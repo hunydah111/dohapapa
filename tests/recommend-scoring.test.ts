@@ -12,7 +12,7 @@ import type { CommuteLeg } from "@/types/recommendation";
 
 function makeProfile(overrides: Partial<CoupleProfile> = {}): CoupleProfile {
   return {
-    priorities: { commute: 5, budgetFit: 3, school: 3, buildingAge: 2 },
+    priorities: { commute: 5, school: 3, buildingAge: 2 },
     workplaceA: { label: "회사A", lat: 37.5665, lng: 126.978 },
     childrenAges: [],
     householdIncomeKrwYear: 80_000_000,
@@ -29,14 +29,27 @@ function inRange(score: number): boolean {
   return score >= 0 && score <= 100;
 }
 
+/** scoreCommute 는 workplace/minutes/withinLimit 만 쓰므로 나머지는 더미. */
+function leg(
+  workplace: "A" | "B",
+  minutes: number,
+  withinLimit: boolean,
+): CommuteLeg {
+  return {
+    workplace,
+    workplaceLabel: workplace === "A" ? "직장A" : "직장B",
+    minutes,
+    distanceKm: 0,
+    mode: "transit",
+    withinLimit,
+  };
+}
+
 // ── scoreCommute ──────────────────────────────────────────────────────────────
 
 describe("scoreCommute", () => {
   it("both legs within limit → high score (≥80)", () => {
-    const legs: CommuteLeg[] = [
-      { workplace: "A", minutes: 30, withinLimit: true },
-      { workplace: "B", minutes: 25, withinLimit: true },
-    ];
+    const legs: CommuteLeg[] = [leg("A", 30, true), leg("B", 25, true)];
     const profile = makeProfile({ maxCommuteMinutesA: 50, maxCommuteMinutesB: 50 });
     const { score, reason } = scoreCommute(legs, profile);
 
@@ -46,10 +59,7 @@ describe("scoreCommute", () => {
   });
 
   it("both legs far over limit → low score (≤30)", () => {
-    const legs: CommuteLeg[] = [
-      { workplace: "A", minutes: 120, withinLimit: false },
-      { workplace: "B", minutes: 110, withinLimit: false },
-    ];
+    const legs: CommuteLeg[] = [leg("A", 120, false), leg("B", 110, false)];
     const profile = makeProfile({ maxCommuteMinutesA: 50, maxCommuteMinutesB: 50 });
     const { score, reason } = scoreCommute(legs, profile);
 
@@ -67,9 +77,7 @@ describe("scoreCommute", () => {
   });
 
   it("single leg (외벌이) within limit → score ≥ 80", () => {
-    const legs: CommuteLeg[] = [
-      { workplace: "A", minutes: 20, withinLimit: true },
-    ];
+    const legs: CommuteLeg[] = [leg("A", 20, true)];
     const profile = makeProfile({ maxCommuteMinutesA: 50 });
     const { score } = scoreCommute(legs, profile);
 
@@ -79,12 +87,9 @@ describe("scoreCommute", () => {
 
   it("score is always in [0, 100]", () => {
     const cases: CommuteLeg[][] = [
-      [{ workplace: "A", minutes: 5, withinLimit: true }],
-      [{ workplace: "A", minutes: 200, withinLimit: false }],
-      [
-        { workplace: "A", minutes: 60, withinLimit: false },
-        { workplace: "B", minutes: 40, withinLimit: true },
-      ],
+      [leg("A", 5, true)],
+      [leg("A", 200, false)],
+      [leg("A", 60, false), leg("B", 40, true)],
     ];
     const profile = makeProfile();
     for (const legs of cases) {

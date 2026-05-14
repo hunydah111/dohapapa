@@ -164,12 +164,16 @@ export function ProfileForm({ onResult }: { onResult: (result: RecommendationRes
   // ── Render ────────────────────────────────────────────────────
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-8">
+    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
       {/* Progress */}
       <div className="mb-8">
-        <p className="text-sm text-gray-500 mb-2">3단계 중 {step}단계</p>
-        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-          <div className={`h-full bg-indigo-600 rounded-full transition-all duration-300 ${progressWidth}`} />
+        <p className="mb-2 text-sm font-medium text-gray-500">
+          3단계 중 {step}단계
+        </p>
+        <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+          <div
+            className={`h-full rounded-full bg-indigo-600 transition-all duration-300 ${progressWidth}`}
+          />
         </div>
       </div>
 

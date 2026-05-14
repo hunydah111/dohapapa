@@ -2,13 +2,14 @@ import { estimateBudget } from "@/lib/budget";
 import { getCommuteMinutes } from "@/lib/commute";
 import { db } from "@/lib/db";
 import { DEFAULT_MAX_COMMUTE_MIN } from "@/types/profile";
-import type { CoupleProfile, LatLng } from "@/types/profile";
+import type { CoupleProfile, LatLng, PriorityKey } from "@/types/profile";
 import { DISCLAIMER } from "@/types/recommendation";
 import type {
   CandidateSignalKey,
   CandidateTier,
   CommuteLeg,
   ComplexCandidate,
+  MoreCandidate,
   RecommendationResult,
 } from "@/types/recommendation";
 import { getAreaMediansForMany, pickRepresentative } from "./complexMedian";
@@ -22,24 +23,32 @@ import {
 // ── 가중치 빌드 ──────────────────────────────────────────────────────────────
 
 /**
- * 사용자가 입력한 4개 조건 중요도(1~5)를 정규화해 신호 가중치로 만든다.
- * 합은 항상 1. 모두 0이면 균등 가중(0.25씩)으로 폴백한다.
+ * 사용자가 입력한 3개 조건 중요도(1~5)를 신호 가중치로 정규화한다.
+ * 예산 적합도(budgetFit)는 사용자가 평가하는 항목이 아니라 입력 소득·시드머니로
+ * 정해지는 하드 제약이므로, 나머지 3개의 평균 중요도로 자동 반영한다. 합은 1.
  */
 function buildWeights(
   priorities: CoupleProfile["priorities"],
 ): Record<CandidateSignalKey, number> {
-  const keys: CandidateSignalKey[] = [
-    "commute",
-    "budgetFit",
-    "school",
-    "buildingAge",
-  ];
-  const total = keys.reduce((s, k) => s + Math.max(0, priorities[k] ?? 0), 0);
+  const userKeys: PriorityKey[] = ["commute", "school", "buildingAge"];
+  const userVals = userKeys.map((k) => Math.max(0, priorities[k] ?? 0));
+  const userSum = userVals.reduce((s, v) => s + v, 0);
+  const budgetFitRaw = userSum > 0 ? userSum / userKeys.length : 1;
+
+  const raw: Record<CandidateSignalKey, number> = {
+    commute: userVals[0],
+    school: userVals[1],
+    buildingAge: userVals[2],
+    budgetFit: budgetFitRaw,
+  };
+  const keys = Object.keys(raw) as CandidateSignalKey[];
+  const total = keys.reduce((s, k) => s + raw[k], 0);
+
   const normalized = {} as Record<CandidateSignalKey, number>;
   if (total <= 0) {
     for (const k of keys) normalized[k] = 0.25;
   } else {
-    for (const k of keys) normalized[k] = Math.max(0, priorities[k] ?? 0) / total;
+    for (const k of keys) normalized[k] = raw[k] / total;
   }
   return normalized;
 }
@@ -58,7 +67,7 @@ function haversineKm(a: LatLng, b: LatLng): number {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-// ── 한 줄 요약 생성 ──────────────────────────────────────────────────────────
+// ── 한 줄 요약 / 리포트 ──────────────────────────────────────────────────────
 
 /** 가중치 상위 2개 신호의 reason 을 이어 붙인다. */
 function buildOneLineReason(
@@ -73,6 +82,38 @@ function buildOneLineReason(
     .map((k) => reasoning[k])
     .filter((r) => r.length > 0)
     .join(" · ");
+}
+
+/** 왜 이 단지가 뽑혔는지 2~3문장 간략 리포트. */
+function buildReport(
+  c: {
+    complexName: string;
+    sigungu: string;
+    dongName: string;
+    representativeArea: number;
+    medianPriceKrw: number;
+    commuteLegs: CommuteLeg[];
+    reasoning: Record<CandidateSignalKey, string>;
+    totalScore: number;
+  },
+  weights: Record<CandidateSignalKey, number>,
+): string {
+  const eok = (c.medianPriceKrw / 1e8).toFixed(1);
+  const legText = c.commuteLegs
+    .map((l) => `${l.workplaceLabel} ${l.minutes}분`)
+    .join(", ");
+  const head = `${c.sigungu} ${c.dongName} ${c.complexName}, 전용 ${c.representativeArea}㎡ 실거래 중위 ${eok}억. 통근은 ${legText}.`;
+
+  const orderedKeys = (Object.keys(weights) as CandidateSignalKey[]).sort(
+    (a, b) => weights[b] - weights[a],
+  );
+  const reasons = orderedKeys
+    .map((k) => c.reasoning[k])
+    .filter((r) => r.length > 0)
+    .slice(0, 2);
+  const body = reasons.length > 0 ? ` ${reasons.join(". ")}.` : "";
+
+  return `${head}${body} 종합 ${c.totalScore}점으로 선정.`;
 }
 
 // ── 메인 추천 함수 ───────────────────────────────────────────────────────────
@@ -92,9 +133,11 @@ export async function recommendComplexes(
     lat: profile.workplaceA.lat,
     lng: profile.workplaceA.lng,
   };
+  const labelA = profile.workplaceA.label;
   const wB: LatLng | null = profile.workplaceB
     ? { lat: profile.workplaceB.lat, lng: profile.workplaceB.lng }
     : null;
+  const labelB = profile.workplaceB?.label ?? "";
 
   // 2. 좌표 있는 단지 전체 로드
   const allComplexes = await db.complex.findMany({
@@ -126,10 +169,9 @@ export async function recommendComplexes(
 
   // 소규모 건물·도시형생활주택 배제. MOLIT 매매 API 에 세대수가 없어서
   // 6개월 거래 건수를 "250세대급 대단지" 프록시로 사용한다.
-  // (정확한 세대수 필터는 공동주택 단지정보 API 연동이 필요.)
   const MIN_TRANSACTIONS = 8;
 
-  // 5. 단지별 평가 — 이 시점엔 통근(mock)·점수 계산 모두 순수 함수라 I/O 없음
+  // 5. 단지별 평가
   interface ScoredComplex {
     candidate: ComplexCandidate;
     medianKrw: number;
@@ -140,7 +182,6 @@ export async function recommendComplexes(
     geoSurvivors.map(async (complex): Promise<ScoredComplex | null> => {
       const medians = mediansMap.get(complex.id) ?? [];
 
-      // 거래 건수 프록시로 소규모 단지 배제
       const totalTransactions = medians.reduce((s, m) => s + m.count, 0);
       if (totalTransactions < MIN_TRANSACTIONS) return null;
 
@@ -154,19 +195,27 @@ export async function recommendComplexes(
 
       const legPromises: Promise<CommuteLeg>[] = [
         getCommuteMinutes(wA, complex.id, complexCoord, "transit").then(
-          (minutes) => ({
-            workplace: "A" as const,
+          (minutes): CommuteLeg => ({
+            workplace: "A",
+            workplaceLabel: labelA,
             minutes,
+            distanceKm: Math.round(haversineKm(wA, complexCoord) * 10) / 10,
+            mode: "transit",
             withinLimit: minutes <= limitA,
           }),
         ),
       ];
       if (wB) {
+        const wBfixed = wB;
         legPromises.push(
-          getCommuteMinutes(wB, complex.id, complexCoord, "transit").then(
-            (minutes) => ({
-              workplace: "B" as const,
+          getCommuteMinutes(wBfixed, complex.id, complexCoord, "transit").then(
+            (minutes): CommuteLeg => ({
+              workplace: "B",
+              workplaceLabel: labelB,
               minutes,
+              distanceKm:
+                Math.round(haversineKm(wBfixed, complexCoord) * 10) / 10,
+              mode: "transit",
               withinLimit: minutes <= limitB,
             }),
           ),
@@ -214,21 +263,26 @@ export async function recommendComplexes(
         ),
       );
 
-      const candidate: ComplexCandidate = {
-        complexId: complex.id,
+      const base = {
         complexName: complex.name,
         sigungu: complex.sigungu,
         dongName: complex.dongName,
-        latitude: complex.latitude as number,
-        longitude: complex.longitude as number,
         representativeArea: rep.area,
         medianPriceKrw: rep.medianKrw,
         commuteLegs,
-        scores,
         reasoning,
         totalScore,
+      };
+
+      const candidate: ComplexCandidate = {
+        complexId: complex.id,
+        ...base,
+        latitude: complex.latitude as number,
+        longitude: complex.longitude as number,
+        scores,
         tier: "균형형", // 후처리에서 재할당
         oneLineReason: buildOneLineReason(reasoning, weights),
+        report: buildReport(base, weights),
       };
 
       return { candidate, medianKrw: rep.medianKrw, passedHardFilter };
@@ -250,11 +304,9 @@ export async function recommendComplexes(
   const top8 = survivors.slice(0, 8);
   const chosen: { entry: ScoredComplex; tier: CandidateTier }[] = [];
 
-  // 균형형: 전체 최고 점수
   const balanced = survivors[0] ?? null;
   if (balanced) chosen.push({ entry: balanced, tier: "균형형" });
 
-  // 안정형: top8 중 예산 여유가 가장 크고 통근이 모두 허용 범위인 것
   const stableCandidate =
     top8
       .filter((e) => e !== balanced)
@@ -265,16 +317,15 @@ export async function recommendComplexes(
       )[0] ?? null;
   if (stableCandidate) chosen.push({ entry: stableCandidate, tier: "안정형" });
 
-  // 도전형: top8 중 가격이 가장 높되 순매매력 내(×1.1)인 것
   const chosenEntries = new Set(chosen.map((c) => c.entry));
   const challengeCandidate =
     top8
       .filter((e) => !chosenEntries.has(e))
       .filter((e) => e.medianKrw <= netPurchasePowerKrw * 1.1)
       .sort((a, b) => b.medianKrw - a.medianKrw)[0] ?? null;
-  if (challengeCandidate) chosen.push({ entry: challengeCandidate, tier: "도전형" });
+  if (challengeCandidate)
+    chosen.push({ entry: challengeCandidate, tier: "도전형" });
 
-  // 3개 미만이면 남은 survivors 로 순서대로 채운다
   const tierOrder: CandidateTier[] = ["균형형", "안정형", "도전형"];
   if (chosen.length < 3) {
     const usedEntries = new Set(chosen.map((c) => c.entry));
@@ -292,9 +343,25 @@ export async function recommendComplexes(
     tier,
   }));
 
+  // 8. 추가 후보 — 상세 3개 다음 순위 단지를 이름만 (최대 10개)
+  const chosenIds = new Set(candidates.map((c) => c.complexId));
+  const moreCandidates: MoreCandidate[] = survivors
+    .filter((e) => !chosenIds.has(e.candidate.complexId))
+    .slice(0, 10)
+    .map((e) => ({
+      complexId: e.candidate.complexId,
+      complexName: e.candidate.complexName,
+      sigungu: e.candidate.sigungu,
+      dongName: e.candidate.dongName,
+      representativeArea: e.candidate.representativeArea,
+      medianPriceKrw: e.candidate.medianPriceKrw,
+      totalScore: e.candidate.totalScore,
+    }));
+
   return {
     budget,
     candidates,
+    moreCandidates,
     consideredComplexCount,
     disclaimer: DISCLAIMER,
   };

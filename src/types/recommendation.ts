@@ -30,8 +30,14 @@ export type CommuteMode = "transit" | "car";
 
 export interface CommuteLeg {
   workplace: "A" | "B";
+  /** 직장 라벨 (회사명 등). UI 도식 표시용. */
+  workplaceLabel: string;
   /** 편도 통근 시간 (분). */
   minutes: number;
+  /** 직장↔단지 직선거리 (km). 추정 시간의 근거. */
+  distanceKm: number;
+  /** 시간 추정에 쓴 교통수단. */
+  mode: CommuteMode;
   /** 프로필의 허용 통근시간 이내인지. */
   withinLimit: boolean;
 }
@@ -82,12 +88,27 @@ export interface ComplexCandidate {
   tier: CandidateTier;
   /** 카드에 표시할 한 줄 요약. */
   oneLineReason: string;
+  /** 왜 이 단지가 뽑혔는지 2~3문장 간략 리포트. */
+  report: string;
+}
+
+/** 상세 리포트 없이 이름만 보여줄 추가 후보. */
+export interface MoreCandidate {
+  complexId: string;
+  complexName: string;
+  sigungu: string;
+  dongName: string;
+  representativeArea: number;
+  medianPriceKrw: number;
+  totalScore: number;
 }
 
 export interface RecommendationResult {
   budget: BudgetEstimate;
-  /** 보통 3개 (안정형·균형형·도전형). */
+  /** 상세 리포트 대상 — 보통 3개 (안정형·균형형·도전형). */
   candidates: ComplexCandidate[];
+  /** 이름만 표시할 추가 후보 (보통 10개). */
+  moreCandidates: MoreCandidate[];
   /** 하드 필터 전 검토한 단지 수. */
   consideredComplexCount: number;
   /** 필수 면책 고지. */

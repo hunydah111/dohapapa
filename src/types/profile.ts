@@ -3,12 +3,16 @@
 // 컴플라이언스 원칙: 이 데이터는 DB에 저장하지 않는다. API 요청 본문으로 받아
 // 1회 계산에만 쓰고 폐기한다. (개인정보 최소수집 — 회의 컴플라이언스 패널 권고.)
 
-/** 추천 가중치를 정하는 4개 조건. recommendation.ts 의 CandidateSignalKey 와 동일 리터럴. */
-export type PriorityKey = "commute" | "budgetFit" | "school" | "buildingAge";
+/**
+ * 사용자가 중요도를 매기는 3개 조건.
+ * 예산은 입력한 소득·시드머니로 자동 산정되는 '하드 제약'이라 여기에 넣지 않는다
+ * (1~5로 평가할 성질의 항목이 아님). 추천 엔진은 예산 적합도를 이 3개의
+ * 평균 중요도로 자동 반영한다.
+ */
+export type PriorityKey = "commute" | "school" | "buildingAge";
 
 export const PRIORITY_LABELS: Record<PriorityKey, string> = {
   commute: "출퇴근 거리",
-  budgetFit: "예산 적합도",
   school: "아이 학군",
   buildingAge: "단지 연식",
 };
@@ -25,7 +29,6 @@ export const PRIORITY_SCALE_LABELS: Record<number, string> = {
 /** 모든 조건 중요도 기본값 = 3(보통). */
 export const DEFAULT_PRIORITIES: Record<PriorityKey, number> = {
   commute: 3,
-  budgetFit: 3,
   school: 3,
   buildingAge: 3,
 };
