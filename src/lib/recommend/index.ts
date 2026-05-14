@@ -3,10 +3,7 @@ import { getCommuteMinutes } from "@/lib/commute";
 import { db } from "@/lib/db";
 import { DEFAULT_MAX_COMMUTE_MIN } from "@/types/profile";
 import type { CoupleProfile } from "@/types/profile";
-import {
-  CANDIDATE_SIGNAL_WEIGHTS,
-  DISCLAIMER,
-} from "@/types/recommendation";
+import { DISCLAIMER } from "@/types/recommendation";
 import type {
   CandidateSignalKey,
   CandidateTier,
@@ -22,36 +19,27 @@ import {
   scoreSchool,
 } from "./scoring";
 
-// ── 가중치 재조정 ────────────────────────────────────────────────────────────
+// ── 가중치 빌드 ──────────────────────────────────────────────────────────────
 
 /**
- * primaryConcern에 해당하는 신호 가중치를 1.5배 boosting한 뒤 전체를 정규화한다.
- * 결과의 합은 항상 100 (소수점 오차 무시).
+ * 사용자가 입력한 4개 조건 중요도(1~5)를 정규화해 신호 가중치로 만든다.
+ * 합은 항상 1. 모두 0이면 균등 가중(0.25씩)으로 폴백한다.
  */
 function buildWeights(
-  primaryConcern: CoupleProfile["primaryConcern"],
+  priorities: CoupleProfile["priorities"],
 ): Record<CandidateSignalKey, number> {
-  const base = { ...CANDIDATE_SIGNAL_WEIGHTS };
-
-  // primaryConcern → 대응 신호 키 매핑.
-  const boostKey: CandidateSignalKey | null =
-    primaryConcern === "commute"
-      ? "commute"
-      : primaryConcern === "school"
-        ? "school"
-        : primaryConcern === "budget" || primaryConcern === "loan"
-          ? "budgetFit"
-          : null;
-
-  if (boostKey !== null) {
-    base[boostKey] = base[boostKey] * 1.5;
-  }
-
-  const total = Object.values(base).reduce((s, v) => s + v, 0);
-  const keys = Object.keys(base) as CandidateSignalKey[];
+  const keys: CandidateSignalKey[] = [
+    "commute",
+    "budgetFit",
+    "school",
+    "buildingAge",
+  ];
+  const total = keys.reduce((s, k) => s + Math.max(0, priorities[k] ?? 0), 0);
   const normalized = {} as Record<CandidateSignalKey, number>;
-  for (const k of keys) {
-    normalized[k] = base[k] / total;
+  if (total <= 0) {
+    for (const k of keys) normalized[k] = 0.25;
+  } else {
+    for (const k of keys) normalized[k] = Math.max(0, priorities[k] ?? 0) / total;
   }
   return normalized;
 }
@@ -92,7 +80,7 @@ export async function recommendComplexes(
   const limitB = profile.maxCommuteMinutesB ?? DEFAULT_MAX_COMMUTE_MIN;
 
   // 4. 단지별 평가 (비동기 병렬)
-  const weights = buildWeights(profile.primaryConcern);
+  const weights = buildWeights(profile.priorities);
 
   interface ScoredComplex {
     candidate: ComplexCandidate;

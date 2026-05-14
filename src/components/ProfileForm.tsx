@@ -1,15 +1,22 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import type { CoupleProfile, Segment, Workplace } from "@/types/profile";
-import { SEGMENT_LABELS, DEFAULT_MAX_COMMUTE_MIN } from "@/types/profile";
+import type { CoupleProfile, PriorityKey, Workplace } from "@/types/profile";
+import {
+  PRIORITY_LABELS,
+  PRIORITY_SCALE_LABELS,
+  DEFAULT_PRIORITIES,
+  DEFAULT_MAX_COMMUTE_MIN,
+} from "@/types/profile";
 import type { RecommendationResult } from "@/types/recommendation";
 
 export function ProfileForm({ onResult }: { onResult: (result: RecommendationResult) => void }) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
-  // Step 1
-  const [primaryConcern, setPrimaryConcern] = useState<Segment | null>(null);
+  // Step 1 — 4개 조건 중요도 (1~5)
+  const [priorities, setPriorities] = useState<Record<PriorityKey, number>>({
+    ...DEFAULT_PRIORITIES,
+  });
 
   // Step 2
   const [workplaceA, setWorkplaceA] = useState<Workplace | null>(null);
@@ -92,11 +99,6 @@ export function ProfileForm({ onResult }: { onResult: (result: RecommendationRes
 
   // ── Handlers ──────────────────────────────────────────────────
 
-  function handleStep1Select(seg: Segment) {
-    setPrimaryConcern(seg);
-    setStep(2);
-  }
-
   function handleStep2Next() {
     if (!workplaceA) return;
     setStep(3);
@@ -115,10 +117,10 @@ export function ProfileForm({ onResult }: { onResult: (result: RecommendationRes
   }
 
   async function handleSubmit() {
-    if (!primaryConcern || !workplaceA) return;
+    if (!workplaceA) return;
 
     const profile: CoupleProfile = {
-      primaryConcern,
+      priorities,
       workplaceA,
       workplaceB: dualIncome && workplaceB ? workplaceB : undefined,
       childrenAges,
@@ -174,19 +176,50 @@ export function ProfileForm({ onResult }: { onResult: (result: RecommendationRes
       {/* ── Step 1 ── */}
       {step === 1 && (
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">가장 큰 걱정이 무엇인가요?</h2>
-          <p className="text-gray-500 mb-6">해당하는 항목을 선택하면 다음 단계로 넘어갑니다.</p>
-          <div className="grid grid-cols-1 gap-4">
-            {(Object.keys(SEGMENT_LABELS) as Segment[]).map((seg) => (
-              <button
-                key={seg}
-                onClick={() => handleStep1Select(seg)}
-                className="w-full text-left px-6 py-5 rounded-2xl border-2 border-gray-200 bg-white hover:border-indigo-500 hover:bg-indigo-50 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              >
-                <span className="text-lg font-semibold text-gray-800">{SEGMENT_LABELS[seg]}</span>
-              </button>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">무엇을 얼마나 중요하게 볼까요?</h2>
+          <p className="text-gray-500 mb-6">
+            네 가지 조건의 중요도를 각각 정해주세요. 추천 가중치에 그대로 반영됩니다.
+          </p>
+          <div className="flex flex-col gap-5">
+            {(Object.keys(PRIORITY_LABELS) as PriorityKey[]).map((key) => (
+              <div key={key}>
+                <div className="flex justify-between items-baseline mb-2">
+                  <span className="text-base font-semibold text-gray-800">
+                    {PRIORITY_LABELS[key]}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {PRIORITY_SCALE_LABELS[priorities[key]]}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((v) => (
+                    <button
+                      key={v}
+                      onClick={() =>
+                        setPriorities((p) => ({ ...p, [key]: v }))
+                      }
+                      aria-label={`${PRIORITY_LABELS[key]} 중요도 ${v}`}
+                      className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-bold transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
+                        priorities[key] === v
+                          ? "border-indigo-500 bg-indigo-500 text-white"
+                          : priorities[key] > v
+                            ? "border-indigo-200 bg-indigo-50 text-indigo-400"
+                            : "border-gray-200 bg-white text-gray-400 hover:border-indigo-300"
+                      }`}
+                    >
+                      {v}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
+          <button
+            onClick={() => setStep(2)}
+            className="mt-8 w-full px-6 py-3 rounded-2xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors"
+          >
+            다음
+          </button>
         </div>
       )}
 
@@ -220,6 +253,13 @@ export function ProfileForm({ onResult }: { onResult: (result: RecommendationRes
                 {workplaceALoading && (
                   <p className="mt-1 text-xs text-gray-400">검색 중...</p>
                 )}
+                {!workplaceALoading &&
+                  workplaceAQuery.length >= 2 &&
+                  workplaceAResults.length === 0 && (
+                    <p className="mt-1 text-xs text-amber-600">
+                      찾지 못했어요. 가까운 지하철역·지역명으로 입력해 보세요 (예: 강남역, 판교, 여의도)
+                    </p>
+                  )}
                 {workplaceAResults.length > 0 && (
                   <ul className="absolute z-10 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden">
                     {workplaceAResults.map((r, i) => (
@@ -279,6 +319,13 @@ export function ProfileForm({ onResult }: { onResult: (result: RecommendationRes
                   {workplaceBLoading && (
                     <p className="mt-1 text-xs text-gray-400">검색 중...</p>
                   )}
+                  {!workplaceBLoading &&
+                    workplaceBQuery.length >= 2 &&
+                    workplaceBResults.length === 0 && (
+                      <p className="mt-1 text-xs text-amber-600">
+                        찾지 못했어요. 가까운 지하철역·지역명으로 입력해 보세요 (예: 강남역, 판교, 여의도)
+                      </p>
+                    )}
                   {workplaceBResults.length > 0 && (
                     <ul className="absolute z-10 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden">
                       {workplaceBResults.map((r, i) => (

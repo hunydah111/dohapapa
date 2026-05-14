@@ -12,7 +12,12 @@ const workplaceSchema = z.object({
 });
 
 const coupleProfileSchema = z.object({
-  primaryConcern: z.enum(["commute", "school", "budget", "loan"]),
+  priorities: z.object({
+    commute: z.number().min(0).max(5),
+    budgetFit: z.number().min(0).max(5),
+    school: z.number().min(0).max(5),
+    buildingAge: z.number().min(0).max(5),
+  }),
   workplaceA: workplaceSchema,
   workplaceB: workplaceSchema.optional(),
   childrenAges: z.array(z.number().int().min(0).max(25)),

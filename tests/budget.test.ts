@@ -4,7 +4,7 @@ import type { CoupleProfile } from "@/types/profile";
 
 function makeProfile(overrides: Partial<CoupleProfile> = {}): CoupleProfile {
   return {
-    primaryConcern: "budget",
+    priorities: { commute: 3, budgetFit: 3, school: 3, buildingAge: 3 },
     workplaceA: { label: "회사A", lat: 37.5665, lng: 126.978 },
     childrenAges: [],
     householdIncomeKrwYear: 100_000_000,

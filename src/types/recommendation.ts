@@ -43,7 +43,10 @@ export type CandidateSignalKey =
   | "school"
   | "buildingAge";
 
-/** 기본 가중치. primaryConcern 에 따라 recommend 엔진에서 동적으로 재조정된다. */
+/**
+ * 참고용 기본 가중치 (UI 안내·문서용). 실제 추천 가중치는 사용자가 입력한
+ * priorities(1~5)를 정규화해 만든다 — recommend 엔진의 buildWeights 참고.
+ */
 export const CANDIDATE_SIGNAL_WEIGHTS: Record<CandidateSignalKey, number> = {
   commute: 40,
   budgetFit: 30,

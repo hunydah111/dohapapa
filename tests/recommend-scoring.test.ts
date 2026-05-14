@@ -12,7 +12,7 @@ import type { CommuteLeg } from "@/types/recommendation";
 
 function makeProfile(overrides: Partial<CoupleProfile> = {}): CoupleProfile {
   return {
-    primaryConcern: "commute",
+    priorities: { commute: 5, budgetFit: 3, school: 3, buildingAge: 2 },
     workplaceA: { label: "회사A", lat: 37.5665, lng: 126.978 },
     childrenAges: [],
     householdIncomeKrwYear: 80_000_000,

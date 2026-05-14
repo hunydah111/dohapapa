@@ -46,16 +46,13 @@
 
 `buildYear`가 최근일수록 높은 점수를 받습니다. 준공 후 5년 이내 최고점, 20년 초과 시 최저점으로 선형 감소합니다.
 
-## 3. primaryConcern에 따른 가중치 재조정
+## 3. 사용자 입력 가중치 (priorities)
 
-사용자가 선택한 `primaryConcern`에 따라 해당 신호의 가중치를 높이고 나머지를 비례 축소합니다. 합계는 항상 100을 유지합니다.
+사용자는 4개 조건 각각에 중요도 1~5를 부여합니다(`CoupleProfile.priorities`). 추천 엔진의 `buildWeights`가 이 값들을 정규화해 신호 가중치로 직접 사용합니다 — 합은 항상 1.
 
-| primaryConcern | 조정 신호 | 효과 |
-|----------------|-----------|------|
-| `commute` | commute | 통근 가중치 상향 |
-| `school` | school | 학군·자녀 가중치 상향 |
-| `budget` | budgetFit | 예산 적합도 가중치 상향 |
-| `loan` | budgetFit | 예산 적합도 가중치 상향 (대출 한도 걱정은 예산 여유와 동일 방향) |
+- 예: `{ commute: 5, budgetFit: 4, school: 2, buildingAge: 1 }` → 정규화 시 통근 0.42 / 예산 0.33 / 학군 0.17 / 연식 0.08.
+- 모든 값이 0이면 균등 가중(각 0.25)으로 폴백합니다.
+- `CANDIDATE_SIGNAL_WEIGHTS`(commute 40 / budgetFit 30 / school 20 / buildingAge 10)는 UI 안내·문서용 참고 기본값일 뿐, 실제 계산에는 사용자 입력이 우선합니다.
 
 ## 4. 3-tier 후보 선별
 
