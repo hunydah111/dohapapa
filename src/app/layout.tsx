@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "dohapapa — 우리 가족, 어디 살 수 있을까",
+  title: "dohapapa — 우리, 어디 살 수 있을까",
   description:
     "국토부 실거래가로 통근·예산·학군 조건에 맞는 아파트 단지를 좁혀주는 정보 제공 도구.",
 };
@@ -54,7 +54,7 @@ export default function RootLayout({
               className="hidden text-xs sm:inline"
               style={{ color: "#86868b" }}
             >
-              우리 가족, 어디 살 수 있을까
+              우리, 어디 살 수 있을까
             </span>
           </div>
         </header>

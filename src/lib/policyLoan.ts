@@ -1,0 +1,274 @@
+// 정책대출 자격 판정 모듈.
+//
+// 컴플라이언스: 자격 가능성 안내까지만 — 특정 은행 상품 연결·비교 금지.
+// 주택가 요건(예: 디딤돌 5억 이하, 보금자리론 6억 이하)은 예산 추정 시점에서
+// 매수 희망 주택의 가격을 알 수 없으므로 이 모듈에서 판정하지 않는다.
+// 판정 결과 reason 에 "주택가 요건 별도 적용" 을 명시해 사용자가 인지하도록 함.
+//
+// 2025~2026 현행 기준으로 작성. 제도 변경 시 상수를 갱신할 것.
+
+import type { CoupleProfile } from "@/types/profile";
+import type { PolicyLoanMatch } from "@/types/recommendation";
+
+// ── 소득·자산 기준 상수 (2025~2026 기준) ──────────────────────────────────
+
+/** 신생아 특례 디딤돌: 부부합산 연소득 2억 이하 */
+const SHINSEONA_INCOME_LIMIT = 200_000_000;
+
+/** 디딤돌(신혼): 부부합산 연소득 8,500만 이하 */
+const DIDIMDOL_NEWLYWED_INCOME_LIMIT = 85_000_000;
+
+/** 디딤돌(일반): 기본 합산 6,000만 이하 */
+const DIDIMDOL_GENERAL_INCOME_LIMIT = 60_000_000;
+
+/** 디딤돌(일반): 생애최초·2자녀 이상 완화 기준 7,000만 이하 */
+const DIDIMDOL_GENERAL_INCOME_LIMIT_EXTENDED = 70_000_000;
+
+/** 보금자리론: 기본 합산 7,000만 이하 */
+const BOGEUMJARI_INCOME_LIMIT = 70_000_000;
+
+/** 보금자리론: 신혼 완화 8,500만 이하 */
+const BOGEUMJARI_NEWLYWED_INCOME_LIMIT = 85_000_000;
+
+/** 디딤돌(신혼) 순자산 요건: 5.11억 이하 */
+const DIDIMDOL_NEWLYWED_NET_ASSET_LIMIT = 511_000_000;
+
+/** 신생아 특례 디딤돌 최대 대출 한도 (원) */
+const SHINSEONA_LOAN_LIMIT = 400_000_000;
+
+/** 디딤돌(신혼) 최대 대출 한도 (원) */
+const DIDIMDOL_NEWLYWED_LOAN_LIMIT = 320_000_000;
+
+/** 디딤돌(일반) 기본 한도 (원) */
+const DIDIMDOL_GENERAL_LOAN_LIMIT = 200_000_000;
+
+/** 디딤돌(일반) 생애최초 한도 (원) */
+const DIDIMDOL_GENERAL_FIRST_LOAN_LIMIT = 240_000_000;
+
+/** 보금자리론 기본 한도 (원) */
+const BOGEUMJARI_LOAN_LIMIT = 360_000_000;
+
+/** 보금자리론 생애최초 한도 (원) */
+const BOGEUMJARI_FIRST_LOAN_LIMIT = 420_000_000;
+
+// ── 판정 함수 ─────────────────────────────────────────────────────────────
+
+/**
+ * 신생아 특례 디딤돌 자격 판정.
+ *
+ * WHY 자녀 나이 ≤ 1 프록시: 신생아 특례는 "대출 신청일 기준 2년 이내 출산"이
+ * 원칙이나, 앱이 출생연도 입력이 아닌 나이(만 나이)만 받으므로
+ * childrenAges.some(a => a <= 1) 를 프록시로 쓴다.
+ * 나이 2세 자녀라도 대출 신청 시점에 따라 요건 충족 가능 — reason 에 안내 포함.
+ */
+function evaluateShinseona(profile: CoupleProfile): PolicyLoanMatch {
+  const { householdIncomeKrwYear, hasOwnedHomeBefore, childrenAges } = profile;
+
+  const hasInfant = childrenAges.some((a) => a <= 1);
+
+  // WHY 무주택 요건 확인: 신생아 특례 디딤돌은 무주택 세대주만 신청 가능
+  if (hasOwnedHomeBefore) {
+    return {
+      productName: "신생아 특례 디딤돌",
+      eligible: false,
+      reason: "유주택(주택 보유 이력 있음) — 무주택 세대주만 신청 가능",
+    };
+  }
+
+  if (!hasInfant) {
+    return {
+      productName: "신생아 특례 디딤돌",
+      eligible: false,
+      reason:
+        "2년 이내 출산 자녀 없음 (만 나이 기준 1세 이하 자녀가 없음) — " +
+        "2세 자녀라도 실제 출생일 기준 충족 가능, 주택금융공사 확인 필요",
+    };
+  }
+
+  if (householdIncomeKrwYear > SHINSEONA_INCOME_LIMIT) {
+    return {
+      productName: "신생아 특례 디딤돌",
+      eligible: false,
+      reason: `부부합산 소득 ${(householdIncomeKrwYear / 10_000).toLocaleString("ko-KR")}만원 초과 (기준: 2억 이하)`,
+    };
+  }
+
+  return {
+    productName: "신생아 특례 디딤돌",
+    eligible: true,
+    reason:
+      "2년 이내 출산 자녀 있음 + 무주택 + 합산 소득 2억 이하 — 주택가 요건 별도 적용 (5억 이하)",
+    loanLimitKrw: SHINSEONA_LOAN_LIMIT,
+    rateMin: 1.8,
+    rateMax: 4.5,
+  };
+}
+
+/**
+ * 디딤돌(신혼) 자격 판정.
+ *
+ * WHY 신혼 요건 명시: isNewlywed 필드는 혼인 7년 이내 기준으로 사용자가 직접 입력.
+ */
+function evaluateDidimdolNewlywed(profile: CoupleProfile): PolicyLoanMatch {
+  const { householdIncomeKrwYear, hasOwnedHomeBefore, isNewlywed, netAssetsKrw } = profile;
+
+  if (!isNewlywed) {
+    return {
+      productName: "디딤돌(신혼)",
+      eligible: false,
+      reason: "신혼 요건 미충족 (혼인 7년 이내 해당 없음)",
+    };
+  }
+
+  if (hasOwnedHomeBefore) {
+    return {
+      productName: "디딤돌(신혼)",
+      eligible: false,
+      reason: "유주택(주택 보유 이력 있음) — 무주택 세대주만 신청 가능",
+    };
+  }
+
+  if (householdIncomeKrwYear > DIDIMDOL_NEWLYWED_INCOME_LIMIT) {
+    return {
+      productName: "디딤돌(신혼)",
+      eligible: false,
+      reason: `부부합산 소득 ${(householdIncomeKrwYear / 10_000).toLocaleString("ko-KR")}만원 초과 (기준: 8,500만원 이하)`,
+    };
+  }
+
+  if (netAssetsKrw > DIDIMDOL_NEWLYWED_NET_ASSET_LIMIT) {
+    return {
+      productName: "디딤돌(신혼)",
+      eligible: false,
+      reason: `순자산 ${(netAssetsKrw / 100_000_000).toFixed(2)}억원 초과 (기준: 5.11억 이하)`,
+    };
+  }
+
+  return {
+    productName: "디딤돌(신혼)",
+    eligible: true,
+    reason:
+      "신혼 + 무주택 + 합산 소득 8,500만원 이하 + 순자산 5.11억 이하 — 주택가 요건 별도 적용 (5억 이하)",
+    loanLimitKrw: DIDIMDOL_NEWLYWED_LOAN_LIMIT,
+    rateMin: 2.85,
+    rateMax: 4.15,
+  };
+}
+
+/**
+ * 디딤돌(일반) 자격 판정.
+ *
+ * WHY 생애최초·2자녀 완화: 두 조건 중 하나라도 해당하면 소득 기준 7,000만으로 완화.
+ */
+function evaluateDidimdolGeneral(profile: CoupleProfile): PolicyLoanMatch {
+  const { householdIncomeKrwYear, hasOwnedHomeBefore, childrenAges } = profile;
+
+  if (hasOwnedHomeBefore) {
+    return {
+      productName: "디딤돌(일반)",
+      eligible: false,
+      reason: "유주택(주택 보유 이력 있음) — 무주택 세대주만 신청 가능",
+    };
+  }
+
+  const isFirstHome = !hasOwnedHomeBefore;
+  const hasTwoOrMoreChildren = childrenAges.length >= 2;
+
+  // WHY 완화 기준 적용: 생애최초 또는 2자녀 이상이면 소득 7,000만까지 허용
+  const incomeLimit =
+    isFirstHome || hasTwoOrMoreChildren
+      ? DIDIMDOL_GENERAL_INCOME_LIMIT_EXTENDED
+      : DIDIMDOL_GENERAL_INCOME_LIMIT;
+
+  const loanLimit =
+    isFirstHome ? DIDIMDOL_GENERAL_FIRST_LOAN_LIMIT : DIDIMDOL_GENERAL_LOAN_LIMIT;
+
+  if (householdIncomeKrwYear > incomeLimit) {
+    const limitLabel = incomeLimit === DIDIMDOL_GENERAL_INCOME_LIMIT_EXTENDED ? "7,000만원" : "6,000만원";
+    return {
+      productName: "디딤돌(일반)",
+      eligible: false,
+      reason: `부부합산 소득 ${(householdIncomeKrwYear / 10_000).toLocaleString("ko-KR")}만원 초과 (기준: ${limitLabel} 이하)`,
+    };
+  }
+
+  const limitLabel = isFirstHome ? "생애최초 2.4억" : "2억";
+  const conditionLabel = isFirstHome
+    ? "생애최초 + 무주택"
+    : hasTwoOrMoreChildren
+      ? "2자녀 이상 + 무주택"
+      : "무주택";
+
+  return {
+    productName: "디딤돌(일반)",
+    eligible: true,
+    reason:
+      `${conditionLabel} + 합산 소득 기준 충족 — 주택가 요건 별도 적용 (5억 이하), 한도 ${limitLabel}`,
+    loanLimitKrw: loanLimit,
+    rateMin: 2.85,
+    rateMax: 4.15,
+  };
+}
+
+/**
+ * 보금자리론 자격 판정.
+ *
+ * WHY 자녀수 가산 미적용: 자녀수별 소득 가산(1자녀 +100만, 2자녀 +200만 등)은
+ * 소득 경계값 근처에서 유불리를 크게 바꿀 수 있으나, 제도 변경이 잦아
+ * MVP에서는 기본·신혼 2단계만 적용하고 reason 에 안내를 포함.
+ */
+function evaluateBogeumjari(profile: CoupleProfile): PolicyLoanMatch {
+  const { householdIncomeKrwYear, isNewlywed, hasOwnedHomeBefore } = profile;
+
+  // WHY 보금자리론은 유주택자도 신청 가능(1주택자 대환 용도 등) — 무주택 요건 없음.
+  // 단, 투기·투기과열지구 다주택자 제한이 있어 기존 주택 보유 이력만으로
+  // 일률 차단하지 않고 안내로 대체.
+  const incomeLimit = isNewlywed
+    ? BOGEUMJARI_NEWLYWED_INCOME_LIMIT
+    : BOGEUMJARI_INCOME_LIMIT;
+
+  if (householdIncomeKrwYear > incomeLimit) {
+    const limitLabel = isNewlywed ? "8,500만원 (신혼)" : "7,000만원";
+    return {
+      productName: "보금자리론",
+      eligible: false,
+      reason: `부부합산 소득 ${(householdIncomeKrwYear / 10_000).toLocaleString("ko-KR")}만원 초과 (기준: ${limitLabel} 이하)`,
+    };
+  }
+
+  const loanLimit = !hasOwnedHomeBefore
+    ? BOGEUMJARI_FIRST_LOAN_LIMIT
+    : BOGEUMJARI_LOAN_LIMIT;
+
+  const conditionParts: string[] = [];
+  if (!hasOwnedHomeBefore) conditionParts.push("생애최초 한도 4.2억");
+  if (isNewlywed) conditionParts.push("신혼 소득 완화 적용");
+  conditionParts.push("주택가 요건 별도 적용 (6억 이하)");
+  conditionParts.push("자녀수별 소득 가산 별도 확인 필요");
+
+  return {
+    productName: "보금자리론",
+    eligible: true,
+    reason: conditionParts.join(" — "),
+    loanLimitKrw: loanLimit,
+    rateMin: 3.9,
+    rateMax: 4.2,
+  };
+}
+
+// ── 공개 API ──────────────────────────────────────────────────────────────
+
+/**
+ * 프로필을 받아 4개 정책대출 상품의 자격 판정 결과를 반환한다.
+ *
+ * WHY 판정 순서: 한도 큰 순(신생아 특례 → 신혼 → 일반 → 보금자리론)으로 정렬해
+ * budget.ts 에서 "한도 최대" 상품을 쉽게 고를 수 있도록 한다.
+ */
+export function evaluatePolicyLoans(profile: CoupleProfile): PolicyLoanMatch[] {
+  return [
+    evaluateShinseona(profile),
+    evaluateDidimdolNewlywed(profile),
+    evaluateDidimdolGeneral(profile),
+    evaluateBogeumjari(profile),
+  ];
+}

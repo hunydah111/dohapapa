@@ -10,11 +10,7 @@ import { CandidateCard } from "./CandidateCard";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { Card } from "@/components/ui/Card";
-
-function formatEok(krw: number): string {
-  const val = krw / 100_000_000;
-  return `${val.toFixed(1)}억`;
-}
+import { formatKrwHuman } from "@/lib/format";
 
 type ResultState = {
   result: RecommendationResult;
@@ -26,19 +22,25 @@ export function HomeExperience() {
 
   // 조건 수정 패널 상태
   const [panelOpen, setPanelOpen] = useState(false);
-  const [editSeedMoney, setEditSeedMoney] = useState(""); // 억 단위 문자열
+  // 만원 단위 문자열로 관리 (P1 단위 통일)
+  const [editSeedMoneyMan, setEditSeedMoneyMan] = useState("");
   const [editAreaRange, setEditAreaRange] = useState<AreaRangeKey | "">("");
-  const [editMaxCommute, setEditMaxCommute] = useState(""); // 분 단위 문자열
+  // 분 단위 문자열 (빈 값이면 기존 profile 값 유지 — P1 NaN 버그 수정)
+  const [editMaxCommute, setEditMaxCommute] = useState("");
   const [reanalyzing, setReanalyzing] = useState(false);
   const [reanalyzeError, setReanalyzeError] = useState<string | null>(null);
 
   function handleResult(result: RecommendationResult, profile: CoupleProfile) {
     setState({ result, profile });
     setPanelOpen(false);
-    // 조건 수정 패널 기본값을 현재 프로필로 초기화
-    setEditSeedMoney(String((profile.seedMoneyKrw / 100_000_000).toFixed(1)));
+    // 조건 수정 패널 기본값을 현재 프로필로 초기화 (만원 단위)
+    const seedManwon = Math.round(profile.seedMoneyKrw / 10_000);
+    setEditSeedMoneyMan(String(seedManwon));
     setEditAreaRange(profile.preferredAreaRange);
-    const commuteMin = profile.workplaceA?.maxCommuteMinutes ?? 50;
+    const commuteMin =
+      profile.workplaceA?.maxCommuteMinutes ??
+      profile.workplaceB?.maxCommuteMinutes ??
+      50;
     setEditMaxCommute(String(commuteMin));
     setReanalyzeError(null);
   }
@@ -48,18 +50,24 @@ export function HomeExperience() {
     setReanalyzing(true);
     setReanalyzeError(null);
 
+    // 만원 단위 → 원 변환 (P1 단위 통일). 빈 값이면 기존 profile 값 유지.
     const seedKrw =
-      editSeedMoney !== ""
-        ? parseFloat(editSeedMoney) * 100_000_000
+      editSeedMoneyMan.trim() !== ""
+        ? Math.round(parseFloat(editSeedMoneyMan)) * 10_000
         : state.profile.seedMoneyKrw;
 
     const areaRange: AreaRangeKey =
       editAreaRange !== "" ? editAreaRange : state.profile.preferredAreaRange;
 
-    const maxMin =
-      editMaxCommute !== ""
-        ? parseInt(editMaxCommute, 10)
-        : 50;
+    // P1 NaN 버그 수정: 빈 값이면 기존 profile 값 유지
+    const parsedCommute =
+      editMaxCommute.trim() !== "" ? parseInt(editMaxCommute, 10) : NaN;
+    const maxMinA = Number.isFinite(parsedCommute)
+      ? parsedCommute
+      : state.profile.workplaceA?.maxCommuteMinutes ?? 50;
+    const maxMinB = Number.isFinite(parsedCommute)
+      ? parsedCommute
+      : state.profile.workplaceB?.maxCommuteMinutes ?? 50;
 
     // 기존 프로필에 변경값 머지
     const merged: CoupleProfile = {
@@ -70,7 +78,7 @@ export function HomeExperience() {
         ? {
             workplaceA: {
               ...state.profile.workplaceA,
-              maxCommuteMinutes: maxMin,
+              maxCommuteMinutes: maxMinA,
             },
           }
         : {}),
@@ -78,7 +86,7 @@ export function HomeExperience() {
         ? {
             workplaceB: {
               ...state.profile.workplaceB,
-              maxCommuteMinutes: maxMin,
+              maxCommuteMinutes: maxMinB,
             },
           }
         : {}),
@@ -123,16 +131,12 @@ export function HomeExperience() {
   // ── 결과 화면 ──────────────────────────────────────────────
   return (
     <div className="flex flex-col gap-8">
-      {/* 상단 바: 처음부터 버튼 */}
+      {/* 상단 바: 검토 단지 수 + 처음부터 */}
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold" style={{ color: "#6e6e73" }}>
           검토 {result.consideredComplexCount.toLocaleString()}개 단지 분석 완료
         </p>
-        <Button
-          variant="ghost"
-          size="md"
-          onClick={() => setState(null)}
-        >
+        <Button variant="ghost" size="md" onClick={() => setState(null)}>
           처음부터
         </Button>
       </div>
@@ -140,7 +144,7 @@ export function HomeExperience() {
       {/* 예산 분석 */}
       <BudgetSummary budget={result.budget} />
 
-      {/* ── 조건에 맞는 단지 or 0건 ── */}
+      {/* 조건에 맞는 단지 or 0건 */}
       {result.candidates.length > 0 ? (
         <section className="flex flex-col gap-5">
           <div>
@@ -165,7 +169,7 @@ export function HomeExperience() {
           </ul>
         </section>
       ) : (
-        /* P0#2 — 0건 화면 */
+        /* 0건 화면 */
         <Card>
           <h2
             className="text-xl font-bold mb-2"
@@ -193,9 +197,7 @@ export function HomeExperience() {
                   >
                     {s.message}
                   </span>
-                  <span
-                    className="ml-4 flex-shrink-0 rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-bold text-indigo-700"
-                  >
+                  <span className="ml-4 flex-shrink-0 rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-bold text-indigo-700">
                     {s.resultCount}곳
                   </span>
                 </button>
@@ -216,15 +218,20 @@ export function HomeExperience() {
         </Card>
       )}
 
-      {/* 그 밖의 후보 — 이름 목록 */}
+      {/* P1 "그 밖의 후보" — 시각 위계 강화 */}
       {result.moreCandidates.length > 0 && (
-        <section className="flex flex-col gap-3">
-          <h2
-            className="text-base font-semibold"
-            style={{ color: "#6e6e73" }}
-          >
-            그 밖의 후보 {result.moreCandidates.length}곳
-          </h2>
+        <section className="flex flex-col gap-4">
+          <div>
+            <h2
+              className="text-lg font-bold"
+              style={{ color: "#1d1d1f" }}
+            >
+              그 밖의 후보
+            </h2>
+            <p className="mt-0.5 text-sm" style={{ color: "#6e6e73" }}>
+              상세 분석 외 추가로 조건에 근접한 {result.moreCandidates.length}곳
+            </p>
+          </div>
           <div
             className="overflow-hidden rounded-3xl bg-white"
             style={{
@@ -263,7 +270,7 @@ export function HomeExperience() {
                     className="flex-shrink-0 text-sm font-semibold tabular-nums"
                     style={{ color: "#1d1d1f" }}
                   >
-                    {formatEok(m.medianPriceKrw)}
+                    {formatKrwHuman(m.medianPriceKrw)}
                   </span>
                 </li>
               ))}
@@ -272,7 +279,7 @@ export function HomeExperience() {
         </section>
       )}
 
-      {/* P1#5 — 조건 빠른 수정 패널 (접이식) */}
+      {/* 조건 빠른 수정 패널 (접이식) */}
       <section>
         <button
           type="button"
@@ -290,7 +297,11 @@ export function HomeExperience() {
             stroke="currentColor"
             strokeWidth={2}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
         </button>
 
@@ -300,14 +311,15 @@ export function HomeExperience() {
               자주 바꾸는 조건만 수정하고 다시 분석할 수 있습니다.
             </p>
 
+            {/* P1 단위 통일: 만원 단위 */}
             <TextField
-              label="시드머니"
+              label="보유 현금"
               type="number"
-              value={editSeedMoney}
-              onChange={setEditSeedMoney}
-              suffix="억"
-              placeholder="예: 3.0"
-              hint="보유 현금 기준 (갈아타기 매도액 별도)"
+              value={editSeedMoneyMan}
+              onChange={setEditSeedMoneyMan}
+              suffix="만원"
+              placeholder="예: 30000"
+              hint="보유 현금 기준 (갈아타기 매도액 별도). 만원 단위로 입력."
             />
 
             {/* 선호 평수 선택 */}
@@ -336,6 +348,7 @@ export function HomeExperience() {
               </div>
             </div>
 
+            {/* P1 A/B 통근시간 공통 적용 명시 */}
             <TextField
               label="통근 허용 시간"
               type="number"
@@ -343,8 +356,20 @@ export function HomeExperience() {
               onChange={setEditMaxCommute}
               suffix="분"
               placeholder="예: 50"
-              hint="본인·배우자 공통으로 적용됩니다"
+              hint="본인·배우자 직장 모두 공통으로 적용됩니다. 비워두면 기존 설정 유지."
             />
+
+            {/* P2 로딩 진행 표시 */}
+            {reanalyzing && (
+              <div className="flex items-center gap-3 rounded-2xl bg-indigo-50 border border-indigo-100 px-4 py-3">
+                <span className="flex h-4 w-4 flex-shrink-0">
+                  <span className="animate-ping inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
+                </span>
+                <span className="text-sm font-medium text-indigo-700">
+                  조건에 맞는 단지를 다시 분석하고 있습니다...
+                </span>
+              </div>
+            )}
 
             {reanalyzeError && (
               <div className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
@@ -366,13 +391,8 @@ export function HomeExperience() {
       </section>
 
       {/* 면책 고지 */}
-      <footer
-        className="rounded-2xl border border-black/[0.06] bg-[#f5f5f7] px-5 py-4"
-      >
-        <p
-          className="text-xs leading-relaxed"
-          style={{ color: "#86868b" }}
-        >
+      <footer className="rounded-2xl border border-black/[0.06] bg-[#f5f5f7] px-5 py-4">
+        <p className="text-xs leading-relaxed" style={{ color: "#86868b" }}>
           {result.disclaimer}
         </p>
       </footer>

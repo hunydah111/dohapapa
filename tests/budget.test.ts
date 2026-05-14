@@ -17,8 +17,10 @@ function makeProfile(overrides: Partial<CoupleProfile> = {}): CoupleProfile {
     childrenAges: [],
     householdIncomeKrwYear: 100_000_000,
     seedMoneyKrw: 300_000_000,
+    netAssetsKrw: 300_000_000,
     existingLoanMonthlyKrw: 0,
     hasOwnedHomeBefore: false,
+    isNewlywed: false,
     ...overrides,
   };
 }

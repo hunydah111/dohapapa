@@ -9,7 +9,7 @@ export default function HomePage() {
           className="text-3xl font-bold tracking-tight sm:text-4xl"
           style={{ color: "#1d1d1f" }}
         >
-          우리 가족, 어디 살 수 있을까
+          우리, 어디 살 수 있을까
         </h1>
         <p
           className="mx-auto mt-3 max-w-sm text-[15px] leading-relaxed"

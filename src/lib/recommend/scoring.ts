@@ -7,12 +7,20 @@ type ScoreResult = { score: number; reason: string };
 
 /**
  * 직장별 CommuteLeg 목록을 받아 통근 점수를 계산한다.
- * 각 leg 는 자체 maxCommuteMinutes 정보를 갖고 있지 않으므로, 여기서는
- * withinLimit 플래그와 프로필의 Workplace 목록을 함께 사용한다.
+ *
+ * [P0 변별력] 기존 구현은 허용범위 내 모든 단지가 90~100점에 몰려 신호가 없었다.
+ * 허용 비율(실제분/한도)을 0~100에 넓게 선형 매핑해 60~100 범위로 퍼지도록 한다.
+ *
+ * [P0 기준 통일] 하드필터 기준을 한도×1.3 으로 통일했으므로,
+ * 점수 계산도 같은 상수(COMMUTE_HARD_FACTOR = 1.3)를 기준으로 감점한다.
+ * 1.0배 이내 = 만점 구간, 1.0~1.3배 = 선형 감점, 1.3배 초과 = 하드필터 제거 대상.
  *
  * legs 가 비어 있으면 중립 55점 — 은퇴·무직 가구는 통근 신호가 무의미하므로
- * 50점이 아닌 55점(살짝 양호)을 줘 retired 가중치 0과 함께 결과에 영향이 없도록 한다.
+ * 50점이 아닌 55점을 줘 retired 가중치 0과 함께 결과에 영향이 없도록 한다.
  */
+// 하드필터와 동일한 배수 — 이 값을 바꾸면 index.ts 의 COMMUTE_HARD_FACTOR 도 함께 바꿔야 한다.
+export const COMMUTE_HARD_FACTOR = 1.3;
+
 export function scoreCommute(
   legs: CommuteLeg[],
   profile: CoupleProfile,
@@ -20,11 +28,8 @@ export function scoreCommute(
   // retired 혹은 직장 없는 경우 — 통근 정보가 없으므로 중립
   if (legs.length === 0) return { score: 55, reason: "통근 정보 없음" };
 
-  // Workplace 는 이제 직장별 maxCommuteMinutes 를 직접 보유
-  const limitA =
-    profile.workplaceA?.maxCommuteMinutes ?? 50;
-  const limitB =
-    profile.workplaceB?.maxCommuteMinutes ?? 50;
+  const limitA = profile.workplaceA?.maxCommuteMinutes ?? 50;
+  const limitB = profile.workplaceB?.maxCommuteMinutes ?? 50;
 
   const legA = legs.find((l) => l.workplace === "A");
   const legB = legs.find((l) => l.workplace === "B");
@@ -33,60 +38,86 @@ export function scoreCommute(
   const bMin = legB?.minutes ?? null;
   const bothPresent = bMin !== null;
 
-  const aOver = aMin > limitA;
-  const bOver = bMin !== null ? bMin > limitB : false;
-  const anyOver = aOver || bOver;
-  const allOver = bothPresent ? aOver && bOver : aOver;
+  // 하드필터 기준(×1.3)을 초과했는지 여부
+  const aHardOver = aMin > limitA * COMMUTE_HARD_FACTOR;
+  const bHardOver = bMin !== null ? bMin > limitB * COMMUTE_HARD_FACTOR : false;
+
+  // [변별력] 각 leg 의 비율을 0~100 점수로 변환하는 단조 함수.
+  // ratio = 실제 통근시간 / 허용한도
+  //   0.0  → 100점 (극단적으로 가까움)
+  //   0.5  → 90점
+  //   1.0  → 75점  (한도 딱 맞음 — 만점이 아님, 여유에 따라 차등)
+  //   1.3  → 55점  (하드필터 경계)
+  //   2.0+ → 0점
+  function ratioToScore(ratio: number): number {
+    if (ratio <= 0) return 100;
+    if (ratio <= 1.0) {
+      // 0~1 구간: 75~100 선형
+      return Math.round(100 - ratio * 25);
+    }
+    if (ratio <= COMMUTE_HARD_FACTOR) {
+      // 1.0~1.3 구간: 55~75 선형 (경계값 연속)
+      const t = (ratio - 1.0) / (COMMUTE_HARD_FACTOR - 1.0); // 0→1
+      return Math.round(75 - t * 20);
+    }
+    // 1.3 초과: 하드필터 제거 대상이지만 점수는 0까지 떨어질 수 있음
+    return Math.max(0, Math.round(55 - (ratio - COMMUTE_HARD_FACTOR) * 40));
+  }
 
   let score: number;
   let reason: string;
 
-  if (!anyOver) {
-    // 둘 다 허용 범위 내 → 90–100
+  if (bothPresent) {
     const aRatio = aMin / limitA;
-    const bRatio = bMin !== null ? bMin / limitB : 0;
-    const avgRatio = bothPresent ? (aRatio + bRatio) / 2 : aRatio;
-    score = Math.round(100 - avgRatio * 10);
-    score = Math.max(90, Math.min(100, score));
+    const bRatio = bMin / limitB;
+    // 두 직장 중 나쁜 쪽에 더 가중 — 맞벌이는 두 사람 모두 중요하므로 min 기반
+    const worstRatio = Math.max(aRatio, bRatio);
+    const avgRatio = (aRatio + bRatio) / 2;
+    // worst 70% + avg 30% 혼합으로 나쁜 쪽 반영
+    const blended = worstRatio * 0.7 + avgRatio * 0.3;
+    score = ratioToScore(blended);
 
-    if (bothPresent) {
+    if (aHardOver || bHardOver) {
+      reason = `본인 ${aMin}분(한도 ${limitA}분)·배우자 ${bMin}분(한도 ${limitB}분), 한도 초과`;
+    } else if (aMin > limitA || bMin > limitB) {
+      const over = aMin > limitA ? `본인 ${aMin}분` : `배우자 ${bMin}분`;
+      reason = `${over} 허용범위 초과 — 상대방은 범위 내`;
+    } else {
       reason = `본인 ${aMin}분·배우자 ${bMin}분, 둘 다 허용 범위 내`;
+    }
+  } else {
+    const aRatio = aMin / limitA;
+    score = ratioToScore(aRatio);
+
+    if (aHardOver) {
+      reason = `통근 ${aMin}분, 허용 한도(${limitA}분)의 ${COMMUTE_HARD_FACTOR}배 초과`;
+    } else if (aMin > limitA) {
+      reason = `통근 ${aMin}분, 허용 한도 ${limitA}분 초과`;
     } else {
       reason = `통근 ${aMin}분, 허용 범위 내`;
     }
-  } else if (allOver) {
-    // 둘 다 초과 → 0–30
-    const aExcess = aMin / limitA;
-    const bExcess = bMin !== null ? bMin / limitB : aExcess;
-    const avgExcess = bothPresent ? (aExcess + bExcess) / 2 : aExcess;
-    score = Math.round(Math.max(0, 30 - (avgExcess - 1) * 30));
-    score = Math.min(30, score);
-
-    if (bothPresent) {
-      reason = `본인 ${aMin}분(한도 ${limitA}분)·배우자 ${bMin}분(한도 ${limitB}분), 둘 다 초과`;
-    } else {
-      reason = `통근 ${aMin}분, 허용 한도 ${limitA}분 초과`;
-    }
-  } else {
-    // 한 명만 초과 → 40–70
-    const exceederRatio = aOver
-      ? aMin / limitA
-      : (bMin ?? 0) / limitB;
-    score = Math.round(Math.max(40, 70 - (exceederRatio - 1) * 30));
-    score = Math.min(70, score);
-
-    if (aOver) {
-      reason = `본인 ${aMin}분(한도 ${limitA}분) 초과·배우자 ${bMin}분 허용 범위 내`;
-    } else {
-      reason = `본인 ${aMin}분 허용 범위 내·배우자 ${bMin}분(한도 ${limitB}분) 초과`;
-    }
   }
 
-  return { score, reason };
+  return { score: Math.max(0, Math.min(100, score)), reason };
 }
 
 // ── 예산 적합도 점수 ─────────────────────────────────────────────────────────
 
+/**
+ * 예산 대비 가격 여유율을 완만한 기울기로 60~95 범위에 매핑한다.
+ *
+ * [P0 변별력] 기존 구현은 예산 내 단지가 모두 85~100점에 몰렸다.
+ * 여유 0% = 70점, 10% = 80점, 30%+ = 95점으로 점수 분포를 넓힌다.
+ * 100점은 자제 — 어떤 단지도 "완벽하게 저렴"하지 않다는 전문가 패널 의견 반영.
+ *
+ * ratio = medianPrice / netPurchasePower
+ *   ratio ≤ 0.70 → 95점 (여유 30% 이상)
+ *   ratio = 0.90 → 80점 (여유 10%)
+ *   ratio = 1.00 → 70점 (딱 맞음)
+ *   ratio = 1.05 → 55점 (5% 초과)
+ *   ratio = 1.10 → 40점 (10% 초과)
+ *   ratio ≥ 1.15 → 10~20점 (범위 외)
+ */
 export function scoreBudgetFit(
   medianPriceKrw: number,
   netPurchasePowerKrw: number,
@@ -97,19 +128,40 @@ export function scoreBudgetFit(
 
   const ratio = medianPriceKrw / netPurchasePowerKrw;
 
-  if (ratio <= 1) {
+  if (ratio <= 1.0) {
+    // 여유율 = 1 - ratio (0% ~ 100%)
     const marginPct = Math.round((1 - ratio) * 100);
-    const score = Math.min(100, Math.round(70 + marginPct * 1.5));
+
+    let score: number;
+    if (ratio <= 0.70) {
+      // 여유 30% 이상 → 95점 상한
+      score = 95;
+    } else {
+      // 여유 0%~30% 구간: 70점(ratio=1.0) ~ 95점(ratio=0.70) 선형
+      // slope = (95 - 70) / (1.0 - 0.70) = 25 / 0.30 ≈ 83.3
+      score = Math.round(70 + (1.0 - ratio) * (25 / 0.30));
+      score = Math.min(95, score);
+    }
     return { score, reason: `예산 내 여유 ${marginPct}%` };
-  } else if (ratio <= 1.1) {
-    const overPct = Math.round((ratio - 1) * 100);
-    const score = Math.max(30, Math.min(60, Math.round(60 - overPct * 3)));
-    return { score, reason: `예산 대비 ${overPct}% 초과` };
-  } else {
-    const overPct = Math.round((ratio - 1) * 100);
-    const score = Math.round(Math.max(0, 20 - (overPct - 10) * 2));
-    return { score, reason: `예산 대비 ${overPct}% 초과 (범위 외)` };
   }
+
+  if (ratio <= 1.10) {
+    // 예산 0%~10% 초과: 70점(ratio=1.0) → 40점(ratio=1.10) 선형
+    const overPct = Math.round((ratio - 1) * 100);
+    const score = Math.round(70 - (ratio - 1.0) * (30 / 0.10));
+    return {
+      score: Math.max(40, Math.min(69, score)),
+      reason: `예산 대비 ${overPct}% 초과`,
+    };
+  }
+
+  // 10% 초과 ~ : 40점 이하로 급락
+  const overPct = Math.round((ratio - 1) * 100);
+  const score = Math.max(0, Math.round(40 - (ratio - 1.10) * (40 / 0.15)));
+  return {
+    score: Math.min(39, score),
+    reason: `예산 대비 ${overPct}% 초과 (범위 외)`,
+  };
 }
 
 // ── 학군·자녀 점수 ───────────────────────────────────────────────────────────

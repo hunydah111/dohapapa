@@ -1,18 +1,13 @@
-import type { BudgetEstimate } from "@/types/recommendation";
+import type { BudgetEstimate, PolicyLoanMatch } from "@/types/recommendation";
 import { Card } from "@/components/ui/Card";
-
-function formatEok(krw: number): string {
-  const val = krw / 100_000_000;
-  return `${val.toFixed(1)}억`;
-}
-
-function formatMan(krw: number): string {
-  const val = Math.round(krw / 10_000);
-  return `${val.toLocaleString("ko-KR")}만원`;
-}
+import { formatKrwHuman, formatManwon } from "@/lib/format";
 
 export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
-  const hasHomeSale = budget.homeSaleNetKrw > 0;
+  const hasHomeSale = budget.homeSaleNetKrw !== 0;
+  const homeSaleNegative = budget.homeSaleNetKrw < 0;
+
+  const eligibleLoans = budget.policyLoanMatches.filter((m) => m.eligible);
+  const ineligibleLoans = budget.policyLoanMatches.filter((m) => !m.eligible);
 
   return (
     <Card>
@@ -26,12 +21,28 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
         </p>
       </div>
 
+      {/* P0: 갈아타기 음수 경고 */}
+      {homeSaleNegative && (
+        <div className="mb-5 rounded-2xl border border-red-300 bg-red-50 px-4 py-4">
+          <p className="text-sm font-bold text-red-700 mb-1">
+            갈아타기 주의 — 순수령액이 음수입니다
+          </p>
+          <p className="text-xs text-red-600 leading-relaxed">
+            기존 집을 매도해도 대출 잔금 · 양도세가 매도가보다 커서{" "}
+            <span className="font-semibold">
+              {formatKrwHuman(Math.abs(budget.homeSaleNetKrw))}
+            </span>
+            를 추가로 부담해야 합니다. 갈아타기 전 전문가 상담을 권고합니다.
+          </p>
+        </div>
+      )}
+
       {/* 자금 흐름 */}
       <div className="flex flex-col gap-2 mb-5">
-        {/* 시드머니 */}
+        {/* 보유 현금 */}
         <FlowRow
-          label="보유 시드머니"
-          value={formatEok(budget.seedMoneyKrw)}
+          label="보유 현금"
+          value={formatKrwHuman(budget.seedMoneyKrw)}
           color="#1d1d1f"
         />
 
@@ -41,31 +52,41 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
             label="기존 집 매도 순수령액"
             hint={
               budget.capitalGainsTaxKrw > 0
-                ? `(양도세 ${formatEok(budget.capitalGainsTaxKrw)} 차감 후)`
+                ? `(양도세 ${formatKrwHuman(budget.capitalGainsTaxKrw)} 차감 후)`
                 : undefined
             }
-            value={`+ ${formatEok(budget.homeSaleNetKrw)}`}
-            color="#1d1d1f"
+            value={
+              homeSaleNegative
+                ? `− ${formatKrwHuman(Math.abs(budget.homeSaleNetKrw))}`
+                : `+ ${formatKrwHuman(budget.homeSaleNetKrw)}`
+            }
+            color={homeSaleNegative ? "#dc2626" : "#1d1d1f"}
           />
         )}
 
-        {/* 소계: 가용 자기자본 */}
+        {/* 가용 자기자본 소계 */}
         <div className="flex items-center justify-between rounded-xl bg-[#f5f5f7] px-4 py-2.5">
           <span className="text-sm font-semibold" style={{ color: "#6e6e73" }}>
             가용 자기자본
           </span>
           <span
             className="text-sm font-bold tabular-nums"
-            style={{ color: "#1d1d1f" }}
+            style={{ color: budget.totalEquityKrw < 0 ? "#dc2626" : "#1d1d1f" }}
           >
-            {formatEok(budget.totalEquityKrw)}
+            {budget.totalEquityKrw < 0
+              ? `− ${formatKrwHuman(Math.abs(budget.totalEquityKrw))}`
+              : formatKrwHuman(budget.totalEquityKrw)}
           </span>
         </div>
 
         {/* 추정 대출 */}
         <FlowRow
-          label="추정 대출 가능액"
-          value={`+ ${formatEok(budget.loanEstimateKrw)}`}
+          label={
+            budget.appliedLoanType === "policy" && budget.appliedPolicyName
+              ? `추정 대출 가능액 (${budget.appliedPolicyName} 기준)`
+              : "추정 대출 가능액 (일반 DSR·LTV 기준)"
+          }
+          value={`+ ${formatKrwHuman(budget.loanEstimateKrw)}`}
           color="#1d1d1f"
         />
 
@@ -75,7 +96,7 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
         {/* 총예산 */}
         <FlowRow
           label="총예산"
-          value={`= ${formatEok(budget.grossBudgetKrw)}`}
+          value={`= ${formatKrwHuman(budget.grossBudgetKrw)}`}
           color="#1d1d1f"
           semibold
         />
@@ -83,7 +104,7 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
         {/* 취득·부대비용 */}
         <FlowRow
           label="취득세 · 부대비용"
-          value={`− ${formatEok(budget.acquisitionCostsKrw)}`}
+          value={`− ${formatKrwHuman(budget.acquisitionCostsKrw)}`}
           color="#6e6e73"
         />
       </div>
@@ -103,33 +124,92 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
           className="text-4xl font-extrabold tabular-nums tracking-tight"
           style={{ color: "#1d1d1f" }}
         >
-          {formatEok(budget.netPurchasePowerKrw)}
+          {formatKrwHuman(budget.netPurchasePowerKrw)}
         </p>
       </div>
 
-      {/* 월 상환액 — P1#8 */}
+      {/* 월 상환액 */}
       {budget.monthlyPaymentKrw > 0 && (
         <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 px-5 py-4 mb-5 flex items-center justify-between">
           <span className="text-sm font-medium" style={{ color: "#6e6e73" }}>
-            추정 월 상환액
+            추정 월 원리금 상환액
           </span>
           <span
             className="text-lg font-bold tabular-nums"
             style={{ color: "#4338ca" }}
           >
-            약 {formatMan(budget.monthlyPaymentKrw)}
+            약 {formatManwon(budget.monthlyPaymentKrw)}
           </span>
         </div>
       )}
 
-      {/* 경고 (앰버) */}
+      {/* P0: 정책대출 매칭 섹션 */}
+      {budget.policyLoanMatches.length > 0 && (
+        <div className="mb-5">
+          <div className="flex items-baseline gap-2 mb-3">
+            <p className="text-sm font-bold" style={{ color: "#1d1d1f" }}>
+              정책대출 자격 안내
+            </p>
+            {budget.appliedLoanType === "policy" &&
+              budget.appliedPolicyName && (
+                <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
+                  이 예산은 {budget.appliedPolicyName} 기준 적용
+                </span>
+              )}
+          </div>
+
+          {/* 적격 상품 */}
+          {eligibleLoans.length > 0 && (
+            <div className="flex flex-col gap-2 mb-3">
+              {eligibleLoans.map((loan) => (
+                <PolicyLoanCard key={loan.productName} loan={loan} eligible />
+              ))}
+            </div>
+          )}
+
+          {/* 미적격 상품 */}
+          {ineligibleLoans.length > 0 && (
+            <div className="flex flex-col gap-2 mb-3">
+              <p
+                className="text-xs font-semibold"
+                style={{ color: "#86868b" }}
+              >
+                미해당 상품
+              </p>
+              {ineligibleLoans.map((loan) => (
+                <PolicyLoanCard
+                  key={loan.productName}
+                  loan={loan}
+                  eligible={false}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* 컴플라이언스 안내 */}
+          <p
+            className="text-[11px] leading-relaxed"
+            style={{ color: "#86868b" }}
+          >
+            자격 여부 및 최종 한도는 주택도시기금 · 한국주택금융공사에서 확인하시기
+            바랍니다. 특정 금융기관 상품과 직접 연결되지 않습니다.
+          </p>
+        </div>
+      )}
+
+      {/* 경고 (P0: 음수 외 추가 경고) */}
       {budget.warnings.length > 0 && (
         <div className="rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3 mb-4">
-          <p className="text-xs font-semibold text-amber-700 mb-1.5">유의사항</p>
+          <p className="text-xs font-semibold text-amber-700 mb-1.5">
+            유의사항
+          </p>
           <ul className="flex flex-col gap-1">
             {budget.warnings.map((w, i) => (
-              <li key={i} className="flex gap-1.5 text-xs text-amber-800 leading-relaxed">
-                <span className="mt-0.5 flex-shrink-0 text-amber-400">&#9679;</span>
+              <li
+                key={i}
+                className="flex gap-1.5 text-xs text-amber-800 leading-relaxed"
+              >
+                <span className="mt-0.5 flex-shrink-0 text-amber-500">&#9679;</span>
                 {w}
               </li>
             ))}
@@ -137,16 +217,28 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
         </div>
       )}
 
-      {/* 계산 가정 — 흐린 불릿 목록 */}
+      {/* 계산 가정 */}
       {budget.assumptions.length > 0 && (
         <div>
-          <p className="text-xs font-semibold mb-1.5" style={{ color: "#86868b" }}>
+          <p
+            className="text-xs font-semibold mb-1.5"
+            style={{ color: "#86868b" }}
+          >
             계산 가정
           </p>
           <ul className="flex flex-col gap-1">
             {budget.assumptions.map((a, i) => (
-              <li key={i} className="flex gap-1.5 text-xs leading-relaxed" style={{ color: "#86868b" }}>
-                <span className="mt-0.5 flex-shrink-0" style={{ color: "#c7c7cc" }}>&#9679;</span>
+              <li
+                key={i}
+                className="flex gap-1.5 text-xs leading-relaxed"
+                style={{ color: "#86868b" }}
+              >
+                <span
+                  className="mt-0.5 flex-shrink-0"
+                  style={{ color: "#c7c7cc" }}
+                >
+                  &#9679;
+                </span>
                 {a}
               </li>
             ))}
@@ -186,6 +278,78 @@ function FlowRow({
       >
         {value}
       </span>
+    </div>
+  );
+}
+
+function PolicyLoanCard({
+  loan,
+  eligible,
+}: {
+  loan: PolicyLoanMatch;
+  eligible: boolean;
+}) {
+  if (eligible) {
+    return (
+      <div className="rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold" style={{ color: "#3730a3" }}>
+              {loan.productName}
+            </p>
+            <p
+              className="mt-0.5 text-xs leading-relaxed"
+              style={{ color: "#4338ca" }}
+            >
+              {loan.reason}
+            </p>
+          </div>
+          <span className="flex-shrink-0 rounded-full bg-indigo-600 px-2.5 py-0.5 text-[11px] font-bold text-white">
+            적격
+          </span>
+        </div>
+        {(loan.loanLimitKrw !== undefined ||
+          loan.rateMin !== undefined) && (
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+            {loan.loanLimitKrw !== undefined && (
+              <span className="text-xs font-semibold tabular-nums" style={{ color: "#1d1d1f" }}>
+                한도 {formatKrwHuman(loan.loanLimitKrw)}
+              </span>
+            )}
+            {loan.rateMin !== undefined && loan.rateMax !== undefined && (
+              <span className="text-xs font-semibold tabular-nums" style={{ color: "#1d1d1f" }}>
+                금리 연 {loan.rateMin}%~{loan.rateMax}%
+              </span>
+            )}
+            {loan.rateMin !== undefined && loan.rateMax === undefined && (
+              <span className="text-xs font-semibold tabular-nums" style={{ color: "#1d1d1f" }}>
+                금리 연 {loan.rateMin}%~
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-black/[0.06] bg-[#f5f5f7] px-4 py-3">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium" style={{ color: "#86868b" }}>
+            {loan.productName}
+          </p>
+          <p
+            className="mt-0.5 text-xs leading-relaxed"
+            style={{ color: "#86868b" }}
+          >
+            {loan.reason}
+          </p>
+        </div>
+        <span className="flex-shrink-0 rounded-full border border-black/[0.08] bg-white px-2.5 py-0.5 text-[11px] font-medium" style={{ color: "#86868b" }}>
+          미해당
+        </span>
+      </div>
     </div>
   );
 }

@@ -22,33 +22,92 @@ const existingHomeSchema = z.object({
 });
 
 // ── 가구 프로필 스키마 ────────────────────────────────────────────────────────
-const coupleProfileSchema = z.object({
-  // P0#1: householdType 으로 1인·은퇴 분기 처리
-  householdType: z.enum(["single", "dualIncome", "singleIncome", "retired"]),
-  priorities: z.object({
-    commute: z.number().min(0).max(5),
-    school: z.number().min(0).max(5),
-    buildingAge: z.number().min(0).max(5),
-  }),
-  preferredAreaRange: z.enum([
-    "under18",
-    "p19_25",
-    "p26_31",
-    "p32_35",
-    "p36_40",
-    "p41_45",
-    "over45",
-  ]),
-  // 1인 가구: workplaceA 만, retired: 둘 다 없을 수 있음
-  workplaceA: workplaceSchema.optional(),
-  workplaceB: workplaceSchema.optional(),
-  childrenAges: z.array(z.number().int().min(0).max(25)),
-  householdIncomeKrwYear: z.number().nonnegative(),
-  seedMoneyKrw: z.number().nonnegative(),
-  existingLoanMonthlyKrw: z.number().nonnegative(),
-  hasOwnedHomeBefore: z.boolean(),
-  existingHome: existingHomeSchema.optional(),
-});
+const coupleProfileSchema = z
+  .object({
+    // P0#1: householdType 으로 1인·은퇴 분기 처리
+    householdType: z.enum(["single", "dualIncome", "singleIncome", "retired"]),
+    priorities: z.object({
+      commute: z.number().min(0).max(5),
+      school: z.number().min(0).max(5),
+      buildingAge: z.number().min(0).max(5),
+    }),
+    preferredAreaRange: z.enum([
+      "under18",
+      "p19_25",
+      "p26_31",
+      "p32_35",
+      "p36_40",
+      "p41_45",
+      "over45",
+    ]),
+    // 1인 가구: workplaceA 만, retired: 둘 다 없을 수 있음
+    workplaceA: workplaceSchema.optional(),
+    workplaceB: workplaceSchema.optional(),
+    // 자녀 수 상한 10명 — 비현실적 입력 방지
+    childrenAges: z.array(z.number().int().min(0).max(25)).max(10),
+    householdIncomeKrwYear: z.number().nonnegative(),
+    seedMoneyKrw: z.number().nonnegative(),
+    /** 순자산 총액 (원). 정책대출 자산요건 판정용. */
+    netAssetsKrw: z.number().nonnegative(),
+    existingLoanMonthlyKrw: z.number().nonnegative(),
+    hasOwnedHomeBefore: z.boolean(),
+    /** 혼인 7년 이내 신혼 여부. 정책대출 신혼 요건 판정용. */
+    isNewlywed: z.boolean(),
+    existingHome: existingHomeSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    const { householdType, workplaceA, workplaceB } = data;
+
+    if (householdType === "dualIncome") {
+      // 맞벌이: workplaceA·B 둘 다 필수
+      if (!workplaceA) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["workplaceA"],
+          message: "맞벌이(dualIncome) 가구는 workplaceA 가 필수입니다.",
+        });
+      }
+      if (!workplaceB) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["workplaceB"],
+          message: "맞벌이(dualIncome) 가구는 workplaceB 가 필수입니다.",
+        });
+      }
+    } else if (householdType === "single" || householdType === "singleIncome") {
+      // 1인·외벌이: workplaceA 필수, workplaceB 금지
+      if (!workplaceA) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["workplaceA"],
+          message: `${householdType === "single" ? "1인(single)" : "외벌이(singleIncome)"} 가구는 workplaceA 가 필수입니다.`,
+        });
+      }
+      if (workplaceB !== undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["workplaceB"],
+          message: `${householdType === "single" ? "1인(single)" : "외벌이(singleIncome)"} 가구는 workplaceB 를 입력할 수 없습니다.`,
+        });
+      }
+    } else if (householdType === "retired") {
+      // 은퇴: 직장 정보 둘 다 금지
+      if (workplaceA !== undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["workplaceA"],
+          message: "은퇴(retired) 가구는 workplaceA 를 입력할 수 없습니다.",
+        });
+      }
+      if (workplaceB !== undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["workplaceB"],
+          message: "은퇴(retired) 가구는 workplaceB 를 입력할 수 없습니다.",
+        });
+      }
+    }
+  });
 
 export async function POST(req: Request): Promise<Response> {
   try {

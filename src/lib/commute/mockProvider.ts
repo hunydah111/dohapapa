@@ -1,22 +1,7 @@
 import type { LatLng } from "@/types/profile";
 import type { CommuteMode } from "@/types/recommendation";
+import { haversineKm } from "@/lib/geo";
 import type { CommuteProvider } from "./types";
-
-/** Haversine formula — returns great-circle distance in km. */
-function haversineKm(a: LatLng, b: LatLng): number {
-  const R = 6371;
-  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
-  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
-  const sinDLat = Math.sin(dLat / 2);
-  const sinDLng = Math.sin(dLng / 2);
-  const h =
-    sinDLat * sinDLat +
-    Math.cos((a.lat * Math.PI) / 180) *
-      Math.cos((b.lat * Math.PI) / 180) *
-      sinDLng *
-      sinDLng;
-  return R * 2 * Math.asin(Math.sqrt(h));
-}
 
 export const mockProvider: CommuteProvider = {
   name: "mock",

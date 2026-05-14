@@ -42,9 +42,6 @@ export const LAWD_CODES: Record<string, string> = {
   연천군: "41800", 가평군: "41820", 양평군: "41830",
 };
 
-/** @deprecated LAWD_CODES 로 통합됨. 하위호환용 별칭. */
-export const SEOUL_GU_CODES = LAWD_CODES;
-
 // Reverse map: code → 시군구 name. Built once at module load.
 const CODE_TO_GU: Record<string, string> = Object.fromEntries(
   Object.entries(LAWD_CODES).map(([name, code]) => [code, name]),

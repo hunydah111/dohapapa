@@ -126,13 +126,20 @@ export async function getAreaMediansForMany(
 /**
  * 거래 표본이 가장 두꺼운 평형(대표 평형)을 반환한다.
  * [minArea, maxArea) 전용면적 구간 안의 평형만 후보로 본다.
+ *
+ * [P1 최소 거래건수] minCount 미만인 평형은 가격 신뢰도가 낮으므로 후보에서 제외한다.
+ * 기본값 3건 — 1~2건 표본으로는 이상값 한 건이 대표가 될 수 있음.
  * 조건을 만족하는 평형이 없으면 null (해당 단지는 추천에서 제외).
  */
 export function pickRepresentative(
   medians: AreaMedian[],
   minArea: number = 0,
   maxArea: number = Number.POSITIVE_INFINITY,
+  minCount: number = 3,
 ): AreaMedian | null {
-  const eligible = medians.filter((m) => m.area >= minArea && m.area < maxArea);
+  const eligible = medians.filter(
+    (m) => m.area >= minArea && m.area < maxArea && m.count >= minCount,
+  );
+  // getAreaMediansForMany 가 count 내림차순으로 정렬해 반환하므로 [0] = 최다 거래 평형
   return eligible.length > 0 ? eligible[0] : null;
 }

@@ -15,7 +15,9 @@ export function CommuteDiagram({
 }) {
   if (legs.length === 0) {
     return (
-      <p className="text-xs text-[#86868b]">통근 조건 없음</p>
+      <p className="text-xs" style={{ color: "#86868b" }}>
+        통근 조건 없음
+      </p>
     );
   }
 
@@ -26,7 +28,12 @@ export function CommuteDiagram({
   return (
     <div className="flex flex-col gap-4 rounded-2xl bg-[#f5f5f7] px-4 py-4">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold tracking-wide text-[#6e6e73] uppercase">통근 추정</p>
+        <p
+          className="text-xs font-semibold tracking-wide uppercase"
+          style={{ color: "#6e6e73" }}
+        >
+          통근 추정
+        </p>
         {kakaoMapUrl && (
           <a
             href={kakaoMapUrl}
@@ -46,15 +53,22 @@ export function CommuteDiagram({
           const bgColor = ok ? "bg-emerald-50" : "bg-amber-50";
           const dotEnd = ok ? "bg-emerald-500" : "bg-amber-500";
           const lineColor = ok ? "bg-emerald-300" : "bg-amber-300";
-          const fallbackLabel = leg.workplace === "A" ? "본인 직장" : "배우자 직장";
+          const fallbackLabel =
+            leg.workplace === "A" ? "본인 직장" : "배우자 직장";
           const modeLabel = leg.mode === "transit" ? "대중교통" : "자차";
 
           return (
-            <div key={leg.workplace} className={`rounded-xl ${bgColor} px-3 py-3 flex flex-col gap-2`}>
+            <div
+              key={leg.workplace}
+              className={`rounded-xl ${bgColor} px-3 py-3 flex flex-col gap-2`}
+            >
               {/* 도식: 직장 ●──거리──● 단지 */}
               <div className="flex items-center gap-2">
                 {/* 직장 노드 */}
-                <div className="flex flex-col items-center gap-1" style={{ width: 60 }}>
+                <div
+                  className="flex flex-col items-center gap-1"
+                  style={{ width: 60 }}
+                >
                   <span className="h-2.5 w-2.5 rounded-full bg-[#6e6e73] flex-shrink-0" />
                   <span
                     className="text-center text-[10px] font-medium leading-tight line-clamp-2"
@@ -66,15 +80,25 @@ export function CommuteDiagram({
 
                 {/* 연결선 + 거리 */}
                 <div className="flex flex-1 flex-col items-center gap-1">
-                  <span className={`h-0.5 w-full rounded-full ${lineColor}`} />
-                  <span className="text-[10px]" style={{ color: "#86868b" }}>
+                  <span
+                    className={`h-0.5 w-full rounded-full ${lineColor}`}
+                  />
+                  <span
+                    className="text-[10px]"
+                    style={{ color: "#86868b" }}
+                  >
                     직선 {leg.distanceKm.toFixed(1)}km
                   </span>
                 </div>
 
                 {/* 단지 노드 */}
-                <div className="flex flex-col items-center gap-1" style={{ width: 40 }}>
-                  <span className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${dotEnd}`} />
+                <div
+                  className="flex flex-col items-center gap-1"
+                  style={{ width: 40 }}
+                >
+                  <span
+                    className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${dotEnd}`}
+                  />
                   <span
                     className="text-center text-[10px] font-medium"
                     style={{ color: "#6e6e73" }}
@@ -101,8 +125,12 @@ export function CommuteDiagram({
         })}
       </div>
 
-      <p className="text-[11px] leading-relaxed" style={{ color: "#86868b" }}>
-        직선거리 · 평균 속도 기반 추정값입니다. 실제 경로 · 소요 시간은 다를 수 있습니다.
+      <p
+        className="text-[11px] leading-relaxed"
+        style={{ color: "#86868b" }}
+      >
+        직선거리 · 평균 속도 기반 추정값입니다. 실제 경로 · 소요 시간은 다를 수
+        있습니다.
       </p>
     </div>
   );

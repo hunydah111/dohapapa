@@ -27,8 +27,10 @@ function makeProfile(overrides: Partial<CoupleProfile> = {}): CoupleProfile {
     childrenAges: [],
     householdIncomeKrwYear: 80_000_000,
     seedMoneyKrw: 200_000_000,
+    netAssetsKrw: 200_000_000,
     existingLoanMonthlyKrw: 0,
     hasOwnedHomeBefore: false,
+    isNewlywed: false,
     ...overrides,
   };
 }
@@ -151,7 +153,8 @@ describe("scoreCommute", () => {
   });
 
   it("car mode workplace — reads maxCommuteMinutes from workplaceA", () => {
-    // 자차 통근 직장, 허용 40분인데 35분 → 범위 내
+    // 자차 통근 직장, 허용 40분인데 35분 → 허용 범위 내 (ratio 0.875)
+    // 새 점수 분포: ratio 0→100, 1.0→75. 0.875 → 약 78점. 허용 범위 내는 75점 이상.
     const legs: CommuteLeg[] = [leg("A", 35, true)];
     const profile = makeProfile({
       workplaceA: {
@@ -163,7 +166,7 @@ describe("scoreCommute", () => {
       },
     });
     const { score } = scoreCommute(legs, profile);
-    expect(score).toBeGreaterThanOrEqual(80);
+    expect(score).toBeGreaterThanOrEqual(75);
   });
 });
 

@@ -129,14 +129,18 @@ export interface CoupleProfile {
   workplaceB?: Workplace;
   /** 자녀 나이 목록. 빈 배열 = 무자녀. */
   childrenAges: number[];
-  /** 연 가구소득 (원). */
+  /** 연 가구소득 (원). 부부면 합산. */
   householdIncomeKrwYear: number;
-  /** 보유 현금 시드머니 (원). */
+  /** 보유 현금 (원). */
   seedMoneyKrw: number;
-  /** 기존 대출 월 상환액 (원). DSR 계산에 반영. */
+  /** 순자산 총액 (원). 금융자산+부동산−부채 개략값 — 정책대출 자산요건 판정용. */
+  netAssetsKrw: number;
+  /** 기존 대출 월 상환액 합계 (원). 주담대·신용대출·할부 등 전부. DSR 계산에 반영. */
   existingLoanMonthlyKrw: number;
-  /** 세대 내 주택 보유 이력 — 생애최초 취득세 감면 판정용. */
+  /** 세대 내 주택 보유 이력 — 생애최초 취득세 감면·정책대출 판정용. */
   hasOwnedHomeBefore: boolean;
+  /** 혼인 7년 이내 신혼 여부 — 정책대출 신혼 요건 판정용. 1인·은퇴는 false. */
+  isNewlywed: boolean;
   /** 갈아타기 — 기존 집을 팔아 자금을 마련하는 경우. 없으면 undefined. */
   existingHome?: ExistingHome;
 }

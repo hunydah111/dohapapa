@@ -1,6 +1,7 @@
 import { estimateBudget } from "@/lib/budget";
 import { getCommuteMinutes } from "@/lib/commute";
 import { db } from "@/lib/db";
+import { haversineKm } from "@/lib/geo";
 import { AREA_RANGES, AREA_RANGE_ORDER } from "@/types/profile";
 import type {
   AreaRangeKey,
@@ -22,6 +23,7 @@ import type {
 import { getAreaMediansForMany, pickRepresentative } from "./complexMedian";
 import type { AreaMedian } from "./complexMedian";
 import {
+  COMMUTE_HARD_FACTOR,
   scoreBudgetFit,
   scoreBuildingAge,
   scoreCommute,
@@ -69,25 +71,12 @@ function buildWeights(
   return normalized;
 }
 
-// ── 직선거리 (haversine, km) ─────────────────────────────────────────────────
-
-function haversineKm(a: LatLng, b: LatLng): number {
-  const R = 6371;
-  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
-  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
-  const lat1 = (a.lat * Math.PI) / 180;
-  const lat2 = (b.lat * Math.PI) / 180;
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(h));
-}
-
 // ── 지리 사전필터 cutoffKm ───────────────────────────────────────────────────
 
 /**
  * 통근 수단과 허용 시간으로 직선거리 cutoff(km)를 역산한다.
  * 50% 마진을 얹어 API/mock 추정 오차와 우회 경로를 커버한다.
+ * (이 마진은 사전필터 여유분이며 하드필터 배수 COMMUTE_HARD_FACTOR 와 무관하다.)
  */
 function calcCutoffKm(wp: Workplace): number {
   const limit = wp.maxCommuteMinutes;
@@ -118,27 +107,7 @@ function priceInBudgetBand(
   return priceKrw >= lower && priceKrw <= upper;
 }
 
-// ── 한 줄 요약 / 리포트 ──────────────────────────────────────────────────────
-
-/** 가중치 상위 2개 신호의 reason 을 이어 붙인다. */
-function buildOneLineReason(
-  reasoning: Record<CandidateSignalKey, string>,
-  weights: Record<CandidateSignalKey, number>,
-  hasCommuteLegs: boolean,
-): string {
-  const keys = (Object.keys(weights) as CandidateSignalKey[]).sort(
-    (a, b) => weights[b] - weights[a],
-  );
-  // 통근 정보 없으면 통근 신호를 제외하고 상위 2개 선택
-  const filtered = hasCommuteLegs
-    ? keys
-    : keys.filter((k) => k !== "commute");
-  return filtered
-    .slice(0, 2)
-    .map((k) => reasoning[k])
-    .filter((r) => r.length > 0)
-    .join(" · ");
-}
+// ── 리포트 ────────────────────────────────────────────────────────────────────
 
 /** 왜 이 단지가 뽑혔는지 2~3문장 간략 리포트. */
 function buildReport(
@@ -201,6 +170,7 @@ interface ScoredComplex {
 /**
  * 평가된 단지 목록을 받아 변경된 구매력·통근 한도로 하드필터 통과 건수를 반환한다.
  * 이미 평가된 결과(medianKrw, commuteLegs)를 재사용하므로 추가 DB/API 호출 없음.
+ * 통근 하드필터 배수는 scoring.ts 와 동일한 COMMUTE_HARD_FACTOR 를 사용한다.
  */
 function countPassingHardFilter(
   evaluated: ScoredComplex[],
@@ -220,7 +190,8 @@ function countPassingHardFilter(
           : w === workplaces[1],
       );
       const limit = (wp?.maxCommuteMinutes ?? 50) + commuteExtraMinutes;
-      return leg.minutes > limit * 1.5;
+      // scoring.ts 와 동일한 COMMUTE_HARD_FACTOR 로 통일 (구버전 ×1.5 → ×1.3)
+      return leg.minutes > limit * COMMUTE_HARD_FACTOR;
     });
     return !commuteTooLong;
   }).length;
@@ -285,6 +256,7 @@ export async function recommendComplexes(
       const totalTransactions = medians.reduce((s, m) => s + m.count, 0);
       if (totalTransactions < MIN_TRANSACTIONS) return null;
 
+      // pickRepresentative 의 minCount 기본값(3) 그대로 사용
       const rep = pickRepresentative(medians, minArea, maxArea);
       if (rep === null) return null;
 
@@ -309,7 +281,7 @@ export async function recommendComplexes(
       });
       const commuteLegs = await Promise.all(legPromises);
 
-      // 하드 필터 — 가격은 예산 밴드 안, 통근은 허용시간 안
+      // 하드 필터 — 가격은 예산 밴드 안, 통근은 허용시간의 COMMUTE_HARD_FACTOR 배 안
       const priceOutOfBand = !priceInBudgetBand(
         rep.medianKrw,
         netPurchasePowerKrw,
@@ -319,7 +291,8 @@ export async function recommendComplexes(
         const wp = workplaces.find((_, i) =>
           leg.workplace === "A" ? i === 0 : i === 1,
         );
-        return leg.minutes > (wp?.maxCommuteMinutes ?? 50) * 1.5;
+        // scoring.ts 와 동일한 COMMUTE_HARD_FACTOR 로 통일 (구버전 ×1.5 → ×1.3)
+        return leg.minutes > (wp?.maxCommuteMinutes ?? 50) * COMMUTE_HARD_FACTOR;
       });
       const passedHardFilter = !priceOutOfBand && !commuteTooLong;
 
@@ -355,7 +328,6 @@ export async function recommendComplexes(
         ),
       );
 
-      const hasCommuteLegs = commuteLegs.length > 0;
       // 초품아 — 초등학교가 단지에서 직선 150m 이내 (전문가 패널: 100m 는 너무 좁음)
       const isChopumah =
         complex.nearestElemSchoolM !== null &&
@@ -381,7 +353,6 @@ export async function recommendComplexes(
         isChopumah,
         scores,
         tier: "균형형", // 후처리에서 재할당
-        oneLineReason: buildOneLineReason(reasoning, weights, hasCommuteLegs),
         report: buildReport(base, weights),
       };
 
@@ -469,6 +440,7 @@ export async function recommendComplexes(
   }
 
   // ── 3티어 선정 ───────────────────────────────────────────────────────────
+  // [전문가 패널] 세 티어가 실제로 달라야 한다 — 차별화 조건을 각 티어에 부여한다.
 
   const top8 = survivors.slice(0, 8);
   const chosen: { entry: ScoredComplex; tier: CandidateTier }[] = [];
@@ -477,23 +449,30 @@ export async function recommendComplexes(
   const balanced = survivors[0] ?? null;
   if (balanced) chosen.push({ entry: balanced, tier: "균형형" });
 
-  // 안정형: 예산 여유 크고 통근 OK (retired 는 commuteLegs 가 비므로 every 가 항상 true)
+  // 안정형: top8 중 모든 통근이 허용범위 내(withinLimit) + 건물연식 점수 ≥ 60(2005년 이후)
+  // — retired 는 commuteLegs 가 비므로 every 가 항상 true, 연식 조건만 적용됨
   const stableCandidate =
     top8
       .filter((e) => e !== balanced)
       .filter((e) => e.candidate.commuteLegs.every((l) => l.withinLimit))
+      // buildingAge 점수 60 = scoring.ts 기준 2005년 이후 준공(준신축 이상)
+      .filter((e) => e.candidate.scores.buildingAge >= 60)
       .sort(
         (a, b) =>
           a.medianKrw / netPurchasePowerKrw - b.medianKrw / netPurchasePowerKrw,
       )[0] ?? null;
   if (stableCandidate) chosen.push({ entry: stableCandidate, tier: "안정형" });
 
-  // 도전형: 예산 밴드 내에서 가장 비싼
+  // 도전형: top8 중 예산 밴드 내에서 가장 비싸되, 균형형과 가격 차이가 2천만원 이상이어야 함
+  // — 균형형·안정형과 달라야 하며, 같은 단지가 중복 선정되는 것을 방지
   const chosenEntries = new Set(chosen.map((c) => c.entry));
+  const balancedPrice = balanced?.medianKrw ?? 0;
   const challengeCandidate =
     top8
       .filter((e) => !chosenEntries.has(e))
       .filter((e) => priceInBudgetBand(e.medianKrw, netPurchasePowerKrw))
+      // 균형형보다 2천만원 이상 비싸야 "도전형"이라는 이름값을 한다
+      .filter((e) => e.medianKrw - balancedPrice >= 20_000_000)
       .sort((a, b) => b.medianKrw - a.medianKrw)[0] ?? null;
   if (challengeCandidate)
     chosen.push({ entry: challengeCandidate, tier: "도전형" });

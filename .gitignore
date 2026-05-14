@@ -48,3 +48,7 @@ prisma/dev.db*
 
 # claude code local settings
 .claude/settings.local.json
+
+# 초기 기획 잡문서 — 정식 아키텍처 문서(docs/architecture.md 등)와 달리
+# 버전 관리 대상이 아닌 일회성 브리핑 초안.
+docs/ppt-style-brief.md

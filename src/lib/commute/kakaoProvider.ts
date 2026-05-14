@@ -50,8 +50,13 @@ export const kakaoProvider: CommuteProvider = {
       return carMinutes;
     }
 
-    // Kakao does not provide a public transit directions API equivalent to the car directions API.
-    // Using car time × 1.3 as a documented approximation until a proper transit API is integrated.
+    // ※ 주의: 아래는 실제 대중교통 API 호출이 아닌 근사값입니다.
+    // Kakao Mobility 는 자차 길찾기(Directions) API 만 제공하며,
+    // 대중교통 소요 시간 API 는 별도 계약이 필요해 현재 미연동 상태입니다.
+    // 대중교통 시간을 "자차 소요 시간 × 1.3" 으로 추정하는 것은 단순 근사일 뿐이며,
+    // 실제 환승 대기·배차 간격·도보 구간을 반영하지 않습니다.
+    // KAKAO_MOBILITY_KEY 미설정 시에는 mockProvider 가 대신 쓰이므로 운영 환경에서
+    // 대중교통 값이 노출될 경우 이 추정 방식을 사용자에게 반드시 고지해야 합니다.
     return Math.round(carMinutes * 1.3);
   },
 };

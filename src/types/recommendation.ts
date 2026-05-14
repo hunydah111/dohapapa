@@ -9,31 +9,56 @@ import type { CommuteMode } from "./profile";
 
 export type { CommuteMode };
 
+// ── 정책대출 ─────────────────────────────────────────────────
+/**
+ * 정책대출(디딤돌·신생아 특례·보금자리론 등) 자격 판정 결과.
+ * 컴플라이언스: "자격 가능성 안내"까지만 — 특정 은행 상품 연결 금지.
+ */
+export interface PolicyLoanMatch {
+  /** 상품명 — "신생아 특례 디딤돌", "디딤돌(신혼)", "보금자리론" 등. */
+  productName: string;
+  /** 자격 충족 여부. */
+  eligible: boolean;
+  /** 자격 사유 또는 미해당 사유 (한국어). */
+  reason: string;
+  /** 해당 시 최대 대출 한도 (원). */
+  loanLimitKrw?: number;
+  /** 해당 시 금리 범위 (연 %). */
+  rateMin?: number;
+  rateMax?: number;
+}
+
 // ── 예산 추정 ───────────────────────────────────────────────
 // 모든 원(KRW) 값은 number. (최대 ~100억 = 1e10, JS 안전정수 9e15 내.)
 export interface BudgetEstimate {
   seedMoneyKrw: number;
-  /** 갈아타기: 기존 집 매도 순수령액 (매도가 − 대출잔금 − 양도세추정). 없으면 0. */
+  /** 갈아타기: 기존 집 매도 순수령액 (매도가 − 대출잔금 − 양도세추정). 음수면 음수 그대로. */
   homeSaleNetKrw: number;
   /** 갈아타기: 양도세 추정 (원). 없으면 0. */
   capitalGainsTaxKrw: number;
   /** 가용 자기자본 = seedMoneyKrw + homeSaleNetKrw. */
   totalEquityKrw: number;
-  /** DSR·LTV 공개공식 기반 추정 대출 가능액. */
+  /** 추정 대출 가능액 — 정책대출 적격이면 그 한도, 아니면 일반 DSR·LTV 기준. */
   loanEstimateKrw: number;
+  /** loanEstimateKrw 산정에 적용한 대출 종류. */
+  appliedLoanType: "policy" | "general";
+  /** 정책대출이 적용됐다면 그 상품명. */
+  appliedPolicyName?: string;
+  /** 정책대출 자격 판정 결과 (적격·미적격 모두 포함, 안내용). */
+  policyLoanMatches: PolicyLoanMatch[];
   /** 추정 월 원리금 상환액 (원). */
   monthlyPaymentKrw: number;
   /** totalEquity + loan. */
   grossBudgetKrw: number;
-  /** 취득세 + 중개수수료 + 부대비용. */
+  /** 취득세 + 중개수수료 + 부대비용 (acquisitionCost 모듈로 정밀 산출). */
   acquisitionCostsKrw: number;
   /** 실제 매매가 상한 = grossBudget − acquisitionCosts. */
   netPurchasePowerKrw: number;
   /** 항상 true — 이 값이 추정임을 타입 레벨에서 강제. */
   isEstimate: true;
-  /** 사용자에게 보일 계산 가정 (예: "스트레스 DSR +3%p 반영"). */
+  /** 사용자에게 보일 계산 가정. */
   assumptions: string[];
-  /** 사용자에게 보일 경고. */
+  /** 사용자에게 보일 경고 (음수 순수령액·DSR 초과 등 포함). */
   warnings: string[];
 }
 
@@ -103,8 +128,6 @@ export interface ComplexCandidate {
   /** 0~100. */
   totalScore: number;
   tier: CandidateTier;
-  /** 카드에 표시할 한 줄 요약. */
-  oneLineReason: string;
   /** 왜 이 단지가 뽑혔는지 2~3문장 간략 리포트. */
   report: string;
 }

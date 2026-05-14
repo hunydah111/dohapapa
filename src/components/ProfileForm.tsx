@@ -25,10 +25,12 @@ import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { Segmented } from "@/components/ui/Segmented";
 import { StepDots } from "@/components/ui/StepDots";
+import { formatKrwHuman } from "@/lib/format";
 
 // ── 내부 타입 ──────────────────────────────────────────────────
 
-type Step = 1 | 2 | 3 | 4;
+/** 실제 폼 단계 — retired 는 step 2(직장)를 건너뜀 */
+type Step = 1 | 2 | 3 | 4 | 5;
 
 interface GeoResult {
   label: string;
@@ -48,7 +50,78 @@ function makeEmptyWorkplace(): WorkplaceFormState {
   return { selected: null, query: "", results: [], loading: false };
 }
 
-// ── 서브컴포넌트: 직장 입력 ────────────────────────────────────
+// ── 토글 스위치 공통 ───────────────────────────────────────────
+
+interface ToggleSwitchProps {
+  checked: boolean;
+  onChange: () => void;
+  label: string;
+  description?: string;
+  size?: "sm" | "md";
+}
+
+function ToggleSwitch({
+  checked,
+  onChange,
+  label,
+  description,
+  size = "md",
+}: ToggleSwitchProps) {
+  const trackCls =
+    size === "sm"
+      ? "h-6 w-11"
+      : "h-7 w-12";
+  const thumbCls =
+    size === "sm"
+      ? "h-5 w-5"
+      : "h-6 w-6";
+  const translateOn = size === "sm" ? "translate-x-5" : "translate-x-5";
+
+  return (
+    <button
+      type="button"
+      onClick={onChange}
+      className="flex items-center justify-between w-full text-left"
+    >
+      <div>
+        <p className="text-[15px] font-semibold text-[#1d1d1f] leading-snug">
+          {label}
+        </p>
+        {description && (
+          <p className="text-[13px] text-[#86868b] mt-0.5">{description}</p>
+        )}
+      </div>
+      <span
+        role="switch"
+        aria-pressed={checked}
+        className={[
+          "relative inline-flex flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ml-4",
+          trackCls,
+          checked ? "bg-indigo-600" : "bg-[#d1d1d6]",
+        ].join(" ")}
+      >
+        <span
+          className={[
+            "pointer-events-none inline-block transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out",
+            thumbCls,
+            checked ? translateOn : "translate-x-0",
+          ].join(" ")}
+        />
+      </span>
+    </button>
+  );
+}
+
+// ── 금액 hint ─────────────────────────────────────────────────
+
+/** 만원 단위 입력값을 억 환산 hint 문자열로 변환 */
+function manwonHint(manwonStr: string): string | undefined {
+  const n = parseFloat(manwonStr);
+  if (!manwonStr || isNaN(n) || n === 0) return undefined;
+  return `= ${formatKrwHuman(n * 10_000)}`;
+}
+
+// ── 직장 입력 서브컴포넌트 ─────────────────────────────────────
 
 interface WorkplaceInputProps {
   label: string;
@@ -75,17 +148,17 @@ function WorkplaceInput({
   commuteModeValue,
   autoFocus,
 }: WorkplaceInputProps) {
-  const dropdownRef = useRef<HTMLUListElement>(null);
+  const hasSelected = !!state.selected;
 
   return (
     <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 flex flex-col gap-4 shadow-sm">
       <p className="text-[15px] font-semibold text-[#1d1d1f]">{label}</p>
 
       {/* 직장 검색 / 선택 */}
-      {state.selected ? (
+      {hasSelected ? (
         <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-indigo-50 border border-indigo-200">
           <span className="flex-1 text-[15px] text-[#1d1d1f] font-medium">
-            {state.selected.label}
+            {state.selected!.label}
           </span>
           <button
             type="button"
@@ -124,10 +197,7 @@ function WorkplaceInput({
             )}
 
           {state.results.length > 0 && (
-            <ul
-              ref={dropdownRef}
-              className="absolute z-20 left-0 right-0 mt-1 bg-white border border-[#e5e5ea] rounded-2xl shadow-xl overflow-hidden"
-            >
+            <ul className="absolute z-20 left-0 right-0 mt-1 bg-white border border-[#e5e5ea] rounded-2xl shadow-xl overflow-hidden">
               {state.results.map((r, i) => (
                 <li key={i}>
                   <button
@@ -147,32 +217,36 @@ function WorkplaceInput({
         </div>
       )}
 
-      {/* 통근 설정 — 직장 선택 후만 표시 */}
-      {state.selected && (
-        <div className="flex flex-col gap-3">
-          <div>
-            <p className="text-[13px] text-[#6e6e73] mb-2">통근 수단</p>
-            <Segmented
-              options={[
-                { value: "transit", label: "대중교통" },
-                { value: "car", label: "자차" },
-              ]}
-              value={commuteModeValue}
-              onChange={(v) => onCommuteModeChange(v as "transit" | "car")}
-            />
-          </div>
-          <div>
-            <p className="text-[13px] text-[#6e6e73] mb-2">통근 허용시간</p>
-            <TextField
-              value={maxCommuteValue}
-              onChange={onMaxCommuteChange}
-              type="number"
-              placeholder="50"
-              suffix="분"
-            />
-          </div>
+      {/* 통근 설정 — 직장 선택 전에도 흐리게(disabled) 미리보기 */}
+      <div
+        className={[
+          "flex flex-col gap-3 transition-opacity duration-200",
+          hasSelected ? "opacity-100" : "opacity-40 pointer-events-none select-none",
+        ].join(" ")}
+        aria-disabled={!hasSelected}
+      >
+        <div>
+          <p className="text-[13px] text-[#6e6e73] mb-2">통근 수단</p>
+          <Segmented
+            options={[
+              { value: "transit", label: "대중교통" },
+              { value: "car", label: "자차" },
+            ]}
+            value={commuteModeValue}
+            onChange={(v) => onCommuteModeChange(v as "transit" | "car")}
+          />
         </div>
-      )}
+        <div>
+          <p className="text-[13px] text-[#6e6e73] mb-2">통근 허용시간</p>
+          <TextField
+            value={maxCommuteValue}
+            onChange={onMaxCommuteChange}
+            type="number"
+            placeholder="50"
+            suffix="분"
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -184,16 +258,16 @@ export function ProfileForm({
 }: {
   onResult: (result: RecommendationResult, profile: CoupleProfile) => void;
 }) {
-  const TOTAL_STEPS = 4;
+  // retired 는 직장 단계 없으므로 시각적으로 4단계, 나머지 5단계
   const [step, setStep] = useState<Step>(1);
 
-  // ── Step 1 상태 ────────────────────────────────────────────
+  // ── Step 1: 가구 유형 & 평수 ────────────────────────────────
   const [householdType, setHouseholdType] =
     useState<HouseholdType>("dualIncome");
   const [preferredAreaRange, setPreferredAreaRange] =
     useState<AreaRangeKey>(DEFAULT_AREA_RANGE);
 
-  // ── Step 2 상태 ────────────────────────────────────────────
+  // ── Step 2: 직장 & 통근 ─────────────────────────────────────
   const [wpA, setWpA] = useState<WorkplaceFormState>(makeEmptyWorkplace());
   const [wpB, setWpB] = useState<WorkplaceFormState>(makeEmptyWorkplace());
   const [commuteModeA, setCommuteModeA] = useState<"transit" | "car">(
@@ -209,28 +283,33 @@ export function ProfileForm({
     String(DEFAULT_MAX_COMMUTE_MIN)
   );
 
-  // ── Step 3 상태 ────────────────────────────────────────────
+  // ── Step 3: 가족 ────────────────────────────────────────────
   const [childrenAges, setChildrenAges] = useState<number[]>([]);
   const [childAgeInput, setChildAgeInput] = useState("");
-  const [householdIncome, setHouseholdIncome] = useState("");
-  const [seedMoney, setSeedMoney] = useState("");
-  const [existingLoan, setExistingLoan] = useState("0");
-  const [hasOwnedHome, setHasOwnedHome] = useState<boolean>(false);
+  const [isNewlywed, setIsNewlywed] = useState(false);
+  const [hasOwnedHome, setHasOwnedHome] = useState(false);
+
+  // ── Step 4: 예산 / 대출 ─────────────────────────────────────
+  // 모든 금액 입력: 만원 단위
+  const [seedMoney, setSeedMoney] = useState("");          // 보유 현금 (만원)
+  const [householdIncome, setHouseholdIncome] = useState(""); // 연 가구소득 (만원)
+  const [netAssets, setNetAssets] = useState("");          // 순자산 총액 (만원)
+  const [existingLoan, setExistingLoan] = useState("0");   // 매달 갚는 대출 (만원/월)
   const [hasExistingHome, setHasExistingHome] = useState(false);
-  const [existingHomeSalePrice, setExistingHomeSalePrice] = useState("");
-  const [existingHomeLoan, setExistingHomeLoan] = useState("");
+  const [existingHomeSalePrice, setExistingHomeSalePrice] = useState(""); // 매도가 (만원)
+  const [existingHomeLoan, setExistingHomeLoan] = useState("");            // 잔금 (만원)
   const [existingHomeTaxExempt, setExistingHomeTaxExempt] = useState(false);
 
-  // ── Step 4 상태 ────────────────────────────────────────────
+  // ── Step 5: 우선순위 ────────────────────────────────────────
   const [priorities, setPriorities] = useState<Record<PriorityKey, number>>({
     ...DEFAULT_PRIORITIES,
   });
 
-  // ── 제출 상태 ──────────────────────────────────────────────
+  // ── 제출 상태 ────────────────────────────────────────────────
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // ── Geocode 디바운스 ───────────────────────────────────────
+  // ── Geocode 디바운스 ─────────────────────────────────────────
   const debounceARef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debounceBRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -262,7 +341,6 @@ export function ProfileForm({
     []
   );
 
-  // Workplace A 검색
   useEffect(() => {
     if (debounceARef.current) clearTimeout(debounceARef.current);
     if (wpA.query.length < 2) {
@@ -281,7 +359,6 @@ export function ProfileForm({
     };
   }, [wpA.query, fetchGeocode]);
 
-  // Workplace B 검색
   useEffect(() => {
     if (debounceBRef.current) clearTimeout(debounceBRef.current);
     if (wpB.query.length < 2) {
@@ -300,7 +377,7 @@ export function ProfileForm({
     };
   }, [wpB.query, fetchGeocode]);
 
-  // ── 헬퍼 ──────────────────────────────────────────────────
+  // ── 헬퍼 ─────────────────────────────────────────────────────
 
   function selectWorkplace(
     which: "A" | "B",
@@ -327,50 +404,6 @@ export function ProfileForm({
     else setWpB(makeEmptyWorkplace());
   }
 
-  function handleAddChild() {
-    const age = parseInt(childAgeInput, 10);
-    if (!isNaN(age) && age >= 0 && age <= 25) {
-      setChildrenAges((prev) => [...prev, age]);
-      setChildAgeInput("");
-    }
-  }
-
-  function removeChild(index: number) {
-    setChildrenAges((prev) => prev.filter((_, i) => i !== index));
-  }
-
-  // Step 2 진행 가능 여부
-  function step2CanProceed(): boolean {
-    if (householdType === "retired") return true;
-    if (!wpA.selected) return false;
-    if (householdType === "dualIncome" && !wpB.selected) return false;
-    return true;
-  }
-
-  // 실제 단계 진행 (retired 이면 Step 2 건너뜀)
-  function goNext() {
-    if (step === 1) {
-      if (householdType === "retired") {
-        setStep(3);
-      } else {
-        setStep(2);
-      }
-    } else if (step === 2) {
-      setStep(3);
-    } else if (step === 3) {
-      setStep(4);
-    }
-  }
-
-  function goPrev() {
-    if (step === 2) setStep(1);
-    else if (step === 3) {
-      if (householdType === "retired") setStep(1);
-      else setStep(2);
-    } else if (step === 4) setStep(3);
-  }
-
-  // commute 설정 변경 시 selected Workplace 에도 즉시 반영
   function syncWorkplaceSettings(
     which: "A" | "B",
     mode: "transit" | "car",
@@ -407,30 +440,83 @@ export function ProfileForm({
     syncWorkplaceSettings("B", commuteModeB, v);
   }
 
-  // ── 제출 ──────────────────────────────────────────────────
+  function handleAddChild() {
+    if (childrenAges.length >= 10) return;
+    const age = parseInt(childAgeInput, 10);
+    if (!isNaN(age) && age >= 0 && age <= 25) {
+      setChildrenAges((prev) => [...prev, age]);
+      setChildAgeInput("");
+    }
+  }
+
+  function removeChild(index: number) {
+    setChildrenAges((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  // Step 2 진행 가능 여부
+  function step2CanProceed(): boolean {
+    if (householdType === "retired") return true;
+    if (!wpA.selected) return false;
+    if (householdType === "dualIncome" && !wpB.selected) return false;
+    return true;
+  }
+
+  // 실제 step 번호 → 논리적 다음/이전 (retired 는 step 2 건너뜀)
+  function goNext() {
+    if (step === 1) {
+      setStep(householdType === "retired" ? 3 : 2);
+    } else if (step === 2) {
+      setStep(3);
+    } else if (step === 3) {
+      setStep(4);
+    } else if (step === 4) {
+      setStep(5);
+    }
+  }
+
+  function goPrev() {
+    if (step === 2) setStep(1);
+    else if (step === 3) setStep(householdType === "retired" ? 1 : 2);
+    else if (step === 4) setStep(3);
+    else if (step === 5) setStep(4);
+  }
+
+  // ── 시각적 스텝 (retired: 4단계, 나머지: 5단계) ──────────────
+  const isRetired = householdType === "retired";
+  const visualTotal = isRetired ? 4 : 5;
+  // step 1→0, 2→1, 3→retired?1:2, 4→retired?2:3, 5→retired?3:4
+  const visualStep: number = (() => {
+    if (step === 1) return 0;
+    if (step === 2) return 1;
+    if (step === 3) return isRetired ? 1 : 2;
+    if (step === 4) return isRetired ? 2 : 3;
+    return isRetired ? 3 : 4;
+  })();
+
+  // ── 제출 ──────────────────────────────────────────────────────
 
   async function handleSubmit() {
     setSubmitError(null);
     setSubmitting(true);
 
+    const manwonToKrw = (s: string) => (parseFloat(s) || 0) * 10_000;
+
     const existingHome: ExistingHome | undefined = hasExistingHome
       ? {
-          expectedSalePriceKrw:
-            (parseFloat(existingHomeSalePrice) || 0) * 1e8,
-          remainingLoanKrw: (parseFloat(existingHomeLoan) || 0) * 1e8,
+          expectedSalePriceKrw: manwonToKrw(existingHomeSalePrice),
+          remainingLoanKrw: manwonToKrw(existingHomeLoan),
           qualifiesForTaxExemption: existingHomeTaxExempt,
         }
       : undefined;
 
-    const finalWpA: Workplace | undefined =
-      wpA.selected
-        ? {
-            ...wpA.selected,
-            commuteMode: commuteModeA,
-            maxCommuteMinutes:
-              parseInt(maxCommuteA, 10) || DEFAULT_MAX_COMMUTE_MIN,
-          }
-        : undefined;
+    const finalWpA: Workplace | undefined = wpA.selected
+      ? {
+          ...wpA.selected,
+          commuteMode: commuteModeA,
+          maxCommuteMinutes:
+            parseInt(maxCommuteA, 10) || DEFAULT_MAX_COMMUTE_MIN,
+        }
+      : undefined;
 
     const finalWpB: Workplace | undefined =
       householdType === "dualIncome" && wpB.selected
@@ -449,10 +535,12 @@ export function ProfileForm({
       workplaceA: finalWpA,
       workplaceB: finalWpB,
       childrenAges,
-      householdIncomeKrwYear: (parseFloat(householdIncome) || 0) * 10_000,
-      seedMoneyKrw: (parseFloat(seedMoney) || 0) * 1e8,
-      existingLoanMonthlyKrw: (parseFloat(existingLoan) || 0) * 10_000,
+      householdIncomeKrwYear: manwonToKrw(householdIncome),
+      seedMoneyKrw: manwonToKrw(seedMoney),
+      netAssetsKrw: manwonToKrw(netAssets),
+      existingLoanMonthlyKrw: manwonToKrw(existingLoan),
       hasOwnedHomeBefore: hasOwnedHome,
+      isNewlywed,
       existingHome,
     };
 
@@ -484,24 +572,19 @@ export function ProfileForm({
     }
   }
 
-  // ── 시각적 스텝 번호 (retired 는 2단계 없음 → 1·3·4 를 1·2·3으로 표시) ──
-  const visualStep =
-    householdType === "retired" && step >= 3 ? step - 1 : step;
-  const visualTotal = householdType === "retired" ? 3 : TOTAL_STEPS;
-
-  // ── 렌더 ──────────────────────────────────────────────────
+  // ── 렌더 ──────────────────────────────────────────────────────
 
   return (
     <div className="w-full max-w-lg mx-auto flex flex-col gap-6">
       {/* 진행 표시 */}
-      <div className="flex flex-col items-center gap-3 pt-2">
+      <div className="flex flex-col items-center gap-2 pt-2">
         <StepDots current={visualStep} total={visualTotal} />
         <p className="text-[13px] text-[#86868b]">
-          {visualStep}단계 / {visualTotal}
+          {visualStep + 1}단계 / {visualTotal}
         </p>
       </div>
 
-      {/* ── Step 1: 가구 유형 & 평수 ─────────────────────────── */}
+      {/* ── Step 1: 가구 유형 & 평수 ──────────────────────────── */}
       {step === 1 && (
         <div className="flex flex-col gap-6">
           <div>
@@ -509,44 +592,48 @@ export function ProfileForm({
               가구 유형을 선택해 주세요
             </h2>
             <p className="mt-1 text-[15px] text-[#6e6e73]">
-              통근 조건·추천 방식이 달라집니다
+              통근 조건과 분석 방식이 달라집니다
             </p>
           </div>
 
           {/* 가구 유형 카드 */}
           <div className="grid grid-cols-2 gap-3">
-            {(
-              Object.keys(HOUSEHOLD_TYPE_LABELS) as HouseholdType[]
-            ).map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => setHouseholdType(type)}
-                className={[
-                  "rounded-3xl border-2 px-4 py-5 text-left transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-400",
-                  householdType === type
-                    ? "border-indigo-600 bg-indigo-50 shadow-md"
-                    : "border-[#e5e5ea] bg-white hover:border-indigo-300",
-                ].join(" ")}
-              >
-                <span
-                  className={[
-                    "block text-[15px] font-semibold leading-snug",
-                    householdType === type
-                      ? "text-indigo-700"
-                      : "text-[#1d1d1f]",
-                  ].join(" ")}
-                >
-                  {HOUSEHOLD_TYPE_LABELS[type]}
-                </span>
-                <span className="mt-1 block text-[12px] text-[#86868b]">
-                  {type === "single" && "1인 단독 통근"}
-                  {type === "dualIncome" && "두 직장 모두 고려"}
-                  {type === "singleIncome" && "한 직장 기준"}
-                  {type === "retired" && "통근 조건 없음"}
-                </span>
-              </button>
-            ))}
+            {(Object.keys(HOUSEHOLD_TYPE_LABELS) as HouseholdType[]).map(
+              (type) => {
+                const subtitles: Record<HouseholdType, string> = {
+                  single: "1인 통근 기준",
+                  dualIncome: "두 직장 모두 고려",
+                  singleIncome: "한 직장 기준",
+                  retired: "통근 조건 없음",
+                };
+                const selected = householdType === type;
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setHouseholdType(type)}
+                    className={[
+                      "rounded-3xl border-2 px-4 py-5 text-left transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-400",
+                      selected
+                        ? "border-indigo-600 bg-indigo-50 shadow-md"
+                        : "border-[#e5e5ea] bg-white hover:border-indigo-300",
+                    ].join(" ")}
+                  >
+                    <span
+                      className={[
+                        "block text-[15px] font-semibold leading-snug",
+                        selected ? "text-indigo-700" : "text-[#1d1d1f]",
+                      ].join(" ")}
+                    >
+                      {HOUSEHOLD_TYPE_LABELS[type]}
+                    </span>
+                    <span className="mt-1 block text-[12px] text-[#86868b]">
+                      {subtitles[type]}
+                    </span>
+                  </button>
+                );
+              }
+            )}
           </div>
 
           {/* 선호 평수 */}
@@ -585,11 +672,8 @@ export function ProfileForm({
             </p>
           </div>
 
-          {/* 직장 A */}
           <WorkplaceInput
-            label={
-              householdType === "dualIncome" ? "본인 직장" : "직장"
-            }
+            label={householdType === "dualIncome" ? "본인 직장" : "직장"}
             state={wpA}
             onQueryChange={(q) =>
               setWpA((prev) => ({ ...prev, query: q, selected: null }))
@@ -603,7 +687,6 @@ export function ProfileForm({
             autoFocus
           />
 
-          {/* 직장 B — 맞벌이만 */}
           {householdType === "dualIncome" && (
             <WorkplaceInput
               label="배우자 직장"
@@ -626,34 +709,36 @@ export function ProfileForm({
             <Button variant="secondary" onClick={goPrev}>
               이전
             </Button>
-            <Button
-              fullWidth
-              disabled={!step2CanProceed()}
-              onClick={goNext}
-            >
+            <Button fullWidth disabled={!step2CanProceed()} onClick={goNext}>
               다음
             </Button>
           </div>
         </div>
       )}
 
-      {/* ── Step 3: 가족 & 자금 ───────────────────────────────── */}
+      {/* ── Step 3: 가족 ──────────────────────────────────────── */}
       {step === 3 && (
         <div className="flex flex-col gap-6">
           <div>
             <h2 className="text-[22px] font-bold text-[#1d1d1f] leading-snug">
-              가족 구성과 예산을 입력해 주세요
+              가족 구성을 알려주세요
             </h2>
             <p className="mt-1 text-[15px] text-[#6e6e73]">
-              예산 추정과 대출 한도 계산에 활용됩니다
+              학군·정책대출 요건 판정에 활용됩니다
             </p>
           </div>
 
-          {/* 자녀 나이 */}
+          {/* 자녀 나이 칩 */}
           <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm flex flex-col gap-3">
-            <p className="text-[15px] font-semibold text-[#1d1d1f]">
-              자녀 나이
-            </p>
+            <div>
+              <p className="text-[15px] font-semibold text-[#1d1d1f]">
+                자녀 나이
+              </p>
+              <p className="text-[13px] text-[#86868b] mt-0.5">
+                최대 10명까지 추가할 수 있어요
+              </p>
+            </div>
+
             <div className="flex gap-2 items-end">
               <div className="flex-1">
                 <TextField
@@ -669,6 +754,7 @@ export function ProfileForm({
                 size="md"
                 onClick={handleAddChild}
                 disabled={
+                  childrenAges.length >= 10 ||
                   childAgeInput === "" ||
                   isNaN(parseInt(childAgeInput, 10)) ||
                   parseInt(childAgeInput, 10) < 0 ||
@@ -705,59 +791,26 @@ export function ProfileForm({
             )}
           </div>
 
-          {/* 재무 정보 */}
-          <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm flex flex-col gap-5">
-            <p className="text-[15px] font-semibold text-[#1d1d1f]">
-              재무 정보
-            </p>
-
-            <TextField
-              label="연 가구소득"
-              value={householdIncome}
-              onChange={setHouseholdIncome}
-              type="number"
-              placeholder="예: 8000"
-              suffix="만원"
-              hint={
-                householdIncome
-                  ? `= ${(parseFloat(householdIncome) * 10_000).toLocaleString("ko-KR")}원`
-                  : undefined
-              }
-            />
-
-            <TextField
-              label="보유 시드머니"
-              value={seedMoney}
-              onChange={setSeedMoney}
-              type="number"
-              placeholder="예: 2.5"
-              suffix="억"
-              hint={
-                seedMoney
-                  ? `= ${(parseFloat(seedMoney) * 1e8).toLocaleString("ko-KR")}원`
-                  : undefined
-              }
-            />
-
-            <TextField
-              label="기존 대출 월 상환액"
-              value={existingLoan}
-              onChange={setExistingLoan}
-              type="number"
-              placeholder="0"
-              suffix="만원/월"
-              hint="없으면 0을 입력하세요"
-            />
-          </div>
+          {/* 신혼 여부 — 1인·은퇴 제외 */}
+          {householdType !== "single" && householdType !== "retired" && (
+            <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm">
+              <ToggleSwitch
+                checked={isNewlywed}
+                onChange={() => setIsNewlywed((v) => !v)}
+                label="혼인 7년 이내예요"
+                description="신혼 특례 정책대출 요건 판정에 사용됩니다"
+              />
+            </div>
+          )}
 
           {/* 주택 보유 이력 */}
           <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm flex flex-col gap-3">
             <div>
               <p className="text-[15px] font-semibold text-[#1d1d1f]">
-                주택 보유 이력
+                전에 집을 가져본 적 있나요?
               </p>
               <p className="text-[13px] text-[#86868b] mt-0.5">
-                생애최초 취득세 감면 판정에 사용됩니다
+                생애최초 취득세 감면·정책대출 판정에 사용됩니다
               </p>
             </div>
             <Segmented
@@ -770,37 +823,99 @@ export function ProfileForm({
             />
           </div>
 
+          <div className="flex gap-3">
+            <Button variant="secondary" onClick={goPrev}>
+              이전
+            </Button>
+            <Button fullWidth onClick={goNext}>
+              다음
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Step 4: 예산 / 대출 ───────────────────────────────── */}
+      {step === 4 && (
+        <div className="flex flex-col gap-6">
+          <div>
+            <h2 className="text-[22px] font-bold text-[#1d1d1f] leading-snug">
+              예산과 대출 정보를 입력해 주세요
+            </h2>
+            <p className="mt-1 text-[15px] text-[#6e6e73]">
+              모든 금액은 만원 단위로 입력하세요
+            </p>
+          </div>
+
+          {/* 정책대출 안내 배너 */}
+          <div className="rounded-2xl bg-indigo-50 border border-indigo-100 px-4 py-3">
+            <p className="text-[13px] text-indigo-700 leading-relaxed">
+              입력 정보로 디딤돌·신생아 특례·보금자리론 등 정책대출 자격도 함께 확인해 드립니다
+            </p>
+          </div>
+
+          {/* 기본 재무 정보 */}
+          <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm flex flex-col gap-5">
+            <p className="text-[15px] font-semibold text-[#1d1d1f]">
+              기본 재무 정보
+            </p>
+
+            <TextField
+              label="보유 현금"
+              value={seedMoney}
+              onChange={setSeedMoney}
+              type="number"
+              placeholder="예: 10000"
+              suffix="만원"
+              hint={manwonHint(seedMoney)}
+            />
+
+            <TextField
+              label="연 가구소득"
+              value={householdIncome}
+              onChange={setHouseholdIncome}
+              type="number"
+              placeholder="예: 8000"
+              suffix="만원"
+              hint={manwonHint(householdIncome)}
+            />
+
+            <TextField
+              label="순자산 총액"
+              value={netAssets}
+              onChange={setNetAssets}
+              type="number"
+              placeholder="예: 30000"
+              suffix="만원"
+              hint={
+                netAssets
+                  ? `${manwonHint(netAssets)} — 금융자산+부동산−부채 개략값`
+                  : "금융자산+부동산−부채 개략값 (정책대출 자산요건 판정용)"
+              }
+            />
+
+            <TextField
+              label="매달 갚는 대출"
+              value={existingLoan}
+              onChange={setExistingLoan}
+              type="number"
+              placeholder="0"
+              suffix="만원/월"
+              hint={
+                existingLoan && existingLoan !== "0"
+                  ? manwonHint(existingLoan)
+                  : "주담대·신용대출·할부 전부 합산. 없으면 0"
+              }
+            />
+          </div>
+
           {/* 갈아타기 토글 */}
           <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm flex flex-col gap-4">
-            <button
-              type="button"
-              onClick={() => setHasExistingHome((v) => !v)}
-              className="flex items-center justify-between w-full"
-            >
-              <div className="text-left">
-                <p className="text-[15px] font-semibold text-[#1d1d1f]">
-                  기존 집을 팔아 자금을 마련해요
-                </p>
-                <p className="text-[13px] text-[#86868b] mt-0.5">
-                  갈아타기 — 매도 예상가와 잔대출을 입력하면 순수령액을 계산합니다
-                </p>
-              </div>
-              <span
-                className={[
-                  "relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ml-4",
-                  hasExistingHome ? "bg-indigo-600" : "bg-[#d1d1d6]",
-                ].join(" ")}
-                aria-pressed={hasExistingHome}
-                role="switch"
-              >
-                <span
-                  className={[
-                    "pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out",
-                    hasExistingHome ? "translate-x-5" : "translate-x-0",
-                  ].join(" ")}
-                />
-              </span>
-            </button>
+            <ToggleSwitch
+              checked={hasExistingHome}
+              onChange={() => setHasExistingHome((v) => !v)}
+              label="기존 집을 팔아 자금을 마련해요"
+              description="갈아타기 — 매도 예상가와 잔대출을 입력하면 순수령액을 계산합니다"
+            />
 
             {hasExistingHome && (
               <div className="flex flex-col gap-4 pt-2 border-t border-[#f0f0f0]">
@@ -809,13 +924,9 @@ export function ProfileForm({
                   value={existingHomeSalePrice}
                   onChange={setExistingHomeSalePrice}
                   type="number"
-                  placeholder="예: 8"
-                  suffix="억"
-                  hint={
-                    existingHomeSalePrice
-                      ? `= ${(parseFloat(existingHomeSalePrice) * 1e8).toLocaleString("ko-KR")}원`
-                      : undefined
-                  }
+                  placeholder="예: 80000"
+                  suffix="만원"
+                  hint={manwonHint(existingHomeSalePrice)}
                 />
 
                 <TextField
@@ -824,35 +935,34 @@ export function ProfileForm({
                   onChange={setExistingHomeLoan}
                   type="number"
                   placeholder="없으면 0"
-                  suffix="억"
+                  suffix="만원"
                   hint={
                     existingHomeLoan
-                      ? `= ${(parseFloat(existingHomeLoan) * 1e8).toLocaleString("ko-KR")}원`
-                      : undefined
+                      ? manwonHint(existingHomeLoan)
+                      : "없으면 0을 입력하세요"
                   }
                 />
 
-                {/* 비과세 요건 토글 */}
                 <button
                   type="button"
                   onClick={() => setExistingHomeTaxExempt((v) => !v)}
-                  className="flex items-center justify-between w-full py-1"
+                  className="flex items-center justify-between w-full py-1 text-left"
                 >
-                  <div className="text-left">
+                  <div>
                     <p className="text-[14px] font-medium text-[#1d1d1f]">
-                      2년 이상 보유·거주했어요
+                      2년 이상 살면서 보유했어요
                     </p>
                     <p className="text-[12px] text-[#86868b]">
-                      1세대 1주택 양도세 비과세 요건
+                      세금 절감 — 1세대 1주택 양도세 비과세 요건
                     </p>
                   </div>
                   <span
+                    role="switch"
+                    aria-pressed={existingHomeTaxExempt}
                     className={[
                       "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ml-4",
                       existingHomeTaxExempt ? "bg-indigo-600" : "bg-[#d1d1d6]",
                     ].join(" ")}
-                    aria-pressed={existingHomeTaxExempt}
-                    role="switch"
                   >
                     <span
                       className={[
@@ -879,8 +989,8 @@ export function ProfileForm({
         </div>
       )}
 
-      {/* ── Step 4: 우선순위 & 제출 ───────────────────────────── */}
-      {step === 4 && (
+      {/* ── Step 5: 우선순위 & 분석 시작 ─────────────────────── */}
+      {step === 5 && (
         <div className="flex flex-col gap-6">
           <div>
             <h2 className="text-[22px] font-bold text-[#1d1d1f] leading-snug">
@@ -929,6 +1039,15 @@ export function ProfileForm({
             ))}
           </div>
 
+          {/* 분석 중 안내 */}
+          {submitting && (
+            <div className="rounded-2xl bg-indigo-50 border border-indigo-100 px-4 py-3">
+              <p className="text-[13px] text-indigo-700 leading-relaxed">
+                조건에 맞는 단지를 탐색하고 예산·대출을 계산하고 있습니다. 잠시만 기다려 주세요.
+              </p>
+            </div>
+          )}
+
           {/* 에러 */}
           {submitError && (
             <div className="px-4 py-3 rounded-2xl bg-red-50 border border-red-200 text-[14px] text-red-700 leading-snug">
@@ -937,7 +1056,7 @@ export function ProfileForm({
           )}
 
           <div className="flex gap-3">
-            <Button variant="secondary" onClick={goPrev}>
+            <Button variant="secondary" onClick={goPrev} disabled={submitting}>
               이전
             </Button>
             <Button
