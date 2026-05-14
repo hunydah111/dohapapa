@@ -10,19 +10,25 @@ import type { CommuteLeg } from "@/types/recommendation";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
+// CoupleProfile 픽스처 — 새 타입: Workplace 에 commuteMode·maxCommuteMinutes 포함,
+// householdType·preferredAreaRange 필수, 전역 commuteMode/maxCommuteMinutes 제거
 function makeProfile(overrides: Partial<CoupleProfile> = {}): CoupleProfile {
   return {
+    householdType: "dualIncome",
     priorities: { commute: 5, school: 3, buildingAge: 2 },
     preferredAreaRange: "p32_35",
-    commuteMode: "transit",
-    workplaceA: { label: "회사A", lat: 37.5665, lng: 126.978 },
+    workplaceA: {
+      label: "직장A",
+      lat: 37.5665,
+      lng: 126.978,
+      commuteMode: "transit",
+      maxCommuteMinutes: 50,
+    },
     childrenAges: [],
     householdIncomeKrwYear: 80_000_000,
     seedMoneyKrw: 200_000_000,
     existingLoanMonthlyKrw: 0,
     hasOwnedHomeBefore: false,
-    maxCommuteMinutesA: 50,
-    maxCommuteMinutesB: 50,
     ...overrides,
   };
 }
@@ -31,7 +37,10 @@ function inRange(score: number): boolean {
   return score >= 0 && score <= 100;
 }
 
-/** scoreCommute 는 workplace/minutes/withinLimit 만 쓰므로 나머지는 더미. */
+/**
+ * CommuteLeg 픽스처 — 새 타입 필수 필드: workplace, workplaceLabel, minutes,
+ * distanceKm, mode, withinLimit.
+ */
 function leg(
   workplace: "A" | "B",
   minutes: number,
@@ -52,7 +61,23 @@ function leg(
 describe("scoreCommute", () => {
   it("both legs within limit → high score (≥80)", () => {
     const legs: CommuteLeg[] = [leg("A", 30, true), leg("B", 25, true)];
-    const profile = makeProfile({ maxCommuteMinutesA: 50, maxCommuteMinutesB: 50 });
+    // workplaceA·B 의 maxCommuteMinutes 로 한도를 직접 지정
+    const profile = makeProfile({
+      workplaceA: {
+        label: "직장A",
+        lat: 37.5665,
+        lng: 126.978,
+        commuteMode: "transit",
+        maxCommuteMinutes: 50,
+      },
+      workplaceB: {
+        label: "직장B",
+        lat: 37.5,
+        lng: 127.0,
+        commuteMode: "transit",
+        maxCommuteMinutes: 50,
+      },
+    });
     const { score, reason } = scoreCommute(legs, profile);
 
     expect(score).toBeGreaterThanOrEqual(80);
@@ -62,7 +87,22 @@ describe("scoreCommute", () => {
 
   it("both legs far over limit → low score (≤30)", () => {
     const legs: CommuteLeg[] = [leg("A", 120, false), leg("B", 110, false)];
-    const profile = makeProfile({ maxCommuteMinutesA: 50, maxCommuteMinutesB: 50 });
+    const profile = makeProfile({
+      workplaceA: {
+        label: "직장A",
+        lat: 37.5665,
+        lng: 126.978,
+        commuteMode: "transit",
+        maxCommuteMinutes: 50,
+      },
+      workplaceB: {
+        label: "직장B",
+        lat: 37.5,
+        lng: 127.0,
+        commuteMode: "transit",
+        maxCommuteMinutes: 50,
+      },
+    });
     const { score, reason } = scoreCommute(legs, profile);
 
     expect(score).toBeLessThanOrEqual(30);
@@ -70,17 +110,27 @@ describe("scoreCommute", () => {
     expect(reason.length).toBeGreaterThan(0);
   });
 
-  it("empty legs → score 50 with reason", () => {
-    const profile = makeProfile();
+  it("empty legs → score 55 with 통근 정보 없음", () => {
+    // retired 처럼 직장 없는 경우 — 중립 55 반환
+    const profile = makeProfile({ householdType: "retired", workplaceA: undefined });
     const { score, reason } = scoreCommute([], profile);
 
-    expect(score).toBe(50);
+    expect(score).toBe(55);
     expect(reason).toBe("통근 정보 없음");
   });
 
-  it("single leg (외벌이) within limit → score ≥ 80", () => {
+  it("single leg (외벌이·1인가구) within limit → score ≥ 80", () => {
     const legs: CommuteLeg[] = [leg("A", 20, true)];
-    const profile = makeProfile({ maxCommuteMinutesA: 50 });
+    const profile = makeProfile({
+      householdType: "singleIncome",
+      workplaceA: {
+        label: "직장A",
+        lat: 37.5665,
+        lng: 126.978,
+        commuteMode: "transit",
+        maxCommuteMinutes: 50,
+      },
+    });
     const { score } = scoreCommute(legs, profile);
 
     expect(score).toBeGreaterThanOrEqual(80);
@@ -99,13 +149,28 @@ describe("scoreCommute", () => {
       expect(inRange(score)).toBe(true);
     }
   });
+
+  it("car mode workplace — reads maxCommuteMinutes from workplaceA", () => {
+    // 자차 통근 직장, 허용 40분인데 35분 → 범위 내
+    const legs: CommuteLeg[] = [leg("A", 35, true)];
+    const profile = makeProfile({
+      workplaceA: {
+        label: "자차직장",
+        lat: 37.5,
+        lng: 127.0,
+        commuteMode: "car",
+        maxCommuteMinutes: 40,
+      },
+    });
+    const { score } = scoreCommute(legs, profile);
+    expect(score).toBeGreaterThanOrEqual(80);
+  });
 });
 
 // ── scoreBudgetFit ────────────────────────────────────────────────────────────
 
 describe("scoreBudgetFit", () => {
   it("median well under net purchase power → high score (≥70)", () => {
-    // median is 70% of net power → well within budget
     const netPower = 500_000_000;
     const median = netPower * 0.7;
     const { score, reason } = scoreBudgetFit(median, netPower);
@@ -117,7 +182,7 @@ describe("scoreBudgetFit", () => {
 
   it("median 30% over net purchase power → low score (≤20)", () => {
     const netPower = 500_000_000;
-    const median = netPower * 1.3; // 30% over
+    const median = netPower * 1.3;
     const { score, reason } = scoreBudgetFit(median, netPower);
 
     expect(score).toBeLessThanOrEqual(20);
@@ -125,7 +190,7 @@ describe("scoreBudgetFit", () => {
     expect(reason.length).toBeGreaterThan(0);
   });
 
-  it("median exactly equal to net power → score in 30–70 range", () => {
+  it("median exactly equal to net power → score in 30–100 range", () => {
     const netPower = 500_000_000;
     const { score } = scoreBudgetFit(netPower, netPower);
 
@@ -141,7 +206,13 @@ describe("scoreBudgetFit", () => {
 
   it("score is always in [0, 100]", () => {
     const netPower = 600_000_000;
-    const medians = [300_000_000, 600_000_000, 700_000_000, 900_000_000, 1_200_000_000];
+    const medians = [
+      300_000_000,
+      600_000_000,
+      700_000_000,
+      900_000_000,
+      1_200_000_000,
+    ];
     for (const median of medians) {
       const { score } = scoreBudgetFit(median, netPower);
       expect(inRange(score)).toBe(true);
@@ -152,11 +223,12 @@ describe("scoreBudgetFit", () => {
 // ── scoreSchool ───────────────────────────────────────────────────────────────
 
 describe("scoreSchool", () => {
-  it("empty childrenAges → score ≈ 60 with reason mentioning 자녀 없음", () => {
+  it("empty childrenAges → score 55 with reason mentioning 자녀 없음", () => {
     const complex = { nearestElemSchoolM: 400, buildYear: 2010 };
     const { score, reason } = scoreSchool(complex, []);
 
-    expect(score).toBe(60);
+    // P1#7: 자녀 없음 → 55 (이전 60 에서 변경)
+    expect(score).toBe(55);
     expect(reason).toContain("자녀 없음");
   });
 
@@ -169,22 +241,35 @@ describe("scoreSchool", () => {
     expect(reason.length).toBeGreaterThan(0);
   });
 
-  it("초등 child + very close school (≤300m) → score = 95", () => {
+  it("초등 child + very close school (≤300m) → score = 90", () => {
     const complex = { nearestElemSchoolM: 150, buildYear: 2010 };
-    const { score } = scoreSchool(complex, [8]);
+    const { score, reason } = scoreSchool(complex, [8]);
 
-    expect(score).toBe(95);
+    // P1#7: 정직한 라벨링 — 학업성취도 미반영 명시 포함
+    expect(score).toBe(90);
+    expect(reason).toContain("학업성취도·학원가는 미반영");
   });
 
-  it("초등 child + distant school (>600m) → score = 40", () => {
+  it("초등 child + distant school (>600m) → score = 45", () => {
     const complex = { nearestElemSchoolM: 800, buildYear: 2005 };
     const { score } = scoreSchool(complex, [10]);
 
-    expect(score).toBe(40);
+    expect(score).toBe(45);
+  });
+
+  it("중고등 자녀만 있는 경우 → score 55 + 데이터 미반영 안내", () => {
+    const complex = { nearestElemSchoolM: 300, buildYear: 2010 };
+    const { score, reason } = scoreSchool(complex, [14]);
+
+    expect(score).toBe(55);
+    expect(reason).toContain("중·고등 학군 데이터 미반영");
   });
 
   it("score is always in [0, 100] and reason is non-empty", () => {
-    const cases: [{ nearestElemSchoolM: number | null; buildYear: number | null }, number[]][] = [
+    const cases: [
+      { nearestElemSchoolM: number | null; buildYear: number | null },
+      number[],
+    ][] = [
       [{ nearestElemSchoolM: null, buildYear: null }, []],
       [{ nearestElemSchoolM: 100, buildYear: 2020 }, [7]],
       [{ nearestElemSchoolM: 500, buildYear: 2010 }, [3]],
@@ -227,7 +312,15 @@ describe("scoreBuildingAge", () => {
   });
 
   it("score is always in [0, 100] and reason is non-empty", () => {
-    const years: (number | null)[] = [null, 1975, 1985, 1995, 2005, 2015, 2023];
+    const years: (number | null)[] = [
+      null,
+      1975,
+      1985,
+      1995,
+      2005,
+      2015,
+      2023,
+    ];
     for (const year of years) {
       const { score, reason } = scoreBuildingAge(year);
       expect(inRange(score)).toBe(true);

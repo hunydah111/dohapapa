@@ -5,29 +5,39 @@
 // - 예산 추정은 공개된 DSR/LTV 공식만 적용하며 항상 "추정"으로 표시.
 // - 특정 은행 상품 연결/비교 금지. 특정 매물 알선 금지 (단지 레벨까지만).
 
+import type { CommuteMode } from "./profile";
+
+export type { CommuteMode };
+
 // ── 예산 추정 ───────────────────────────────────────────────
 // 모든 원(KRW) 값은 number. (최대 ~100억 = 1e10, JS 안전정수 9e15 내.)
 export interface BudgetEstimate {
   seedMoneyKrw: number;
+  /** 갈아타기: 기존 집 매도 순수령액 (매도가 − 대출잔금 − 양도세추정). 없으면 0. */
+  homeSaleNetKrw: number;
+  /** 갈아타기: 양도세 추정 (원). 없으면 0. */
+  capitalGainsTaxKrw: number;
+  /** 가용 자기자본 = seedMoneyKrw + homeSaleNetKrw. */
+  totalEquityKrw: number;
   /** DSR·LTV 공개공식 기반 추정 대출 가능액. */
   loanEstimateKrw: number;
-  /** seed + loan. */
+  /** 추정 월 원리금 상환액 (원). */
+  monthlyPaymentKrw: number;
+  /** totalEquity + loan. */
   grossBudgetKrw: number;
   /** 취득세 + 중개수수료 + 부대비용. */
   acquisitionCostsKrw: number;
-  /** 실제 매매가 상한 = grossBudget - acquisitionCosts. */
+  /** 실제 매매가 상한 = grossBudget − acquisitionCosts. */
   netPurchasePowerKrw: number;
   /** 항상 true — 이 값이 추정임을 타입 레벨에서 강제. */
   isEstimate: true;
   /** 사용자에게 보일 계산 가정 (예: "스트레스 DSR +3%p 반영"). */
   assumptions: string[];
-  /** 사용자에게 보일 경고 (예: "기존 대출 미입력 시 한도가 과대 추정됨"). */
+  /** 사용자에게 보일 경고. */
   warnings: string[];
 }
 
 // ── 통근 ────────────────────────────────────────────────────
-export type CommuteMode = "transit" | "car";
-
 export interface CommuteLeg {
   workplace: "A" | "B";
   /** 직장 라벨 (회사명 등). UI 도식 표시용. */
@@ -101,6 +111,19 @@ export interface MoreCandidate {
   representativeArea: number;
   medianPriceKrw: number;
   totalScore: number;
+  /** 통근 한 줄 요약 (예: "본인 28분·배우자 35분"). */
+  commuteSummary: string;
+}
+
+/**
+ * 결과가 0건일 때, 어떤 조건을 어떻게 풀면 몇 곳이 나오는지 제안.
+ * (P0 — 0건 막다른 길 해소.)
+ */
+export interface RelaxationSuggestion {
+  /** 사용자에게 보일 제안 문구 (예: "예산을 2억 늘리면 12곳"). */
+  message: string;
+  /** 이 제안 적용 시 나오는 단지 수. */
+  resultCount: number;
 }
 
 export interface RecommendationResult {
@@ -109,7 +132,9 @@ export interface RecommendationResult {
   candidates: ComplexCandidate[];
   /** 이름만 표시할 추가 후보 (보통 10개). */
   moreCandidates: MoreCandidate[];
-  /** 하드 필터 전 검토한 단지 수. */
+  /** candidates 가 비었을 때 채워지는 조건 완화 제안. 평소엔 빈 배열. */
+  relaxationSuggestions: RelaxationSuggestion[];
+  /** 하드 필터 통과 단지 수. */
   consideredComplexCount: number;
   /** 필수 면책 고지. */
   disclaimer: string;
@@ -118,5 +143,5 @@ export interface RecommendationResult {
 export const DISCLAIMER =
   "본 결과는 국토교통부 공개 실거래가와 사용자가 입력한 정보를 바탕으로 한 " +
   "참고용 정보 제공이며, 부동산 중개·투자자문·대출모집이 아닙니다. " +
-  "예산은 공개된 DSR/LTV 공식에 따른 추정치이며 실제 대출 한도는 금융기관 심사 결과에 따릅니다. " +
+  "예산·세금은 공개 공식에 따른 추정치이며 실제 한도·세액은 금융기관·세무 상담 결과에 따릅니다. " +
   "실제 구매 결정 전 반드시 전문가 상담을 권고합니다.";

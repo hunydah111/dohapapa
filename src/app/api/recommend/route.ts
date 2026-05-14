@@ -4,14 +4,27 @@ import type { CoupleProfile } from "@/types/profile";
 
 export const runtime = "nodejs";
 
-// workplaceA / workplaceB 공통 shape
+// ── Workplace 스키마 — commuteMode·maxCommuteMinutes 를 직장별로 보유 ────────
+// (P1#4: 맞벌이에서 본인은 자차, 배우자는 지하철처럼 수단이 다를 수 있다.)
 const workplaceSchema = z.object({
   label: z.string().min(1),
   lat: z.number(),
   lng: z.number(),
+  commuteMode: z.enum(["transit", "car"]),
+  maxCommuteMinutes: z.number().int().positive(),
 });
 
+// ── 기존 주택 갈아타기 스키마 ────────────────────────────────────────────────
+const existingHomeSchema = z.object({
+  expectedSalePriceKrw: z.number().nonnegative(),
+  remainingLoanKrw: z.number().nonnegative(),
+  qualifiesForTaxExemption: z.boolean(),
+});
+
+// ── 가구 프로필 스키마 ────────────────────────────────────────────────────────
 const coupleProfileSchema = z.object({
+  // P0#1: householdType 으로 1인·은퇴 분기 처리
+  householdType: z.enum(["single", "dualIncome", "singleIncome", "retired"]),
   priorities: z.object({
     commute: z.number().min(0).max(5),
     school: z.number().min(0).max(5),
@@ -26,17 +39,15 @@ const coupleProfileSchema = z.object({
     "p41_45",
     "over45",
   ]),
-  commuteMode: z.enum(["transit", "car"]),
-  workplaceA: workplaceSchema,
+  // 1인 가구: workplaceA 만, retired: 둘 다 없을 수 있음
+  workplaceA: workplaceSchema.optional(),
   workplaceB: workplaceSchema.optional(),
   childrenAges: z.array(z.number().int().min(0).max(25)),
   householdIncomeKrwYear: z.number().nonnegative(),
   seedMoneyKrw: z.number().nonnegative(),
   existingLoanMonthlyKrw: z.number().nonnegative(),
   hasOwnedHomeBefore: z.boolean(),
-  // 미입력 시 lib/recommend 내 DEFAULT_MAX_COMMUTE_MIN 으로 폴백 — 여기서는 값 존재만 검증
-  maxCommuteMinutesA: z.number().int().positive().optional(),
-  maxCommuteMinutesB: z.number().int().positive().optional(),
+  existingHome: existingHomeSchema.optional(),
 });
 
 export async function POST(req: Request): Promise<Response> {
@@ -68,11 +79,10 @@ export async function POST(req: Request): Promise<Response> {
     }
 
     // ── 3. 추천 계산 ──────────────────────────────────────────
-    // safeParse 통과 후 타입이 zod 추론 타입이므로 CoupleProfile 로 단언해도 안전
+    // safeParse 통과 후 zod 추론 타입이 CoupleProfile 와 일치하므로 단언 안전
     const profile = parsed.data as CoupleProfile;
     const result = await recommendComplexes(profile);
 
-    // 모든 KRW 값은 number — bigint 없으므로 JSON 직렬화 문제 없음
     return Response.json(result);
   } catch (err: unknown) {
     console.error("[recommend] 예기치 않은 오류:", err);

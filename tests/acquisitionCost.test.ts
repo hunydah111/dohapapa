@@ -4,10 +4,16 @@ import type { CoupleProfile } from "@/types/profile";
 
 function makeProfile(overrides: Partial<CoupleProfile> = {}): CoupleProfile {
   return {
+    householdType: "dualIncome",
     priorities: { commute: 3, school: 3, buildingAge: 3 },
     preferredAreaRange: "p32_35",
-    commuteMode: "transit",
-    workplaceA: { label: "회사A", lat: 37.5665, lng: 126.978 },
+    workplaceA: {
+      label: "회사A",
+      lat: 37.5,
+      lng: 127.0,
+      commuteMode: "transit",
+      maxCommuteMinutes: 50,
+    },
     childrenAges: [],
     householdIncomeKrwYear: 80_000_000,
     seedMoneyKrw: 200_000_000,
@@ -22,7 +28,7 @@ const BILLION = 100_000_000; // 1억
 describe("estimateAcquisitionCosts", () => {
   it("5억 매물 → 취득세 실효율 ≈ 1.1%, total > 0, breakdown non-empty", () => {
     const price = 5 * BILLION;
-    const profile = makeProfile({ hasOwnedHomeBefore: true }); // use owned to avoid 감면
+    const profile = makeProfile({ hasOwnedHomeBefore: true }); // 감면 제외
     const result = estimateAcquisitionCosts(price, profile);
 
     const effectiveRate = result.acquisitionTaxKrw / price;
@@ -44,12 +50,22 @@ describe("estimateAcquisitionCosts", () => {
 
   it("생애최초 + 10억 매물 → 취득세에 200만원 감면 적용 (기보유보다 낮음)", () => {
     const price = 10 * BILLION;
-    const firstTimeBuyer = estimateAcquisitionCosts(price, makeProfile({ hasOwnedHomeBefore: false }));
-    const previousOwner = estimateAcquisitionCosts(price, makeProfile({ hasOwnedHomeBefore: true }));
+    const firstTimeBuyer = estimateAcquisitionCosts(
+      price,
+      makeProfile({ hasOwnedHomeBefore: false }),
+    );
+    const previousOwner = estimateAcquisitionCosts(
+      price,
+      makeProfile({ hasOwnedHomeBefore: true }),
+    );
 
     // 생애최초 gets 200만원 discount → lower acquisition tax
-    expect(firstTimeBuyer.acquisitionTaxKrw).toBeLessThan(previousOwner.acquisitionTaxKrw);
-    expect(previousOwner.acquisitionTaxKrw - firstTimeBuyer.acquisitionTaxKrw).toBe(2_000_000);
+    expect(firstTimeBuyer.acquisitionTaxKrw).toBeLessThan(
+      previousOwner.acquisitionTaxKrw,
+    );
+    expect(
+      previousOwner.acquisitionTaxKrw - firstTimeBuyer.acquisitionTaxKrw,
+    ).toBe(2_000_000);
   });
 
   it("all outputs are integers", () => {
