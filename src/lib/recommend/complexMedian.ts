@@ -54,16 +54,17 @@ export async function getAreaMedians(
 
 /**
  * 거래 표본이 가장 두꺼운 평형(대표 평형)을 반환한다.
- * minArea 이상인 평형만 후보로 본다 — 오피스텔·초소형 원룸이 대표 평형으로
- * 잡혀 가족용 추천을 오염시키는 것을 막는다.
+ * [minArea, maxArea) 전용면적 구간 안의 평형만 후보로 본다 — 사용자가 고른
+ * 선호 평수대 밖의 평형(초소형 원룸·초대형 등)이 대표로 잡히는 것을 막는다.
  * 조건을 만족하는 평형이 없으면 null (해당 단지는 추천에서 제외).
  */
 export function pickRepresentative(
   medians: AreaMedian[],
   minArea: number = 0,
+  maxArea: number = Number.POSITIVE_INFINITY,
 ): AreaMedian | null {
   // medians 는 count 내림차순 정렬돼 있으므로 filter 후 첫 번째가 대표.
-  const eligible = medians.filter((m) => m.area >= minArea);
+  const eligible = medians.filter((m) => m.area >= minArea && m.area < maxArea);
   return eligible.length > 0 ? eligible[0] : null;
 }
 

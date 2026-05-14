@@ -1,19 +1,32 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import type { CoupleProfile, PriorityKey, Workplace } from "@/types/profile";
+import type {
+  CoupleProfile,
+  PriorityKey,
+  Workplace,
+  AreaRangeKey,
+} from "@/types/profile";
 import {
   PRIORITY_LABELS,
   PRIORITY_SCALE_LABELS,
   DEFAULT_PRIORITIES,
   DEFAULT_MAX_COMMUTE_MIN,
+  AREA_RANGES,
+  AREA_RANGE_ORDER,
+  DEFAULT_AREA_RANGE,
+  DEFAULT_COMMUTE_MODE,
 } from "@/types/profile";
-import type { RecommendationResult } from "@/types/recommendation";
+import type { CommuteMode, RecommendationResult } from "@/types/recommendation";
 
 export function ProfileForm({ onResult }: { onResult: (result: RecommendationResult) => void }) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
-  // Step 1 — 4개 조건 중요도 (1~5)
+  // Step 1 — 선호 평수 · 통근수단 · 3개 조건 중요도 (1~5)
+  const [preferredAreaRange, setPreferredAreaRange] =
+    useState<AreaRangeKey>(DEFAULT_AREA_RANGE);
+  const [commuteMode, setCommuteMode] =
+    useState<CommuteMode>(DEFAULT_COMMUTE_MODE);
   const [priorities, setPriorities] = useState<Record<PriorityKey, number>>({
     ...DEFAULT_PRIORITIES,
   });
@@ -121,6 +134,8 @@ export function ProfileForm({ onResult }: { onResult: (result: RecommendationRes
 
     const profile: CoupleProfile = {
       priorities,
+      preferredAreaRange,
+      commuteMode,
       workplaceA,
       workplaceB: dualIncome && workplaceB ? workplaceB : undefined,
       childrenAges,
@@ -180,14 +195,68 @@ export function ProfileForm({ onResult }: { onResult: (result: RecommendationRes
       {/* ── Step 1 ── */}
       {step === 1 && (
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">무엇을 얼마나 중요하게 볼까요?</h2>
-          <p className="text-gray-500 mb-6">
-            네 가지 조건의 중요도를 각각 정해주세요. 추천 가중치에 그대로 반영됩니다.
+          <h2 className="mb-6 text-2xl font-bold text-gray-900">
+            어떤 집을 찾으세요?
+          </h2>
+
+          {/* 선호 평수 */}
+          <div className="mb-7">
+            <p className="mb-2 text-sm font-semibold text-gray-700">선호 평수</p>
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+              {AREA_RANGE_ORDER.map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setPreferredAreaRange(key)}
+                  className={`rounded-xl border-2 py-2.5 text-sm font-semibold transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
+                    preferredAreaRange === key
+                      ? "border-indigo-500 bg-indigo-500 text-white"
+                      : "border-gray-200 bg-white text-gray-500 hover:border-indigo-300"
+                  }`}
+                >
+                  {AREA_RANGES[key].label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 통근 수단 */}
+          <div className="mb-7">
+            <p className="mb-2 text-sm font-semibold text-gray-700">통근 수단</p>
+            <div className="flex gap-2">
+              {(
+                [
+                  { value: "transit", label: "대중교통" },
+                  { value: "car", label: "자차" },
+                ] as const
+              ).map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setCommuteMode(opt.value)}
+                  className={`flex-1 rounded-xl border-2 py-2.5 text-sm font-semibold transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
+                    commuteMode === opt.value
+                      ? "border-indigo-500 bg-indigo-500 text-white"
+                      : "border-gray-200 bg-white text-gray-500 hover:border-indigo-300"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 우선순위 */}
+          <p className="mb-3 text-sm font-semibold text-gray-700">
+            무엇을 중요하게 볼까요?
+            <span className="ml-1 font-normal text-gray-400">
+              세 가지 조건의 중요도가 추천 가중치에 반영됩니다.
+            </span>
           </p>
           <div className="flex flex-col gap-5">
             {(Object.keys(PRIORITY_LABELS) as PriorityKey[]).map((key) => (
               <div key={key}>
-                <div className="flex justify-between items-baseline mb-2">
+                <div className="mb-2 flex items-baseline justify-between">
                   <span className="text-base font-semibold text-gray-800">
                     {PRIORITY_LABELS[key]}
                   </span>
@@ -199,11 +268,12 @@ export function ProfileForm({ onResult }: { onResult: (result: RecommendationRes
                   {[1, 2, 3, 4, 5].map((v) => (
                     <button
                       key={v}
+                      type="button"
                       onClick={() =>
                         setPriorities((p) => ({ ...p, [key]: v }))
                       }
                       aria-label={`${PRIORITY_LABELS[key]} 중요도 ${v}`}
-                      className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-bold transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
+                      className={`flex-1 rounded-xl border-2 py-2.5 text-sm font-bold transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
                         priorities[key] === v
                           ? "border-indigo-500 bg-indigo-500 text-white"
                           : priorities[key] > v
@@ -219,8 +289,9 @@ export function ProfileForm({ onResult }: { onResult: (result: RecommendationRes
             ))}
           </div>
           <button
+            type="button"
             onClick={() => setStep(2)}
-            className="mt-8 w-full px-6 py-3 rounded-2xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors"
+            className="mt-8 w-full rounded-2xl bg-indigo-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-indigo-700"
           >
             다음
           </button>

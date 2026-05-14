@@ -1,7 +1,7 @@
 import { estimateBudget } from "@/lib/budget";
 import { getCommuteMinutes } from "@/lib/commute";
 import { db } from "@/lib/db";
-import { DEFAULT_MAX_COMMUTE_MIN } from "@/types/profile";
+import { AREA_RANGES, DEFAULT_MAX_COMMUTE_MIN } from "@/types/profile";
 import type { CoupleProfile, LatLng, PriorityKey } from "@/types/profile";
 import { DISCLAIMER } from "@/types/recommendation";
 import type {
@@ -146,9 +146,13 @@ export async function recommendComplexes(
 
   // 3. 지리적 사전필터 — 직선거리 기준으로 두 직장 중 한 곳이라도 cutoff 안이면 통과.
   //    수도권 단지 1만 개 전부에 통근·중위가 계산을 돌리면 SQLite 가 막히므로,
-  //    먼저 수백~수천 개로 줄인다. cutoff 는 mock transit 역산에 50% 마진.
+  //    먼저 수백~수천 개로 줄인다. cutoff 는 mock 역산에 50% 마진 (수단별 속도 반영).
   const maxLimit = Math.max(limitA, limitB);
-  const cutoffKm = Math.max(8, (((maxLimit * 1.5 - 12) * 22) / 60) * 1.5);
+  const mode = profile.commuteMode;
+  const cutoffKm =
+    mode === "car"
+      ? Math.max(8, (((maxLimit * 1.5 - 5) * 28) / 60) * 1.5)
+      : Math.max(8, (((maxLimit * 1.5 - 12) * 22) / 60) * 1.5);
 
   const geoSurvivors = allComplexes.filter((c) => {
     const coord: LatLng = {
@@ -163,9 +167,10 @@ export async function recommendComplexes(
   // 4. 중위가 일괄 조회 (단지별 개별 쿼리 대신 청크 쿼리)
   const mediansMap = await getAreaMediansForMany(geoSurvivors.map((c) => c.id));
 
-  // 가족 규모에 따른 최소 전용면적(㎡) — 오피스텔·초소형 원룸을 대표 평형에서 배제.
-  const childCount = profile.childrenAges.length;
-  const minArea = childCount >= 2 ? 60 : childCount === 1 ? 45 : 33;
+  // 선호 평수대 → 대표 평형 전용면적 구간 [minArea, maxArea).
+  const areaRange = AREA_RANGES[profile.preferredAreaRange];
+  const minArea = areaRange.minM2;
+  const maxArea = areaRange.maxM2 ?? Number.POSITIVE_INFINITY;
 
   // 소규모 건물·도시형생활주택 배제. MOLIT 매매 API 에 세대수가 없어서
   // 6개월 거래 건수를 "250세대급 대단지" 프록시로 사용한다.
@@ -185,8 +190,8 @@ export async function recommendComplexes(
       const totalTransactions = medians.reduce((s, m) => s + m.count, 0);
       if (totalTransactions < MIN_TRANSACTIONS) return null;
 
-      const rep = pickRepresentative(medians, minArea);
-      if (rep === null) return null; // 가족용 평형 거래 데이터 없음 — 제외
+      const rep = pickRepresentative(medians, minArea, maxArea);
+      if (rep === null) return null; // 선호 평수대 거래 데이터 없음 — 제외
 
       const complexCoord: LatLng = {
         lat: complex.latitude as number,
@@ -194,13 +199,13 @@ export async function recommendComplexes(
       };
 
       const legPromises: Promise<CommuteLeg>[] = [
-        getCommuteMinutes(wA, complex.id, complexCoord, "transit").then(
+        getCommuteMinutes(wA, complex.id, complexCoord, mode).then(
           (minutes): CommuteLeg => ({
             workplace: "A",
             workplaceLabel: labelA,
             minutes,
             distanceKm: Math.round(haversineKm(wA, complexCoord) * 10) / 10,
-            mode: "transit",
+            mode,
             withinLimit: minutes <= limitA,
           }),
         ),
@@ -208,14 +213,14 @@ export async function recommendComplexes(
       if (wB) {
         const wBfixed = wB;
         legPromises.push(
-          getCommuteMinutes(wBfixed, complex.id, complexCoord, "transit").then(
+          getCommuteMinutes(wBfixed, complex.id, complexCoord, mode).then(
             (minutes): CommuteLeg => ({
               workplace: "B",
               workplaceLabel: labelB,
               minutes,
               distanceKm:
                 Math.round(haversineKm(wBfixed, complexCoord) * 10) / 10,
-              mode: "transit",
+              mode,
               withinLimit: minutes <= limitB,
             }),
           ),
