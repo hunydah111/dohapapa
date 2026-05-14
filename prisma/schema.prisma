@@ -1,0 +1,104 @@
+// Dohapapa — Seoul real-estate fake-listing analyzer
+// Dev: SQLite (file). Prod: switch provider to "postgresql" and DATABASE_URL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Complex {
+  id              String        @id @default(cuid())
+  name            String
+  sigungu         String
+  dongName        String
+  buildYear       Int?
+  totalHouseholds Int?
+  latitude        Float?
+  longitude       Float?
+  createdAt       DateTime      @default(now())
+
+  listings        Listing[]
+  transactions   Transaction[]
+
+  @@unique([sigungu, dongName, name])
+  @@index([sigungu, dongName])
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  complexId String
+  complex   Complex  @relation(fields: [complexId], references: [id])
+
+  dealDate  DateTime
+  priceKrw  BigInt
+  area      Float
+  floor     Int?
+  source    String   @default("MOLIT")
+
+  @@index([complexId, dealDate])
+  @@index([complexId, area, dealDate])
+}
+
+model Listing {
+  id             String    @id @default(cuid())
+  complexId      String
+  complex        Complex   @relation(fields: [complexId], references: [id])
+
+  externalUrl    String?   @unique
+  brokerName     String?
+  brokerPhoneHash String?
+
+  askPriceKrw    BigInt
+  area           Float
+  floor          Int?
+  direction      String?
+
+  description    String?
+  photos         String?   // JSON array of URLs/hashes
+  rawHtml        String?   // optional: raw user-pasted blob
+
+  postedAt       DateTime?
+  lastModifiedAt DateTime?
+  refreshHistory String?   // JSON array of {at, priceKrw, modified}
+
+  submittedAt    DateTime  @default(now())
+  submitterIpHash String?
+
+  score          Score?
+  reports        Report[]
+
+  @@index([complexId, area])
+  @@index([submittedAt])
+}
+
+model Score {
+  id         String   @id @default(cuid())
+  listingId  String   @unique
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  total      Int      // 0–100
+  band       String   // "green" | "yellow" | "red"
+  signals    String   // JSON {price:30, info:5, ...}
+  reasoning  String   // JSON {price:"중위 -18%", ...}
+
+  computedAt DateTime @default(now())
+
+  @@index([total])
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  listingId   String
+  listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  reporterIpHash String
+  reason         String   // enum-like string
+  description    String?
+  createdAt      DateTime @default(now())
+
+  @@index([listingId])
+}

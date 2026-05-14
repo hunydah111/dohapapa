@@ -1,0 +1,341 @@
+// 국토교통부 실거래가 공개 API wrapper.
+// Endpoint: getRTMSDataSvcAptTradeDev (v2, apartment trade real transaction price).
+
+import { z } from "zod";
+import type { MolitDeal, MolitFetchOptions } from "@/types/molit";
+
+// ---------------------------------------------------------------------------
+// Seoul 구 codes (법정동코드 앞 5자리)
+// ---------------------------------------------------------------------------
+
+export const SEOUL_GU_CODES: Record<string, string> = {
+  종로구: "11110",
+  중구: "11140",
+  용산구: "11170",
+  성동구: "11200",
+  광진구: "11215",
+  동대문구: "11230",
+  중랑구: "11260",
+  성북구: "11290",
+  강북구: "11305",
+  도봉구: "11320",
+  노원구: "11350",
+  은평구: "11380",
+  서대문구: "11410",
+  마포구: "11440",
+  양천구: "11470",
+  강서구: "11500",
+  구로구: "11530",
+  금천구: "11545",
+  영등포구: "11560",
+  동작구: "11590",
+  관악구: "11620",
+  서초구: "11650",
+  강남구: "11680",
+  송파구: "11710",
+  강동구: "11740",
+};
+
+// Reverse map: code → 구 name. Built once at module load.
+const CODE_TO_GU: Record<string, string> = Object.fromEntries(
+  Object.entries(SEOUL_GU_CODES).map(([name, code]) => [code, name]),
+);
+
+// ---------------------------------------------------------------------------
+// Zod schema for a single item returned by the MOLIT API.
+// Fields arrive as numbers or numeric strings depending on the record.
+// ---------------------------------------------------------------------------
+
+// Coerces a value to a number or returns null when absent/blank/"-".
+const coerceNum = z
+  .union([z.number(), z.string()])
+  .transform((v) => {
+    const n = Number(String(v).replace(/,/g, "").trim());
+    return Number.isFinite(n) ? n : null;
+  })
+  .nullable()
+  .optional();
+
+const MolitItemSchema = z
+  .object({
+    aptNm: z.string().optional().default(""),
+    dealYear: z.union([z.number(), z.string()]),
+    dealMonth: z.union([z.number(), z.string()]),
+    dealDay: z.union([z.number(), z.string()]),
+    dealAmount: z.string(),              // "120,500" in 만원
+    excluUseAr: z.union([z.number(), z.string()]),
+    floor: z.union([z.number(), z.string()]).optional().nullable(),
+    umdNm: z.string().optional().default(""),
+    buildYear: z.union([z.number(), z.string()]).optional().nullable(),
+  })
+  .passthrough()  // tolerate extra fields the API may add without breaking schema
+  .transform((item) => {
+    // Parse year / month / day — API sometimes sends them as numbers.
+    const year = Number(item.dealYear);
+    const month = Number(item.dealMonth);
+    const day = Number(item.dealDay);
+    const dealDate = new Date(year, month - 1, day);
+
+    // dealAmount is in 만원 ("120,500" → 1,205,000,000 원).
+    const manWon = parseInt(item.dealAmount.replace(/,/g, ""), 10);
+    const priceKrw = BigInt(manWon) * 10000n;
+
+    const area = Number(String(item.excluUseAr).replace(/,/g, ""));
+
+    // floor: null when missing, "0", or "-".
+    const rawFloor = item.floor;
+    let floor: number | null = null;
+    if (rawFloor !== undefined && rawFloor !== null) {
+      const f = Number(rawFloor);
+      if (Number.isFinite(f) && f !== 0 && String(rawFloor).trim() !== "-") {
+        floor = f;
+      }
+    }
+
+    // buildYear: null when missing or non-numeric.
+    let buildYear: number | null = null;
+    if (item.buildYear !== undefined && item.buildYear !== null) {
+      const by = Number(item.buildYear);
+      if (Number.isFinite(by) && by > 0) buildYear = by;
+    }
+
+    return {
+      _aptNm: item.aptNm,
+      _dealDate: dealDate,
+      _priceKrw: priceKrw,
+      _area: area,
+      _floor: floor,
+      _umdNm: item.umdNm,
+      _buildYear: buildYear,
+    };
+  });
+
+// ---------------------------------------------------------------------------
+// Internal: build a MolitDeal from a validated+transformed item.
+// sigunguCode / sigunguName are injected from the call site.
+// ---------------------------------------------------------------------------
+
+function toDeal(
+  transformed: z.output<typeof MolitItemSchema>,
+  sigunguCode: string,
+): MolitDeal {
+  return {
+    apartmentName: transformed._aptNm,
+    dealDate: transformed._dealDate,
+    priceKrw: transformed._priceKrw,
+    area: transformed._area,
+    floor: transformed._floor,
+    sigunguCode,
+    sigunguName: CODE_TO_GU[sigunguCode] ?? sigunguCode,
+    dongName: transformed._umdNm,
+    buildYear: transformed._buildYear,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Internal: shape of the top-level JSON from the MOLIT endpoint.
+// ---------------------------------------------------------------------------
+
+// `item` can be an array, a single object, or absent (when no data).
+const MolitResponseSchema = z.object({
+  response: z.object({
+    header: z.object({
+      resultCode: z.string(),
+      resultMsg: z.string(),
+    }),
+    body: z.object({
+      totalCount: z.union([z.number(), z.string()]).transform(Number),
+      items: z
+        .union([
+          z.object({ item: z.union([z.array(z.unknown()), z.unknown()]) }),
+          z.string(), // empty string when no results
+          z.null(),
+        ])
+        .optional(),
+    }),
+  }),
+});
+
+// ---------------------------------------------------------------------------
+// MOLIT API base URL
+// ---------------------------------------------------------------------------
+
+const BASE_URL =
+  "https://apis.data.go.kr/1613000/RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTradeDev";
+
+// ---------------------------------------------------------------------------
+// fetchDeals — fetch a single month's transactions.
+// ---------------------------------------------------------------------------
+
+export async function fetchDeals(opts: MolitFetchOptions): Promise<MolitDeal[]> {
+  const apiKey = process.env.MOLIT_API_KEY;
+  if (!apiKey) throw new Error("MOLIT_API_KEY not configured");
+
+  const pageNo = opts.pageNo ?? 1;
+  const numOfRows = opts.numOfRows ?? 100;
+
+  // serviceKey is pre-encoded as registered on data.go.kr — do NOT re-encode.
+  const url =
+    `${BASE_URL}?serviceKey=${apiKey}` +
+    `&LAWD_CD=${opts.sigunguCode}` +
+    `&DEAL_YMD=${opts.dealYearMonth}` +
+    `&pageNo=${pageNo}` +
+    `&numOfRows=${numOfRows}` +
+    `&_type=json`;
+
+  const response = await fetch(url, { cache: "no-store" });
+
+  if (!response.ok) {
+    throw new Error(
+      `MOLIT HTTP error: ${response.status} ${response.statusText}`,
+    );
+  }
+
+  const raw: unknown = await response.json();
+
+  const parsed = MolitResponseSchema.parse(raw);
+  const { header, body } = parsed.response;
+
+  if (header.resultCode !== "00") {
+    throw new Error(`MOLIT API error: ${header.resultCode} ${header.resultMsg}`);
+  }
+
+  // Normalize items → array.
+  const rawItems = normalizeItems(body.items);
+
+  const deals: MolitDeal[] = [];
+  for (const rawItem of rawItems) {
+    const result = MolitItemSchema.safeParse(rawItem);
+    if (!result.success) {
+      // Skip malformed records rather than aborting the entire page.
+      continue;
+    }
+    deals.push(toDeal(result.data, opts.sigunguCode));
+  }
+
+  return deals;
+}
+
+// ---------------------------------------------------------------------------
+// fetchDealsForRange — iterate inclusive YYYYMM range, paginate as needed.
+// ---------------------------------------------------------------------------
+
+export async function fetchDealsForRange(opts: {
+  sigunguCode: string;
+  fromYearMonth: string;
+  toYearMonth: string;
+}): Promise<MolitDeal[]> {
+  const months = expandMonthRange(opts.fromYearMonth, opts.toYearMonth);
+  const numOfRows = 1000;
+  const all: MolitDeal[] = [];
+
+  for (const ym of months) {
+    // Fetch first page to learn totalCount.
+    const firstPage = await fetchDealsPageRaw(
+      { sigunguCode: opts.sigunguCode, dealYearMonth: ym, pageNo: 1, numOfRows },
+    );
+
+    all.push(...parsePage(firstPage.rawItems, opts.sigunguCode));
+
+    const totalCount = firstPage.totalCount;
+    const totalPages = Math.ceil(totalCount / numOfRows);
+
+    // Fetch additional pages if paginated.
+    for (let page = 2; page <= totalPages; page++) {
+      const pageData = await fetchDealsPageRaw(
+        { sigunguCode: opts.sigunguCode, dealYearMonth: ym, pageNo: page, numOfRows },
+      );
+      all.push(...parsePage(pageData.rawItems, opts.sigunguCode));
+    }
+  }
+
+  return all;
+}
+
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
+
+/** Fetch a page and return the raw items array + totalCount without parsing deals. */
+async function fetchDealsPageRaw(opts: Required<MolitFetchOptions>): Promise<{
+  rawItems: unknown[];
+  totalCount: number;
+}> {
+  const apiKey = process.env.MOLIT_API_KEY;
+  if (!apiKey) throw new Error("MOLIT_API_KEY not configured");
+
+  const url =
+    `${BASE_URL}?serviceKey=${apiKey}` +
+    `&LAWD_CD=${opts.sigunguCode}` +
+    `&DEAL_YMD=${opts.dealYearMonth}` +
+    `&pageNo=${opts.pageNo}` +
+    `&numOfRows=${opts.numOfRows}` +
+    `&_type=json`;
+
+  const response = await fetch(url, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`MOLIT HTTP error: ${response.status} ${response.statusText}`);
+  }
+
+  const raw: unknown = await response.json();
+  const parsed = MolitResponseSchema.parse(raw);
+  const { header, body } = parsed.response;
+
+  if (header.resultCode !== "00") {
+    throw new Error(`MOLIT API error: ${header.resultCode} ${header.resultMsg}`);
+  }
+
+  return {
+    rawItems: normalizeItems(body.items),
+    totalCount: body.totalCount,
+  };
+}
+
+/** Normalise the `items` field (array | single object | empty string | missing) → array. */
+function normalizeItems(
+  items: z.output<typeof MolitResponseSchema>["response"]["body"]["items"],
+): unknown[] {
+  if (!items || typeof items === "string") return [];
+  if ("item" in items) {
+    const item = items.item;
+    if (Array.isArray(item)) return item;
+    if (item !== null && item !== undefined) return [item];
+  }
+  return [];
+}
+
+/** Parse a raw items array into MolitDeal[], skipping invalid records. */
+function parsePage(rawItems: unknown[], sigunguCode: string): MolitDeal[] {
+  const deals: MolitDeal[] = [];
+  for (const rawItem of rawItems) {
+    const result = MolitItemSchema.safeParse(rawItem);
+    if (result.success) {
+      deals.push(toDeal(result.data, sigunguCode));
+    }
+  }
+  return deals;
+}
+
+/**
+ * Expand "202401" .. "202404" → ["202401", "202402", "202403", "202404"].
+ * Handles year wrap-around correctly.
+ */
+function expandMonthRange(from: string, to: string): string[] {
+  let year = parseInt(from.slice(0, 4), 10);
+  let month = parseInt(from.slice(4, 6), 10);
+  const toYear = parseInt(to.slice(0, 4), 10);
+  const toMonth = parseInt(to.slice(4, 6), 10);
+
+  const results: string[] = [];
+
+  while (year < toYear || (year === toYear && month <= toMonth)) {
+    results.push(`${year}${String(month).padStart(2, "0")}`);
+    month++;
+    if (month > 12) {
+      month = 1;
+      year++;
+    }
+  }
+
+  return results;
+}
