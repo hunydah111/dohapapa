@@ -2,9 +2,9 @@
 
 ## 사용 중인 데이터 소스
 
-### 국토교통부 실거래가 공개 API (아파트 매매)
+### 국토교통부 실거래가 공개 API (핵심)
 
-dohapapa의 유일한 외부 데이터 소스입니다. 실제 체결된 아파트 매매 거래를 제공하며, 호가 대비 검증을 위한 진실 기준(truth anchor)으로 사용합니다.
+dohapapa의 핵심 데이터 소스입니다. 공식 체결 아파트 매매 거래 데이터를 제공하며, 단지별 중위 실거래가 산출의 근거로 사용합니다.
 
 | 항목 | 내용 |
 |------|------|
@@ -12,8 +12,25 @@ dohapapa의 유일한 외부 데이터 소스입니다. 실제 체결된 아파�
 | 엔드포인트 | `https://apis.data.go.kr/1613000/RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTradeDev` |
 | 등록 URL | https://www.data.go.kr (공공데이터포털 → 아파트매매실거래자료 → 활용신청) |
 | 인증 방식 | `serviceKey` 쿼리 파라미터 (URL-encoded, 재인코딩 금지) |
+| 환경 변수 | `MOLIT_API_KEY` |
 | 비용 | 무료 |
 | 응답 형식 | JSON (`_type=json` 파라미터로 지정) |
+| 수집 스크립트 | `scripts/fetch-molit.ts` |
+
+`MOLIT_API_KEY`가 설정되지 않은 경우 앱은 `prisma/seed.ts`로 삽입된 시드 데이터로 동작합니다. 실거래 데이터가 없는 단지는 후보 선별에서 제외됩니다.
+
+#### 수집 스크립트 사용법
+
+```powershell
+npx tsx scripts/fetch-molit.ts --months=3 --gu="강남구,서초구,송파구"
+```
+
+| 파라미터 | 설명 | 기본값 |
+|----------|------|--------|
+| `--months` | 오늘 기준 수집할 개월 수 | 3 |
+| `--gu` | 수집할 구 목록 (쉼표 구분) | 강남구,서초구,송파구 |
+
+서울 25개 구 코드는 `src/lib/molit.ts`의 `SEOUL_GU_CODES`에 정의되어 있습니다. 수집된 거래는 `Transaction` 테이블에 `source = "MOLIT"`로 저장되며 중복은 건너뜁니다.
 
 #### 요청 파라미터
 
@@ -26,79 +43,67 @@ dohapapa의 유일한 외부 데이터 소스입니다. 실제 체결된 아파�
 | `numOfRows` | 페이지당 행 수 | `1000` |
 | `_type` | 응답 형식 지정 | `json` |
 
-서울 25개 구 코드는 `src/lib/molit.ts`의 `SEOUL_GU_CODES` 맵에 정의되어 있습니다.
+---
 
-#### 응답 구조
+### 카카오 API (선택, mock fallback 있음)
 
-```json
-{
-  "response": {
-    "header": { "resultCode": "00", "resultMsg": "NORMAL SERVICE." },
-    "body": {
-      "totalCount": 1234,
-      "items": {
-        "item": [
-          {
-            "aptNm": "래미안대치팰리스",
-            "dealYear": "2024", "dealMonth": "4", "dealDay": "15",
-            "dealAmount": "120,500",
-            "excluUseAr": "84.99",
-            "floor": "12",
-            "umdNm": "대치동",
-            "buildYear": "2015"
-          }
-        ]
-      }
-    }
-  }
-}
-```
+#### Kakao Local API — 지오코딩 (회사명 → 좌표)
 
-- `dealAmount` 단위: 만원 (예: `"120,500"` → 12억 500만 원)
-- `items.item`은 단일 결과인 경우 배열이 아닌 객체로 반환될 수 있습니다. `src/lib/molit.ts`의 `normalizeItems()`가 정규화합니다.
-- 결과가 없을 때 `items`는 빈 문자열 또는 null이 될 수 있습니다.
+사용자가 회사명을 입력한 경우 좌표로 변환하는 데 사용합니다.
 
-#### 속도 제한 및 주의사항
+| 항목 | 내용 |
+|------|------|
+| 용도 | 회사명 또는 주소 문자열 → (lat, lng) 변환 |
+| 엔드포인트 | `https://dapi.kakao.com/v2/local/search/keyword.json` |
+| 환경 변수 | `KAKAO_REST_KEY` |
+| Fallback | `KAKAO_REST_KEY` 미설정 시 시드 좌표 테이블에서 조회 |
 
-공공데이터포털 기준 일반 활용 신청 시 초당 호출 수 제한이 적용됩니다 (신청 시 확인). `scripts/fetch-molit.ts`는 구(gu)와 월(month)을 순차적으로 처리하며, 별도의 rate-limit 처리 로직은 포함하지 않습니다. 대량 수집 시 요청 간 지연을 고려해야 합니다.
+#### Kakao Mobility API — 통근 시간
 
-#### 데이터 저장 위치
+단지 좌표에서 각 직장까지의 대중교통·자동차 통근 시간을 계산합니다.
 
-수집된 거래는 `Transaction` 테이블에 `source = "MOLIT"`로 저장됩니다. 동일 거래(단지, 날짜, 면적, 층, 가격 일치)는 중복 삽입하지 않습니다.
+| 항목 | 내용 |
+|------|------|
+| 용도 | 출발지 → 목적지 이동 시간(분) 계산 |
+| 모드 | `transit` (대중교통) / `car` (자동차) |
+| 환경 변수 | `KAKAO_REST_KEY` |
+| Fallback | `KAKAO_REST_KEY` 미설정 시 `MockCommuteProvider` 사용 |
+| 캐시 | `CommuteCache` 테이블 (originKey: 좌표 소수 3자리 반올림) |
+
+`KAKAO_REST_KEY`는 선택 환경 변수입니다. 미설정 시 앱은 `MockCommuteProvider`(직선거리 기반 추정)로 대체 동작하며 기능 전체가 유지됩니다.
 
 ---
 
-### 공동주택단지 기본정보 API (향후 개선 대상)
+## 향후 통합 예정 데이터 소스
 
-국토교통부 공동주택단지 기본정보 API를 통해 단지의 세대수, 준공연도, 동수 등 마스터 데이터를 정규화할 수 있습니다. 현재 MVP에서는 MOLIT 실거래 응답에 포함된 `aptNm` / `umdNm` / `buildYear`를 그대로 사용하며, 단지명 정규화는 수행하지 않습니다. 향후 동일 단지가 표기 방식 차이로 중복 생성되는 문제를 해결하기 위한 개선 포인트입니다.
+### 학교알리미 (교육통계서비스)
+
+초등학교 학생 수, 학급 수 등 학군 관련 정보를 제공합니다. 현재 MVP에서 `school` 신호는 `nearestElemSchoolM`(최단 초등학교 도보 거리) 시드 추정값만 사용합니다. 학교알리미 API 연동이 완료되면 학급 규모, 특수학급 유무 등 추가 지표를 반영할 계획입니다.
 
 ---
 
 ## 사용하지 않는 데이터 소스
 
-### 네이버 부동산 / 직방 / 다방
+### 네이버 부동산 / 직방
 
 **사용 안 함.**
 
-이들 서비스의 이용약관은 자동화된 데이터 수집(크롤링, 스크래핑)을 명시적으로 금지합니다. 유사 사례로 잡코리아가 사람인의 크롤링 행위에 대해 법적 조치를 취한 판례가 있으며, 부동산 포털 데이터는 저작권 및 데이터베이스 보호 법률의 적용 대상이 될 수 있습니다.
-
-따라서 dohapapa는 포털 페이지를 직접 수집하지 않습니다. 매물 정보는 사용자가 직접 입력하거나 URL을 붙여넣기 하는 방식으로만 수집합니다. `src/lib/parseNaverUrl.ts`는 URL 문자열의 구조를 파싱할 뿐 네트워크 요청을 보내지 않습니다.
-
-### KISO 부동산매물클린관리센터
-
-**현재 사용 안 함 — 향후 신호 보강 후보.**
-
-한국인터넷자율정책기구(KISO) 부동산매물클린관리센터는 중개사 허위매물 신고 이력 데이터를 관리합니다. API 접근이 공개되거나 데이터 공유 협약이 체결된다면 `brokerHistory` 신호의 데이터 소스로 활용할 수 있습니다. 현재 해당 신호는 MVP placeholder 상태입니다.
+이들 서비스의 이용약관은 자동화된 데이터 수집(크롤링, 스크래핑)을 명시적으로 금지합니다. 부동산 포털 데이터는 저작권 및 데이터베이스 보호 법률의 적용 대상이 될 수 있습니다. dohapapa는 이들 서비스로부터 어떠한 데이터도 수집하지 않습니다.
 
 ---
 
-## 환경 변수 설정
+## 환경 변수 요약
 
 ```ini
 # .env.local
 
-# MOLIT API 키 — data.go.kr에서 "아파트매매실거래자료" 활용 신청 후 발급
-MOLIT_API_KEY="your-api-key-here"
+# MOLIT API 키 — data.go.kr에서 "아파트매매실거래자료" 활용신청 후 발급
+# 미설정 시 시드 데이터로 동작
+MOLIT_API_KEY="your-molit-api-key"
+
+# 카카오 REST API 키 — developers.kakao.com에서 앱 생성 후 발급
+# 미설정 시 mock 지오코딩·통근 제공자로 동작
+KAKAO_REST_KEY="your-kakao-rest-key"
 
 # DB (개발: SQLite)
 DATABASE_URL="file:./dev.db"

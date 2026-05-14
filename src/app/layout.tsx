@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "dohapapa — 부동산 호가 의심도 분석",
+  title: "dohapapa — 우리 부부, 어디 살 수 있을까",
   description:
-    "사용자가 제출한 매물을 국토부 실거래가와 비교해 허위매물 가능성을 점수화합니다.",
+    "국토부 실거래가로 부부 두 직장 통근·예산·학군 조건에 맞는 아파트 단지를 좁혀주는 정보 제공 도구.",
 };
 
 export default function RootLayout({

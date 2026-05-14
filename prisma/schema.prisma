@@ -1,5 +1,8 @@
-// Dohapapa — Seoul real-estate fake-listing analyzer
+// Dohapapa — 부부 프로필 기반 주거지 탐색 의사결정 도구
 // Dev: SQLite (file). Prod: switch provider to "postgresql" and DATABASE_URL.
+//
+// 컴플라이언스 주의: 사용자 프로필(소득·자산·직장)은 DB에 저장하지 않는다.
+// 요청당 1회 계산 후 폐기. 영속 데이터는 공개 데이터(실거래가)와 캐시뿐.
 
 generator client {
   provider = "prisma-client-js"
@@ -19,10 +22,12 @@ model Complex {
   totalHouseholds Int?
   latitude        Float?
   longitude       Float?
+  // 가족 입지 점수용 보조 데이터 (MVP: 시드/추정값, 추후 학교알리미 등으로 보강)
+  nearestElemSchoolM Int? // 최단 초등학교 도보 거리(m)
+  nearestSubwayM     Int? // 최단 지하철역 거리(m)
   createdAt       DateTime      @default(now())
 
-  listings        Listing[]
-  transactions   Transaction[]
+  transactions    Transaction[]
 
   @@unique([sigungu, dongName, name])
   @@index([sigungu, dongName])
@@ -31,7 +36,7 @@ model Complex {
 model Transaction {
   id        String   @id @default(cuid())
   complexId String
-  complex   Complex  @relation(fields: [complexId], references: [id])
+  complex   Complex  @relation(fields: [complexId], references: [id], onDelete: Cascade)
 
   dealDate  DateTime
   priceKrw  BigInt
@@ -43,62 +48,17 @@ model Transaction {
   @@index([complexId, area, dealDate])
 }
 
-model Listing {
-  id             String    @id @default(cuid())
-  complexId      String
-  complex        Complex   @relation(fields: [complexId], references: [id])
-
-  externalUrl    String?   @unique
-  brokerName     String?
-  brokerPhoneHash String?
-
-  askPriceKrw    BigInt
-  area           Float
-  floor          Int?
-  direction      String?
-
-  description    String?
-  photos         String?   // JSON array of URLs/hashes
-  rawHtml        String?   // optional: raw user-pasted blob
-
-  postedAt       DateTime?
-  lastModifiedAt DateTime?
-  refreshHistory String?   // JSON array of {at, priceKrw, modified}
-
-  submittedAt    DateTime  @default(now())
-  submitterIpHash String?
-
-  score          Score?
-  reports        Report[]
-
-  @@index([complexId, area])
-  @@index([submittedAt])
-}
-
-model Score {
+// 통근 시간 계산 결과 캐시 — 동일 출발지·단지·교통수단 조합의 재계산을 막는다.
+// 출발지는 좌표를 소수 3자리(약 100m)로 반올림한 키로 묶는다.
+// (회의에서 데이터 사이언티스트가 지적한 "API 호출 폭발" 대응의 핵심.)
+model CommuteCache {
   id         String   @id @default(cuid())
-  listingId  String   @unique
-  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-
-  total      Int      // 0–100
-  band       String   // "green" | "yellow" | "red"
-  signals    String   // JSON {price:30, info:5, ...}
-  reasoning  String   // JSON {price:"중위 -18%", ...}
-
+  originKey  String   // "37.513,127.086" — lat,lng rounded to 3 decimals
+  complexId  String
+  mode       String   // "transit" | "car"
+  minutes    Int
   computedAt DateTime @default(now())
 
-  @@index([total])
-}
-
-model Report {
-  id          String   @id @default(cuid())
-  listingId   String
-  listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-
-  reporterIpHash String
-  reason         String   // enum-like string
-  description    String?
-  createdAt      DateTime @default(now())
-
-  @@index([listingId])
+  @@unique([originKey, complexId, mode])
+  @@index([originKey])
 }

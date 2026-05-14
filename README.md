@@ -1,41 +1,40 @@
 # dohapapa
 
-서울 아파트 매물의 허위매물 가능성을 0–100점으로 수치화하는 분석 도구입니다. 국토교통부 실거래가 공개 API를 진실 기준(truth anchor)으로 삼아 가격 이상치, 중개사 행동 패턴, 미끼 키워드 등 8개 신호를 개별 점수로 분해해 보여줍니다. 분석 대상 데이터는 사용자가 직접 입력하거나 URL을 붙여넣는 방식으로만 수집하며, 포털 사이트 크롤링은 법적 이유로 수행하지 않습니다.
+부부가 함께 집을 고를 때 가장 어려운 문제, 즉 두 직장을 동시에 고려한 통근 부담을 수치로 풀어주는 주거지 탐색 의사결정 도구입니다. 양쪽 직장 좌표와 가구 재무 정보를 입력하면, 국토교통부 실거래가 기반으로 예산에 맞는 아파트 단지를 선별하고 통근·학군·예산 적합도를 복합 점수로 산출해 세 가지 안정형/균형형/도전형 후보를 제시합니다. 특정 매물을 중개하거나 투자 자문을 제공하지 않습니다.
 
 ## 주요 기능
 
-- 매물 정보 수동 입력 및 외부 URL 제출
-- 국토부 실거래가 기반 가격 이상치 탐지 (z-score)
-- 8개 신호 개별 점수 + 한국어 사유 표시 (SignalBreakdown)
-- 의심도 밴드: 초록(안전) / 노랑(주의) / 빨강(위험)
-- 최근 거래가 분포 차트 (Recharts)
-- 매물 신고 기능 (Report)
-- 국토부 실거래 데이터 주기적 동기화 스크립트
+- 부부 직장 주소(또는 좌표) 입력 → 단지별 양측 통근 시간 동시 계산
+- DSR 40% / LTV / 스트레스 DSR 공개 공식 기반 구매력 추정 (항상 "추정"으로 표시)
+- 취득세·중개수수료·부대비용 합산 실매입 가능 상한액 산출
+- 통근 / 예산 적합도 / 학군·자녀 / 단지 연식 4개 신호 복합 점수화
+- 안정형·균형형·도전형 3개 후보 단지 제시 (단지 레벨, 개별 매물 알선 없음)
+- 결과 하단 법적 면책 고지 항상 표시
+- 사용자 재무 정보는 DB 미저장 — 요청당 계산 후 즉시 폐기
 
 ## 기술 스택
 
 | 구분 | 사용 기술 |
 |------|-----------|
-| 프레임워크 | Next.js 15 (App Router) |
+| 프레임워크 | Next.js 16 (App Router, Turbopack) |
 | 언어 | TypeScript 5 |
 | 스타일 | Tailwind CSS v4 |
 | ORM / DB | Prisma 6 — SQLite(개발) / PostgreSQL(운영) |
+| 검증 | Zod 3 |
 | 차트 | Recharts 2 |
 | 테스트 | Vitest 2 |
 | 스크립트 런타임 | tsx |
-| 검증 | Zod 3 |
 
 ## 시작하기
 
 ```powershell
 npm install
-npm run db:generate
-npm run db:migrate -- --name init
+npm run db:migrate
 npm run db:seed
 npm run dev
 ```
 
-Bash를 사용하는 경우에도 동일한 명령어가 동작합니다.
+개발 서버가 `http://localhost:3000`에서 실행됩니다.
 
 ## 환경 변수
 
@@ -45,68 +44,69 @@ Bash를 사용하는 경우에도 동일한 명령어가 동작합니다.
 copy .env.example .env.local
 ```
 
-| 변수 | 설명 |
-|------|------|
-| `DATABASE_URL` | SQLite: `file:./dev.db` / PostgreSQL: connection string |
-| `MOLIT_API_KEY` | data.go.kr 아파트매매실거래자료 API 키 |
-| `NEXT_PUBLIC_KAKAO_MAP_KEY` | 카카오 지도 API 키 (선택) |
-| `IP_HASH_SALT` | 익명 제출자 IP 해시 솔트 (임의 문자열) |
+| 변수 | 필수 여부 | 설명 |
+|------|-----------|------|
+| `DATABASE_URL` | 필수 | SQLite: `file:./dev.db` / PostgreSQL: connection string |
+| `MOLIT_API_KEY` | 선택 | data.go.kr 아파트매매실거래자료 API 키. 미설정 시 시드 데이터로 동작 |
+| `KAKAO_REST_KEY` | 선택 | 카카오 Local·Mobility REST API 키. 미설정 시 mock 통근 제공자 사용 |
 
-자세한 내용은 [`docs/data-sources.md`](docs/data-sources.md)를 참조하세요.
+`MOLIT_API_KEY`와 `KAKAO_REST_KEY` 없이도 앱은 완전히 동작합니다. 실데이터가 필요한 경우에만 발급하면 됩니다.
 
 ## 스크립트
 
 | 명령어 | 설명 |
 |--------|------|
-| `npm run dev` | 개발 서버 실행 (localhost:3000) |
+| `npm run dev` | 개발 서버 실행 (Turbopack) |
 | `npm run build` | 프로덕션 빌드 |
 | `npm run start` | 프로덕션 서버 실행 |
 | `npm run lint` | ESLint 검사 |
 | `npm run typecheck` | TypeScript 타입 검사 (`tsc --noEmit`) |
 | `npm run test` | Vitest 단위 테스트 실행 |
+| `npm run test:watch` | Vitest watch 모드 |
 | `npm run db:generate` | Prisma 클라이언트 생성 |
 | `npm run db:migrate` | DB 마이그레이션 적용 |
 | `npm run db:seed` | 시드 데이터 삽입 |
 
-## MOLIT 실거래 데이터 동기화
-
-국토교통부 API에서 실거래 데이터를 가져와 DB에 upsert합니다. `MOLIT_API_KEY`가 `.env.local`에 설정되어 있어야 합니다.
+### MOLIT 실거래 데이터 수집
 
 ```powershell
 npx tsx scripts/fetch-molit.ts --months=3 --gu="강남구,서초구,송파구"
 ```
 
-- `--months` : 오늘 기준 몇 개월 전까지 수집할지 (기본값: 3)
-- `--gu` : 수집할 구 이름 목록, 쉼표 구분 (기본값: 강남구,서초구,송파구)
-- 서울 25개 구 코드가 모두 내장되어 있습니다 (`src/lib/molit.ts` 참조).
-
-스크립트는 중복 거래를 건너뛰고 신규 건만 삽입합니다.
-
-## 법적 입장
-
-본 서비스는 국토교통부 실거래가 공개 API(공공데이터포털, 무료)만을 데이터 소스로 사용합니다. 네이버 부동산, 직방, 다방 등 민간 포털의 페이지를 크롤링하거나 스크래핑하지 않습니다. 사용자가 직접 입력하거나 붙여넣기한 정보만 분석에 활용합니다. 자세한 내용은 [`docs/data-sources.md`](docs/data-sources.md)를 참조하세요.
+`MOLIT_API_KEY`가 설정되어 있어야 합니다. `--gu` 기본값은 강남·서초·송파입니다.
 
 ## 프로젝트 구조
 
 ```
 dohapapa/
 ├── src/
-│   ├── app/          # Next.js App Router (pages, API routes)
-│   ├── components/   # React 컴포넌트 (ListingForm, ScoreCard, SignalBreakdown, PriceDistribution)
-│   ├── lib/          # 비즈니스 로직 (score/, molit.ts, comparables.ts, db.ts)
-│   └── types/        # 공유 타입 (listing.ts, molit.ts)
+│   ├── app/              # Next.js App Router (pages, API routes)
+│   ├── components/       # React 컴포넌트 (ProfileForm, BudgetSummary, CandidateCards 등)
+│   ├── lib/
+│   │   ├── budget.ts         # 구매력 추정 (DSR/LTV)
+│   │   ├── acquisitionCost.ts # 취득세·중개수수료·부대비용
+│   │   ├── commute/          # 통근 엔진 (mock + Kakao Mobility 어댑터)
+│   │   ├── recommend/        # 단지 점수화·후보 선별
+│   │   └── molit.ts          # 국토교통부 API 클라이언트
+│   └── types/
+│       ├── profile.ts        # CoupleProfile, Workplace, Segment
+│       └── recommendation.ts # BudgetEstimate, ComplexCandidate, RecommendationResult
 ├── prisma/
-│   ├── schema.prisma # DB 스키마 (Complex, Transaction, Listing, Score, Report)
-│   └── seed.ts       # 시드 데이터
+│   ├── schema.prisma     # DB 스키마 (Complex, Transaction, CommuteCache)
+│   └── seed.ts           # 개발용 시드 데이터
 ├── scripts/
-│   └── fetch-molit.ts # MOLIT 실거래 데이터 수집 스크립트
-├── tests/
-│   └── score/        # 신호 스코어러 단위 테스트 (Vitest)
+│   └── fetch-molit.ts    # MOLIT 실거래 데이터 수집 CLI
+├── tests/                # Vitest 단위 테스트
 └── docs/
     ├── architecture.md
-    ├── data-sources.md
-    └── scoring.md
+    ├── scoring.md
+    ├── legal.md
+    └── data-sources.md
 ```
+
+## 법적 입장
+
+본 서비스는 국토교통부 공개 실거래가 API(공공데이터포털, 무료)를 주요 데이터 소스로 사용합니다. 네이버 부동산·직방·다방 등 민간 포털 크롤링은 수행하지 않습니다. 결과 화면에 표시되는 정보는 중개·투자자문·대출모집이 아닌 참고용 정보 제공이며, 법적 컴플라이언스 세부 내용은 [`docs/legal.md`](docs/legal.md)를 참조하십시오.
 
 ## 라이선스
 
