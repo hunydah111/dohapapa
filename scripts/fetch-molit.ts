@@ -1,40 +1,36 @@
 /**
  * fetch-molit.ts
  *
- * Standalone data-fetcher: pulls apartment transaction records from MOLIT
- * (국토교통부 실거래가) and upserts them into the local database.
+ * MOLIT(국토교통부) 아파트 매매 실거래가를 받아 DB 에 적재한다.
  *
- * Usage:
- *   npx tsx scripts/fetch-molit.ts [--months=3] [--gu="강남구,서초구,송파구"]
+ * 사용법:
+ *   npx tsx --env-file=.env.local scripts/fetch-molit.ts [--months=6] [--gu="강남구,..."|--gu=all]
  *
- * Defaults: months=3, gu=강남구,서초구,송파구
+ * 기본값: months=3, gu=강남구,서초구,송파구
+ * --gu=all (또는 --gu 생략 없이 명시) 시 LAWD_CODES 전체(서울25 + 경기47) 수집.
+ *
+ * 주의: createMany 기반 일괄 삽입이라 DB 가 비어 있다고 가정한다.
+ *       실데이터로 교체할 때는 먼저 scripts/wipe.ts 를 실행할 것.
+ *       fetch 후 scripts/geocode-complexes.ts 로 단지 좌표를 채워야 한다.
  */
 
 import { PrismaClient } from "@prisma/client";
-import { fetchDealsForRange, SEOUL_GU_CODES } from "@/lib/molit";
+import { fetchDealsForRange, LAWD_CODES } from "@/lib/molit";
 import type { MolitDeal } from "@/types/molit";
 
-// ---------------------------------------------------------------------------
-// Guard: MOLIT_API_KEY must be present before we do anything.
-// ---------------------------------------------------------------------------
 if (!process.env.MOLIT_API_KEY) {
   console.error(
-    "오류: MOLIT_API_KEY 환경 변수가 설정되지 않았습니다.\n" +
-      ".env.local 파일에 MOLIT_API_KEY=<발급받은 키> 를 추가한 후 다시 실행해 주세요."
+    "오류: MOLIT_API_KEY 가 설정되지 않았습니다. .env.local 을 확인하세요.",
   );
   process.exit(1);
 }
-
-// ---------------------------------------------------------------------------
-// Arg parsing — no external libraries needed for two simple flags.
-// ---------------------------------------------------------------------------
 
 const DEFAULT_GU = ["강남구", "서초구", "송파구"];
 const DEFAULT_MONTHS = 3;
 
 function parseArgs(): { months: number; guList: string[] } {
   let months = DEFAULT_MONTHS;
-  let guList = DEFAULT_GU;
+  let guList: string[] = DEFAULT_GU;
 
   for (const arg of process.argv.slice(2)) {
     const monthsMatch = arg.match(/^--months=(\d+)$/);
@@ -42,122 +38,116 @@ function parseArgs(): { months: number; guList: string[] } {
       months = parseInt(monthsMatch[1], 10);
       continue;
     }
-
-    const guMatch = arg.match(/^--gu="?([^"]+)"?$/);
+    const guMatch = arg.match(/^--gu=(.+)$/);
     if (guMatch) {
-      guList = guMatch[1].split(",").map((s) => s.trim()).filter(Boolean);
+      const raw = guMatch[1].replace(/^"|"$/g, "");
+      guList =
+        raw === "all"
+          ? Object.keys(LAWD_CODES)
+          : raw.split(",").map((s) => s.trim()).filter(Boolean);
       continue;
     }
-
     console.warn(`알 수 없는 인수 무시됨: ${arg}`);
   }
 
   return { months, guList };
 }
 
-// ---------------------------------------------------------------------------
-// Date helpers
-// ---------------------------------------------------------------------------
-
-/** Returns YYYYMM string for the month that is `n` months before today. */
 function monthsAgoYYYYMM(n: number): string {
   const d = new Date();
   d.setDate(1);
   d.setMonth(d.getMonth() - n);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  return `${y}${m}`;
+  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
-/** Returns YYYYMM string for the current month. */
 function currentYYYYMM(): string {
   const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  return `${y}${m}`;
+  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
-
-/** Parse "YYYYMMDD" or "YYYY-MM-DD" from MOLIT deal into a JS Date. */
-function parseDealDate(raw: string): Date {
-  // MOLIT returns dates as "YYYYMMDD" or "YYYY-MM-DD"
-  const cleaned = raw.replace(/-/g, "");
-  const y = parseInt(cleaned.slice(0, 4), 10);
-  const mo = parseInt(cleaned.slice(4, 6), 10) - 1;
-  const d = parseInt(cleaned.slice(6, 8), 10);
-  return new Date(y, mo, d);
-}
-
-// ---------------------------------------------------------------------------
-// Core upsert logic
-// ---------------------------------------------------------------------------
 
 const prisma = new PrismaClient();
 
-async function upsertComplex(
-  deal: MolitDeal,
-  sigungu: string
-): Promise<string> {
-  const complex = await prisma.complex.upsert({
-    where: {
-      sigungu_dongName_name: {
-        sigungu,
-        dongName: deal.dongName,
-        name: deal.apartmentName,
-      },
-    },
-    create: {
-      sigungu,
-      dongName: deal.dongName,
-      name: deal.apartmentName,
-      buildYear: deal.buildYear ?? null,
-    },
-    update: {
-      // Only fill in buildYear if we now know it and didn't before.
-      ...(deal.buildYear != null ? { buildYear: deal.buildYear } : {}),
-    },
-  });
-
-  return complex.id;
+/** SQLite 변수 한도를 피하려고 createMany 를 청크로 나눠 실행. */
+async function createTransactionsChunked(
+  data: {
+    complexId: string;
+    dealDate: Date;
+    priceKrw: bigint;
+    area: number;
+    floor: number | null;
+    source: string;
+  }[],
+): Promise<void> {
+  const CHUNK = 1000;
+  for (let i = 0; i < data.length; i += CHUNK) {
+    await prisma.transaction.createMany({ data: data.slice(i, i + CHUNK) });
+  }
 }
 
-async function insertTransactionIfNew(
-  complexId: string,
-  deal: MolitDeal
-): Promise<boolean> {
-  // MolitDeal.dealDate is already a Date (transformed by the molit wrapper).
-  const dealDate = deal.dealDate;
-  const priceKrw = deal.priceKrw;
+/** 한 시군구의 deals 를 일괄 적재. DB 가 비어 있다고 가정한다. */
+async function ingestGu(
+  gu: string,
+  deals: MolitDeal[],
+): Promise<{ complexes: number; transactions: number }> {
+  if (deals.length === 0) return { complexes: 0, transactions: 0 };
 
-  // SQLite doesn't support compound unique on BigInt+Float; use findFirst.
-  const existing = await prisma.transaction.findFirst({
-    where: {
-      complexId,
-      dealDate,
-      area: deal.area,
-      floor: deal.floor ?? null,
-      priceKrw,
-    },
+  // 1. 고유 단지 추출 (dongName|aptName 기준).
+  const complexMap = new Map<
+    string,
+    { dongName: string; name: string; buildYear: number | null }
+  >();
+  for (const d of deals) {
+    const key = `${d.dongName}|${d.apartmentName}`;
+    const existing = complexMap.get(key);
+    if (!existing) {
+      complexMap.set(key, {
+        dongName: d.dongName,
+        name: d.apartmentName,
+        buildYear: d.buildYear,
+      });
+    } else if (existing.buildYear === null && d.buildYear !== null) {
+      existing.buildYear = d.buildYear;
+    }
+  }
+
+  // 2. 단지 일괄 생성.
+  await prisma.complex.createMany({
+    data: [...complexMap.values()].map((c) => ({
+      sigungu: gu,
+      dongName: c.dongName,
+      name: c.name,
+      buildYear: c.buildYear,
+    })),
   });
 
-  if (existing) return false;
-
-  await prisma.transaction.create({
-    data: {
-      complexId,
-      dealDate,
-      priceKrw,
-      area: deal.area,
-      floor: deal.floor ?? null,
-      source: "MOLIT",
-    },
+  // 3. 이름 → id 맵 조회 (createMany 는 id 를 반환하지 않으므로).
+  const rows = await prisma.complex.findMany({
+    where: { sigungu: gu },
+    select: { id: true, dongName: true, name: true },
   });
+  const idMap = new Map<string, string>();
+  for (const r of rows) idMap.set(`${r.dongName}|${r.name}`, r.id);
 
-  return true;
+  // 4. 거래 일괄 생성.
+  const txData = deals
+    .map((d) => {
+      const complexId = idMap.get(`${d.dongName}|${d.apartmentName}`);
+      if (!complexId) return null;
+      return {
+        complexId,
+        dealDate: d.dealDate,
+        priceKrw: d.priceKrw,
+        area: d.area,
+        floor: d.floor ?? null,
+        source: "MOLIT",
+      };
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null);
+
+  await createTransactionsChunked(txData);
+
+  return { complexes: complexMap.size, transactions: txData.length };
 }
-
-// ---------------------------------------------------------------------------
-// Main
-// ---------------------------------------------------------------------------
 
 async function main(): Promise<void> {
   const { months, guList } = parseArgs();
@@ -165,43 +155,45 @@ async function main(): Promise<void> {
   const toYearMonth = currentYYYYMM();
 
   console.log(
-    `MOLIT 실거래가 수집: ${fromYearMonth} ~ ${toYearMonth}, 대상 구: ${guList.join(", ")}`
+    `MOLIT 실거래가 수집: ${fromYearMonth}~${toYearMonth}, 대상 ${guList.length}개 시군구`,
   );
 
+  let totalComplexes = 0;
+  let totalTransactions = 0;
+
   for (const gu of guList) {
-    const sigunguCode = SEOUL_GU_CODES[gu];
+    const sigunguCode = LAWD_CODES[gu];
     if (!sigunguCode) {
-      console.log(`  [건너뜀] "${gu}"에 대한 시군구 코드를 찾을 수 없습니다.`);
+      console.log(`  [건너뜀] "${gu}" — 시군구 코드를 찾을 수 없습니다.`);
       continue;
     }
 
     let deals: MolitDeal[];
     try {
-      deals = await fetchDealsForRange({ sigunguCode, fromYearMonth, toYearMonth });
+      deals = await fetchDealsForRange({
+        sigunguCode,
+        fromYearMonth,
+        toYearMonth,
+      });
     } catch (err) {
-      console.error(`  [오류] ${gu} 데이터 수집 실패:`, err);
+      console.error(
+        `  [오류] ${gu} 수집 실패:`,
+        err instanceof Error ? err.message : err,
+      );
       continue;
     }
 
-    let inserted = 0;
-    let skipped = 0;
-
-    for (const deal of deals) {
-      const complexId = await upsertComplex(deal, gu);
-      const wasInserted = await insertTransactionIfNew(complexId, deal);
-
-      if (wasInserted) {
-        inserted++;
-      } else {
-        skipped++;
-      }
-    }
-
-    const total = deals.length.toLocaleString();
-    const ins = inserted.toLocaleString();
-    const skip = skipped.toLocaleString();
-    console.log(`  ${gu}: ${total} 건 수집, ${ins} 건 저장, ${skip} 건 중복 건너뜀`);
+    const { complexes, transactions } = await ingestGu(gu, deals);
+    totalComplexes += complexes;
+    totalTransactions += transactions;
+    console.log(
+      `  ${gu}: ${complexes.toLocaleString()} 단지, ${transactions.toLocaleString()} 거래`,
+    );
   }
+
+  console.log(
+    `\n완료: 총 ${totalComplexes.toLocaleString()} 단지, ${totalTransactions.toLocaleString()} 거래`,
+  );
 }
 
 main()
