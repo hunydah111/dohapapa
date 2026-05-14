@@ -124,6 +124,11 @@ export async function recommendComplexes(
   const childCount = profile.childrenAges.length;
   const minArea = childCount >= 2 ? 60 : childCount === 1 ? 45 : 33;
 
+  // 소규모 건물·도시형생활주택 배제. MOLIT 매매 API 에 세대수가 없어서
+  // 6개월 거래 건수를 "250세대급 대단지" 프록시로 사용한다.
+  // (정확한 세대수 필터는 공동주택 단지정보 API 연동이 필요.)
+  const MIN_TRANSACTIONS = 8;
+
   // 5. 단지별 평가 — 이 시점엔 통근(mock)·점수 계산 모두 순수 함수라 I/O 없음
   interface ScoredComplex {
     candidate: ComplexCandidate;
@@ -134,6 +139,11 @@ export async function recommendComplexes(
   const evaluated = await Promise.all(
     geoSurvivors.map(async (complex): Promise<ScoredComplex | null> => {
       const medians = mediansMap.get(complex.id) ?? [];
+
+      // 거래 건수 프록시로 소규모 단지 배제
+      const totalTransactions = medians.reduce((s, m) => s + m.count, 0);
+      if (totalTransactions < MIN_TRANSACTIONS) return null;
+
       const rep = pickRepresentative(medians, minArea);
       if (rep === null) return null; // 가족용 평형 거래 데이터 없음 — 제외
 
