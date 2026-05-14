@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ListingForm } from "@/components/ListingForm";
 import { db } from "@/lib/db";
-import type { ScoreResult } from "@/types/listing";
+import { formatPyeong } from "@/lib/area";
 
 // Convert BigInt 원 → "X.X억" display string (rounds to 1 decimal)
 function formatEok(krw: bigint): string {
@@ -83,7 +83,7 @@ export default async function HomePage() {
                         {listing.complex.name}
                       </span>
                       <span className="ml-2 text-sm text-zinc-500 dark:text-zinc-400">
-                        {listing.area}㎡
+                        {formatPyeong(listing.area)}
                         {listing.floor != null ? ` · ${listing.floor}층` : ""}
                         {" · "}
                         {formatEok(listing.askPriceKrw)}

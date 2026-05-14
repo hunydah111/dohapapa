@@ -78,25 +78,63 @@ export async function POST(req: Request): Promise<Response> {
   };
 
   // 3. Find or create the Complex.
-  const sigungu = data.sigungu ?? "미상";
-  const dongName = data.dongName ?? "미상";
-
-  const complex = await db.complex.upsert({
-    where: {
-      sigungu_dongName_name: {
-        sigungu,
-        dongName,
-        name: data.complexName,
+  // Priority: (a) exact (sigungu, dongName, name) match if both provided;
+  //           (b) otherwise resolve by name alone — accepts the existing row
+  //               if there's a single complex with that name, so users typing
+  //               just "잠실엘스" still hit the seeded record. Falls back to
+  //               creating a "미상/미상" placeholder when truly unknown.
+  let complexId: string;
+  if (data.sigungu && data.dongName) {
+    const c = await db.complex.upsert({
+      where: {
+        sigungu_dongName_name: {
+          sigungu: data.sigungu,
+          dongName: data.dongName,
+          name: data.complexName,
+        },
       },
-    },
-    create: { sigungu, dongName, name: data.complexName },
-    update: {},
-    select: { id: true },
-  });
+      create: { sigungu: data.sigungu, dongName: data.dongName, name: data.complexName },
+      update: {},
+      select: { id: true },
+    });
+    complexId = c.id;
+  } else {
+    const candidates = await db.complex.findMany({
+      where: {
+        name: data.complexName,
+        ...(data.sigungu ? { sigungu: data.sigungu } : {}),
+        ...(data.dongName ? { dongName: data.dongName } : {}),
+      },
+      select: { id: true, sigungu: true, dongName: true },
+    });
+    if (candidates.length === 1) {
+      complexId = candidates[0].id;
+    } else if (candidates.length === 0) {
+      const c = await db.complex.create({
+        data: {
+          name: data.complexName,
+          sigungu: data.sigungu ?? "미상",
+          dongName: data.dongName ?? "미상",
+        },
+        select: { id: true },
+      });
+      complexId = c.id;
+    } else {
+      // Multiple complexes share this name; ask user to disambiguate.
+      return Response.json(
+        {
+          error: "AMBIGUOUS_COMPLEX",
+          message: `'${data.complexName}'(이)라는 단지가 여러 곳 등록되어 있습니다. 시군구·법정동을 함께 입력해 주세요.`,
+          candidates: candidates.map((c) => ({ sigungu: c.sigungu, dongName: c.dongName })),
+        },
+        { status: 400 }
+      );
+    }
+  }
 
   // 4. Build comparable transactions (may return null if < 3 exist).
   const comp = await buildComparables({
-    complexId: complex.id,
+    complexId,
     area: data.area,
   });
 
@@ -106,7 +144,7 @@ export async function POST(req: Request): Promise<Response> {
   // 6. Persist Listing + nested Score in one operation.
   const listing = await db.listing.create({
     data: {
-      complexId: complex.id,
+      complexId,
       askPriceKrw: data.askPriceKrw,
       area: data.area,
       floor: data.floor ?? null,

@@ -5,6 +5,7 @@ import { ScoreCard } from "@/components/ScoreCard";
 import { SignalBreakdown } from "@/components/SignalBreakdown";
 import { PriceDistribution } from "@/components/PriceDistribution";
 import type { ScoreResult, SignalKey } from "@/types/listing";
+import { formatArea } from "@/lib/area";
 
 // Next.js 15: params is a Promise
 type PageProps = { params: Promise<{ id: string }> };
@@ -92,7 +93,7 @@ export default async function AnalyzePage({ params }: PageProps) {
             {listing.complex.name}
           </h1>
           <p className="mt-1 text-zinc-500 dark:text-zinc-400">
-            전용 {listing.area}㎡
+            전용 {formatArea(listing.area)}
             {listing.floor != null ? ` · ${listing.floor}층` : ""}
             {" · "}
             <span className="font-semibold text-zinc-700 dark:text-zinc-200">

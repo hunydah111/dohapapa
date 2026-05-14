@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { formatPyeong } from "@/lib/area";
 
 // Next.js 15: params is a Promise
 type PageProps = { params: Promise<{ id: string }> };
@@ -114,7 +115,7 @@ export default async function ComplexPage({ params }: PageProps) {
                           href={`/analyze/${listing.id}`}
                           className="hover:underline"
                         >
-                          {listing.area}㎡
+                          {formatPyeong(listing.area)}
                         </Link>
                       </td>
                       <td className="px-4 py-3 text-zinc-500 dark:text-zinc-400">

@@ -5,11 +5,13 @@ export async function buildComparables(opts: {
   complexId: string;
   area: number;
   areaTolerance?: number; // default ±3 ㎡
-  windowMonths?: number;  // default 3
+  windowMonths?: number;  // default 6
 }): Promise<ComparableSet | null> {
   const { complexId, area } = opts;
   const tol = opts.areaTolerance ?? 3;
-  const windowMonths = opts.windowMonths ?? 3;
+  // 6 months balances sample size (need >=3 for stable median/stdev) vs market
+  // freshness. Real MOLIT data is dense enough that 3 months also works.
+  const windowMonths = opts.windowMonths ?? 6;
 
   const since = new Date();
   since.setMonth(since.getMonth() - windowMonths);
