@@ -2,112 +2,118 @@ import { db } from "@/lib/db";
 
 export interface AreaMedian {
   area: number;
+  /**
+   * 추정 현재가 (원). 최근 6개월 실거래의 "최근 거래 가중 중위값 × 추세 계수".
+   * 단순 중위가가 아니라 "지금 거래될 가격" 추정 — 부동산 전문가 패널 권고.
+   */
   medianKrw: number;
+  /** 최근 6개월 거래 건수 — 가격 신뢰도 지표. */
   count: number;
 }
 
-/** priceKrw는 BigInt로 반환되므로 Number()로 변환 후 정렬하여 중위값 추출. */
-function median(values: number[]): number {
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 1
-    ? sorted[mid]
-    : (sorted[mid - 1] + sorted[mid]) / 2;
+const WINDOW_MONTHS = 6;
+// 최근 거래일수록 무겁게: w = exp(-LAMBDA * daysAgo). 약 140일 반감기.
+const LAMBDA = 0.005;
+// 추세 계수 클램프 — 과보정 방지.
+const TREND_MIN = 0.9;
+const TREND_MAX = 1.12;
+
+/** 가중 중위값 — 가격 오름차순 정렬 후 누적 가중치가 절반을 넘는 가격. */
+function weightedMedian(items: { price: number; weight: number }[]): number {
+  if (items.length === 0) return 0;
+  const sorted = [...items].sort((a, b) => a.price - b.price);
+  const totalW = sorted.reduce((s, it) => s + it.weight, 0);
+  let cum = 0;
+  for (const it of sorted) {
+    cum += it.weight;
+    if (cum >= totalW / 2) return it.price;
+  }
+  return sorted[sorted.length - 1].price;
 }
 
-/**
- * 지정 단지의 최근 windowMonths 개월 실거래를 평형별로 집계하여
- * 각 평형의 중위가(원)와 거래 건수를 반환한다.
- * 거래 건수 내림차순 정렬 — 표본이 두꺼운 평형이 앞에 온다.
- */
-export async function getAreaMedians(
-  complexId: string,
-  windowMonths: number = 12,
-): Promise<AreaMedian[]> {
-  const since = new Date();
-  since.setMonth(since.getMonth() - windowMonths);
+interface Tx {
+  price: number;
+  daysAgo: number;
+}
 
-  const rows = await db.transaction.findMany({
-    where: {
-      complexId,
-      dealDate: { gte: since },
-    },
-    select: { area: true, priceKrw: true },
-  });
+function decayWeight(daysAgo: number): number {
+  return Math.exp(-LAMBDA * daysAgo);
+}
 
-  // area 값은 Float이므로 소수점 1자리 반올림으로 같은 평형끼리 묶는다.
-  const groups = new Map<number, number[]>();
-  for (const row of rows) {
-    const key = Math.round(row.area * 10) / 10;
-    const prices = groups.get(key) ?? [];
-    prices.push(Number(row.priceKrw));
-    groups.set(key, prices);
+/** 한 평형 그룹의 거래들로 추정 현재가를 산출한다. */
+function estimateCurrentPrice(txs: Tx[]): number {
+  if (txs.length === 0) return 0;
+
+  // 1. 최근 거래 가중 중위값
+  const base = weightedMedian(
+    txs.map((t) => ({ price: t.price, weight: decayWeight(t.daysAgo) })),
+  );
+
+  // 2. 추세 계수 — 최근 3개월 vs 직전 3개월 (양쪽 모두 2건 이상일 때만)
+  const recent = txs.filter((t) => t.daysAgo <= 90);
+  const older = txs.filter((t) => t.daysAgo > 90);
+  let trend = 1;
+  if (recent.length >= 2 && older.length >= 2) {
+    const recentMed = weightedMedian(
+      recent.map((t) => ({ price: t.price, weight: decayWeight(t.daysAgo) })),
+    );
+    const olderMed = weightedMedian(
+      older.map((t) => ({ price: t.price, weight: decayWeight(t.daysAgo) })),
+    );
+    if (olderMed > 0) {
+      trend = Math.min(TREND_MAX, Math.max(TREND_MIN, recentMed / olderMed));
+    }
   }
 
-  const result: AreaMedian[] = [];
-  for (const [area, prices] of groups) {
-    result.push({ area, medianKrw: median(prices), count: prices.length });
-  }
-
-  return result.sort((a, b) => b.count - a.count);
+  return Math.round(base * trend);
 }
 
 /**
- * 거래 표본이 가장 두꺼운 평형(대표 평형)을 반환한다.
- * [minArea, maxArea) 전용면적 구간 안의 평형만 후보로 본다 — 사용자가 고른
- * 선호 평수대 밖의 평형(초소형 원룸·초대형 등)이 대표로 잡히는 것을 막는다.
- * 조건을 만족하는 평형이 없으면 null (해당 단지는 추천에서 제외).
- */
-export function pickRepresentative(
-  medians: AreaMedian[],
-  minArea: number = 0,
-  maxArea: number = Number.POSITIVE_INFINITY,
-): AreaMedian | null {
-  // medians 는 count 내림차순 정렬돼 있으므로 filter 후 첫 번째가 대표.
-  const eligible = medians.filter((m) => m.area >= minArea && m.area < maxArea);
-  return eligible.length > 0 ? eligible[0] : null;
-}
-
-/**
- * 여러 단지의 평형별 중위가를 청크 단위 쿼리로 한 번에 집계한다.
- * 단지별로 getAreaMedians 를 N번 호출하면 N개의 동시 쿼리가 발생해
- * SQLite 가 막히므로, 추천 엔진에서는 이 일괄 버전을 쓴다.
+ * 여러 단지의 평형별 추정 현재가를 청크 단위 쿼리로 한 번에 집계한다.
+ * 단지별로 N번 쿼리하면 동시 쿼리 폭주로 SQLite 가 막히므로 일괄 처리.
  */
 export async function getAreaMediansForMany(
   complexIds: string[],
-  windowMonths: number = 12,
 ): Promise<Map<string, AreaMedian[]>> {
   const since = new Date();
-  since.setMonth(since.getMonth() - windowMonths);
+  since.setMonth(since.getMonth() - WINDOW_MONTHS);
+  const now = Date.now();
 
   const CHUNK = 400;
-  // complexId → (area → prices[])
-  const byComplex = new Map<string, Map<number, number[]>>();
+  // complexId → (area → Tx[])
+  const byComplex = new Map<string, Map<number, Tx[]>>();
 
   for (let i = 0; i < complexIds.length; i += CHUNK) {
     const ids = complexIds.slice(i, i + CHUNK);
     const rows = await db.transaction.findMany({
       where: { complexId: { in: ids }, dealDate: { gte: since } },
-      select: { complexId: true, area: true, priceKrw: true },
+      select: { complexId: true, area: true, priceKrw: true, dealDate: true },
     });
     for (const row of rows) {
       let areaGroups = byComplex.get(row.complexId);
       if (!areaGroups) {
-        areaGroups = new Map<number, number[]>();
+        areaGroups = new Map<number, Tx[]>();
         byComplex.set(row.complexId, areaGroups);
       }
       const key = Math.round(row.area * 10) / 10;
-      const prices = areaGroups.get(key) ?? [];
-      prices.push(Number(row.priceKrw));
-      areaGroups.set(key, prices);
+      const list = areaGroups.get(key) ?? [];
+      list.push({
+        price: Number(row.priceKrw),
+        daysAgo: (now - row.dealDate.getTime()) / 86_400_000,
+      });
+      areaGroups.set(key, list);
     }
   }
 
   const result = new Map<string, AreaMedian[]>();
   for (const [complexId, areaGroups] of byComplex) {
     const medians: AreaMedian[] = [];
-    for (const [area, prices] of areaGroups) {
-      medians.push({ area, medianKrw: median(prices), count: prices.length });
+    for (const [area, txs] of areaGroups) {
+      medians.push({
+        area,
+        medianKrw: estimateCurrentPrice(txs),
+        count: txs.length,
+      });
     }
     result.set(
       complexId,
@@ -115,4 +121,18 @@ export async function getAreaMediansForMany(
     );
   }
   return result;
+}
+
+/**
+ * 거래 표본이 가장 두꺼운 평형(대표 평형)을 반환한다.
+ * [minArea, maxArea) 전용면적 구간 안의 평형만 후보로 본다.
+ * 조건을 만족하는 평형이 없으면 null (해당 단지는 추천에서 제외).
+ */
+export function pickRepresentative(
+  medians: AreaMedian[],
+  minArea: number = 0,
+  maxArea: number = Number.POSITIVE_INFINITY,
+): AreaMedian | null {
+  const eligible = medians.filter((m) => m.area >= minArea && m.area < maxArea);
+  return eligible.length > 0 ? eligible[0] : null;
 }

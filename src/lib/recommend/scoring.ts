@@ -115,92 +115,34 @@ export function scoreBudgetFit(
 // ── 학군·자녀 점수 ───────────────────────────────────────────────────────────
 
 /**
- * 학군 점수 계산.
- *
- * 데이터 한계를 사용자에게 솔직히 알린다:
- * - 학업성취도·학원가·중고교 학군 데이터는 현재 없음.
- * - 초등학교 도보거리(nearestElemSchoolM)만 활용한다.
- * - reason 에 "초등학교 도보거리 기준 (학업성취도·학원가는 미반영)" 를 명시.
+ * 학군 점수 — "초품아 여부" 중심으로 단순화 (부동산 전문가 패널 권고).
+ * - 초품아: 초등학교가 단지에서 직선 150m 이내. (100m 는 실제 초품아 단지를
+ *   상당수 누락 — 전문가 다수가 150m 권고.)
+ * - 그 밖엔 도보권 / 통학 부담 2단계.
+ * - 학업성취도·학원가·배정 중학교는 현재 데이터 없음 (별도 과제).
  */
 export function scoreSchool(
   complex: { nearestElemSchoolM: number | null; buildYear: number | null },
   childrenAges: number[],
 ): ScoreResult {
-  // 자녀 없음 — 학군 신호 자체가 무의미
-  if (childrenAges.length === 0) {
-    return { score: 55, reason: "자녀 없음 — 학군 비중 낮음" };
-  }
-
-  const hasElem = childrenAges.some((a) => a >= 7 && a <= 12);
-  const hasToddler = childrenAges.some((a) => a >= 0 && a <= 6);
-  const hasMiddleUp = childrenAges.some((a) => a >= 13);
-
   const dist = complex.nearestElemSchoolM;
+  const hasKids = childrenAges.length > 0;
 
-  // 중고등 자녀만 있는 경우 — 해당 학군 데이터가 없으므로 중립
-  if (hasMiddleUp && !hasElem && !hasToddler) {
-    return {
-      score: 55,
-      reason: "중·고등 학군 데이터 미반영 — 학교알리미 등 별도 확인 권고",
-    };
+  if (dist === null) {
+    return { score: 52, reason: "초등학교 거리 정보 없음" };
   }
-
-  const HONEST_SUFFIX = " (학업성취도·학원가는 미반영)";
-
-  let score = 55;
-  const parts: string[] = [];
-
-  if (hasElem) {
-    // 초등 자녀 — 도보거리 기준으로 점수화
-    if (dist === null) {
-      score = 50;
-      parts.push(`초등학교 거리 정보 없음 — 직접 확인 필요${HONEST_SUFFIX}`);
-    } else if (dist <= 300) {
-      score = 90;
-      parts.push(
-        `초등학교 ${dist}m — 도보 매우 가까움. 초등학교 도보거리 기준${HONEST_SUFFIX}`,
-      );
-    } else if (dist <= 600) {
-      score = 70;
-      parts.push(
-        `초등학교 ${dist}m — 도보 가능. 초등학교 도보거리 기준${HONEST_SUFFIX}`,
-      );
-    } else {
-      score = 45;
-      parts.push(
-        `초등학교 ${dist}m — 통학 거리 부담 있음. 초등학교 도보거리 기준${HONEST_SUFFIX}`,
-      );
-    }
-  } else if (hasToddler) {
-    // 미취학 아동 — 초등 준비 관점에서 완화 적용
-    if (dist === null) {
-      score = 55;
-      parts.push(`초등학교 거리 정보 없음 (미취학 아동)${HONEST_SUFFIX}`);
-    } else if (dist <= 400) {
-      score = 80;
-      parts.push(
-        `초등학교 ${dist}m — 입학 후 통학 양호 예상. 초등학교 도보거리 기준${HONEST_SUFFIX}`,
-      );
-    } else if (dist <= 800) {
-      score = 65;
-      parts.push(
-        `초등학교 ${dist}m — 입학 후 통학 무난. 초등학교 도보거리 기준${HONEST_SUFFIX}`,
-      );
-    } else {
-      score = 45;
-      parts.push(
-        `초등학교 ${dist}m — 입학 후 통학 거리 확인 필요. 초등학교 도보거리 기준${HONEST_SUFFIX}`,
-      );
-    }
+  // 초품아 — 초등학교 직선 150m 이내
+  if (dist <= 150) {
+    return { score: 95, reason: `초품아 (초등학교 ${dist}m 이내)` };
   }
-
-  // 중고등 자녀도 동시에 있는 경우 — 점수를 중립값과 blend
-  if (hasMiddleUp) {
-    parts.push("중·고등 학군 데이터 미반영 — 학교알리미 등 별도 확인 권고");
-    score = Math.round((score + 55) / 2);
+  if (dist <= 400) {
+    return { score: 70, reason: `초등학교 도보권 (${dist}m)` };
   }
-
-  return { score, reason: parts.join(" · ") || "학군 정보 없음" };
+  // 통학 거리 부담 — 자녀가 있으면 감점 폭이 크다
+  return {
+    score: hasKids ? 45 : 55,
+    reason: `초등학교 ${dist}m — 통학 거리 부담`,
+  };
 }
 
 // ── 건축연도 점수 ────────────────────────────────────────────────────────────

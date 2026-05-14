@@ -73,6 +73,11 @@ export function CandidateCard({
         >
           {RANK_LABELS[rank] ?? `${rank}위`}
         </span>
+        {candidate.isChopumah && (
+          <span className="inline-flex items-center rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700 ring-1 ring-sky-200">
+            초품아
+          </span>
+        )}
         <span
           className="ml-auto rounded-full bg-[#f5f5f7] px-3 py-1 text-xs font-semibold tabular-nums"
           style={{ color: "#6e6e73" }}
@@ -103,9 +108,13 @@ export function CandidateCard({
           </span>
           <span style={{ color: "#c7c7cc" }}>·</span>
           <span className="text-sm font-semibold" style={{ color: "#1d1d1f" }}>
-            중위 {formatEok(candidate.medianPriceKrw)}
+            추정가 {formatEok(candidate.medianPriceKrw)}
           </span>
         </div>
+        <p className="mt-1.5 text-xs" style={{ color: "#86868b" }}>
+          최근 6개월 실거래 {candidate.transactionCount}건 기준 추정 현재가 (실제
+          거래가와 다를 수 있음)
+        </p>
       </div>
 
       {/* 리포트 — 왜 뽑혔는지 */}

@@ -88,8 +88,15 @@ export interface ComplexCandidate {
   longitude: number;
   /** 대표 평형 (전용㎡) — 실거래 표본이 가장 두꺼운 평형. */
   representativeArea: number;
-  /** 대표 평형 실거래 중위가 (원). */
+  /**
+   * 대표 평형 추정 현재가 (원). 최근 6개월 실거래에 최근 거래 가중 + 추세 보정.
+   * 단순 중위가가 아니라 "지금 거래될 가격"의 추정치 — 부동산 전문가 패널 권고.
+   */
   medianPriceKrw: number;
+  /** 추정 현재가 산출에 쓴 최근 6개월 거래 건수 — 가격 신뢰도 지표. */
+  transactionCount: number;
+  /** 초품아 여부 — 초등학교가 단지에서 직선 150m 이내. */
+  isChopumah: boolean;
   commuteLegs: CommuteLeg[];
   scores: Record<CandidateSignalKey, number>;
   reasoning: Record<CandidateSignalKey, string>;

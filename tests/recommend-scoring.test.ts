@@ -223,46 +223,48 @@ describe("scoreBudgetFit", () => {
 // ── scoreSchool ───────────────────────────────────────────────────────────────
 
 describe("scoreSchool", () => {
-  it("empty childrenAges → score 55 with reason mentioning 자녀 없음", () => {
-    const complex = { nearestElemSchoolM: 400, buildYear: 2010 };
-    const { score, reason } = scoreSchool(complex, []);
-
-    // P1#7: 자녀 없음 → 55 (이전 60 에서 변경)
-    expect(score).toBe(55);
-    expect(reason).toContain("자녀 없음");
+  it("초등학교 150m 이내 → 초품아, score 95", () => {
+    const { score, reason } = scoreSchool(
+      { nearestElemSchoolM: 120, buildYear: 2010 },
+      [9],
+    );
+    expect(score).toBe(95);
+    expect(reason).toContain("초품아");
   });
 
-  it("child age 9 (초등) + nearestElemSchoolM: 200 → high score (≥80)", () => {
-    const complex = { nearestElemSchoolM: 200, buildYear: 2010 };
-    const { score, reason } = scoreSchool(complex, [9]);
-
-    expect(score).toBeGreaterThanOrEqual(80);
-    expect(inRange(score)).toBe(true);
-    expect(reason.length).toBeGreaterThan(0);
+  it("초등학교 도보권(150~400m) → score 70", () => {
+    const { score, reason } = scoreSchool(
+      { nearestElemSchoolM: 300, buildYear: 2010 },
+      [8],
+    );
+    expect(score).toBe(70);
+    expect(reason).toContain("도보권");
   });
 
-  it("초등 child + very close school (≤300m) → score = 90", () => {
-    const complex = { nearestElemSchoolM: 150, buildYear: 2010 };
-    const { score, reason } = scoreSchool(complex, [8]);
-
-    // P1#7: 정직한 라벨링 — 학업성취도 미반영 명시 포함
-    expect(score).toBe(90);
-    expect(reason).toContain("학업성취도·학원가는 미반영");
-  });
-
-  it("초등 child + distant school (>600m) → score = 45", () => {
-    const complex = { nearestElemSchoolM: 800, buildYear: 2005 };
-    const { score } = scoreSchool(complex, [10]);
-
+  it("초등학교 400m 초과 + 자녀 있음 → score 45 (통학 부담)", () => {
+    const { score, reason } = scoreSchool(
+      { nearestElemSchoolM: 800, buildYear: 2005 },
+      [10],
+    );
     expect(score).toBe(45);
+    expect(reason).toContain("통학 거리 부담");
   });
 
-  it("중고등 자녀만 있는 경우 → score 55 + 데이터 미반영 안내", () => {
-    const complex = { nearestElemSchoolM: 300, buildYear: 2010 };
-    const { score, reason } = scoreSchool(complex, [14]);
-
+  it("초등학교 400m 초과 + 자녀 없음 → score 55", () => {
+    const { score } = scoreSchool(
+      { nearestElemSchoolM: 800, buildYear: 2005 },
+      [],
+    );
     expect(score).toBe(55);
-    expect(reason).toContain("중·고등 학군 데이터 미반영");
+  });
+
+  it("거리 정보 없음 → score 52", () => {
+    const { score, reason } = scoreSchool(
+      { nearestElemSchoolM: null, buildYear: 2010 },
+      [7],
+    );
+    expect(score).toBe(52);
+    expect(reason).toContain("정보 없음");
   });
 
   it("score is always in [0, 100] and reason is non-empty", () => {
@@ -274,7 +276,7 @@ describe("scoreSchool", () => {
       [{ nearestElemSchoolM: 100, buildYear: 2020 }, [7]],
       [{ nearestElemSchoolM: 500, buildYear: 2010 }, [3]],
       [{ nearestElemSchoolM: 900, buildYear: 2000 }, [14]],
-      [{ nearestElemSchoolM: null, buildYear: null }, [5, 12]],
+      [{ nearestElemSchoolM: 150, buildYear: null }, [5, 12]],
     ];
 
     for (const [complex, ages] of cases) {

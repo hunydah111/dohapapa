@@ -97,6 +97,27 @@ function calcCutoffKm(wp: Workplace): number {
   return Math.max(8, (((limit * 1.5 - 12) * 22) / 60) * 1.5);
 }
 
+// ── 예산 밴드 ─────────────────────────────────────────────────────────────────
+
+/**
+ * 추천 단지 가격 밴드 (부동산 전문가 패널 권고):
+ * - 상한 = 예산 + 1억 (예산 초과는 강하게 제한 — "한참 비싼 집은 안 본다")
+ * - 하한 = max(예산 − 1억, 예산 × 0.85) — 절대 ±1억은 저가 구간에서 의미가
+ *   너무 넓어지므로(3억 예산에 2~4억은 완전 다른 동네), 비율 하한과 큰 쪽을 쓴다.
+ * 가격은 단순 중위가가 아니라 complexMedian 의 "추정 현재가"를 받는다.
+ */
+function priceInBudgetBand(
+  priceKrw: number,
+  netPurchasePowerKrw: number,
+): boolean {
+  const upper = netPurchasePowerKrw + 100_000_000;
+  const lower = Math.max(
+    netPurchasePowerKrw - 100_000_000,
+    netPurchasePowerKrw * 0.85,
+  );
+  return priceKrw >= lower && priceKrw <= upper;
+}
+
 // ── 한 줄 요약 / 리포트 ──────────────────────────────────────────────────────
 
 /** 가중치 상위 2개 신호의 reason 을 이어 붙인다. */
@@ -143,7 +164,7 @@ function buildReport(
         "."
       : "";
 
-  const head = `${c.sigungu} ${c.dongName} ${c.complexName}, 전용 ${c.representativeArea}㎡ 실거래 중위 ${eok}억.${legText}`;
+  const head = `${c.sigungu} ${c.dongName} ${c.complexName}, 전용 ${c.representativeArea}㎡ 추정 현재가 ${eok}억.${legText}`;
 
   const orderedKeys = (Object.keys(weights) as CandidateSignalKey[])
     .filter((k) => c.commuteLegs.length > 0 || k !== "commute")
@@ -188,8 +209,8 @@ function countPassingHardFilter(
   workplaces: Workplace[],
 ): number {
   return evaluated.filter((e) => {
-    const priceTooHigh = e.medianKrw > netPurchasePowerKrw * 1.1;
-    if (priceTooHigh) return false;
+    const priceOutOfBand = !priceInBudgetBand(e.medianKrw, netPurchasePowerKrw);
+    if (priceOutOfBand) return false;
 
     // 통근 한도를 extraMinutes 만큼 늘렸을 때도 초과하는지 확인
     const commuteTooLong = e.candidate.commuteLegs.some((leg) => {
@@ -288,8 +309,11 @@ export async function recommendComplexes(
       });
       const commuteLegs = await Promise.all(legPromises);
 
-      // 하드 필터
-      const priceTooHigh = rep.medianKrw > netPurchasePowerKrw * 1.1;
+      // 하드 필터 — 가격은 예산 밴드 안, 통근은 허용시간 안
+      const priceOutOfBand = !priceInBudgetBand(
+        rep.medianKrw,
+        netPurchasePowerKrw,
+      );
       // 직장 없으면 통근 제약 없음 (retired)
       const commuteTooLong = commuteLegs.some((leg) => {
         const wp = workplaces.find((_, i) =>
@@ -297,7 +321,7 @@ export async function recommendComplexes(
         );
         return leg.minutes > (wp?.maxCommuteMinutes ?? 50) * 1.5;
       });
-      const passedHardFilter = !priceTooHigh && !commuteTooLong;
+      const passedHardFilter = !priceOutOfBand && !commuteTooLong;
 
       // 신호별 점수
       const commuteResult = scoreCommute(commuteLegs, profile);
@@ -332,6 +356,11 @@ export async function recommendComplexes(
       );
 
       const hasCommuteLegs = commuteLegs.length > 0;
+      // 초품아 — 초등학교가 단지에서 직선 150m 이내 (전문가 패널: 100m 는 너무 좁음)
+      const isChopumah =
+        complex.nearestElemSchoolM !== null &&
+        complex.nearestElemSchoolM <= 150;
+
       const base = {
         complexName: complex.name,
         sigungu: complex.sigungu,
@@ -348,6 +377,8 @@ export async function recommendComplexes(
         ...base,
         latitude: complex.latitude as number,
         longitude: complex.longitude as number,
+        transactionCount: rep.count,
+        isChopumah,
         scores,
         tier: "균형형", // 후처리에서 재할당
         oneLineReason: buildOneLineReason(reasoning, weights, hasCommuteLegs),
@@ -425,7 +456,7 @@ export async function recommendComplexes(
         if (totalTx < MIN_TRANSACTIONS) continue;
         const rep = pickRepresentative(medians, nextMin, nextMax);
         if (rep === null) continue;
-        if (rep.medianKrw > netPurchasePowerKrw * 1.1) continue;
+        if (!priceInBudgetBand(rep.medianKrw, netPurchasePowerKrw)) continue;
         countAreaRelax++;
       }
       if (countAreaRelax > 0) {
@@ -457,12 +488,12 @@ export async function recommendComplexes(
       )[0] ?? null;
   if (stableCandidate) chosen.push({ entry: stableCandidate, tier: "안정형" });
 
-  // 도전형: 예산 내에서 가장 비싼
+  // 도전형: 예산 밴드 내에서 가장 비싼
   const chosenEntries = new Set(chosen.map((c) => c.entry));
   const challengeCandidate =
     top8
       .filter((e) => !chosenEntries.has(e))
-      .filter((e) => e.medianKrw <= netPurchasePowerKrw * 1.1)
+      .filter((e) => priceInBudgetBand(e.medianKrw, netPurchasePowerKrw))
       .sort((a, b) => b.medianKrw - a.medianKrw)[0] ?? null;
   if (challengeCandidate)
     chosen.push({ entry: challengeCandidate, tier: "도전형" });
