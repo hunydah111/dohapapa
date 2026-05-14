@@ -8,7 +8,10 @@ import { db } from "@/lib/db";
 export type { CommuteProvider };
 
 export function getCommuteProvider(): CommuteProvider {
-  const key = process.env.KAKAO_REST_KEY;
+  // 통근 시간 계산은 Kakao Mobility(길찾기) API 가 필요하다. 이는 지오코딩용
+  // KAKAO_REST_KEY 와 다른, developers.kakaomobility.com 의 별도 키다.
+  // 전용 키가 없으면 mock(거리·평균속도 기반 추정) provider 를 쓴다.
+  const key = process.env.KAKAO_MOBILITY_KEY;
   return key && key.length > 0 ? kakaoProvider : mockProvider;
 }
 

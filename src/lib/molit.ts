@@ -1,5 +1,7 @@
 // 국토교통부 실거래가 공개 API wrapper.
-// Endpoint: getRTMSDataSvcAptTradeDev (v2, apartment trade real transaction price).
+// Endpoint: getRTMSDataSvcAptTrade (아파트 매매 실거래가 기본 자료).
+// 주의: data.go.kr 에서 "아파트 매매 실거래가" 기본 API 를 활용신청해야 한다.
+// ("상세 자료"=...Dev 는 별도 신청 대상이며 키가 호환되지 않음.)
 
 import { z } from "zod";
 import type { MolitDeal, MolitFetchOptions } from "@/types/molit";
@@ -161,7 +163,7 @@ const MolitResponseSchema = z.object({
 // ---------------------------------------------------------------------------
 
 const BASE_URL =
-  "https://apis.data.go.kr/1613000/RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTradeDev";
+  "https://apis.data.go.kr/1613000/RTMSDataSvcAptTrade/getRTMSDataSvcAptTrade";
 
 // ---------------------------------------------------------------------------
 // fetchDeals — fetch a single month's transactions.
@@ -196,7 +198,8 @@ export async function fetchDeals(opts: MolitFetchOptions): Promise<MolitDeal[]> 
   const parsed = MolitResponseSchema.parse(raw);
   const { header, body } = parsed.response;
 
-  if (header.resultCode !== "00") {
+  // 성공 코드: 기본 API 는 "000", 일부 엔드포인트는 "00" 을 쓴다.
+  if (header.resultCode !== "00" && header.resultCode !== "000") {
     throw new Error(`MOLIT API error: ${header.resultCode} ${header.resultMsg}`);
   }
 
@@ -281,7 +284,8 @@ async function fetchDealsPageRaw(opts: Required<MolitFetchOptions>): Promise<{
   const parsed = MolitResponseSchema.parse(raw);
   const { header, body } = parsed.response;
 
-  if (header.resultCode !== "00") {
+  // 성공 코드: 기본 API 는 "000", 일부 엔드포인트는 "00" 을 쓴다.
+  if (header.resultCode !== "00" && header.resultCode !== "000") {
     throw new Error(`MOLIT API error: ${header.resultCode} ${header.resultMsg}`);
   }
 

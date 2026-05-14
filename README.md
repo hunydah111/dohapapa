@@ -69,11 +69,21 @@ copy .env.example .env.local
 
 ### MOLIT 실거래 데이터 수집
 
+`.env.local` 에 키가 설정된 상태에서:
+
 ```powershell
-npx tsx scripts/fetch-molit.ts --months=3 --gu="강남구,서초구,송파구"
+# 1) 합성 시드 제거 (실데이터로 교체할 때)
+npx tsx --env-file=.env.local scripts/wipe.ts
+
+# 2) MOLIT 실거래가 수집 (MOLIT_API_KEY 필요)
+npx tsx --env-file=.env.local scripts/fetch-molit.ts --months=6 --gu="강남구,서초구,송파구"
+
+# 3) 단지 좌표 지오코딩 (KAKAO_REST_KEY 필요) — 추천 엔진이 단지를 쓰려면 필수
+npx tsx --env-file=.env.local scripts/geocode-complexes.ts
 ```
 
-`MOLIT_API_KEY`가 설정되어 있어야 합니다. `--gu` 기본값은 강남·서초·송파입니다.
+MOLIT 데이터엔 좌표가 없으므로 fetch 후 반드시 geocode 를 실행해야 합니다.
+`--gu` 기본값은 강남·서초·송파, `--months` 기본값은 3.
 
 ## 프로젝트 구조
 
@@ -95,7 +105,9 @@ dohapapa/
 │   ├── schema.prisma     # DB 스키마 (Complex, Transaction, CommuteCache)
 │   └── seed.ts           # 개발용 시드 데이터
 ├── scripts/
-│   └── fetch-molit.ts    # MOLIT 실거래 데이터 수집 CLI
+│   ├── fetch-molit.ts        # MOLIT 실거래 데이터 수집 CLI
+│   ├── geocode-complexes.ts  # 단지 좌표 지오코딩 (Kakao Local)
+│   └── wipe.ts               # DB 초기화 (시드↔실데이터 교체용)
 ├── tests/                # Vitest 단위 테스트
 └── docs/
     ├── architecture.md

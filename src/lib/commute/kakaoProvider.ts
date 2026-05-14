@@ -39,9 +39,9 @@ export const kakaoProvider: CommuteProvider = {
   name: "kakao",
 
   async travelMinutes(origin: LatLng, dest: LatLng, mode: CommuteMode): Promise<number> {
-    const key = process.env.KAKAO_REST_KEY;
+    const key = process.env.KAKAO_MOBILITY_KEY;
     if (!key) {
-      throw new Error("KAKAO_REST_KEY not configured");
+      throw new Error("KAKAO_MOBILITY_KEY not configured");
     }
 
     const carMinutes = await fetchCarMinutes(key, origin, dest);
