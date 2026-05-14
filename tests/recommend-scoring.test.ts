@@ -40,8 +40,8 @@ function inRange(score: number): boolean {
 }
 
 /**
- * CommuteLeg 픽스처 — 새 타입 필수 필드: workplace, workplaceLabel, minutes,
- * distanceKm, mode, withinLimit.
+ * CommuteLeg 픽스처 — 필수 필드: workplace, workplaceLabel, workplaceLat,
+ * workplaceLng, minutes, distanceKm, mode, withinLimit.
  */
 function leg(
   workplace: "A" | "B",
@@ -51,6 +51,8 @@ function leg(
   return {
     workplace,
     workplaceLabel: workplace === "A" ? "직장A" : "직장B",
+    workplaceLat: 37.5,
+    workplaceLng: 127.0,
     minutes,
     distanceKm: 0,
     mode: "transit",

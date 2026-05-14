@@ -67,6 +67,10 @@ export interface CommuteLeg {
   workplace: "A" | "B";
   /** 직장 라벨 (회사명 등). UI 도식 표시용. */
   workplaceLabel: string;
+  /** 직장 위도. 카카오맵 길찾기 deep-link 출발지로 사용. */
+  workplaceLat: number;
+  /** 직장 경도. 카카오맵 길찾기 deep-link 출발지로 사용. */
+  workplaceLng: number;
   /** 편도 통근 시간 (분). */
   minutes: number;
   /** 직장↔단지 직선거리 (km). 추정 시간의 근거. */

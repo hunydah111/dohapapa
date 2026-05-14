@@ -272,6 +272,8 @@ export async function recommendComplexes(
           (minutes): CommuteLeg => ({
             workplace: wpLabel,
             workplaceLabel: wp.label,
+            workplaceLat: wp.lat,
+            workplaceLng: wp.lng,
             minutes,
             distanceKm: Math.round(haversineKm(wp, complexCoord) * 10) / 10,
             mode: wp.commuteMode,
