@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import type {
   CoupleProfile,
   HouseholdType,
@@ -26,6 +26,8 @@ import { TextField } from "@/components/ui/TextField";
 import { Segmented } from "@/components/ui/Segmented";
 import { StepDots } from "@/components/ui/StepDots";
 import { formatKrwHuman } from "@/lib/format";
+import { estimateBudget } from "@/lib/budget";
+import { BudgetPreview } from "./BudgetPreview";
 
 // ── 내부 타입 ──────────────────────────────────────────────────
 
@@ -112,7 +114,12 @@ function ToggleSwitch({
   );
 }
 
-// ── 금액 hint ─────────────────────────────────────────────────
+// ── 금액 변환 / hint ──────────────────────────────────────────
+
+/** 만원 단위 문자열 → 원. 빈 값·비숫자는 0. */
+function manwonToKrw(s: string): number {
+  return (parseFloat(s) || 0) * 10_000;
+}
 
 /** 만원 단위 입력값을 억 환산 hint 문자열로 변환 */
 function manwonHint(manwonStr: string): string | undefined {
@@ -493,14 +500,8 @@ export function ProfileForm({
     return isRetired ? 3 : 4;
   })();
 
-  // ── 제출 ──────────────────────────────────────────────────────
-
-  async function handleSubmit() {
-    setSubmitError(null);
-    setSubmitting(true);
-
-    const manwonToKrw = (s: string) => (parseFloat(s) || 0) * 10_000;
-
+  // ── 프로필 빌드 (제출·예산 미리보기 공용) ────────────────────
+  const buildProfile = useCallback((): CoupleProfile => {
     const existingHome: ExistingHome | undefined = hasExistingHome
       ? {
           expectedSalePriceKrw: manwonToKrw(existingHomeSalePrice),
@@ -528,7 +529,7 @@ export function ProfileForm({
           }
         : undefined;
 
-    const profile: CoupleProfile = {
+    return {
       householdType,
       priorities,
       preferredAreaRange,
@@ -543,6 +544,64 @@ export function ProfileForm({
       isNewlywed,
       existingHome,
     };
+  }, [
+    householdType,
+    priorities,
+    preferredAreaRange,
+    wpA.selected,
+    wpB.selected,
+    commuteModeA,
+    commuteModeB,
+    maxCommuteA,
+    maxCommuteB,
+    childrenAges,
+    householdIncome,
+    seedMoney,
+    netAssets,
+    existingLoan,
+    hasOwnedHome,
+    isNewlywed,
+    hasExistingHome,
+    existingHomeSalePrice,
+    existingHomeLoan,
+    existingHomeTaxExempt,
+  ]);
+
+  // ── Step 4 예산 미리보기 ─────────────────────────────────────
+  // 보유 현금·연 소득이 모두 입력돼야 추정이 의미 있으므로 그 전엔 숨긴다.
+  const canPreviewBudget =
+    (parseFloat(seedMoney) || 0) > 0 && (parseFloat(householdIncome) || 0) > 0;
+
+  const previewBudget = useMemo(
+    () => (canPreviewBudget ? estimateBudget(buildProfile()) : null),
+    [canPreviewBudget, buildProfile],
+  );
+
+  // ── Step 3 정책대출 예비 힌트 ────────────────────────────────
+  // 가족 구성(자녀·신혼·무주택)만으로 짚어줄 수 있는 항목. 소득·자산 요건은
+  // Step 4 입력 후 estimateBudget 이 정식 판정한다.
+  const familyPolicyHints = useMemo(() => {
+    const hints: string[] = [];
+    if (hasOwnedHome) return hints;
+    if (childrenAges.some((a) => a <= 1)) {
+      hints.push("1세 이하 자녀 + 무주택 → 신생아 특례 디딤돌 대상 가능");
+    }
+    if (isNewlywed) {
+      hints.push("혼인 7년 이내 + 무주택 → 디딤돌(신혼) 대상 가능");
+    }
+    if (childrenAges.length >= 2) {
+      hints.push("자녀 2명 이상 → 디딤돌(일반) 소득 기준 완화 (7,000만원)");
+    }
+    return hints;
+  }, [childrenAges, isNewlywed, hasOwnedHome]);
+
+  // ── 제출 ──────────────────────────────────────────────────────
+
+  async function handleSubmit() {
+    setSubmitError(null);
+    setSubmitting(true);
+
+    const profile: CoupleProfile = buildProfile();
 
     try {
       const res = await fetch("/api/recommend", {
@@ -823,6 +882,39 @@ export function ProfileForm({
             />
           </div>
 
+          {/* 정책대출 예비 안내 — 가족 구성 기준 */}
+          <div className="rounded-3xl border border-indigo-100 bg-indigo-50/50 p-5 flex flex-col gap-2">
+            <p className="text-[15px] font-semibold text-[#1d1d1f]">
+              정책대출 예비 안내
+            </p>
+            {familyPolicyHints.length > 0 ? (
+              <>
+                <p className="text-[13px] text-[#6e6e73] leading-relaxed">
+                  지금까지 입력한 가족 구성 기준으로 아래 항목에 해당할 수 있어요.
+                  소득·순자산 요건은 다음 단계에서 확인합니다.
+                </p>
+                <ul className="flex flex-col gap-1.5 mt-0.5">
+                  {familyPolicyHints.map((hint) => (
+                    <li
+                      key={hint}
+                      className="flex gap-1.5 text-[13px] text-indigo-800 leading-relaxed"
+                    >
+                      <span className="mt-0.5 flex-shrink-0 text-indigo-400">
+                        &#9679;
+                      </span>
+                      {hint}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <p className="text-[13px] text-[#6e6e73] leading-relaxed">
+                다음 단계에서 소득·순자산을 입력하면 디딤돌·신생아 특례·보금자리론
+                등 정책대출 자격을 확인해 드려요.
+              </p>
+            )}
+          </div>
+
           <div className="flex gap-3">
             <Button variant="secondary" onClick={goPrev}>
               이전
@@ -977,6 +1069,18 @@ export function ProfileForm({
               </div>
             )}
           </div>
+
+          {/* 예산 미리보기 — 보유 현금·연 소득 입력 시 노출 */}
+          {previewBudget ? (
+            <BudgetPreview budget={previewBudget} />
+          ) : (
+            <div className="rounded-3xl border border-dashed border-[#d1d1d6] bg-[#f5f5f7] p-5">
+              <p className="text-[13px] text-[#86868b] leading-relaxed">
+                보유 현금과 연 가구소득을 입력하면 예상 대출 가능액·실매수 가능가가
+                여기 바로 표시됩니다.
+              </p>
+            </div>
+          )}
 
           <div className="flex gap-3">
             <Button variant="secondary" onClick={goPrev}>
