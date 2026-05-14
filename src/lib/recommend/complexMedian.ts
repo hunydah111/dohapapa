@@ -54,10 +54,64 @@ export async function getAreaMedians(
 
 /**
  * 거래 표본이 가장 두꺼운 평형(대표 평형)을 반환한다.
- * medians가 빈 배열이면 null.
+ * minArea 이상인 평형만 후보로 본다 — 오피스텔·초소형 원룸이 대표 평형으로
+ * 잡혀 가족용 추천을 오염시키는 것을 막는다.
+ * 조건을 만족하는 평형이 없으면 null (해당 단지는 추천에서 제외).
  */
-export function pickRepresentative(medians: AreaMedian[]): AreaMedian | null {
-  if (medians.length === 0) return null;
-  // 이미 count 내림차순 정렬돼 있으므로 첫 번째가 대표.
-  return medians[0];
+export function pickRepresentative(
+  medians: AreaMedian[],
+  minArea: number = 0,
+): AreaMedian | null {
+  // medians 는 count 내림차순 정렬돼 있으므로 filter 후 첫 번째가 대표.
+  const eligible = medians.filter((m) => m.area >= minArea);
+  return eligible.length > 0 ? eligible[0] : null;
+}
+
+/**
+ * 여러 단지의 평형별 중위가를 청크 단위 쿼리로 한 번에 집계한다.
+ * 단지별로 getAreaMedians 를 N번 호출하면 N개의 동시 쿼리가 발생해
+ * SQLite 가 막히므로, 추천 엔진에서는 이 일괄 버전을 쓴다.
+ */
+export async function getAreaMediansForMany(
+  complexIds: string[],
+  windowMonths: number = 12,
+): Promise<Map<string, AreaMedian[]>> {
+  const since = new Date();
+  since.setMonth(since.getMonth() - windowMonths);
+
+  const CHUNK = 400;
+  // complexId → (area → prices[])
+  const byComplex = new Map<string, Map<number, number[]>>();
+
+  for (let i = 0; i < complexIds.length; i += CHUNK) {
+    const ids = complexIds.slice(i, i + CHUNK);
+    const rows = await db.transaction.findMany({
+      where: { complexId: { in: ids }, dealDate: { gte: since } },
+      select: { complexId: true, area: true, priceKrw: true },
+    });
+    for (const row of rows) {
+      let areaGroups = byComplex.get(row.complexId);
+      if (!areaGroups) {
+        areaGroups = new Map<number, number[]>();
+        byComplex.set(row.complexId, areaGroups);
+      }
+      const key = Math.round(row.area * 10) / 10;
+      const prices = areaGroups.get(key) ?? [];
+      prices.push(Number(row.priceKrw));
+      areaGroups.set(key, prices);
+    }
+  }
+
+  const result = new Map<string, AreaMedian[]>();
+  for (const [complexId, areaGroups] of byComplex) {
+    const medians: AreaMedian[] = [];
+    for (const [area, prices] of areaGroups) {
+      medians.push({ area, medianKrw: median(prices), count: prices.length });
+    }
+    result.set(
+      complexId,
+      medians.sort((a, b) => b.count - a.count),
+    );
+  }
+  return result;
 }

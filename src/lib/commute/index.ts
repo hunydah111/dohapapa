@@ -21,6 +21,15 @@ export async function getCommuteMinutes(
   complexCoord: LatLng,
   mode: CommuteMode,
 ): Promise<number> {
+  const provider = getCommuteProvider();
+
+  // mock provider 는 순수 계산(haversine)이라 DB 캐시가 오히려 오버헤드다.
+  // 캐시는 비싼 외부 호출(Kakao Mobility)에만 의미가 있으므로 mock 은 바로 계산.
+  // (단지 1만 개 추천 시 캐시 upsert 폭주로 SQLite 가 socket timeout 나던 문제.)
+  if (provider.name === "mock") {
+    return provider.travelMinutes(origin, complexCoord, mode);
+  }
+
   const originKey = `${origin.lat.toFixed(3)},${origin.lng.toFixed(3)}`;
 
   const cached = await db.commuteCache.findUnique({
@@ -33,7 +42,7 @@ export async function getCommuteMinutes(
     return cached.minutes;
   }
 
-  const minutes = await getCommuteProvider().travelMinutes(origin, complexCoord, mode);
+  const minutes = await provider.travelMinutes(origin, complexCoord, mode);
 
   await db.commuteCache.upsert({
     where: {
