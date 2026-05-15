@@ -16,33 +16,25 @@ export default function HomePage() {
           }}
         />
 
-        {/* 콤파스 마크 — 히어로 사이즈 */}
-        <div className="mb-5 flex justify-center text-indigo-600">
-          <div className="rounded-3xl bg-white/60 p-3 shadow-[0_8px_28px_-12px_rgba(79,70,229,0.35)] ring-1 ring-indigo-100 backdrop-blur">
-            <BrandMark size={56} />
-          </div>
+        {/* 브랜드 마크 — 히어로 사이즈 */}
+        <div className="mb-6 flex justify-center text-indigo-600">
+          <BrandMark size={72} />
         </div>
 
-        {/* 브랜드 supertitle */}
-        <p
-          className="mb-3 text-[12px] font-semibold uppercase tracking-[0.18em]"
-          style={{ color: "#9a3412" /* warm amber-800 */ }}
-        >
-          홈앤나사이
-        </p>
-
+        {/* 워드마크 — 큰 사이즈 */}
         <h1
-          className="text-3xl font-bold tracking-tight sm:text-4xl"
+          className="text-4xl font-extrabold tracking-tight sm:text-5xl"
           style={{ color: "#1d1d1f" }}
         >
-          우리, 어디 살 수 있을까
+          홈앤나사이
         </h1>
+
+        {/* 캐주얼 태그라인 — "재미로 한번 돌려본다" 톤 */}
         <p
-          className="mx-auto mt-3 max-w-sm text-[15px] leading-relaxed"
+          className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed"
           style={{ color: "#6e6e73" }}
         >
-          통근 거리·예산·학군 조건을 입력하면 국토부 실거래가로 살 만한 단지를
-          좁혀 드립니다.
+          재미로 한번 돌려보는 우리 부부 집 찾기
         </p>
       </section>
 

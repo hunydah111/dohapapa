@@ -1,8 +1,10 @@
-// 홈앤나사이 — 콤파스 브랜드 마크.
+// 홈앤나사이 — 브랜드 마크.
 //
-// 메타포: 부부가 "집과 자신들 사이의 거리"를 좁히는 방향성 도구.
-// 디자인: amber 바늘이 북(=집·따뜻함)을 가리키고 indigo 본체는 현재 위치.
-// currentColor 로 본체 색을 상속 받아 헤더(indigo) / 다크 배경 어디든 맞춤.
+// 컨셉: 브랜드 이름 "Home & 나 사이" 의 시각화.
+//   - 왼쪽 indigo 반쪽 = 나 (currentColor 상속으로 헤더 톤과 동기화)
+//   - 오른쪽 amber 반쪽 = Home (따뜻함·도착지)
+//   - 중앙 흰 원 = "사이" (Home 과 나 사이의 공간, 이 도구가 메우려는 거리)
+// 집 실루엣을 유지하되 단순 그림이 아닌 브랜드의 메타포 그 자체.
 
 type Props = {
   size?: number;
@@ -10,7 +12,6 @@ type Props = {
 };
 
 export function BrandMark({ size = 24, className }: Props) {
-  const stroke = Math.max(1.2, size / 18);
   return (
     <svg
       width={size}
@@ -21,42 +22,18 @@ export function BrandMark({ size = 24, className }: Props) {
       aria-label="홈앤나사이 로고"
       className={className}
     >
-      {/* 외곽 원 */}
-      <circle
-        cx="16"
-        cy="16"
-        r="14"
-        stroke="currentColor"
-        strokeWidth={stroke}
-      />
-      {/* 4 방위 마커 (희미) */}
-      <circle cx="16" cy="3.4" r="0.9" fill="currentColor" opacity="0.4" />
-      <circle cx="16" cy="28.6" r="0.9" fill="currentColor" opacity="0.4" />
-      <circle cx="3.4" cy="16" r="0.9" fill="currentColor" opacity="0.4" />
-      <circle cx="28.6" cy="16" r="0.9" fill="currentColor" opacity="0.4" />
-      {/* 위 바늘 — amber (북·집·따뜻함) */}
-      <path d="M16 7 L19.2 16 L16 16 Z" fill="#f59e0b" />
-      <path d="M16 7 L12.8 16 L16 16 Z" fill="#fbbf24" />
-      {/* 아래 바늘 — indigo currentColor */}
+      {/* 나 (왼쪽 반쪽, indigo) — 바닥 모서리 라운드 */}
       <path
-        d="M16 25 L19.2 16 L16 16 Z"
+        d="M16 4 L4 13 L4 26 Q4 28 6 28 L16 28 Z"
         fill="currentColor"
-        opacity="0.55"
       />
+      {/* Home (오른쪽 반쪽, amber) — 바닥 모서리 라운드 */}
       <path
-        d="M16 25 L12.8 16 L16 16 Z"
-        fill="currentColor"
-        opacity="0.78"
+        d="M16 4 L28 13 L28 26 Q28 28 26 28 L16 28 Z"
+        fill="#f59e0b"
       />
-      {/* 중심 핀 */}
-      <circle
-        cx="16"
-        cy="16"
-        r="1.6"
-        fill="white"
-        stroke="currentColor"
-        strokeWidth={stroke}
-      />
+      {/* "사이" — Home 과 나 사이의 공간, 벽 중앙 */}
+      <circle cx="16" cy="16" r="3.5" fill="white" />
     </svg>
   );
 }
