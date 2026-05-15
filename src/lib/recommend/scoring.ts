@@ -172,13 +172,15 @@ export function scoreBudgetFit(
  *   상당수 누락 — 전문가 다수가 150m 권고.)
  * - 그 밖엔 도보권 / 통학 부담 2단계.
  * - 학업성취도·학원가·배정 중학교는 현재 데이터 없음 (별도 과제).
+ *
+ * hasSchoolAgedChild: 통학 거리 부담 감점 폭에만 영향 (있으면 더 깎임).
+ * 초품아 보너스는 자녀 유무와 무관하게 모든 단지 자산가치에 반영된다.
  */
 export function scoreSchool(
   complex: { nearestElemSchoolM: number | null; buildYear: number | null },
-  childrenAges: number[],
+  hasSchoolAgedChild: boolean,
 ): ScoreResult {
   const dist = complex.nearestElemSchoolM;
-  const hasKids = childrenAges.length > 0;
 
   if (dist === null) {
     return { score: 52, reason: "초등학교 거리 정보 없음" };
@@ -190,9 +192,9 @@ export function scoreSchool(
   if (dist <= 400) {
     return { score: 70, reason: `초등학교 도보권 (${dist}m)` };
   }
-  // 통학 거리 부담 — 자녀가 있으면 감점 폭이 크다
+  // 통학 거리 부담 — 학령기 자녀가 있으면 감점 폭이 크다
   return {
-    score: hasKids ? 45 : 55,
+    score: hasSchoolAgedChild ? 45 : 55,
     reason: `초등학교 ${dist}m — 통학 거리 부담`,
   };
 }

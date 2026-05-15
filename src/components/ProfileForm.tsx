@@ -291,8 +291,12 @@ export function ProfileForm({
   );
 
   // ── Step 3: 가족 ────────────────────────────────────────────
-  const [childrenAges, setChildrenAges] = useState<number[]>([]);
-  const [childAgeInput, setChildAgeInput] = useState("");
+  // 자녀 신호는 boolean 3개로 단순화 — 학교 데이터가 초등 거리뿐이라 정밀한
+  // 나이는 의미가 없고, 실제로 코드가 쓰는 건 (학령기 여부 / 영유아 여부 / 2명 이상)
+  // 세 신호뿐이다. 이를 그대로 사용자에게 노출한다.
+  const [hasSchoolAgedChild, setHasSchoolAgedChild] = useState(false);
+  const [hasInfant, setHasInfant] = useState(false);
+  const [hasTwoOrMoreChildren, setHasTwoOrMoreChildren] = useState(false);
   const [isNewlywed, setIsNewlywed] = useState(false);
   const [hasOwnedHome, setHasOwnedHome] = useState(false);
 
@@ -447,19 +451,6 @@ export function ProfileForm({
     syncWorkplaceSettings("B", commuteModeB, v);
   }
 
-  function handleAddChild() {
-    if (childrenAges.length >= 10) return;
-    const age = parseInt(childAgeInput, 10);
-    if (!isNaN(age) && age >= 0 && age <= 25) {
-      setChildrenAges((prev) => [...prev, age]);
-      setChildAgeInput("");
-    }
-  }
-
-  function removeChild(index: number) {
-    setChildrenAges((prev) => prev.filter((_, i) => i !== index));
-  }
-
   // Step 2 진행 가능 여부
   function step2CanProceed(): boolean {
     if (householdType === "retired") return true;
@@ -535,7 +526,9 @@ export function ProfileForm({
       preferredAreaRange,
       workplaceA: finalWpA,
       workplaceB: finalWpB,
-      childrenAges,
+      hasSchoolAgedChild,
+      hasInfant,
+      hasTwoOrMoreChildren,
       householdIncomeKrwYear: manwonToKrw(householdIncome),
       seedMoneyKrw: manwonToKrw(seedMoney),
       netAssetsKrw: manwonToKrw(netAssets),
@@ -554,7 +547,9 @@ export function ProfileForm({
     commuteModeB,
     maxCommuteA,
     maxCommuteB,
-    childrenAges,
+    hasSchoolAgedChild,
+    hasInfant,
+    hasTwoOrMoreChildren,
     householdIncome,
     seedMoney,
     netAssets,
@@ -583,17 +578,17 @@ export function ProfileForm({
   const familyPolicyHints = useMemo(() => {
     const hints: string[] = [];
     if (hasOwnedHome) return hints;
-    if (childrenAges.some((a) => a <= 1)) {
+    if (hasInfant) {
       hints.push("1세 이하 자녀 + 무주택 → 신생아 특례 디딤돌 대상 가능");
     }
     if (isNewlywed) {
       hints.push("혼인 7년 이내 + 무주택 → 디딤돌(신혼) 대상 가능");
     }
-    if (childrenAges.length >= 2) {
+    if (hasTwoOrMoreChildren) {
       hints.push("자녀 2명 이상 → 디딤돌(일반) 소득 기준 완화 (7,000만원)");
     }
     return hints;
-  }, [childrenAges, isNewlywed, hasOwnedHome]);
+  }, [hasInfant, hasTwoOrMoreChildren, isNewlywed, hasOwnedHome]);
 
   // ── 제출 ──────────────────────────────────────────────────────
 
@@ -787,67 +782,92 @@ export function ProfileForm({
             </p>
           </div>
 
-          {/* 자녀 나이 칩 */}
+          {/* 자녀·가족 신호 — 해당 항목 모두 선택 */}
           <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm flex flex-col gap-3">
             <div>
               <p className="text-[15px] font-semibold text-[#1d1d1f]">
-                자녀 나이
+                자녀 / 가족 상황
               </p>
               <p className="text-[13px] text-[#86868b] mt-0.5">
-                최대 10명까지 추가할 수 있어요
+                해당되는 항목을 모두 선택해 주세요. 학군 점수와 정책대출 자격
+                판정에 활용됩니다.
               </p>
             </div>
 
-            <div className="flex gap-2 items-end">
-              <div className="flex-1">
-                <TextField
-                  value={childAgeInput}
-                  onChange={setChildAgeInput}
-                  type="number"
-                  placeholder="나이 입력 (0~25)"
-                  suffix="세"
-                />
-              </div>
-              <Button
-                variant="secondary"
-                size="md"
-                onClick={handleAddChild}
-                disabled={
-                  childrenAges.length >= 10 ||
-                  childAgeInput === "" ||
-                  isNaN(parseInt(childAgeInput, 10)) ||
-                  parseInt(childAgeInput, 10) < 0 ||
-                  parseInt(childAgeInput, 10) > 25
-                }
-              >
-                추가
-              </Button>
-            </div>
-
-            {childrenAges.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {childrenAges.map((age, i) => (
-                  <span
-                    key={i}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-[13px] font-medium text-indigo-800"
-                  >
-                    {age}세
-                    <button
-                      type="button"
-                      onClick={() => removeChild(i)}
-                      aria-label={`${age}세 삭제`}
-                      className="w-4 h-4 flex items-center justify-center rounded-full bg-indigo-200 text-indigo-600 hover:bg-indigo-300 transition-colors text-[10px] font-bold leading-none"
+            <div className="flex flex-col gap-2">
+              {(
+                [
+                  {
+                    key: "school",
+                    label: "초·중·고 자녀 있음",
+                    why: "학군 점수(통학 거리 부담)에 반영",
+                    state: hasSchoolAgedChild,
+                    set: setHasSchoolAgedChild,
+                  },
+                  {
+                    key: "infant",
+                    label: "영유아(만 1세 이하)",
+                    why: "신생아 특례 디딤돌 자격 판정",
+                    state: hasInfant,
+                    set: setHasInfant,
+                  },
+                  {
+                    key: "two",
+                    label: "자녀 2명 이상",
+                    why: "디딤돌(일반) 소득 기준 완화 판정",
+                    state: hasTwoOrMoreChildren,
+                    set: setHasTwoOrMoreChildren,
+                  },
+                ] as const
+              ).map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  role="switch"
+                  aria-checked={item.state}
+                  onClick={() => item.set((v) => !v)}
+                  className={`flex items-center justify-between px-4 py-3 rounded-2xl border transition-colors text-left ${
+                    item.state
+                      ? "bg-indigo-50 border-indigo-300"
+                      : "bg-white border-[#e5e5ea] hover:border-[#d1d1d6]"
+                  }`}
+                >
+                  <div>
+                    <p
+                      className={`text-[15px] font-medium ${item.state ? "text-indigo-900" : "text-[#1d1d1f]"}`}
                     >
-                      x
-                    </button>
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="text-[13px] text-[#86868b]">
-                자녀가 없으면 비워두세요.
-              </p>
-            )}
+                      {item.label}
+                    </p>
+                    <p className="text-[12px] text-[#86868b] mt-0.5">
+                      {item.why}
+                    </p>
+                  </div>
+                  <div
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                      item.state
+                        ? "bg-indigo-600 border-indigo-600"
+                        : "border-[#d1d1d6]"
+                    }`}
+                  >
+                    {item.state && (
+                      <svg
+                        className="w-3 h-3 text-white"
+                        viewBox="0 0 12 12"
+                        fill="none"
+                      >
+                        <path
+                          d="M2 6L5 9L10 3"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* 신혼 여부 — 1인·은퇴 제외 */}

@@ -319,7 +319,7 @@ export async function recommendComplexes(
           nearestElemSchoolM: complex.nearestElemSchoolM,
           buildYear: complex.buildYear,
         },
-        profile.childrenAges,
+        profile.hasSchoolAgedChild,
       );
       const ageResult = scoreBuildingAge(complex.buildYear);
 

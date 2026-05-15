@@ -56,15 +56,12 @@ const BOGEUMJARI_FIRST_LOAN_LIMIT = 420_000_000;
 /**
  * 신생아 특례 디딤돌 자격 판정.
  *
- * WHY 자녀 나이 ≤ 1 프록시: 신생아 특례는 "대출 신청일 기준 2년 이내 출산"이
- * 원칙이나, 앱이 출생연도 입력이 아닌 나이(만 나이)만 받으므로
- * childrenAges.some(a => a <= 1) 를 프록시로 쓴다.
- * 나이 2세 자녀라도 대출 신청 시점에 따라 요건 충족 가능 — reason 에 안내 포함.
+ * WHY hasInfant 프록시: 신생아 특례는 "대출 신청일 기준 2년 이내 출산"이 원칙이나,
+ * 폼에서 만 1세 이하 자녀 유무(boolean)만 받으므로 그것을 프록시로 쓴다.
+ * 2세 자녀도 실제 출생일 기준 충족 가능 — reason 에 안내 포함.
  */
 function evaluateShinseona(profile: CoupleProfile): PolicyLoanMatch {
-  const { householdIncomeKrwYear, hasOwnedHomeBefore, childrenAges } = profile;
-
-  const hasInfant = childrenAges.some((a) => a <= 1);
+  const { householdIncomeKrwYear, hasOwnedHomeBefore, hasInfant } = profile;
 
   // WHY 무주택 요건 확인: 신생아 특례 디딤돌은 무주택 세대주만 신청 가능
   if (hasOwnedHomeBefore) {
@@ -161,7 +158,8 @@ function evaluateDidimdolNewlywed(profile: CoupleProfile): PolicyLoanMatch {
  * WHY 생애최초·2자녀 완화: 두 조건 중 하나라도 해당하면 소득 기준 7,000만으로 완화.
  */
 function evaluateDidimdolGeneral(profile: CoupleProfile): PolicyLoanMatch {
-  const { householdIncomeKrwYear, hasOwnedHomeBefore, childrenAges } = profile;
+  const { householdIncomeKrwYear, hasOwnedHomeBefore, hasTwoOrMoreChildren } =
+    profile;
 
   if (hasOwnedHomeBefore) {
     return {
@@ -172,7 +170,6 @@ function evaluateDidimdolGeneral(profile: CoupleProfile): PolicyLoanMatch {
   }
 
   const isFirstHome = !hasOwnedHomeBefore;
-  const hasTwoOrMoreChildren = childrenAges.length >= 2;
 
   // WHY 완화 기준 적용: 생애최초 또는 2자녀 이상이면 소득 7,000만까지 허용
   const incomeLimit =

@@ -43,8 +43,12 @@ const coupleProfileSchema = z
     // 1인 가구: workplaceA 만, retired: 둘 다 없을 수 있음
     workplaceA: workplaceSchema.optional(),
     workplaceB: workplaceSchema.optional(),
-    // 자녀 수 상한 10명 — 비현실적 입력 방지
-    childrenAges: z.array(z.number().int().min(0).max(25)).max(10),
+    /** 초·중·고 자녀 있음 — 학군 점수 적용. */
+    hasSchoolAgedChild: z.boolean(),
+    /** 영유아(만 1세 이하) 있음 — 신생아 특례 디딤돌 자격 판정. */
+    hasInfant: z.boolean(),
+    /** 자녀 2명 이상 — 디딤돌(일반) 소득 기준 완화 판정. */
+    hasTwoOrMoreChildren: z.boolean(),
     householdIncomeKrwYear: z.number().nonnegative(),
     seedMoneyKrw: z.number().nonnegative(),
     /** 순자산 총액 (원). 정책대출 자산요건 판정용. */

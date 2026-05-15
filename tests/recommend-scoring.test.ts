@@ -24,7 +24,9 @@ function makeProfile(overrides: Partial<CoupleProfile> = {}): CoupleProfile {
       commuteMode: "transit",
       maxCommuteMinutes: 50,
     },
-    childrenAges: [],
+    hasSchoolAgedChild: false,
+    hasInfant: false,
+    hasTwoOrMoreChildren: false,
     householdIncomeKrwYear: 80_000_000,
     seedMoneyKrw: 200_000_000,
     netAssetsKrw: 200_000_000,
@@ -231,7 +233,7 @@ describe("scoreSchool", () => {
   it("초등학교 150m 이내 → 초품아, score 95", () => {
     const { score, reason } = scoreSchool(
       { nearestElemSchoolM: 120, buildYear: 2010 },
-      [9],
+      true,
     );
     expect(score).toBe(95);
     expect(reason).toContain("초품아");
@@ -240,25 +242,25 @@ describe("scoreSchool", () => {
   it("초등학교 도보권(150~400m) → score 70", () => {
     const { score, reason } = scoreSchool(
       { nearestElemSchoolM: 300, buildYear: 2010 },
-      [8],
+      true,
     );
     expect(score).toBe(70);
     expect(reason).toContain("도보권");
   });
 
-  it("초등학교 400m 초과 + 자녀 있음 → score 45 (통학 부담)", () => {
+  it("초등학교 400m 초과 + 학령기 자녀 있음 → score 45 (통학 부담)", () => {
     const { score, reason } = scoreSchool(
       { nearestElemSchoolM: 800, buildYear: 2005 },
-      [10],
+      true,
     );
     expect(score).toBe(45);
     expect(reason).toContain("통학 거리 부담");
   });
 
-  it("초등학교 400m 초과 + 자녀 없음 → score 55", () => {
+  it("초등학교 400m 초과 + 학령기 자녀 없음 → score 55", () => {
     const { score } = scoreSchool(
       { nearestElemSchoolM: 800, buildYear: 2005 },
-      [],
+      false,
     );
     expect(score).toBe(55);
   });
@@ -266,7 +268,7 @@ describe("scoreSchool", () => {
   it("거리 정보 없음 → score 52", () => {
     const { score, reason } = scoreSchool(
       { nearestElemSchoolM: null, buildYear: 2010 },
-      [7],
+      true,
     );
     expect(score).toBe(52);
     expect(reason).toContain("정보 없음");
@@ -275,17 +277,17 @@ describe("scoreSchool", () => {
   it("score is always in [0, 100] and reason is non-empty", () => {
     const cases: [
       { nearestElemSchoolM: number | null; buildYear: number | null },
-      number[],
+      boolean,
     ][] = [
-      [{ nearestElemSchoolM: null, buildYear: null }, []],
-      [{ nearestElemSchoolM: 100, buildYear: 2020 }, [7]],
-      [{ nearestElemSchoolM: 500, buildYear: 2010 }, [3]],
-      [{ nearestElemSchoolM: 900, buildYear: 2000 }, [14]],
-      [{ nearestElemSchoolM: 150, buildYear: null }, [5, 12]],
+      [{ nearestElemSchoolM: null, buildYear: null }, false],
+      [{ nearestElemSchoolM: 100, buildYear: 2020 }, true],
+      [{ nearestElemSchoolM: 500, buildYear: 2010 }, true],
+      [{ nearestElemSchoolM: 900, buildYear: 2000 }, true],
+      [{ nearestElemSchoolM: 150, buildYear: null }, true],
     ];
 
-    for (const [complex, ages] of cases) {
-      const { score, reason } = scoreSchool(complex, ages);
+    for (const [complex, hasKid] of cases) {
+      const { score, reason } = scoreSchool(complex, hasKid);
       expect(inRange(score)).toBe(true);
       expect(reason.length).toBeGreaterThan(0);
     }

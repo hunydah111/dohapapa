@@ -127,8 +127,16 @@ export interface CoupleProfile {
   workplaceA?: Workplace;
   /** 배우자 직장. 맞벌이(dualIncome)일 때만. */
   workplaceB?: Workplace;
-  /** 자녀 나이 목록. 빈 배열 = 무자녀. */
-  childrenAges: number[];
+  /**
+   * 초·중·고 자녀 있음 — 학군 점수에 반영(통학 거리 부담 감점 등).
+   * 데이터로는 초등학교 거리만 알기 때문에 정확한 자녀 나이는 의미가 없어
+   * boolean 으로 단순화. 영유아는 별도 필드.
+   */
+  hasSchoolAgedChild: boolean;
+  /** 영유아(만 1세 이하) 있음 — 신생아 특례 디딤돌 자격 판정용. */
+  hasInfant: boolean;
+  /** 자녀 2명 이상 — 디딤돌(일반) 소득 기준 완화 판정용. */
+  hasTwoOrMoreChildren: boolean;
   /** 연 가구소득 (원). 부부면 합산. */
   householdIncomeKrwYear: number;
   /** 보유 현금 (원). */
