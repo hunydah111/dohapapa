@@ -111,12 +111,12 @@ export function CandidateCard({
             className="text-sm font-semibold"
             style={{ color: "#1d1d1f" }}
           >
-            추정가 {formatKrwHuman(candidate.medianPriceKrw)}
+            실거래 중위가 {formatKrwHuman(candidate.medianPriceKrw)}
           </span>
         </div>
         <p className="mt-1.5 text-xs" style={{ color: "#86868b" }}>
-          최근 6개월 실거래 {candidate.transactionCount}건 기준 추정 현재가
-          (실제 거래가와 다를 수 있음)
+          최근 6개월 실거래 {candidate.transactionCount}건의 중위값
+          (국토교통부 공개 데이터, 실제 거래가와 다를 수 있음)
         </p>
       </div>
 

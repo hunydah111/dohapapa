@@ -137,7 +137,7 @@ export function CommuteDiagram({
                   {leg.minutes}분
                 </span>
                 <span className="text-[11px]" style={{ color: "#86868b" }}>
-                  {modeLabel} · 직선거리 추정{!ok && " · 허용 시간 초과"}
+                  {modeLabel} · 카카오 길찾기 기준{!ok && " · 허용 시간 초과"}
                 </span>
               </div>
 
@@ -173,9 +173,9 @@ export function CommuteDiagram({
         className="text-[11px] leading-relaxed"
         style={{ color: "#86868b" }}
       >
-        통근 시간은 직선거리와 평균 속도로 계산한 대략적 추정치예요. 특히
-        대중교통은 실제 노선·환승·배차 간격을 반영하지 않으니, 정확한 시간은 각
-        직장의 카카오맵 길찾기로 확인하세요.
+        통근 시간은 카카오 길찾기(자차) 표준 트래픽 기준이며, 대중교통은
+        자차의 1.3배로 근사한 값이에요. 실제 노선·환승·배차 간격은 반영하지
+        않으니 정확한 시간은 본인 직장의 카카오맵 길찾기로 확인하세요.
       </p>
     </div>
   );

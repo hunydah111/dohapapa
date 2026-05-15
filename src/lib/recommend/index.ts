@@ -138,7 +138,7 @@ function buildReport(
         "."
       : "";
 
-  const head = `${c.sigungu} ${c.dongName} ${c.complexName}, 전용 ${c.representativeArea}㎡ 추정 현재가 ${eok}억.${legText}`;
+  const head = `${c.sigungu} ${c.dongName} ${c.complexName}, 전용 ${c.representativeArea}㎡ 실거래 중위가 ${eok}억(최근 6개월).${legText}`;
 
   const orderedKeys = (Object.keys(weights) as CandidateSignalKey[])
     .filter((k) => c.commuteLegs.length > 0 || k !== "commute")
