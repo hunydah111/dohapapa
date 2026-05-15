@@ -1,5 +1,10 @@
 import { estimateBudget } from "@/lib/budget";
-import { getCommuteMinutes } from "@/lib/commute";
+import {
+  getCommuteMinutes,
+  getCommuteProvider,
+  mockProvider,
+} from "@/lib/commute";
+import type { CommuteProvider } from "@/lib/commute";
 import { db } from "@/lib/db";
 import { haversineKm } from "@/lib/geo";
 import { AREA_RANGES, AREA_RANGE_ORDER } from "@/types/profile";
@@ -248,9 +253,11 @@ export async function recommendComplexes(
   // 소규모 건물 배제 — 6개월 거래 건수를 대단지 프록시로 사용
   const MIN_TRANSACTIONS = 8;
 
-  // 6. 단지별 평가
-  const evaluated = await Promise.all(
-    geoSurvivors.map(async (complex): Promise<ScoredComplex | null> => {
+  // 6. 단지별 평가 — evaluateComplex 를 commute provider 만 바꿔 2단계로 재사용한다.
+  const evaluateComplex = async (
+    complex: (typeof geoSurvivors)[number],
+    commuteProvider: CommuteProvider,
+  ): Promise<ScoredComplex | null> => {
       const medians: AreaMedian[] = mediansMap.get(complex.id) ?? [];
 
       const totalTransactions = medians.reduce((s, m) => s + m.count, 0);
@@ -268,7 +275,13 @@ export async function recommendComplexes(
       // 직장별 통근 leg 계산 — 각 직장의 commuteMode 사용
       const legPromises: Promise<CommuteLeg>[] = workplaces.map((wp, idx) => {
         const wpLabel: "A" | "B" = idx === 0 ? "A" : "B";
-        return getCommuteMinutes(wp, complex.id, complexCoord, wp.commuteMode).then(
+        return getCommuteMinutes(
+          wp,
+          complex.id,
+          complexCoord,
+          wp.commuteMode,
+          commuteProvider,
+        ).then(
           (minutes): CommuteLeg => ({
             workplace: wpLabel,
             workplaceLabel: wp.label,
@@ -359,29 +372,81 @@ export async function recommendComplexes(
       };
 
       return { candidate, medianKrw: rep.medianKrw, passedHardFilter };
-    }),
-  );
+  };
 
-  const validEvaluated = evaluated.filter(
-    (e): e is ScoredComplex => e !== null,
+  // ── 6a. 1차 평가 — geoSurvivors 전체를 mock 통근으로 평가 (즉시·무료) ───────
+  const phase1 = await Promise.all(
+    geoSurvivors.map((complex) => evaluateComplex(complex, mockProvider)),
   );
+  const phase1Valid = phase1.filter((e): e is ScoredComplex => e !== null);
+
+  // ── 6b. 2차 평가 — 길찾기 키가 있으면 상위 후보만 Kakao API 로 정밀화 ───────
+  // geoSurvivors 전체(수천 개)에 실 API 를 쓰면 일일 쿼터(1만)·rate limit·지연이
+  // 폭발한다. mock 점수 상위 REFINE_COUNT 곳만 실측으로 다시 평가하면 캐시 미스
+  // 시에도 호출은 ~REFINE_COUNT×직장수 건에 그친다. 표시되는 후보(3티어+추가 10)는
+  // 모두 이 정밀 구간에서 나오므로 사용자가 보는 통근 시간은 실측값이다.
+  // 한계: 1차 랭킹이 mock 기반이라, mock 이 크게 빗나간 단지(직선거리는 가깝지만
+  // 실제론 우회하는)가 상위 밖으로 밀리면 놓칠 수 있다.
+  const realProvider = getCommuteProvider();
+  let validEvaluated: ScoredComplex[];
+
+  if (realProvider.name === "mock") {
+    // 길찾기 키 없음 — 1차 평가가 곧 최종.
+    validEvaluated = phase1Valid;
+  } else {
+    // mock 점수 상위 REFINE_COUNT 곳만 실측으로 재평가한다. 1차 나머지(rest)를
+    // 섞지 않는 이유: rest 는 낙관적인 mock 통근 점수를 그대로 갖고 있어, 실측으로
+    // 통근 점수가 정직하게 깎인 refined 와 한 줄로 정렬하면 rest 가 부당하게 상위로
+    // 뜬다. 따라서 화면에 쓰는 풀은 refined 로 한정한다.
+    const REFINE_COUNT = 40;
+    const CHUNK = 10; // 동시 호출을 ~CHUNK×직장수 로 제한 — rate limit 회피
+    const complexById = new Map(geoSurvivors.map((c) => [c.id, c]));
+    // 실측 재평가 대상 선정: mock 하드필터 통과 단지를 점수순으로 먼저 채우고,
+    // 남는 자리는 미통과 단지로 채운다. 통과 단지는 통근상 현실적인 후보이므로
+    // 우선이고, 미통과분도 일부 포함해 mock 추정 오차로 놓친 경계 단지를 건진다.
+    const sortedP1 = [...phase1Valid].sort(
+      (a, b) => b.candidate.totalScore - a.candidate.totalScore,
+    );
+    const toRefine = [
+      ...sortedP1.filter((e) => e.passedHardFilter),
+      ...sortedP1.filter((e) => !e.passedHardFilter),
+    ].slice(0, REFINE_COUNT);
+
+    const refined: ScoredComplex[] = [];
+    for (let i = 0; i < toRefine.length; i += CHUNK) {
+      const chunk = toRefine.slice(i, i + CHUNK);
+      const results = await Promise.all(
+        chunk.map((e) =>
+          evaluateComplex(complexById.get(e.candidate.complexId)!, realProvider),
+        ),
+      );
+      for (const r of results) if (r !== null) refined.push(r);
+    }
+    validEvaluated = refined;
+  }
 
   // 하드 필터 통과 단지만, 총점 내림차순
   const survivors = validEvaluated
     .filter((e) => e.passedHardFilter)
     .sort((a, b) => b.candidate.totalScore - a.candidate.totalScore);
 
-  const consideredComplexCount = survivors.length;
+  // "검토한 단지 수" 는 넓은 1차(mock) 통과 수 — 화면 풀(refined)이 아니라
+  // 사용자 조건에 맞는 단지가 몇 곳인지를 의미하기 때문.
+  const consideredComplexCount = phase1Valid.filter(
+    (e) => e.passedHardFilter,
+  ).length;
 
   // ── P0#2 — relaxationSuggestions ────────────────────────────────────────
   // 결과 0건일 때만 계산. 조건 완화 시나리오별로 몇 곳이 통과하는지 시뮬레이션.
   const relaxationSuggestions: RelaxationSuggestion[] = [];
 
-  if (survivors.length === 0 && validEvaluated.length > 0) {
+  // 완화 시뮬레이션은 넓은 1차(mock) 평가 집합으로 한다 — refined(상위 40)만
+  // 보면 "조건을 풀면 N곳"의 N 이 비현실적으로 작게 나오기 때문.
+  if (survivors.length === 0 && phase1Valid.length > 0) {
     // (a) 예산 30% 추가 확보 가정
     const relaxedBudget = netPurchasePowerKrw * 1.3;
     const countBudgetRelax = countPassingHardFilter(
-      validEvaluated,
+      phase1Valid,
       relaxedBudget,
       0,
       workplaces,
@@ -397,7 +462,7 @@ export async function recommendComplexes(
     // (b) 모든 직장 통근 허용시간 +20분
     if (workplaces.length > 0) {
       const countCommuteRelax = countPassingHardFilter(
-        validEvaluated,
+        phase1Valid,
         netPurchasePowerKrw,
         20,
         workplaces,
