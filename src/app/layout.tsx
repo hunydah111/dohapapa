@@ -14,9 +14,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "홈앤나사이 — 우리, 어디 살 수 있을까",
+  title: "홈앤나사이 — 재미로 한번 돌려보는 우리 부부 집 찾기",
   description:
-    "Home & 나 사이의 거리. 국토부 실거래가로 통근·예산·학군 조건에 맞는 아파트 단지를 좁혀주는 정보 제공 도구.",
+    "Home & 나 사이의 거리. 부부 두 직장·예산·학군 조건으로 국토부 실거래가에 살 만한 아파트 단지를 좁혀주는 정보 제공 도구.",
+  openGraph: {
+    title: "홈앤나사이",
+    description: "재미로 한번 돌려보는 우리 부부 집 찾기",
+    type: "website",
+    locale: "ko_KR",
+    siteName: "홈앤나사이",
+  },
+  twitter: {
+    card: "summary",
+    title: "홈앤나사이",
+    description: "재미로 한번 돌려보는 우리 부부 집 찾기",
+  },
 };
 
 export default function RootLayout({

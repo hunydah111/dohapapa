@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ProfileForm } from "@/components/ProfileForm";
 import type { RecommendationResult, MoreCandidate } from "@/types/recommendation";
 import type { CoupleProfile, AreaRangeKey } from "@/types/profile";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { Card } from "@/components/ui/Card";
 import { formatKrwHuman } from "@/lib/format";
+import { SHARE_PARAM, encodeProfile, decodeProfile } from "@/lib/shareLink";
 
 type ResultState = {
   result: RecommendationResult;
@@ -19,6 +20,8 @@ type ResultState = {
 
 export function HomeExperience() {
   const [state, setState] = useState<ResultState | null>(null);
+  const [autoLoading, setAutoLoading] = useState(false);
+  const [shareToast, setShareToast] = useState<string | null>(null);
 
   // 조건 수정 패널 상태
   const [panelOpen, setPanelOpen] = useState(false);
@@ -30,19 +33,79 @@ export function HomeExperience() {
   const [reanalyzing, setReanalyzing] = useState(false);
   const [reanalyzeError, setReanalyzeError] = useState<string | null>(null);
 
-  function handleResult(result: RecommendationResult, profile: CoupleProfile) {
-    setState({ result, profile });
-    setPanelOpen(false);
-    // 조건 수정 패널 기본값을 현재 프로필로 초기화 (만원 단위)
-    const seedManwon = Math.round(profile.seedMoneyKrw / 10_000);
-    setEditSeedMoneyMan(String(seedManwon));
-    setEditAreaRange(profile.preferredAreaRange);
-    const commuteMin =
-      profile.workplaceA?.maxCommuteMinutes ??
-      profile.workplaceB?.maxCommuteMinutes ??
-      50;
-    setEditMaxCommute(String(commuteMin));
-    setReanalyzeError(null);
+  const handleResult = useCallback(
+    (result: RecommendationResult, profile: CoupleProfile) => {
+      setState({ result, profile });
+      setPanelOpen(false);
+      // 조건 수정 패널 기본값을 현재 프로필로 초기화 (만원 단위)
+      const seedManwon = Math.round(profile.seedMoneyKrw / 10_000);
+      setEditSeedMoneyMan(String(seedManwon));
+      setEditAreaRange(profile.preferredAreaRange);
+      const commuteMin =
+        profile.workplaceA?.maxCommuteMinutes ??
+        profile.workplaceB?.maxCommuteMinutes ??
+        50;
+      setEditMaxCommute(String(commuteMin));
+      setReanalyzeError(null);
+
+      // URL 에 프로필 인코딩 — 부부가 같은 결과 링크로 공유 가능
+      try {
+        const slug = encodeProfile(profile);
+        const url = new URL(window.location.href);
+        url.searchParams.set(SHARE_PARAM, slug);
+        window.history.replaceState(null, "", url.toString());
+      } catch {
+        // 인코딩 실패해도 결과는 정상 노출 — URL 만 갱신 안 됨
+      }
+    },
+    [],
+  );
+
+  // 공유 링크 진입 시 자동 분석 — ?p={encoded} 가 있으면 폼 건너뛰고 결과 로드
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const slug = params.get(SHARE_PARAM);
+    if (!slug) return;
+    const profile = decodeProfile(slug);
+    if (!profile) return;
+
+    setAutoLoading(true);
+    fetch("/api/recommend", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(profile),
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("auto-load failed");
+        const result = (await res.json()) as RecommendationResult;
+        handleResult(result, profile);
+      })
+      .catch(() => {
+        // 공유 링크가 깨졌거나 만료된 경우 → 폼 화면 유지
+      })
+      .finally(() => setAutoLoading(false));
+    // handleResult 는 안정적 — 의존성 OK
+  }, [handleResult]);
+
+  async function handleShare() {
+    if (!state) return;
+    try {
+      const url = window.location.href;
+      await navigator.clipboard.writeText(url);
+      setShareToast("주소를 복사했어요. 카톡·SNS에 붙여넣으면 배우자도 같은 결과를 볼 수 있어요.");
+      setTimeout(() => setShareToast(null), 3500);
+    } catch {
+      setShareToast("복사에 실패했어요. 주소창에서 직접 복사해주세요.");
+      setTimeout(() => setShareToast(null), 3500);
+    }
+  }
+
+  function handleRestart() {
+    setState(null);
+    // URL 의 공유 파라미터 제거
+    const url = new URL(window.location.href);
+    url.searchParams.delete(SHARE_PARAM);
+    window.history.replaceState(null, "", url.toString());
   }
 
   async function handleReanalyze() {
@@ -110,8 +173,8 @@ export function HomeExperience() {
       }
 
       const newResult = (await res.json()) as RecommendationResult;
-      setState({ result: newResult, profile: merged });
-      setPanelOpen(false);
+      // handleResult 로 통일 — URL 공유링크도 새 프로필로 갱신됨
+      handleResult(newResult, merged);
     } catch {
       setReanalyzeError(
         "네트워크 오류가 발생했습니다. 인터넷 연결을 확인해 주세요."
@@ -123,6 +186,21 @@ export function HomeExperience() {
 
   // ── 입력 화면 ──────────────────────────────────────────────
   if (state === null) {
+    if (autoLoading) {
+      return (
+        <div className="flex flex-col items-center gap-3 rounded-3xl border border-indigo-100 bg-indigo-50/60 px-6 py-12 text-center">
+          <span className="flex h-3 w-3">
+            <span className="animate-ping inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
+          </span>
+          <p className="text-sm font-semibold text-indigo-700">
+            공유 링크 분석 중…
+          </p>
+          <p className="text-xs text-indigo-500/80">
+            잠시만 기다려 주세요
+          </p>
+        </div>
+      );
+    }
     return <ProfileForm onResult={handleResult} />;
   }
 
@@ -131,15 +209,37 @@ export function HomeExperience() {
   // ── 결과 화면 ──────────────────────────────────────────────
   return (
     <div className="flex flex-col gap-8">
-      {/* 상단 바: 검토 단지 수 + 처음부터 */}
-      <div className="flex items-center justify-between">
+      {/* 상단 바: 검토 단지 수 + 공유 + 처음부터 */}
+      <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-semibold" style={{ color: "#6e6e73" }}>
           검토 {result.consideredComplexCount.toLocaleString()}개 단지 분석 완료
         </p>
-        <Button variant="ghost" size="md" onClick={() => setState(null)}>
-          처음부터
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="md" onClick={handleShare}>
+            <span className="inline-flex items-center gap-1.5">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="h-4 w-4"
+              >
+                <path d="M13 4.5a2.5 2.5 0 11.702 1.737L6.97 9.604a2.518 2.518 0 010 .792l6.733 3.367a2.5 2.5 0 11-.671 1.341l-6.733-3.367a2.5 2.5 0 110-3.475l6.733-3.366A2.52 2.52 0 0113 4.5z" />
+              </svg>
+              결과 공유
+            </span>
+          </Button>
+          <Button variant="ghost" size="md" onClick={handleRestart}>
+            처음부터
+          </Button>
+        </div>
       </div>
+
+      {/* 공유 토스트 */}
+      {shareToast && (
+        <div className="rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-medium text-indigo-800">
+          {shareToast}
+        </div>
+      )}
 
       {/* 예산 분석 */}
       <BudgetSummary budget={result.budget} />
