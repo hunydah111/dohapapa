@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { BrandMark } from "@/components/BrandMark";
+import { Analytics } from "@/components/Analytics";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -73,6 +75,28 @@ export default function RootLayout({
 
         {/* ── 본문 ── */}
         <main className="flex-1">{children}</main>
+
+        {/* ── 푸터 ── */}
+        <footer className="mt-12 border-t border-black/[0.06] bg-white/60">
+          <div className="mx-auto flex max-w-2xl flex-col gap-3 px-4 py-6 text-xs sm:flex-row sm:items-center sm:justify-between">
+            <p style={{ color: "#86868b" }}>
+              © {new Date().getFullYear()} 홈앤나사이 — 정보 제공 도구
+            </p>
+            <nav className="flex flex-wrap gap-4" style={{ color: "#6e6e73" }}>
+              <Link href="/privacy" className="hover:text-indigo-600">
+                개인정보처리방침
+              </Link>
+              <Link href="/terms" className="hover:text-indigo-600">
+                이용약관
+              </Link>
+              <Link href="/contact" className="hover:text-indigo-600">
+                연락처
+              </Link>
+            </nav>
+          </div>
+        </footer>
+
+        <Analytics />
       </body>
     </html>
   );

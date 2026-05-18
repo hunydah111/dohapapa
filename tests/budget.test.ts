@@ -11,7 +11,7 @@ function makeProfile(overrides: Partial<CoupleProfile> = {}): CoupleProfile {
       label: "회사A",
       lat: 37.5,
       lng: 127.0,
-      commuteMode: "transit",
+      commuteMode: "car",
       maxCommuteMinutes: 50,
     },
     hasSchoolAgedChild: false,

@@ -4,13 +4,12 @@ import type { CoupleProfile } from "@/types/profile";
 
 export const runtime = "nodejs";
 
-// ── Workplace 스키마 — commuteMode·maxCommuteMinutes 를 직장별로 보유 ────────
-// (P1#4: 맞벌이에서 본인은 자차, 배우자는 지하철처럼 수단이 다를 수 있다.)
+// ── Workplace 스키마 — 자차 통근만 지원 (대중교통 API 미연동) ──────────────
 const workplaceSchema = z.object({
   label: z.string().min(1),
   lat: z.number(),
   lng: z.number(),
-  commuteMode: z.enum(["transit", "car"]),
+  commuteMode: z.literal("car"),
   maxCommuteMinutes: z.number().int().positive(),
 });
 

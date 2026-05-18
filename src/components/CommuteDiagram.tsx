@@ -64,7 +64,7 @@ export function CommuteDiagram({
           const fallbackLabel =
             leg.workplace === "A" ? "본인 직장" : "배우자 직장";
           const workplaceName = leg.workplaceLabel || fallbackLabel;
-          const modeLabel = leg.mode === "transit" ? "대중교통" : "자차";
+          const modeLabel = "자차";
 
           const directionsUrl = complex
             ? kakaoDirectionsUrl(
@@ -173,9 +173,9 @@ export function CommuteDiagram({
         className="text-[11px] leading-relaxed"
         style={{ color: "#86868b" }}
       >
-        통근 시간은 카카오 길찾기(자차) 표준 트래픽 기준이며, 대중교통은
-        자차의 1.3배로 근사한 값이에요. 실제 노선·환승·배차 간격은 반영하지
-        않으니 정확한 시간은 본인 직장의 카카오맵 길찾기로 확인하세요.
+        통근 시간은 카카오 길찾기(자차) 표준 트래픽 기준 추정이에요. 실제
+        시간은 시간대·교통 상황에 따라 달라지니 정확한 값은 본인 직장의
+        카카오맵 길찾기로 확인하세요.
       </p>
     </div>
   );

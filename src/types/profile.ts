@@ -5,7 +5,7 @@
 //
 // 참고: 타입명 CoupleProfile 은 레거시 — 제품은 1인·은퇴 가구까지 다룬다.
 
-export type CommuteMode = "transit" | "car";
+export type CommuteMode = "car";
 
 /** 가구 유형 — 입력 흐름과 추천 처리를 분기한다. */
 export type HouseholdType =
@@ -85,7 +85,7 @@ export const AREA_RANGE_ORDER: AreaRangeKey[] = [
 ];
 
 export const DEFAULT_AREA_RANGE: AreaRangeKey = "p32_35";
-export const DEFAULT_COMMUTE_MODE: CommuteMode = "transit";
+export const DEFAULT_COMMUTE_MODE: CommuteMode = "car";
 export const DEFAULT_MAX_COMMUTE_MIN = 50;
 
 // ── 직장 / 위치 ──────────────────────────────────────────────

@@ -38,24 +38,11 @@ async function fetchCarMinutes(key: string, origin: LatLng, dest: LatLng): Promi
 export const kakaoProvider: CommuteProvider = {
   name: "kakao",
 
-  async travelMinutes(origin: LatLng, dest: LatLng, mode: CommuteMode): Promise<number> {
+  async travelMinutes(origin: LatLng, dest: LatLng, _mode: CommuteMode): Promise<number> {
     const key = process.env.KAKAO_REST_KEY;
     if (!key) {
       throw new Error("KAKAO_REST_KEY not configured");
     }
-
-    const carMinutes = await fetchCarMinutes(key, origin, dest);
-
-    if (mode === "car") {
-      return carMinutes;
-    }
-
-    // ※ 주의: 아래는 실제 대중교통 API 호출이 아닌 근사값입니다.
-    // 카카오 길찾기(Navi) API 는 자차 길찾기(Directions)만 제공하며,
-    // 대중교통 소요 시간 API 는 별도 계약이 필요해 현재 미연동 상태입니다.
-    // 대중교통 시간을 "자차 소요 시간 × 1.3" 으로 추정하는 것은 단순 근사일 뿐이며,
-    // 실제 환승 대기·배차 간격·도보 구간을 반영하지 않습니다.
-    // 운영 환경에서 대중교통 값이 노출될 경우 이 추정 방식을 사용자에게 반드시 고지해야 합니다.
-    return Math.round(carMinutes * 1.3);
+    return fetchCarMinutes(key, origin, dest);
   },
 };

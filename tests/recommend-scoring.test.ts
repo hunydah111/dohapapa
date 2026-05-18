@@ -21,7 +21,7 @@ function makeProfile(overrides: Partial<CoupleProfile> = {}): CoupleProfile {
       label: "직장A",
       lat: 37.5665,
       lng: 126.978,
-      commuteMode: "transit",
+      commuteMode: "car",
       maxCommuteMinutes: 50,
     },
     hasSchoolAgedChild: false,
@@ -57,7 +57,7 @@ function leg(
     workplaceLng: 127.0,
     minutes,
     distanceKm: 0,
-    mode: "transit",
+    mode: "car",
     withinLimit,
   };
 }
@@ -73,14 +73,14 @@ describe("scoreCommute", () => {
         label: "직장A",
         lat: 37.5665,
         lng: 126.978,
-        commuteMode: "transit",
+        commuteMode: "car",
         maxCommuteMinutes: 50,
       },
       workplaceB: {
         label: "직장B",
         lat: 37.5,
         lng: 127.0,
-        commuteMode: "transit",
+        commuteMode: "car",
         maxCommuteMinutes: 50,
       },
     });
@@ -98,14 +98,14 @@ describe("scoreCommute", () => {
         label: "직장A",
         lat: 37.5665,
         lng: 126.978,
-        commuteMode: "transit",
+        commuteMode: "car",
         maxCommuteMinutes: 50,
       },
       workplaceB: {
         label: "직장B",
         lat: 37.5,
         lng: 127.0,
-        commuteMode: "transit",
+        commuteMode: "car",
         maxCommuteMinutes: 50,
       },
     });
@@ -133,7 +133,7 @@ describe("scoreCommute", () => {
         label: "직장A",
         lat: 37.5665,
         lng: 126.978,
-        commuteMode: "transit",
+        commuteMode: "car",
         maxCommuteMinutes: 50,
       },
     });

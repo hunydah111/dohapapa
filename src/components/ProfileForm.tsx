@@ -15,7 +15,6 @@ import {
   PRIORITY_SCALE_LABELS,
   DEFAULT_PRIORITIES,
   DEFAULT_MAX_COMMUTE_MIN,
-  DEFAULT_COMMUTE_MODE,
   AREA_RANGES,
   AREA_RANGE_ORDER,
   DEFAULT_AREA_RANGE,
@@ -136,10 +135,8 @@ interface WorkplaceInputProps {
   onQueryChange: (q: string) => void;
   onSelect: (r: GeoResult) => void;
   onClear: () => void;
-  onCommuteModeChange: (mode: "transit" | "car") => void;
   onMaxCommuteChange: (minutes: string) => void;
   maxCommuteValue: string;
-  commuteModeValue: "transit" | "car";
   autoFocus?: boolean;
 }
 
@@ -149,10 +146,8 @@ function WorkplaceInput({
   onQueryChange,
   onSelect,
   onClear,
-  onCommuteModeChange,
   onMaxCommuteChange,
   maxCommuteValue,
-  commuteModeValue,
   autoFocus,
 }: WorkplaceInputProps) {
   const hasSelected = !!state.selected;
@@ -224,7 +219,7 @@ function WorkplaceInput({
         </div>
       )}
 
-      {/* 통근 설정 — 직장 선택 전에도 흐리게(disabled) 미리보기 */}
+      {/* 통근 허용시간 — 직장 선택 전에도 흐리게(disabled) 미리보기 */}
       <div
         className={[
           "flex flex-col gap-3 transition-opacity duration-200",
@@ -233,18 +228,7 @@ function WorkplaceInput({
         aria-disabled={!hasSelected}
       >
         <div>
-          <p className="text-[13px] text-[#6e6e73] mb-2">통근 수단</p>
-          <Segmented
-            options={[
-              { value: "transit", label: "대중교통" },
-              { value: "car", label: "자차" },
-            ]}
-            value={commuteModeValue}
-            onChange={(v) => onCommuteModeChange(v as "transit" | "car")}
-          />
-        </div>
-        <div>
-          <p className="text-[13px] text-[#6e6e73] mb-2">통근 허용시간</p>
+          <p className="text-[13px] text-[#6e6e73] mb-2">통근 허용시간 (자차 기준)</p>
           <TextField
             value={maxCommuteValue}
             onChange={onMaxCommuteChange}
@@ -275,14 +259,9 @@ export function ProfileForm({
     useState<AreaRangeKey>(DEFAULT_AREA_RANGE);
 
   // ── Step 2: 직장 & 통근 ─────────────────────────────────────
+  // 카카오 길찾기 API 가 자차만 지원하므로 통근 수단은 자차로 고정.
   const [wpA, setWpA] = useState<WorkplaceFormState>(makeEmptyWorkplace());
   const [wpB, setWpB] = useState<WorkplaceFormState>(makeEmptyWorkplace());
-  const [commuteModeA, setCommuteModeA] = useState<"transit" | "car">(
-    DEFAULT_COMMUTE_MODE
-  );
-  const [commuteModeB, setCommuteModeB] = useState<"transit" | "car">(
-    DEFAULT_COMMUTE_MODE
-  );
   const [maxCommuteA, setMaxCommuteA] = useState(
     String(DEFAULT_MAX_COMMUTE_MIN)
   );
@@ -393,14 +372,13 @@ export function ProfileForm({
   function selectWorkplace(
     which: "A" | "B",
     r: GeoResult,
-    mode: "transit" | "car",
     maxMin: string
   ) {
     const selected: Workplace = {
       label: r.label,
       lat: r.lat,
       lng: r.lng,
-      commuteMode: mode,
+      commuteMode: "car",
       maxCommuteMinutes: parseInt(maxMin, 10) || DEFAULT_MAX_COMMUTE_MIN,
     };
     if (which === "A") {
@@ -415,11 +393,7 @@ export function ProfileForm({
     else setWpB(makeEmptyWorkplace());
   }
 
-  function syncWorkplaceSettings(
-    which: "A" | "B",
-    mode: "transit" | "car",
-    maxMin: string
-  ) {
+  function syncMaxCommute(which: "A" | "B", maxMin: string) {
     const setter = which === "A" ? setWpA : setWpB;
     setter((prev) => {
       if (!prev.selected) return prev;
@@ -427,28 +401,19 @@ export function ProfileForm({
         ...prev,
         selected: {
           ...prev.selected,
-          commuteMode: mode,
           maxCommuteMinutes: parseInt(maxMin, 10) || DEFAULT_MAX_COMMUTE_MIN,
         },
       };
     });
   }
 
-  function handleCommuteModeA(mode: "transit" | "car") {
-    setCommuteModeA(mode);
-    syncWorkplaceSettings("A", mode, maxCommuteA);
-  }
-  function handleCommuteModeB(mode: "transit" | "car") {
-    setCommuteModeB(mode);
-    syncWorkplaceSettings("B", mode, maxCommuteB);
-  }
   function handleMaxCommuteA(v: string) {
     setMaxCommuteA(v);
-    syncWorkplaceSettings("A", commuteModeA, v);
+    syncMaxCommute("A", v);
   }
   function handleMaxCommuteB(v: string) {
     setMaxCommuteB(v);
-    syncWorkplaceSettings("B", commuteModeB, v);
+    syncMaxCommute("B", v);
   }
 
   // Step 2 진행 가능 여부
@@ -504,7 +469,7 @@ export function ProfileForm({
     const finalWpA: Workplace | undefined = wpA.selected
       ? {
           ...wpA.selected,
-          commuteMode: commuteModeA,
+          commuteMode: "car",
           maxCommuteMinutes:
             parseInt(maxCommuteA, 10) || DEFAULT_MAX_COMMUTE_MIN,
         }
@@ -514,7 +479,7 @@ export function ProfileForm({
       householdType === "dualIncome" && wpB.selected
         ? {
             ...wpB.selected,
-            commuteMode: commuteModeB,
+            commuteMode: "car",
             maxCommuteMinutes:
               parseInt(maxCommuteB, 10) || DEFAULT_MAX_COMMUTE_MIN,
           }
@@ -543,8 +508,6 @@ export function ProfileForm({
     preferredAreaRange,
     wpA.selected,
     wpB.selected,
-    commuteModeA,
-    commuteModeB,
     maxCommuteA,
     maxCommuteB,
     hasSchoolAgedChild,
@@ -732,11 +695,9 @@ export function ProfileForm({
             onQueryChange={(q) =>
               setWpA((prev) => ({ ...prev, query: q, selected: null }))
             }
-            onSelect={(r) => selectWorkplace("A", r, commuteModeA, maxCommuteA)}
+            onSelect={(r) => selectWorkplace("A", r, maxCommuteA)}
             onClear={() => clearWorkplace("A")}
-            onCommuteModeChange={handleCommuteModeA}
             onMaxCommuteChange={handleMaxCommuteA}
-            commuteModeValue={commuteModeA}
             maxCommuteValue={maxCommuteA}
             autoFocus
           />
@@ -748,13 +709,9 @@ export function ProfileForm({
               onQueryChange={(q) =>
                 setWpB((prev) => ({ ...prev, query: q, selected: null }))
               }
-              onSelect={(r) =>
-                selectWorkplace("B", r, commuteModeB, maxCommuteB)
-              }
+              onSelect={(r) => selectWorkplace("B", r, maxCommuteB)}
               onClear={() => clearWorkplace("B")}
-              onCommuteModeChange={handleCommuteModeB}
               onMaxCommuteChange={handleMaxCommuteB}
-              commuteModeValue={commuteModeB}
               maxCommuteValue={maxCommuteB}
             />
           )}
