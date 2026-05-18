@@ -60,6 +60,11 @@ export interface BudgetEstimate {
   assumptions: string[];
   /** 사용자에게 보일 경고 (음수 순수령액·DSR 초과 등 포함). */
   warnings: string[];
+  /**
+   * 대출 추정액이 어떻게·왜 그 금액으로 산출됐는지 단계별 설명.
+   * 정책대출이면 정책명·한도·자격 사유와 DSR/LTV 비교, 일반대출이면 DSR 공식·LTV 상한 등.
+   */
+  loanReasonLines: string[];
 }
 
 // ── 통근 ────────────────────────────────────────────────────
@@ -124,6 +129,8 @@ export interface ComplexCandidate {
   medianPriceKrw: number;
   /** 추정 현재가 산출에 쓴 최근 6개월 거래 건수 — 가격 신뢰도 지표. */
   transactionCount: number;
+  /** 단지 준공년도 — UI 에 "○○○○년식" 으로 표시. null = 정보 없음. */
+  buildYear: number | null;
   /** 초품아 여부 — 초등학교가 단지에서 직선 150m 이내. */
   isChopumah: boolean;
   commuteLegs: CommuteLeg[];
@@ -134,6 +141,11 @@ export interface ComplexCandidate {
   tier: CandidateTier;
   /** 왜 이 단지가 뽑혔는지 2~3문장 간략 리포트. */
   report: string;
+  /**
+   * 다른 두 후보와 비교해 왜 이 순위(=이 티어)에 있는지 한두 문장 설명.
+   * 3개 후보가 모두 결정된 후 비교적으로 생성됨.
+   */
+  rankReason: string;
 }
 
 /** 상세 리포트 없이 이름만 보여줄 추가 후보. */

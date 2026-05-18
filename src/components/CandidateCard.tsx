@@ -86,6 +86,16 @@ export function CandidateCard({
         </span>
       </div>
 
+      {/* 비교 근거 — 왜 이 순위인지 (다른 두 후보 대비) */}
+      {candidate.rankReason && (
+        <p
+          className="text-xs leading-relaxed -mt-2"
+          style={{ color: "#6e6e73" }}
+        >
+          {candidate.rankReason}
+        </p>
+      )}
+
       {/* 단지명 + 위치 + 시세 */}
       <div>
         <h3
@@ -93,6 +103,14 @@ export function CandidateCard({
           style={{ color: "#1d1d1f" }}
         >
           {candidate.complexName}
+          {candidate.buildYear !== null && (
+            <span
+              className="ml-2 text-base font-semibold tabular-nums"
+              style={{ color: "#86868b" }}
+            >
+              ({candidate.buildYear}년식)
+            </span>
+          )}
         </h3>
         <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="text-sm" style={{ color: "#6e6e73" }}>

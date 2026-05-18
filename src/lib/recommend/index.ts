@@ -153,6 +153,97 @@ function buildReport(
   return `${head}${body} 종합 ${c.totalScore}점으로 선정.`;
 }
 
+// ── 1·2·3등 비교 근거 ─────────────────────────────────────────────────────────
+//
+// 3개 후보가 모두 결정된 후, 각 후보가 왜 그 순위(=티어)인지 한 문장 설명한다.
+// 사용자가 "왜 이게 1등이고 저게 2등인지" 한 눈에 납득하도록.
+
+const TIER_HEAD: Record<CandidateTier, string> = {
+  균형형: "균형형 — 종합점수 최고",
+  안정형: "안정형 — 보수적인 안전 선택",
+  도전형: "도전형 — 예산을 더 쓰면 잡히는 상위안",
+};
+
+function eokOf(krw: number): string {
+  return (krw / 1e8).toFixed(1);
+}
+
+/** A 가 B 대비 어떤 점에서 우위인지 짧은 비교 문구. 큰 차이만 골라낸다. */
+function compareTo(a: ComplexCandidate, b: ComplexCandidate, bLabel: string): string {
+  const diffs: string[] = [];
+
+  const scoreDiff = a.totalScore - b.totalScore;
+  if (Math.abs(scoreDiff) >= 5) {
+    diffs.push(
+      `종합 ${Math.abs(scoreDiff)}점 ${scoreDiff > 0 ? "높음" : "낮음"}`,
+    );
+  }
+
+  const priceDiff = a.medianPriceKrw - b.medianPriceKrw;
+  if (Math.abs(priceDiff) >= 30_000_000) {
+    diffs.push(
+      `${eokOf(Math.abs(priceDiff))}억 ${priceDiff > 0 ? "비쌈" : "쌈"}`,
+    );
+  }
+
+  const commuteA = a.commuteLegs.reduce((s, l) => s + l.minutes, 0);
+  const commuteB = b.commuteLegs.reduce((s, l) => s + l.minutes, 0);
+  if (commuteA > 0 && commuteB > 0 && Math.abs(commuteA - commuteB) >= 5) {
+    diffs.push(
+      `통근 ${Math.abs(commuteA - commuteB)}분 ${commuteA < commuteB ? "짧음" : "김"}`,
+    );
+  }
+
+  if (a.buildYear !== null && b.buildYear !== null) {
+    const yearDiff = a.buildYear - b.buildYear;
+    if (Math.abs(yearDiff) >= 5) {
+      diffs.push(
+        yearDiff > 0 ? `${yearDiff}년 더 신축` : `${-yearDiff}년 더 구축`,
+      );
+    }
+  }
+
+  if (a.scores.school - b.scores.school >= 15) {
+    diffs.push("학군 점수 더 높음");
+  } else if (b.scores.school - a.scores.school >= 15) {
+    diffs.push("학군 점수 더 낮음");
+  }
+
+  if (diffs.length === 0) return `${bLabel} 대비 유사 수준`;
+  return `${bLabel} 대비 ${diffs.slice(0, 2).join(", ")}`;
+}
+
+/** 3개 후보가 결정된 후, 각각의 rankReason 을 채워 반환한다. */
+function fillRankReasons(candidates: ComplexCandidate[]): ComplexCandidate[] {
+  if (candidates.length === 0) return candidates;
+
+  return candidates.map((c, i) => {
+    const others = candidates.filter((_, j) => j !== i);
+    const head = TIER_HEAD[c.tier];
+
+    if (others.length === 0) {
+      return { ...c, rankReason: head };
+    }
+
+    // 1등(균형형)이 아닌 경우는 "균형형 대비 X" 식이 자연스럽고,
+    // 균형형은 "안정형/도전형 대비 X" 두 줄을 합쳐 보여준다.
+    let body: string;
+    if (c.tier === "균형형") {
+      const parts = others.map((o) =>
+        compareTo(c, o, o.tier),
+      );
+      body = parts.join(" · ");
+    } else {
+      const balanced = others.find((o) => o.tier === "균형형");
+      body = balanced
+        ? compareTo(c, balanced, "1등(균형형)")
+        : others.map((o) => compareTo(c, o, o.tier)).join(" · ");
+    }
+
+    return { ...c, rankReason: `${head}. ${body}.` };
+  });
+}
+
 // ── commuteSummary 생성 ───────────────────────────────────────────────────────
 
 function buildCommuteSummary(commuteLegs: CommuteLeg[]): string {
@@ -365,10 +456,12 @@ export async function recommendComplexes(
         latitude: complex.latitude as number,
         longitude: complex.longitude as number,
         transactionCount: rep.count,
+        buildYear: complex.buildYear,
         isChopumah,
         scores,
         tier: "균형형", // 후처리에서 재할당
         report: buildReport(base, weights),
+        rankReason: "", // 3티어 선정 후 후처리에서 채움
       };
 
       return { candidate, medianKrw: rep.medianKrw, passedHardFilter };
@@ -557,10 +650,12 @@ export async function recommendComplexes(
     }
   }
 
-  const candidates: ComplexCandidate[] = chosen.map(({ entry, tier }) => ({
-    ...entry.candidate,
-    tier,
-  }));
+  const candidates: ComplexCandidate[] = fillRankReasons(
+    chosen.map(({ entry, tier }) => ({
+      ...entry.candidate,
+      tier,
+    })),
+  );
 
   // ── moreCandidates — 상위 3개 다음 최대 10개, commuteSummary 포함 ──────────
 

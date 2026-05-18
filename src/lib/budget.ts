@@ -269,6 +269,68 @@ export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
     );
   }
 
+  // ── 13. 대출 산출 근거 ────────────────────────────────────────────────────
+  // 사용자가 "왜 이 금액인지" 한 눈에 보도록 단계별 설명을 채운다.
+  const eok = (krw: number) => (krw / 1e8).toFixed(1);
+  const manwon = (krw: number) =>
+    Math.round(krw / 10000).toLocaleString("ko-KR");
+  const loanReasonLines: string[] = [];
+
+  if (appliedLoanType === "policy" && bestPolicy !== undefined) {
+    const policyLimit = bestPolicy.loanLimitKrw ?? 0;
+    loanReasonLines.push(
+      `${bestPolicy.productName} 채택 — 정책 한도 ${eok(policyLimit)}억`,
+    );
+    loanReasonLines.push(`자격 사유: ${bestPolicy.reason}`);
+
+    if (eligiblePolicies.length > 1) {
+      const others = eligiblePolicies
+        .filter((p) => p.productName !== bestPolicy.productName)
+        .map((p) => `${p.productName} ${eok(p.loanLimitKrw ?? 0)}억`)
+        .join(", ");
+      loanReasonLines.push(
+        `적격 정책 ${eligiblePolicies.length}종 중 한도가 가장 큼 (그 외: ${others})`,
+      );
+    }
+    loanReasonLines.push(
+      `일반 DSR 한도(약 ${eok(dsrLoanCapacity)}억)와 비교해 정책이 더 유리`,
+    );
+  } else {
+    if (eligiblePolicies.length > 0 && bestPolicy !== undefined) {
+      loanReasonLines.push(
+        `일반 DSR 대출 채택 — 적격 정책(${bestPolicy.productName} 한도 ${eok(
+          bestPolicy.loanLimitKrw ?? 0,
+        )}억)보다 DSR 한도가 큼`,
+      );
+    } else if (policyLoanMatches.every((m) => !m.eligible)) {
+      loanReasonLines.push(
+        "적격 정책대출 없음 — 일반 DSR 한도로 산출",
+      );
+    } else {
+      loanReasonLines.push("일반 DSR 한도 기준 산출");
+    }
+    if (availableMonthly > 0) {
+      loanReasonLines.push(
+        `DSR 40% × 연소득 ${eok(
+          householdIncomeKrwYear,
+        )}억 ÷ 12 − 기존상환 = 월 가용 ${manwon(availableMonthly)}만원`,
+      );
+      loanReasonLines.push(
+        `30년 원리금균등 + 스트레스 5.5% 환산 → DSR 한도 약 ${eok(
+          dsrLoanCapacity,
+        )}억`,
+      );
+    } else {
+      loanReasonLines.push(
+        "기존 대출이 DSR 한도를 이미 차지해 가용 월상환액 0 — 추가 대출 불가",
+      );
+    }
+  }
+
+  loanReasonLines.push(
+    `LTV ${ltvLabel} 상한 ${eok(ltvCeiling)}억과 비교해 작은 값 적용`,
+  );
+
   return {
     seedMoneyKrw,
     homeSaleNetKrw,
@@ -285,5 +347,6 @@ export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
     isEstimate: true,
     assumptions,
     warnings,
+    loanReasonLines,
   };
 }

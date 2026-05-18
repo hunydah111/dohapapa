@@ -90,6 +90,32 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
           color="#1d1d1f"
         />
 
+        {/* 대출 산출 근거 — 왜 이 금액인지 단계별 설명 */}
+        {budget.loanReasonLines.length > 0 && (
+          <div className="ml-4 mt-1 mb-2 rounded-xl bg-indigo-50/40 border border-indigo-100 px-3 py-2.5">
+            <p
+              className="text-[11px] font-semibold mb-1.5"
+              style={{ color: "#4338ca" }}
+            >
+              이 금액이 어떻게 나왔는지
+            </p>
+            <ol className="flex flex-col gap-1">
+              {budget.loanReasonLines.map((line, i) => (
+                <li
+                  key={i}
+                  className="flex gap-1.5 text-[11px] leading-relaxed"
+                  style={{ color: "#4338ca" }}
+                >
+                  <span className="flex-shrink-0 tabular-nums font-semibold opacity-70">
+                    {i + 1}.
+                  </span>
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+
         {/* 구분선 */}
         <div className="my-1 border-t border-black/[0.06]" />
 

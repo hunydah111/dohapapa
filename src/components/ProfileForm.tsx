@@ -756,8 +756,8 @@ export function ProfileForm({
                 [
                   {
                     key: "school",
-                    label: "초·중·고 자녀 있음",
-                    why: "학군 점수(통학 거리 부담)에 반영",
+                    label: "초등학교 다닐 아이 있음",
+                    why: "초등학교 통학 거리 점수에 반영 (중·고등은 미반영)",
                     state: hasSchoolAgedChild,
                     set: setHasSchoolAgedChild,
                   },

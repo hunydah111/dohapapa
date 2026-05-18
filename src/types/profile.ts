@@ -26,7 +26,7 @@ export type PriorityKey = "commute" | "school" | "buildingAge";
 
 export const PRIORITY_LABELS: Record<PriorityKey, string> = {
   commute: "출퇴근 거리",
-  school: "아이 학군",
+  school: "초품아 여부",
   buildingAge: "단지 연식",
 };
 
@@ -128,9 +128,9 @@ export interface CoupleProfile {
   /** 배우자 직장. 맞벌이(dualIncome)일 때만. */
   workplaceB?: Workplace;
   /**
-   * 초·중·고 자녀 있음 — 학군 점수에 반영(통학 거리 부담 감점 등).
-   * 데이터로는 초등학교 거리만 알기 때문에 정확한 자녀 나이는 의미가 없어
-   * boolean 으로 단순화. 영유아는 별도 필드.
+   * 초등학교 다닐 아이 있음 — 초등학교 통학 거리 점수에 반영.
+   * 데이터로 다룰 수 있는 게 초등학교 거리뿐이라(중·고·학원가 데이터 없음)
+   * 필드명은 hasSchoolAgedChild 그대로 두되 의미는 "초등학생"으로 한정.
    */
   hasSchoolAgedChild: boolean;
   /** 영유아(만 1세 이하) 있음 — 신생아 특례 디딤돌 자격 판정용. */
