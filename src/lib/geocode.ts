@@ -140,6 +140,36 @@ async function searchKakao(query: string, key: string): Promise<PlaceResult[]> {
   }));
 }
 
+// 가게/회사 이름이 카카오 장소 DB에 없을 때(예: 작은 약국) 대비한 보조 검색.
+// 도로명·지번 주소를 좌표로 변환한다. 키워드 검색이 0건일 때만 호출된다.
+async function searchKakaoAddress(
+  query: string,
+  key: string,
+): Promise<PlaceResult[]> {
+  const url = `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(query)}`;
+  const res = await fetch(url, {
+    headers: { Authorization: `KakaoAK ${key}` },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`Kakao address API error: ${res.status}`);
+
+  const data = (await res.json()) as {
+    documents: Array<{
+      address_name: string;
+      x: string;
+      y: string;
+      road_address: { address_name: string } | null;
+    }>;
+  };
+
+  return data.documents.slice(0, 6).map((doc) => ({
+    label: doc.road_address?.address_name || doc.address_name,
+    lat: parseFloat(doc.y),
+    lng: parseFloat(doc.x),
+    address: doc.address_name,
+  }));
+}
+
 function searchMock(query: string): PlaceResult[] {
   const q = query.toLowerCase();
   return MOCK_PLACES.filter(
@@ -156,7 +186,11 @@ export async function searchPlaces(query: string): Promise<PlaceResult[]> {
   const key = process.env.KAKAO_REST_KEY;
   if (key && key.length > 0) {
     try {
-      return await searchKakao(trimmed, key);
+      const byKeyword = await searchKakao(trimmed, key);
+      if (byKeyword.length > 0) return byKeyword;
+      // 가게명이 카카오에 없으면(예: 작은 약국) 주소 검색으로 한 번 더 시도
+      const byAddress = await searchKakaoAddress(trimmed, key);
+      if (byAddress.length > 0) return byAddress;
     } catch {
       // Fall through to mock dictionary on any network / API error
     }
