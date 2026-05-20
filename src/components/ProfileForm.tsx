@@ -218,13 +218,21 @@ function WorkplaceInput({
             )}
           </div>
 
+          <p className="mt-2 text-[12px] text-[#9a8f82] leading-snug">
+            가게·회사명이 안 나오면{" "}
+            <span className="font-medium text-[#6b6157]">도로명주소</span>로 입력해
+            보세요.
+          </p>
+
           {!state.loading &&
             state.query.length >= 2 &&
             state.results.length === 0 && (
               <p className="mt-2 text-[13px] text-amber-600 leading-snug">
-                결과가 없어요. 가까운 지하철역·지역명으로 입력해 보세요
+                결과가 없어요. 가게·회사명이 안 잡히면 도로명주소로 입력해 보세요
                 <br />
-                <span className="text-[#9a8f82]">예: 강남역, 판교, 여의도</span>
+                <span className="text-[#9a8f82]">
+                  예: 서울 강남구 테헤란로 152, 강남역, 판교
+                </span>
               </p>
             )}
 
