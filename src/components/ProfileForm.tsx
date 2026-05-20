@@ -290,8 +290,7 @@ export function ProfileForm({
   const [step, setStep] = useState<Step>(1);
 
   // ── Step 1: 가구 유형 & 평수 ────────────────────────────────
-  const [householdType, setHouseholdType] =
-    useState<HouseholdType>("dualIncome");
+  const [householdType, setHouseholdType] = useState<HouseholdType | "">("");
   const [preferredAreaRange, setPreferredAreaRange] =
     useState<AreaRangeKey>(DEFAULT_AREA_RANGE);
   const [locationVibes, setLocationVibes] = useState<LocationVibes>({});
@@ -531,7 +530,7 @@ export function ProfileForm({
         : undefined;
 
     return {
-      householdType,
+      householdType: householdType as HouseholdType,
       priorities,
       preferredAreaRange,
       locationVibes,
@@ -729,7 +728,7 @@ export function ProfileForm({
               </span>
             </p>
             <p className="mt-1 mb-4 text-[12px] leading-relaxed text-[#6e6e73]">
-              누를 때마다 조금 → 꽤 → 많이로 세지고, 셀수록 가점이 커져요. 여러
+              누를 때마다 조금 → 꽤 → 많이로 강해지고, 셀수록 가점이 커져요. 여러
               개 골라도 OK!
             </p>
             <div className="flex flex-wrap gap-2">
@@ -773,7 +772,7 @@ export function ProfileForm({
             </div>
           </div>
 
-          <Button onClick={goNext} fullWidth>
+          <Button onClick={goNext} disabled={householdType === ""} fullWidth>
             다음
           </Button>
         </div>

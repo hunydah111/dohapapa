@@ -25,7 +25,7 @@ export function Button({
 }: ButtonProps) {
   /* ── 베이스 ── */
   const base =
-    "inline-flex items-center justify-center font-semibold rounded-2xl " +
+    "inline-flex items-center justify-center whitespace-nowrap font-semibold rounded-2xl " +
     "transition-all duration-200 select-none cursor-pointer " +
     "active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 " +
     "focus-visible:ring-indigo-600 focus-visible:ring-offset-2 " +

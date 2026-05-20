@@ -117,7 +117,7 @@ export function HomeExperience() {
     // 2. 폴백 — 링크 복사 (공유 API 미지원 브라우저)
     try {
       await navigator.clipboard.writeText(url);
-      setShareToast("링크를 복사했어요. 카톡·SNS에 붙여넣으면 같은 결과를 볼 수 있어요.");
+      setShareToast("링크 복사됨 ⚠️ 소득·자산·직장 정보가 담겨 있어요 — 믿는 사람에게만 보내세요.");
     } catch {
       setShareToast("복사에 실패했어요. 주소창에서 직접 복사해주세요.");
     }

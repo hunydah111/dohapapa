@@ -111,7 +111,10 @@ export function HeroResultCard({
         </svg>
       </button>
 
-      <p className="mt-4 text-[11px] leading-relaxed text-white/60">
+      <p className="mt-3 text-[11px] leading-relaxed text-white/70">
+        ⚠️ 공유 링크엔 입력한 소득·자산·직장 정보가 담겨요. 믿는 사람에게만 보내세요.
+      </p>
+      <p className="mt-2 text-[11px] leading-relaxed text-white/60">
         실거래가 기반 추정 정보 · 부동산 중개·투자자문이 아닙니다
       </p>
     </section>
