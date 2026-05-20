@@ -56,9 +56,9 @@ const BOGEUMJARI_FIRST_LOAN_LIMIT = 420_000_000;
 /**
  * 신생아 특례 디딤돌 자격 판정.
  *
- * WHY hasInfant 프록시: 신생아 특례는 "대출 신청일 기준 2년 이내 출산"이 원칙이나,
- * 폼에서 만 1세 이하 자녀 유무(boolean)만 받으므로 그것을 프록시로 쓴다.
- * 2세 자녀도 실제 출생일 기준 충족 가능 — reason 에 안내 포함.
+ * WHY hasInfant 프록시: 신생아 특례는 "대출 신청일 기준 2년 이내 출산"이 원칙이며,
+ * 폼은 이 의미 그대로 "출산 2년 이내(만 2세 이하)" 로 묻는다. 실제 자격은
+ * 출생일 기준 최종 판정되므로 reason 에 출생일 확인 안내를 포함한다.
  */
 function evaluateShinseona(profile: CoupleProfile): PolicyLoanMatch {
   const { householdIncomeKrwYear, hasOwnedHomeBefore, hasInfant } = profile;
@@ -76,9 +76,7 @@ function evaluateShinseona(profile: CoupleProfile): PolicyLoanMatch {
     return {
       productName: "신생아 특례 디딤돌",
       eligible: false,
-      reason:
-        "2년 이내 출산 자녀 없음 (만 나이 기준 1세 이하 자녀가 없음) — " +
-        "2세 자녀라도 실제 출생일 기준 충족 가능, 주택금융공사 확인 필요",
+      reason: "출산 2년 이내(만 2세 이하) 자녀 없음 — 신생아 특례 자격 미해당",
     };
   }
 
@@ -94,7 +92,7 @@ function evaluateShinseona(profile: CoupleProfile): PolicyLoanMatch {
     productName: "신생아 특례 디딤돌",
     eligible: true,
     reason:
-      "2년 이내 출산 자녀 있음 + 무주택 + 합산 소득 2억 이하 — 주택가 요건 별도 적용 (5억 이하)",
+      "출산 2년 이내 자녀 + 무주택 + 합산 소득 2억 이하 — 정확한 출생일 기준 자격은 주택금융공사 확인 (주택가 5억 이하 요건 별도)",
     loanLimitKrw: SHINSEONA_LOAN_LIMIT,
     rateMin: 1.8,
     rateMax: 4.5,

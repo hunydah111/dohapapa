@@ -48,6 +48,10 @@ const coupleProfileSchema = z
     hasInfant: z.boolean(),
     /** 자녀 2명 이상 — 디딤돌(일반) 소득 기준 완화 판정. */
     hasTwoOrMoreChildren: z.boolean(),
+    /** 자녀 3명 이상 (다자녀) — 안내용. 현 산식엔 미반영. */
+    hasThreeOrMoreChildren: z.boolean(),
+    /** 임신 중·출산 예정 — 안내용. 출산 후 재시뮬레이션 권고. */
+    isExpectingChild: z.boolean(),
     householdIncomeKrwYear: z.number().nonnegative(),
     seedMoneyKrw: z.number().nonnegative(),
     /** 순자산 총액 (원). 정책대출 자산요건 판정용. */

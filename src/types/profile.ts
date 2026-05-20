@@ -133,10 +133,24 @@ export interface CoupleProfile {
    * 필드명은 hasSchoolAgedChild 그대로 두되 의미는 "초등학생"으로 한정.
    */
   hasSchoolAgedChild: boolean;
-  /** 영유아(만 1세 이하) 있음 — 신생아 특례 디딤돌 자격 판정용. */
+  /**
+   * 출산 2년 이내 자녀 있음 — 신생아 특례 디딤돌 자격 판정용.
+   * 신생아 특례 디딤돌은 대출 신청일 기준 2년 이내 출산이 원칙이므로
+   * UI 라벨은 "만 2세 이하" 로 표시 (이전엔 "만 1세 이하" 였음).
+   */
   hasInfant: boolean;
   /** 자녀 2명 이상 — 디딤돌(일반) 소득 기준 완화 판정용. */
   hasTwoOrMoreChildren: boolean;
+  /**
+   * 자녀 3명 이상 (다자녀) — 안내용 분류. 다자녀 추가 정책(주거·세제) 확인 권고.
+   * 현 정책대출 산식엔 미반영 — 디딤돌 일반 완화는 hasTwoOrMoreChildren 으로 처리됨.
+   */
+  hasThreeOrMoreChildren: boolean;
+  /**
+   * 임신 중·출산 예정 — 안내용 정보. 출산 후 신생아 특례 디딤돌 재시뮬레이션
+   * 권고. 현 정책대출 산식엔 영향 X (출생일 확정 후 적용 가능하므로).
+   */
+  isExpectingChild: boolean;
   /** 연 가구소득 (원). 부부면 합산. */
   householdIncomeKrwYear: number;
   /** 보유 현금 (원). */

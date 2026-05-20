@@ -275,21 +275,37 @@ export function HomeExperience() {
             className="text-xl font-bold mb-2"
             style={{ color: "#1d1d1f" }}
           >
-            조건에 맞는 단지를 찾지 못했습니다
+            아직 딱 맞는 단지가 없어요
           </h2>
-          <p className="text-sm mb-6" style={{ color: "#6e6e73" }}>
-            입력하신 조건에 딱 맞는 단지가 없습니다. 아래 제안 중 하나를
-            선택해 조건을 조정해 보세요.
+          <p className="text-sm leading-relaxed mb-5" style={{ color: "#6e6e73" }}>
+            수도권{" "}
+            <span className="font-semibold" style={{ color: "#1d1d1f" }}>
+              {result.consideredComplexCount.toLocaleString("ko-KR")}곳
+            </span>
+            을 살펴봤지만 입력하신 모든 조건을 동시에 만족하는 단지가 없어요.
+            {result.relaxationSuggestions.length > 0
+              ? " 조건을 조금만 풀면 후보가 나옵니다 ↓"
+              : " 조건을 한두 가지 크게 조정해야 후보가 나올 것 같아요."}
           </p>
 
-          {result.relaxationSuggestions.length > 0 && (
+          {result.relaxationSuggestions.length > 0 ? (
             <div className="flex flex-col gap-3">
+              <p
+                className="text-[12px] font-semibold uppercase tracking-wider"
+                style={{ color: "#86868b" }}
+              >
+                추천 조정 ({result.relaxationSuggestions.length}개)
+              </p>
               {result.relaxationSuggestions.map((s, i) => (
                 <button
                   key={i}
                   type="button"
                   onClick={() => setPanelOpen(true)}
-                  className="group flex items-center justify-between rounded-2xl border border-black/[0.08] bg-[#f5f5f7] px-5 py-4 text-left transition-colors hover:bg-white hover:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className={`group flex items-center justify-between rounded-2xl border px-5 py-4 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                    i === 0
+                      ? "border-indigo-300 bg-indigo-50 hover:bg-white"
+                      : "border-black/[0.08] bg-[#f5f5f7] hover:bg-white hover:border-indigo-300"
+                  }`}
                 >
                   <span
                     className="text-sm font-medium leading-relaxed"
@@ -297,11 +313,43 @@ export function HomeExperience() {
                   >
                     {s.message}
                   </span>
-                  <span className="ml-4 flex-shrink-0 rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-bold text-indigo-700">
+                  <span
+                    className={`ml-4 flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
+                      i === 0
+                        ? "bg-indigo-600 text-white"
+                        : "bg-indigo-100 text-indigo-700"
+                    }`}
+                  >
                     {s.resultCount}곳
                   </span>
                 </button>
               ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-amber-50 border border-amber-200 px-4 py-4 mb-2">
+              <p className="text-sm font-semibold text-amber-800 mb-2">
+                흔한 원인
+              </p>
+              <ul className="flex flex-col gap-1.5 text-[13px] leading-relaxed text-amber-900">
+                <li className="flex gap-2">
+                  <span className="flex-shrink-0">·</span>
+                  <span>
+                    <strong>예산이 빡빡함</strong> — 보유 현금·소득을 다시 보거나, 정책대출 자격 충족 시 한도가 크게 늘어요
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="flex-shrink-0">·</span>
+                  <span>
+                    <strong>통근 시간이 짧음</strong> — 자차 30분 이내는 도심 근무자에게 좁아요. 40~50분으로 늘려보세요
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="flex-shrink-0">·</span>
+                  <span>
+                    <strong>선호 평수가 좁음</strong> — 한 단지대 위·아래로 한 칸 넓혀보세요
+                  </span>
+                </li>
+              </ul>
             </div>
           )}
 

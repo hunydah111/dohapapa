@@ -27,6 +27,8 @@ function makeProfile(overrides: Partial<CoupleProfile> = {}): CoupleProfile {
     hasSchoolAgedChild: false,
     hasInfant: false,
     hasTwoOrMoreChildren: false,
+    hasThreeOrMoreChildren: false,
+    isExpectingChild: false,
     householdIncomeKrwYear: 80_000_000,
     seedMoneyKrw: 200_000_000,
     netAssetsKrw: 200_000_000,

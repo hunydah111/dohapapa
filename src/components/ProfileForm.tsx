@@ -276,6 +276,8 @@ export function ProfileForm({
   const [hasSchoolAgedChild, setHasSchoolAgedChild] = useState(false);
   const [hasInfant, setHasInfant] = useState(false);
   const [hasTwoOrMoreChildren, setHasTwoOrMoreChildren] = useState(false);
+  const [hasThreeOrMoreChildren, setHasThreeOrMoreChildren] = useState(false);
+  const [isExpectingChild, setIsExpectingChild] = useState(false);
   const [isNewlywed, setIsNewlywed] = useState(false);
   const [hasOwnedHome, setHasOwnedHome] = useState(false);
 
@@ -289,6 +291,7 @@ export function ProfileForm({
   const [existingHomeSalePrice, setExistingHomeSalePrice] = useState(""); // 매도가 (만원)
   const [existingHomeLoan, setExistingHomeLoan] = useState("");            // 잔금 (만원)
   const [existingHomeTaxExempt, setExistingHomeTaxExempt] = useState(false);
+  const [showTaxGuide, setShowTaxGuide] = useState(false);
 
   // ── Step 5: 우선순위 ────────────────────────────────────────
   const [priorities, setPriorities] = useState<Record<PriorityKey, number>>({
@@ -494,6 +497,8 @@ export function ProfileForm({
       hasSchoolAgedChild,
       hasInfant,
       hasTwoOrMoreChildren,
+      hasThreeOrMoreChildren,
+      isExpectingChild,
       householdIncomeKrwYear: manwonToKrw(householdIncome),
       seedMoneyKrw: manwonToKrw(seedMoney),
       netAssetsKrw: manwonToKrw(netAssets),
@@ -513,6 +518,8 @@ export function ProfileForm({
     hasSchoolAgedChild,
     hasInfant,
     hasTwoOrMoreChildren,
+    hasThreeOrMoreChildren,
+    isExpectingChild,
     householdIncome,
     seedMoney,
     netAssets,
@@ -763,17 +770,45 @@ export function ProfileForm({
                   },
                   {
                     key: "infant",
-                    label: "영유아(만 1세 이하)",
-                    why: "신생아 특례 디딤돌 자격 판정",
+                    label: "출산 2년 이내 아이 있음 (만 2세 이하)",
+                    why: "신생아 특례 디딤돌 자격 판정 (출산일 기준 2년 이내)",
                     state: hasInfant,
                     set: setHasInfant,
+                  },
+                  {
+                    key: "expecting",
+                    label: "임신 중·출산 예정",
+                    why: "출산 후 신생아 특례 재시뮬레이션 권고 — 현 결과엔 미반영",
+                    state: isExpectingChild,
+                    set: setIsExpectingChild,
                   },
                   {
                     key: "two",
                     label: "자녀 2명 이상",
                     why: "디딤돌(일반) 소득 기준 완화 판정",
                     state: hasTwoOrMoreChildren,
-                    set: setHasTwoOrMoreChildren,
+                    set: (updater: boolean | ((v: boolean) => boolean)) => {
+                      const next =
+                        typeof updater === "function"
+                          ? updater(hasTwoOrMoreChildren)
+                          : updater;
+                      setHasTwoOrMoreChildren(next);
+                      if (!next) setHasThreeOrMoreChildren(false);
+                    },
+                  },
+                  {
+                    key: "three",
+                    label: "자녀 3명 이상 (다자녀)",
+                    why: "다자녀 추가 정책 확인 권고 — 현 계산엔 디딤돌(일반) 완화만 반영",
+                    state: hasThreeOrMoreChildren,
+                    set: (updater: boolean | ((v: boolean) => boolean)) => {
+                      const next =
+                        typeof updater === "function"
+                          ? updater(hasThreeOrMoreChildren)
+                          : updater;
+                      setHasThreeOrMoreChildren(next);
+                      if (next) setHasTwoOrMoreChildren(true);
+                    },
                   },
                 ] as const
               ).map((item) => (
@@ -1012,37 +1047,90 @@ export function ProfileForm({
                   }
                 />
 
-                <button
-                  type="button"
-                  onClick={() => setExistingHomeTaxExempt((v) => !v)}
-                  className="flex items-center justify-between w-full py-1 text-left"
-                >
-                  <div>
-                    <p className="text-[14px] font-medium text-[#1d1d1f]">
-                      2년 이상 살면서 보유했어요
-                    </p>
-                    <p className="text-[12px] text-[#86868b]">
-                      세금 절감 — 1세대 1주택 양도세 비과세 요건
-                    </p>
-                  </div>
-                  <span
-                    role="switch"
-                    aria-pressed={existingHomeTaxExempt}
-                    className={[
-                      "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ml-4",
-                      existingHomeTaxExempt ? "bg-indigo-600" : "bg-[#d1d1d6]",
-                    ].join(" ")}
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setExistingHomeTaxExempt((v) => !v)}
+                    className="flex items-center justify-between w-full py-1 text-left"
                   >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-[14px] font-medium text-[#1d1d1f]">
+                          2년 이상 살면서 보유했어요
+                        </p>
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowTaxGuide((v) => !v);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.stopPropagation();
+                              setShowTaxGuide((v) => !v);
+                            }
+                          }}
+                          aria-label="양도세 비과세 요건 안내 보기"
+                          className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-[#c7c7cc] text-[10px] font-bold text-[#86868b] hover:border-indigo-400 hover:text-indigo-600 cursor-pointer"
+                        >
+                          ?
+                        </span>
+                      </div>
+                      <p className="text-[12px] text-[#86868b]">
+                        세금 절감 — 1세대 1주택 양도세 비과세 요건
+                      </p>
+                    </div>
                     <span
+                      role="switch"
+                      aria-pressed={existingHomeTaxExempt}
                       className={[
-                        "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
-                        existingHomeTaxExempt
-                          ? "translate-x-5"
-                          : "translate-x-0",
+                        "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ml-4",
+                        existingHomeTaxExempt ? "bg-indigo-600" : "bg-[#d1d1d6]",
                       ].join(" ")}
-                    />
-                  </span>
-                </button>
+                    >
+                      <span
+                        className={[
+                          "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                          existingHomeTaxExempt
+                            ? "translate-x-5"
+                            : "translate-x-0",
+                        ].join(" ")}
+                      />
+                    </span>
+                  </button>
+
+                  {/* 양도세 비과세 미니 가이드 — ? 클릭 시 표시 */}
+                  {showTaxGuide && (
+                    <div className="rounded-2xl bg-indigo-50/60 border border-indigo-200 px-4 py-3">
+                      <p className="text-[12px] font-semibold text-indigo-800 mb-2">
+                        1세대 1주택 양도세 비과세 — 모두 충족해야 적용
+                      </p>
+                      <ul className="flex flex-col gap-1.5 text-[12px] leading-relaxed text-indigo-900">
+                        <li className="flex gap-2">
+                          <span className="flex-shrink-0">①</span>
+                          <span>매도하는 집이 <strong>1세대 1주택</strong> (세대원 모두 다른 집 없음)</span>
+                        </li>
+                        <li className="flex gap-2">
+                          <span className="flex-shrink-0">②</span>
+                          <span><strong>2년 이상 보유</strong> (취득일~양도일 기준)</span>
+                        </li>
+                        <li className="flex gap-2">
+                          <span className="flex-shrink-0">③</span>
+                          <span><strong>2년 이상 거주</strong> (조정대상지역 취득 시 — 서울 전역 해당)</span>
+                        </li>
+                        <li className="flex gap-2">
+                          <span className="flex-shrink-0">④</span>
+                          <span><strong>양도가 12억원 이하</strong> (12억 초과분은 과세)</span>
+                        </li>
+                      </ul>
+                      <p className="mt-2 text-[11px] text-indigo-700 leading-relaxed">
+                        헷갈리면 ❌ 그대로 두세요 — 양도세 6% 정도가 계산에 반영돼
+                        보수적으로 추정됩니다. 정확한 판정은 세무사 상담 권장.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -1083,15 +1171,26 @@ export function ProfileForm({
           </div>
 
           <div className="flex flex-col gap-4">
-            {(Object.keys(PRIORITY_LABELS) as PriorityKey[]).map((key) => (
+            {(Object.keys(PRIORITY_LABELS) as PriorityKey[]).map((key) => {
+              const hints: Record<PriorityKey, string> = {
+                commute: "자차 통근 시간 기준 (대중교통 미반영)",
+                school: "초등학교 도보 거리 기준 (중·고·학업성취도·학원가 미반영)",
+                buildingAge: "준공년도 — 신축일수록 가점",
+              };
+              return (
               <div
                 key={key}
                 className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm flex flex-col gap-3"
               >
                 <div className="flex items-baseline justify-between">
-                  <p className="text-[15px] font-semibold text-[#1d1d1f]">
-                    {PRIORITY_LABELS[key]}
-                  </p>
+                  <div>
+                    <p className="text-[15px] font-semibold text-[#1d1d1f]">
+                      {PRIORITY_LABELS[key]}
+                    </p>
+                    <p className="text-[11px] text-[#86868b] mt-0.5">
+                      {hints[key]}
+                    </p>
+                  </div>
                   <span
                     className={[
                       "text-[13px] font-medium",
@@ -1117,7 +1216,8 @@ export function ProfileForm({
                   }
                 />
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* 분석 중 안내 */}
