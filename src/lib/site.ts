@@ -1,6 +1,6 @@
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
-  "https://homennasai.com";
+  "https://www.homenasia.kr";
 
 export const SITE_NAME = "홈앤나사이";
 
