@@ -10,6 +10,11 @@ export interface AreaMedian {
   /** 최근 6개월 거래 건수 — 가격 신뢰도 지표. */
   count: number;
   /**
+   * 가격 변동계수(CV = 표준편차/평균). 낮을수록 가격이 안정적(환금성·예측가능성↑).
+   * 표본 2건 미만이면 0(중립). 기본 가점에서 "안정성"으로 살짝 반영된다.
+   */
+  volatility: number;
+  /**
    * 단지 내 다른 평형 대비 ㎡당 단가가 비정상(역전·극단치)이라 신뢰도가 낮음.
    * 대표 평형 선택에서 제외된다 (C-1: 플래그만, 가격 보정은 하지 않음).
    */
@@ -50,6 +55,17 @@ interface Tx {
 
 function decayWeight(daysAgo: number): number {
   return Math.exp(-LAMBDA * daysAgo);
+}
+
+/** 가격 변동계수(CV = 표준편차/평균). 표본 2건 미만이면 0(중립). */
+function priceVolatility(txs: Tx[]): number {
+  if (txs.length < 2) return 0;
+  const prices = txs.map((t) => t.price);
+  const mean = prices.reduce((s, p) => s + p, 0) / prices.length;
+  if (mean <= 0) return 0;
+  const variance =
+    prices.reduce((s, p) => s + (p - mean) ** 2, 0) / prices.length;
+  return Math.sqrt(variance) / mean;
 }
 
 /** 한 평형 그룹의 거래들로 추정 현재가를 산출한다. */
@@ -171,6 +187,7 @@ export async function getAreaMediansForMany(
         area,
         medianKrw: estimateCurrentPrice(txs),
         count: txs.length,
+        volatility: priceVolatility(txs),
         lowConfidence: false,
       });
     }

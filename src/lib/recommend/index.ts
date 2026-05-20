@@ -554,9 +554,16 @@ export async function recommendComplexes(
       const vibeBadge = badgeKey
         ? vibeBadgeLabel(badgeKey, complexCoord)
         : undefined;
+      // 거래량·안정성 기본 가점 — 우선순위와 무관하게 환금성·대단지 중요성을 살짝 깐다.
+      // 거래 활발(유동성) + 가격 변동성 낮음(안정) → 최대 +5. (priority=0 이어도 적용)
+      const liquidityBase = Math.min(1, totalTransactions / 40);
+      const stabilityBase = 1 - Math.min(1, rep.volatility / 0.25);
+      const baselineBonus = Math.round(liquidityBase * 3 + stabilityBase * 2);
       const totalScore = Math.min(
         100,
-        baseTotalScore + Math.round(Math.min(VIBE_BONUS_CAP, vibeBonus)),
+        baseTotalScore +
+          Math.round(Math.min(VIBE_BONUS_CAP, vibeBonus)) +
+          baselineBonus,
       );
 
       // 초품아 — 초등학교가 단지에서 직선 150m 이내 (전문가 패널: 100m 는 너무 좁음)

@@ -7,7 +7,7 @@ const med = (
   medianKrw: number,
   count: number,
   lowConfidence = false,
-): AreaMedian => ({ area, medianKrw, count, lowConfidence });
+): AreaMedian => ({ area, medianKrw, count, volatility: 0, lowConfidence });
 
 describe("flagLowConfidence — 평형 간 ㎡당 단가 교차검증", () => {
   it("신뢰표본 대비 극단적으로 싼 빈약표본 평형을 표시한다", () => {
