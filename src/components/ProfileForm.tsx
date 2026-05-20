@@ -968,13 +968,17 @@ export function ProfileForm({
             </p>
 
             <TextField
-              label="보유 현금"
+              label="보유 현금 (이번 구매 자금)"
               value={seedMoney}
               onChange={setSeedMoney}
               type="number"
               placeholder="예: 10000"
               suffix="만원"
-              hint={manwonHint(seedMoney)}
+              hint={
+                seedMoney
+                  ? `${manwonHint(seedMoney)} — 이번 집 살 때 넣을 현금(종잣돈)`
+                  : "이번 집 구매에 넣을 현금(종잣돈) — 계약금·잔금 재원. 구매력 계산에 사용"
+              }
             />
 
             <TextField
@@ -988,7 +992,7 @@ export function ProfileForm({
             />
 
             <TextField
-              label="순자산 총액"
+              label="순자산 총액 (정책대출 자격용)"
               value={netAssets}
               onChange={setNetAssets}
               type="number"
@@ -996,8 +1000,8 @@ export function ProfileForm({
               suffix="만원"
               hint={
                 netAssets
-                  ? `${manwonHint(netAssets)} — 금융자산+부동산−부채 개략값`
-                  : "금융자산+부동산−부채 개략값 (정책대출 자산요건 판정용)"
+                  ? `${manwonHint(netAssets)} — 위 보유현금까지 포함한 전 재산(금융+부동산−부채)`
+                  : "보유현금까지 포함한 전 재산(금융+부동산−부채). 정책대출 자격 판정에만 사용"
               }
             />
 
