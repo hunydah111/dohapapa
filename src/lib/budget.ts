@@ -228,9 +228,26 @@ export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
   const equityForLtv = Math.max(0, totalEquityKrw);
   const assumedPrice = equityForLtv + finalLoanCapacity;
 
-  // 생애최초: 70%, 무주택(기보유 없음): 50%.
-  // WHY 서울 규제지역 항상 가정: opts 제거로 단순화.
-  const ltvRate = !hasOwnedHomeBefore ? 0.7 : 0.5;
+  // LTV — 보유 주택 수로 차등 (서울 전역 규제지역 가정).
+  //   0채(생애최초/무주택) 70% · 1채(처분조건부 갈아타기) 50% · 2채+ 0%(규제지역 다주택 주담대 제한).
+  // WHY ownedHomeCount 우선: 자세히 모드 폼이 0/1/2+ 를 받음. 없으면 보유이력 불리언으로 근사.
+  const ownedHomeCount =
+    profile.ownedHomeCount ?? (hasOwnedHomeBefore ? 1 : 0);
+  let ltvRate: number;
+  let ltvLabel: string;
+  if (ownedHomeCount >= 2) {
+    ltvRate = 0;
+    ltvLabel = "0% (다주택자·규제지역 주담대 제한)";
+    warnings.push(
+      "2주택 이상 보유 — 서울 규제지역에서는 추가 주택담보대출이 사실상 제한(LTV 0)됩니다. 기존 주택 처분 등 별도 검토가 필요해요.",
+    );
+  } else if (ownedHomeCount === 1) {
+    ltvRate = 0.5;
+    ltvLabel = "50% (처분조건부 1주택)";
+  } else {
+    ltvRate = 0.7;
+    ltvLabel = "70% (생애최초·무주택)";
+  }
 
   // 가격 구간별 LTV 절대 한도 (2025~2026 기준)
   let bracketCap: number;
@@ -274,7 +291,6 @@ export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
   }
 
   // ── 11. 가정 문구 ─────────────────────────────────────────────────────────
-  const ltvLabel = !hasOwnedHomeBefore ? "70% (생애최초)" : "50% (무주택)";
   const assumptions: string[] = [
     "서울 전역 규제지역으로 가정",
     "스트레스 DSR +1.5%p 반영 (수도권 가산 원칙, 실효 5.5%)",
