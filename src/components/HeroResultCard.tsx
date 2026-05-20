@@ -91,6 +91,7 @@ export function HeroResultCard({
         {totalCommute > 0 && <Badge>🚗 {totalCommute}분</Badge>}
         <Badge>⭐ 종합 {candidate.totalScore}점</Badge>
         {candidate.isChopumah && <Badge>🏫 초품아</Badge>}
+        {candidate.vibeBadge && <Badge>{candidate.vibeBadge}</Badge>}
       </div>
 
       {/* 공유 */}

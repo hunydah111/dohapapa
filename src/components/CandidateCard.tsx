@@ -86,6 +86,11 @@ export function CandidateCard({
             초품아
           </span>
         )}
+        {candidate.vibeBadge && (
+          <span className="inline-flex items-center rounded-full bg-violet-50 px-3 py-1 text-xs font-bold text-violet-700 ring-1 ring-violet-200">
+            {candidate.vibeBadge}
+          </span>
+        )}
         <span
           className="ml-auto rounded-full bg-[#f5f5f7] px-3 py-1 text-xs font-semibold tabular-nums"
           style={{ color: "#6e6e73" }}

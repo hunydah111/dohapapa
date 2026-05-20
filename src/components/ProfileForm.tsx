@@ -7,6 +7,7 @@ import type {
   PriorityKey,
   Workplace,
   AreaRangeKey,
+  LocationVibe,
   ExistingHome,
 } from "@/types/profile";
 import {
@@ -18,6 +19,8 @@ import {
   AREA_RANGES,
   AREA_RANGE_ORDER,
   DEFAULT_AREA_RANGE,
+  LOCATION_VIBE_LABELS,
+  LOCATION_VIBE_ORDER,
 } from "@/types/profile";
 import type { RecommendationResult } from "@/types/recommendation";
 import { Button } from "@/components/ui/Button";
@@ -26,6 +29,43 @@ import { Segmented } from "@/components/ui/Segmented";
 import { StepDots } from "@/components/ui/StepDots";
 import { formatKrwHuman } from "@/lib/format";
 import { estimateBudget } from "@/lib/budget";
+
+// 선호 입지 칩 — 다른 입력과 달리 키워드마다 색·이모지를 줘 '재미 탭'으로 차별화.
+const VIBE_CHIP: Record<
+  LocationVibe,
+  { emoji: string; active: string; idle: string }
+> = {
+  none: {
+    emoji: "🤷",
+    active: "border-gray-600 bg-gray-700 text-white focus:ring-gray-400",
+    idle: "border-gray-200 bg-white text-gray-500 hover:border-gray-400",
+  },
+  riverside: {
+    emoji: "🌊",
+    active: "border-sky-500 bg-sky-500 text-white focus:ring-sky-300",
+    idle: "border-sky-200 bg-sky-50 text-sky-700 hover:border-sky-400",
+  },
+  hongdae: {
+    emoji: "🎨",
+    active: "border-pink-500 bg-pink-500 text-white focus:ring-pink-300",
+    idle: "border-pink-200 bg-pink-50 text-pink-700 hover:border-pink-400",
+  },
+  seongsu: {
+    emoji: "☕",
+    active: "border-amber-500 bg-amber-500 text-white focus:ring-amber-300",
+    idle: "border-amber-200 bg-amber-50 text-amber-700 hover:border-amber-400",
+  },
+  gangnam: {
+    emoji: "🏙️",
+    active: "border-indigo-600 bg-indigo-600 text-white focus:ring-indigo-300",
+    idle: "border-indigo-200 bg-indigo-50 text-indigo-700 hover:border-indigo-400",
+  },
+  quiet: {
+    emoji: "🍃",
+    active: "border-emerald-500 bg-emerald-500 text-white focus:ring-emerald-300",
+    idle: "border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-400",
+  },
+};
 import { BudgetPreview } from "./BudgetPreview";
 
 // ── 내부 타입 ──────────────────────────────────────────────────
@@ -257,6 +297,7 @@ export function ProfileForm({
     useState<HouseholdType>("dualIncome");
   const [preferredAreaRange, setPreferredAreaRange] =
     useState<AreaRangeKey>(DEFAULT_AREA_RANGE);
+  const [locationVibe, setLocationVibe] = useState<LocationVibe>("none");
 
   // ── Step 2: 직장 & 통근 ─────────────────────────────────────
   // 카카오 길찾기 API 가 자차만 지원하므로 통근 수단은 자차로 고정.
@@ -496,6 +537,7 @@ export function ProfileForm({
       householdType,
       priorities,
       preferredAreaRange,
+      locationVibe,
       workplaceA: finalWpA,
       workplaceB: finalWpB,
       hasSchoolAgedChild,
@@ -515,6 +557,7 @@ export function ProfileForm({
     householdType,
     priorities,
     preferredAreaRange,
+    locationVibe,
     wpA.selected,
     wpB.selected,
     maxCommuteA,
@@ -678,6 +721,41 @@ export function ProfileForm({
               onChange={(v) => setPreferredAreaRange(v as AreaRangeKey)}
               columns={3}
             />
+          </div>
+
+          {/* 선호 입지 — 재미 탭. 다른 입력과 달리 컬러풀하게. */}
+          <div className="rounded-3xl border border-dashed border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-pink-50 px-4 py-5">
+            <p className="text-[15px] font-bold text-[#1d1d1f]">
+              🎯 취향 한 스푼{" "}
+              <span className="text-[12px] font-medium text-indigo-500">
+                선택 · 재미로
+              </span>
+            </p>
+            <p className="mt-1 mb-4 text-[12px] leading-relaxed text-[#6e6e73]">
+              끌리는 분위기를 찍으면 그쪽 단지가 살짝 위로 올라와요. 안 골라도 OK!
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {LOCATION_VIBE_ORDER.map((key) => {
+                const cfg = VIBE_CHIP[key];
+                const active = locationVibe === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setLocationVibe(key)}
+                    aria-pressed={active}
+                    className={[
+                      "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] font-bold transition-all focus:outline-none focus:ring-2 focus:ring-offset-1",
+                      active ? cfg.active : cfg.idle,
+                      active ? "scale-105 shadow-sm" : "",
+                    ].join(" ")}
+                  >
+                    <span aria-hidden="true">{cfg.emoji}</span>
+                    {LOCATION_VIBE_LABELS[key]}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <Button onClick={goNext} fullWidth>

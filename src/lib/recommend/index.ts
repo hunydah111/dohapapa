@@ -34,6 +34,10 @@ import {
   scoreCommute,
   scoreSchool,
 } from "./scoring";
+import { scoreLocationVibe, vibeBadgeLabel } from "./locationVibe";
+
+// 선호 입지(분위기) 소프트 가점 상한 — 종합점수에 더해지는 최대 점수
+const VIBE_BONUS = 8;
 
 // ── 가중치 빌드 ──────────────────────────────────────────────────────────────
 
@@ -461,11 +465,20 @@ export async function recommendComplexes(
         buildingAge: ageResult.reason,
       };
 
-      const totalScore = Math.round(
+      const baseTotalScore = Math.round(
         (Object.keys(scores) as CandidateSignalKey[]).reduce(
           (sum, k) => sum + scores[k] * weights[k],
           0,
         ),
+      );
+
+      // 선호 입지(분위기) 소프트 가점 — 선택 시 매칭도(0~1)에 따라 최대 +VIBE_BONUS
+      const vibe = profile.locationVibe ?? "none";
+      const vibeScore01 =
+        vibe === "none" ? 0 : scoreLocationVibe(vibe, complexCoord);
+      const totalScore = Math.min(
+        100,
+        baseTotalScore + Math.round(vibeScore01 * VIBE_BONUS),
       );
 
       // 초품아 — 초등학교가 단지에서 직선 150m 이내 (전문가 패널: 100m 는 너무 좁음)
@@ -493,6 +506,10 @@ export async function recommendComplexes(
         buildYear: complex.buildYear,
         isChopumah,
         scores,
+        vibeBadge:
+          vibe !== "none" && vibeScore01 >= 0.5
+            ? vibeBadgeLabel(vibe)
+            : undefined,
         tier: "균형형", // 후처리에서 재할당
         report: buildReport(base, weights),
         rankReason: "", // 3티어 선정 후 후처리에서 채움
