@@ -15,6 +15,7 @@ import {
 } from "@/types/profile";
 import type {
   AreaRangeKey,
+  BudgetFlex,
   CoupleProfile,
   LatLng,
   LocationVibe,
@@ -113,17 +114,38 @@ function calcCutoffKm(wp: Workplace): number {
  *   너무 넓어지므로(3억 예산에 2~4억은 완전 다른 동네), 비율 하한과 큰 쪽을 쓴다.
  * 가격은 단순 중위가가 아니라 complexMedian 의 "추정 현재가"를 받는다.
  */
+// 예산 근접도(flex)에 따른 가격 밴드 하/상한. 지역 고정(dropLowerBound) 시 하한은 0.
+function bandBounds(
+  netPurchasePowerKrw: number,
+  dropLowerBound: boolean,
+  flex: BudgetFlex,
+): { lower: number; upper: number } {
+  let lower: number;
+  let upper: number;
+  if (flex === "tight") {
+    lower = netPurchasePowerKrw * 0.95;
+    upper = netPurchasePowerKrw * 1.05;
+  } else if (flex === "normal") {
+    lower = netPurchasePowerKrw * 0.9;
+    upper = netPurchasePowerKrw * 1.1;
+  } else {
+    lower = Math.max(
+      netPurchasePowerKrw - 100_000_000,
+      netPurchasePowerKrw * 0.85,
+    );
+    upper = netPurchasePowerKrw + 100_000_000;
+  }
+  if (dropLowerBound) lower = 0;
+  return { lower, upper };
+}
+
 function priceInBudgetBand(
   priceKrw: number,
   netPurchasePowerKrw: number,
   dropLowerBound = false,
+  flex: BudgetFlex = "relaxed",
 ): boolean {
-  const upper = netPurchasePowerKrw + 100_000_000;
-  // 지역을 콕 집어 고른 경우(필수 지역)엔 "예산보다 너무 쌈" 하한을 풀어
-  // 그 지역의 저렴한 단지도 보여준다. (상한은 유지 — 못 사는 건 안 보여줌)
-  const lower = dropLowerBound
-    ? 0
-    : Math.max(netPurchasePowerKrw - 100_000_000, netPurchasePowerKrw * 0.85);
+  const { lower, upper } = bandBounds(netPurchasePowerKrw, dropLowerBound, flex);
   return priceKrw >= lower && priceKrw <= upper;
 }
 
@@ -304,10 +326,11 @@ function countPassingHardFilter(
   commuteExtraMinutes: number,
   workplaces: Workplace[],
   dropLowerBound = false,
+  flex: BudgetFlex = "relaxed",
 ): number {
   return evaluated.filter(
     (e) =>
-      priceInBudgetBand(e.medianKrw, netPurchasePowerKrw, dropLowerBound) &&
+      priceInBudgetBand(e.medianKrw, netPurchasePowerKrw, dropLowerBound, flex) &&
       !commuteExceedsLimit(e.candidate.commuteLegs, workplaces, commuteExtraMinutes),
   ).length;
 }
@@ -321,8 +344,9 @@ function minExtraBudgetForMoreKrw(
   netPurchasePowerKrw: number,
   commuteExtraMinutes: number,
   workplaces: Workplace[],
+  flex: BudgetFlex = "relaxed",
 ): number | null {
-  const upper = netPurchasePowerKrw + 100_000_000;
+  const upper = bandBounds(netPurchasePowerKrw, false, flex).upper;
   let minAbove = Number.POSITIVE_INFINITY;
   for (const e of evaluated) {
     if (commuteExceedsLimit(e.candidate.commuteLegs, workplaces, commuteExtraMinutes)) {
@@ -366,6 +390,8 @@ export async function recommendComplexes(
   const minBuildYear = profile.minBuildYear ?? 0;
   // 필수 지역을 고른 경우 예산 하한("너무 쌈")을 풀어 그 지역 저가 단지도 노출
   const dropLowerBand = requiredRegions.length > 0;
+  // 예산 근접도 — 결과 가격 밴드 폭(딱맞게/적당히/넉넉히). 미지정 시 넉넉히(기존).
+  const budgetFlex: BudgetFlex = profile.budgetFlex ?? "relaxed";
   const allComplexes = await db.complex.findMany({
     where: {
       latitude: { not: null },
@@ -455,6 +481,7 @@ export async function recommendComplexes(
         rep.medianKrw,
         netPurchasePowerKrw,
         dropLowerBand,
+        budgetFlex,
       );
       // 직장 없으면 통근 제약 없음 (retired)
       const commuteTooLong = commuteLegs.some((leg) => {
@@ -648,6 +675,7 @@ export async function recommendComplexes(
       0,
       workplaces,
       dropLowerBand,
+      budgetFlex,
     );
     if (countBudgetRelax > 0) {
       const addEok = ((relaxedBudget - netPurchasePowerKrw) / 1e8).toFixed(1);
@@ -665,6 +693,7 @@ export async function recommendComplexes(
         20,
         workplaces,
         dropLowerBand,
+        budgetFlex,
       );
       if (countCommuteRelax > 0) {
         relaxationSuggestions.push({
@@ -693,7 +722,14 @@ export async function recommendComplexes(
         if (totalTx < MIN_TRANSACTIONS) continue;
         const rep = pickRepresentative(medians, nextMin, nextMax);
         if (rep === null) continue;
-        if (!priceInBudgetBand(rep.medianKrw, netPurchasePowerKrw, dropLowerBand))
+        if (
+          !priceInBudgetBand(
+            rep.medianKrw,
+            netPurchasePowerKrw,
+            dropLowerBand,
+            budgetFlex,
+          )
+        )
           continue;
         countAreaRelax++;
       }
@@ -715,6 +751,7 @@ export async function recommendComplexes(
       netPurchasePowerKrw,
       0,
       workplaces,
+      budgetFlex,
     );
     if (extra !== null) {
       const relaxedCount = countPassingHardFilter(
@@ -723,6 +760,7 @@ export async function recommendComplexes(
         0,
         workplaces,
         dropLowerBand,
+        budgetFlex,
       );
       const more = relaxedCount - currentPassing;
       if (more > 0) {
@@ -741,6 +779,7 @@ export async function recommendComplexes(
         20,
         workplaces,
         dropLowerBand,
+        budgetFlex,
       );
       const more = relaxedCount - currentPassing;
       if (more > 0) {
@@ -784,7 +823,12 @@ export async function recommendComplexes(
     top8
       .filter((e) => !chosenEntries.has(e))
       .filter((e) =>
-        priceInBudgetBand(e.medianKrw, netPurchasePowerKrw, dropLowerBand),
+        priceInBudgetBand(
+          e.medianKrw,
+          netPurchasePowerKrw,
+          dropLowerBand,
+          budgetFlex,
+        ),
       )
       // 균형형보다 2천만원 이상 비싸야 "도전형"이라는 이름값을 한다
       .filter((e) => e.medianKrw - balancedPrice >= 20_000_000)

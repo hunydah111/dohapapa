@@ -9,6 +9,7 @@ import type {
   AreaRangeKey,
   LocationVibe,
   LocationVibes,
+  BudgetFlex,
   ExistingHome,
 } from "@/types/profile";
 import {
@@ -25,6 +26,10 @@ import {
   LOCATION_VIBE_LEVEL_LABELS,
   REGION_GROUPS,
   REGION_PRESETS,
+  BUDGET_FLEX_ORDER,
+  BUDGET_FLEX_LABELS,
+  BUDGET_FLEX_DESC,
+  DEFAULT_BUDGET_FLEX,
 } from "@/types/profile";
 import type { RecommendationResult } from "@/types/recommendation";
 import { Button } from "@/components/ui/Button";
@@ -289,6 +294,7 @@ export function ProfileForm({
   const [requireChopumah, setRequireChopumah] = useState(false);
   const [regionTab, setRegionTab] = useState<"서울" | "경기">("서울");
   const [regionQuery, setRegionQuery] = useState("");
+  const [budgetFlex, setBudgetFlex] = useState<BudgetFlex>(DEFAULT_BUDGET_FLEX);
 
   // ── Step 2: 직장 & 통근 ─────────────────────────────────────
   // 카카오 길찾기 API 가 자차만 지원하므로 통근 수단은 자차로 고정.
@@ -533,6 +539,7 @@ export function ProfileForm({
       preferLargeComplex: preferLargeComplex || undefined,
       minBuildYear: minBuildYear > 0 ? minBuildYear : undefined,
       requireChopumah: requireChopumah || undefined,
+      budgetFlex,
       workplaceA: finalWpA,
       workplaceB: finalWpB,
       hasSchoolAgedChild,
@@ -557,6 +564,7 @@ export function ProfileForm({
     preferLargeComplex,
     minBuildYear,
     requireChopumah,
+    budgetFlex,
     wpA.selected,
     wpB.selected,
     maxCommuteA,
@@ -1325,6 +1333,28 @@ export function ProfileForm({
                   : "주담대·신용대출·전세·자동차할부·카드론 등 매달 갚는 가계대출만 합산하세요. 사업자(기업)대출은 보통 DSR에 안 잡혀 빼도 됩니다. 없으면 0."
               }
             />
+          </div>
+
+          {/* 예산 근접도 — 결과 가격대를 예산에 얼마나 맞출지 (필수) */}
+          <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm">
+            <p className="text-[15px] font-semibold text-[#1d1d1f] mb-1">
+              예산 근접도
+            </p>
+            <p className="text-[12px] text-[#6e6e73] mb-3">
+              결과 가격대를 예산에 얼마나 딱 맞출지 골라주세요.
+            </p>
+            <Segmented
+              options={BUDGET_FLEX_ORDER.map((k) => ({
+                value: k,
+                label: BUDGET_FLEX_LABELS[k],
+              }))}
+              value={budgetFlex}
+              onChange={(v) => setBudgetFlex(v as BudgetFlex)}
+              columns={3}
+            />
+            <p className="mt-2 text-[12px] font-medium text-indigo-600">
+              {BUDGET_FLEX_DESC[budgetFlex]}
+            </p>
           </div>
 
           {/* 갈아타기 토글 */}

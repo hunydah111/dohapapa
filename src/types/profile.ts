@@ -109,6 +109,21 @@ export const LOCATION_VIBE_LEVEL_LABELS: Record<number, string> = {
   3: "듬뿍",
 };
 
+// ── 예산 근접도 — 결과 가격대를 예산에 얼마나 빡빡하게 맞출지 (필수, 기본 적당히) ──
+export type BudgetFlex = "tight" | "normal" | "relaxed";
+export const BUDGET_FLEX_LABELS: Record<BudgetFlex, string> = {
+  tight: "딱 맞게",
+  normal: "적당히",
+  relaxed: "넉넉히",
+};
+export const BUDGET_FLEX_DESC: Record<BudgetFlex, string> = {
+  tight: "예산 ±5%",
+  normal: "예산 ±10%",
+  relaxed: "예산 위아래 넓게",
+};
+export const BUDGET_FLEX_ORDER: BudgetFlex[] = ["tight", "normal", "relaxed"];
+export const DEFAULT_BUDGET_FLEX: BudgetFlex = "normal";
+
 // ── 필수 지역(시군구) 선택지 — complex.sigungu 값과 정확히 일치해야 함 ──
 export const SEOUL_GU: string[] = [
   "강남구", "강동구", "강북구", "강서구", "관악구", "광진구", "구로구", "금천구",
@@ -184,6 +199,8 @@ export interface CoupleProfile {
   minBuildYear?: number;
   /** 초품아만 — 초등학교 150m 이내만(하드). */
   requireChopumah?: boolean;
+  /** 예산 근접도 — 결과 가격대를 예산에 얼마나 맞출지. 없으면 넉넉히(기존). */
+  budgetFlex?: BudgetFlex;
   /** 본인 직장. 은퇴·무직(retired)이면 생략. */
   workplaceA?: Workplace;
   /** 배우자 직장. 맞벌이(dualIncome)일 때만. */
