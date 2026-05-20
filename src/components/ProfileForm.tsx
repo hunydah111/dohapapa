@@ -933,8 +933,8 @@ export function ProfileForm({
                     </span>
                   </p>
                   <p className="mt-1 mb-4 text-[12px] leading-relaxed text-[#6e6e73]">
-                    누를 때마다 조금 → 꽤 → 많이로 강해지고, 셀수록 가점이 커져요.
-                    여러 개 골라도 OK!
+                    누를 때마다 한 스푼 → 두 스푼 → 듬뿍으로 진해지고, 많이
+                    담을수록 가점이 커져요. 여러 개 골라도 OK!
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {LOCATION_VIBE_ORDER.map((key) => {
@@ -963,8 +963,8 @@ export function ProfileForm({
                           ].join(" ")}
                         >
                           <span aria-hidden="true">{cfg.emoji}</span>
-                          {active ? `${LOCATION_VIBE_LEVEL_LABELS[level]} ` : ""}
                           {LOCATION_VIBE_LABELS[key]}
+                          {active ? ` ${LOCATION_VIBE_LEVEL_LABELS[level]}` : ""}
                           {active && (
                             <span className="ml-0.5 text-[10px] tracking-tighter opacity-90">
                               {"●".repeat(level)}

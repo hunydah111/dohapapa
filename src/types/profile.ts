@@ -104,9 +104,9 @@ export const LOCATION_VIBE_ORDER: LocationVibe[] = ["riverside", "quiet"];
 export type LocationVibes = Partial<Record<LocationVibe, number>>;
 
 export const LOCATION_VIBE_LEVEL_LABELS: Record<number, string> = {
-  1: "조금",
-  2: "꽤",
-  3: "많이",
+  1: "한 스푼",
+  2: "두 스푼",
+  3: "듬뿍",
 };
 
 // ── 필수 지역(시군구) 선택지 — complex.sigungu 값과 정확히 일치해야 함 ──

@@ -128,38 +128,41 @@ export function scoreBudgetFit(
 
   const ratio = medianPriceKrw / netPurchasePowerKrw;
 
+  // 예산을 잘 활용하는 구간(예산의 85~100%)을 최고점으로 본다. 너무 싸면
+  // (예산 대비 한참 저렴) 활용도가 낮다고 보아 감점, 초과하면 더 빨리 감점.
   if (ratio <= 1.0) {
-    // 여유율 = 1 - ratio (0% ~ 100%)
     const marginPct = Math.round((1 - ratio) * 100);
-
     let score: number;
-    if (ratio <= 0.70) {
-      // 여유 30% 이상 → 95점 상한
-      score = 95;
+    if (ratio >= 0.85) {
+      score = 95; // 예산 85~100% 활용 — 최고
     } else {
-      // 여유 0%~30% 구간: 70점(ratio=1.0) ~ 95점(ratio=0.70) 선형
-      // slope = (95 - 70) / (1.0 - 0.70) = 25 / 0.30 ≈ 83.3
-      score = Math.round(70 + (1.0 - ratio) * (25 / 0.30));
-      score = Math.min(95, score);
+      // 0.85 미만: 쌀수록 감점 (0.85→95, 0.50→60, 하한 45)
+      score = Math.max(45, Math.round(95 - (0.85 - ratio) * 100));
     }
-    return { score, reason: `예산 내 여유 ${marginPct}%` };
+    return {
+      score,
+      reason:
+        ratio >= 0.85
+          ? `예산 거의 다 활용 (여유 ${marginPct}%)`
+          : `예산보다 ${marginPct}% 저렴`,
+    };
   }
 
   if (ratio <= 1.10) {
-    // 예산 0%~10% 초과: 70점(ratio=1.0) → 40점(ratio=1.10) 선형
+    // 0%~10% 초과: 95점(ratio=1.0) → 55점(ratio=1.10) 선형
     const overPct = Math.round((ratio - 1) * 100);
-    const score = Math.round(70 - (ratio - 1.0) * (30 / 0.10));
+    const score = Math.max(55, Math.round(95 - (ratio - 1.0) * (40 / 0.10)));
     return {
-      score: Math.max(40, Math.min(69, score)),
+      score: Math.min(95, score),
       reason: `예산 대비 ${overPct}% 초과`,
     };
   }
 
-  // 10% 초과 ~ : 40점 이하로 급락
+  // 10% 초과 ~ : 55점 이하로 급락
   const overPct = Math.round((ratio - 1) * 100);
-  const score = Math.max(0, Math.round(40 - (ratio - 1.10) * (40 / 0.15)));
+  const score = Math.max(0, Math.round(55 - (ratio - 1.1) * (55 / 0.15)));
   return {
-    score: Math.min(39, score),
+    score: Math.min(54, score),
     reason: `예산 대비 ${overPct}% 초과 (범위 외)`,
   };
 }
