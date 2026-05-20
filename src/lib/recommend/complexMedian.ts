@@ -150,9 +150,10 @@ export async function getAreaMediansForMany(
         areaGroups = new Map<number, Tx[]>();
         byComplex.set(row.complexId, areaGroups);
       }
-      // 평형 버킷은 1㎡ 단위로 묶는다 — 같은 타입(예: 전용 59.84·59.98㎡)이
-      // 0.1㎡ 차이로 다른 버킷에 쪼개져 표본이 얇아지는 것을 막는다.
-      const key = Math.round(row.area);
+      // 평형 버킷은 1㎡ 단위 내림으로 묶는다 — 같은 타입(예: 전용 59.84·59.98㎡)이
+      // 0.1㎡ 차이로 쪼개지는 것을 막고, 전용면적 타입 표기(예: 84.6㎡ → "84㎡")와
+      // 평수대 필터(>= min && < max)에 모두 맞는다.
+      const key = Math.floor(row.area);
       const list = areaGroups.get(key) ?? [];
       list.push({
         price: Number(row.priceKrw),
