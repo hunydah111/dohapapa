@@ -49,14 +49,22 @@ function estimateCurrentPrice(txs: Tx[]): number {
     txs.map((t) => ({ price: t.price, weight: decayWeight(t.daysAgo) })),
   );
 
-  // 2. 추세 계수 — 최근 3개월 vs 직전 3개월 (양쪽 모두 2건 이상일 때만)
   const recent = txs.filter((t) => t.daysAgo <= 90);
   const older = txs.filter((t) => t.daysAgo > 90);
+
+  // 최근 분기(≤90일) 가중중위 — 추세 계산과 하한 가드에 공통으로 쓴다.
+  const recentMed =
+    recent.length > 0
+      ? weightedMedian(
+          recent.map((t) => ({ price: t.price, weight: decayWeight(t.daysAgo) })),
+        )
+      : 0;
+
+  // 2. 추세 계수 — 최근 3개월 vs 직전 3개월. 단, 양쪽 모두 4건 이상일 때만 적용.
+  // 2~3건 표본은 가중중위가 사실상 한 거래값이라(이상치 한 건이 추세를 좌우)
+  // 멀쩡한 base 를 왜곡한다 — 그런 경우 추세를 적용하지 않는다.
   let trend = 1;
-  if (recent.length >= 2 && older.length >= 2) {
-    const recentMed = weightedMedian(
-      recent.map((t) => ({ price: t.price, weight: decayWeight(t.daysAgo) })),
-    );
+  if (recent.length >= 4 && older.length >= 4) {
     const olderMed = weightedMedian(
       older.map((t) => ({ price: t.price, weight: decayWeight(t.daysAgo) })),
     );
@@ -65,7 +73,15 @@ function estimateCurrentPrice(txs: Tx[]): number {
     }
   }
 
-  return Math.round(base * trend);
+  let estimated = Math.round(base * trend);
+
+  // 3. 하한 가드 — 최근 분기 표본이 충분(3건 이상)하면 추정가가 그 가중중위값보다
+  // 낮아지지 않게 막는다. 추세계수가 base 를 최근 실거래 밑으로 끌어내리는 오류 방지.
+  if (recent.length >= 3 && recentMed > 0) {
+    estimated = Math.max(estimated, Math.round(recentMed));
+  }
+
+  return estimated;
 }
 
 /**
@@ -95,7 +111,9 @@ export async function getAreaMediansForMany(
         areaGroups = new Map<number, Tx[]>();
         byComplex.set(row.complexId, areaGroups);
       }
-      const key = Math.round(row.area * 10) / 10;
+      // 평형 버킷은 1㎡ 단위로 묶는다 — 같은 타입(예: 전용 59.84·59.98㎡)이
+      // 0.1㎡ 차이로 다른 버킷에 쪼개져 표본이 얇아지는 것을 막는다.
+      const key = Math.round(row.area);
       const list = areaGroups.get(key) ?? [];
       list.push({
         price: Number(row.priceKrw),
