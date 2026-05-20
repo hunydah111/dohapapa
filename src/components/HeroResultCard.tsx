@@ -26,9 +26,9 @@ export function HeroResultCard({
     0,
   );
 
-  const kakaoMapUrl = `https://map.kakao.com/link/map/${encodeURIComponent(
-    candidate.complexName,
-  )},${candidate.latitude},${candidate.longitude}`;
+  const kakaoMapUrl = `https://map.kakao.com/?q=${encodeURIComponent(
+    `${candidate.complexName} ${candidate.dongName}`,
+  )}`;
 
   return (
     <section

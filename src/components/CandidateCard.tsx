@@ -61,10 +61,11 @@ export function CandidateCard({
     `${candidate.complexName} ${candidate.sigungu} ${candidate.dongName}`
   )}`;
 
-  // 카카오맵 — 좌표로 정확한 위치에 마커를 찍어 지도를 연다.
-  const kakaoMapUrl = `https://map.kakao.com/link/map/${encodeURIComponent(
-    candidate.complexName,
-  )},${candidate.latitude},${candidate.longitude}`;
+  // 카카오맵 — 단지명+동으로 검색해 해당 단지 위치를 띄운다.
+  // (link/map/이름,위도,경도 형식은 레거시 좌표 URL로 리다이렉트돼 기본 화면이 떠서 사용 안 함)
+  const kakaoMapUrl = `https://map.kakao.com/?q=${encodeURIComponent(
+    `${candidate.complexName} ${candidate.dongName}`,
+  )}`;
 
   return (
     <Card className="flex flex-col gap-5">

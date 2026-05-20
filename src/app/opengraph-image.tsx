@@ -28,11 +28,22 @@ export default async function Image() {
           fontFamily: "BlackHanSans",
         }}
       >
-        <div style={{ fontSize: 138, lineHeight: 1 }}>홈앤나사이</div>
-        <div style={{ fontSize: 52, marginTop: 28, opacity: 0.96 }}>
+        {/* 브랜드 마크 — 인디고 배경에서 보이게 좌:흰색 / 우:앰버 / 가운데:인디고 */}
+        <svg
+          width="138"
+          height="138"
+          viewBox="0 0 32 32"
+          style={{ marginBottom: 28 }}
+        >
+          <path d="M16 4 L4 13 L4 26 Q4 28 6 28 L16 28 Z" fill="#ffffff" />
+          <path d="M16 4 L28 13 L28 26 Q28 28 26 28 L16 28 Z" fill="#f59e0b" />
+          <circle cx="16" cy="16" r="3.5" fill="#4f46e5" />
+        </svg>
+        <div style={{ fontSize: 168, lineHeight: 1 }}>홈앤나사이</div>
+        <div style={{ fontSize: 62, marginTop: 28, opacity: 0.96 }}>
           재미로 한번 돌려보는 내 집 찾기
         </div>
-        <div style={{ fontSize: 34, marginTop: 56, opacity: 0.8 }}>
+        <div style={{ fontSize: 42, marginTop: 52, opacity: 0.8 }}>
           homenasia.kr
         </div>
       </div>
