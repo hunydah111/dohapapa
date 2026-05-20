@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   // og:image 등 메타 URL을 절대경로로 만들어 카카오톡·SNS가 썸네일을 가져갈 수 있게 한다.
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://homenasia.kr",
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.homenasia.kr",
   ),
   title: "홈앤나사이 — 재미로 한번 돌려보는 내 집 찾기",
   description:
