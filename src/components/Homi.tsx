@@ -17,8 +17,8 @@ const DOOR = "#FF9B72"; // 문 = 입
 const INK = "#4A3B30";
 const BLUSH = "#F4B8C1";
 const GLASS = "#FFE6B0";
-const MONEY = "#A7DBA9"; // 굴뚝에서 폴폴 나오는 지폐
-const MONEY_LT = "#C4E9C5";
+const MONEY = "#A7DBA9"; // 굴뚝에서 폴폴 나오는 통장 표지
+const MONEY_LT = "#EAF7EA"; // 통장 속지
 const MONEY_EDGE = "#5FA968";
 
 export function Homi({
@@ -63,15 +63,19 @@ export function Homi({
         strokeWidth="2.5"
         strokeLinejoin="round"
       />
-      {/* 굴뚝에서 폴폴 나오는 지폐(₩) */}
-      <g transform="rotate(-12 81 12)">
-        <rect x="74" y="8" width="14" height="9" rx="2" fill={MONEY} stroke={MONEY_EDGE} strokeWidth="1.5" />
-        <circle cx="81" cy="12.5" r="2" fill={MONEY_EDGE} />
+      {/* 굴뚝에서 폴폴 나오는 통장 한 권 (+반짝) */}
+      <g transform="rotate(-10 79 9)">
+        {/* 살짝 삐져나온 속지 */}
+        <rect x="74" y="4" width="15" height="11" rx="2" fill={MONEY_LT} stroke={MONEY_EDGE} strokeWidth="1" />
+        {/* 표지 */}
+        <rect x="71" y="2.5" width="15" height="12" rx="2.5" fill={MONEY} stroke={MONEY_EDGE} strokeWidth="1.5" />
+        {/* 책등 */}
+        <rect x="71" y="2.5" width="3.6" height="12" rx="1.8" fill={MONEY_EDGE} />
+        {/* ₩ 마크 */}
+        <text x="79.6" y="11.4" fontSize="7.3" fontWeight="700" fontFamily="sans-serif" textAnchor="middle" fill={MONEY_EDGE}>₩</text>
       </g>
-      <g transform="rotate(13 88 5)">
-        <rect x="83" y="1.5" width="10" height="7" rx="1.8" fill={MONEY_LT} stroke={MONEY_EDGE} strokeWidth="1.3" />
-        <circle cx="88" cy="5" r="1.3" fill={MONEY_EDGE} />
-      </g>
+      {/* 반짝 */}
+      <path d="M92 3 l1 2.4 2.4 1 -2.4 1 -1 2.4 -1 -2.4 -2.4 -1 2.4 -1z" fill="#FFD24D" />
 
       {/* 볼터치 */}
       <ellipse cx="37" cy="80" rx="6.2" ry="3.7" fill={BLUSH} />
