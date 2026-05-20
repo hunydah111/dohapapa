@@ -652,7 +652,7 @@ export async function recommendComplexes(
     if (countBudgetRelax > 0) {
       const addEok = ((relaxedBudget - netPurchasePowerKrw) / 1e8).toFixed(1);
       relaxationSuggestions.push({
-        message: `예산을 약 ${addEok}억 더 확보하면 ${countBudgetRelax}곳이 조건에 맞습니다`,
+        message: `💰 ${addEok}억만 더 모으면(=더 벌자!) ${countBudgetRelax}곳이 빵 떠요`,
         resultCount: countBudgetRelax,
       });
     }
@@ -668,7 +668,7 @@ export async function recommendComplexes(
       );
       if (countCommuteRelax > 0) {
         relaxationSuggestions.push({
-          message: `통근 허용시간을 20분 늘리면 ${countCommuteRelax}곳이 조건에 맞습니다`,
+          message: `🏃 통근 20분만 더 열면(=더 걷자!) ${countCommuteRelax}곳이 나와요`,
           resultCount: countCommuteRelax,
         });
       }
@@ -699,7 +699,7 @@ export async function recommendComplexes(
       }
       if (countAreaRelax > 0) {
         relaxationSuggestions.push({
-          message: `선호 평수대를 "${nextRange.label}"로 조정하면 ${countAreaRelax}곳이 조건에 맞습니다`,
+          message: `📐 평수를 "${nextRange.label}"로 살짝 넓히면 ${countAreaRelax}곳이 나와요`,
           resultCount: countAreaRelax,
         });
       }
@@ -727,7 +727,7 @@ export async function recommendComplexes(
       const more = relaxedCount - currentPassing;
       if (more > 0) {
         relaxationSuggestions.push({
-          message: `예산을 약 ${formatKrwShort(extra)} 더 확보하면 ${more}곳을 더 볼 수 있어요`,
+          message: `💰 ${formatKrwShort(extra)}만 더 있으면(=더 벌자!) ${more}곳 더 보여요`,
           resultCount: more,
         });
       }
@@ -745,7 +745,7 @@ export async function recommendComplexes(
       const more = relaxedCount - currentPassing;
       if (more > 0) {
         relaxationSuggestions.push({
-          message: `통근 허용시간을 20분 늘리면 ${more}곳을 더 볼 수 있어요`,
+          message: `🏃 통근 20분만 더 열면(=더 걷자!) ${more}곳 더 보여요`,
           resultCount: more,
         });
       }
@@ -874,6 +874,19 @@ export async function recommendComplexes(
     }
   }
 
+  // 0건일 때 — 어떤 추가 조건(하드)이 결과를 좁혔는지 유쾌하게 지목
+  let emptyReason: string | undefined;
+  if (candidates.length === 0) {
+    const causes: string[] = [];
+    if (requiredRegions.length > 0)
+      causes.push(`지역(${requiredRegions.join("·")})`);
+    if (minBuildYear > 0) causes.push(`신축 ${minBuildYear}년+`);
+    if (profile.requireChopumah) causes.push("초품아만");
+    if (causes.length > 0) {
+      emptyReason = `🧐 이 조건들이 좀 빡셌나봐요 — ${causes.join(", ")}. 하나만 살짝 풀어볼까요?`;
+    }
+  }
+
   return {
     budget,
     candidates,
@@ -882,6 +895,7 @@ export async function recommendComplexes(
     relaxationSuggestions,
     consideredComplexCount,
     vibeNote,
+    emptyReason,
     disclaimer: DISCLAIMER,
   };
 }

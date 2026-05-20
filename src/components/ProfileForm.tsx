@@ -24,6 +24,7 @@ import {
   LOCATION_VIBE_ORDER,
   LOCATION_VIBE_LEVEL_LABELS,
   REGION_GROUPS,
+  REGION_PRESETS,
 } from "@/types/profile";
 import type { RecommendationResult } from "@/types/recommendation";
 import { Button } from "@/components/ui/Button";
@@ -42,21 +43,6 @@ const VIBE_CHIP: Record<
     emoji: "🌊",
     active: "border-sky-500 bg-sky-500 text-white focus:ring-sky-300",
     idle: "border-sky-200 bg-sky-50 text-sky-700 hover:border-sky-400",
-  },
-  hongdae: {
-    emoji: "🎨",
-    active: "border-pink-500 bg-pink-500 text-white focus:ring-pink-300",
-    idle: "border-pink-200 bg-pink-50 text-pink-700 hover:border-pink-400",
-  },
-  seongsu: {
-    emoji: "☕",
-    active: "border-amber-500 bg-amber-500 text-white focus:ring-amber-300",
-    idle: "border-amber-200 bg-amber-50 text-amber-700 hover:border-amber-400",
-  },
-  gangnam: {
-    emoji: "🏙️",
-    active: "border-indigo-600 bg-indigo-600 text-white focus:ring-indigo-300",
-    idle: "border-indigo-200 bg-indigo-50 text-indigo-700 hover:border-indigo-400",
   },
   quiet: {
     emoji: "🍃",
@@ -774,6 +760,37 @@ export function ProfileForm({
                   <p className="mt-0.5 mb-2 text-[12px] leading-relaxed text-[#6e6e73]">
                     고른 지역의 단지만 보여줘요. 안 고르면 수도권 전체.
                   </p>
+                  {/* 빠른 선택 (핫플 → 해당 구) */}
+                  <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                    <span className="mr-1 text-[12px] font-medium text-[#86868b]">
+                      빠른 선택
+                    </span>
+                    {REGION_PRESETS.map((p) => {
+                      const on = p.regions.every((r) =>
+                        requiredRegions.includes(r),
+                      );
+                      return (
+                        <button
+                          key={p.label}
+                          type="button"
+                          onClick={() =>
+                            setRequiredRegions((prev) =>
+                              on
+                                ? prev.filter((r) => !p.regions.includes(r))
+                                : [...new Set([...prev, ...p.regions])],
+                            )
+                          }
+                          className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${
+                            on
+                              ? "border-indigo-500 bg-indigo-600 text-white"
+                              : "border-black/[0.10] bg-white text-[#6e6e73] hover:border-indigo-300"
+                          }`}
+                        >
+                          {p.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                   {requiredRegions.length > 0 && (
                     <div className="mb-2 flex flex-wrap gap-1.5">
                       {requiredRegions.map((r) => (

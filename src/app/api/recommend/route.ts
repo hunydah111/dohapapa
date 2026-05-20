@@ -42,9 +42,6 @@ const coupleProfileSchema = z
     locationVibes: z
       .object({
         riverside: z.number().int().min(1).max(3).optional(),
-        hongdae: z.number().int().min(1).max(3).optional(),
-        seongsu: z.number().int().min(1).max(3).optional(),
-        gangnam: z.number().int().min(1).max(3).optional(),
         quiet: z.number().int().min(1).max(3).optional(),
       })
       .optional(),

@@ -319,18 +319,23 @@ export function HomeExperience() {
             className="text-xl font-bold mb-2"
             style={{ color: "#1d1d1f" }}
           >
-            아직 딱 맞는 단지가 없어요
+            앗, 딱 맞는 집을 못 찾았어요 😅
           </h2>
-          <p className="text-sm leading-relaxed mb-5" style={{ color: "#6e6e73" }}>
+          <p className="text-sm leading-relaxed mb-3" style={{ color: "#6e6e73" }}>
             수도권{" "}
             <span className="font-semibold" style={{ color: "#1d1d1f" }}>
               {result.consideredComplexCount.toLocaleString("ko-KR")}곳
             </span>
-            을 살펴봤지만 입력하신 모든 조건을 동시에 만족하는 단지가 없어요.
+            을 다 뒤졌는데 조건이 살짝 빡셌나봐요!
             {result.relaxationSuggestions.length > 0
-              ? " 조건을 조금만 풀면 후보가 나옵니다 ↓"
-              : " 조건을 한두 가지 크게 조정해야 후보가 나올 것 같아요."}
+              ? " 아래처럼 살짝만 풀면 바로 나와요 👇"
+              : " 한두 가지만 크게 풀어볼까요?"}
           </p>
+          {result.emptyReason && (
+            <p className="mb-5 rounded-2xl bg-amber-50 px-4 py-3 text-[13px] leading-relaxed text-amber-900">
+              {result.emptyReason}
+            </p>
+          )}
 
           {result.relaxationSuggestions.length > 0 ? (
             <div className="flex flex-col gap-3">
@@ -338,7 +343,7 @@ export function HomeExperience() {
                 className="text-[12px] font-semibold uppercase tracking-wider"
                 style={{ color: "#86868b" }}
               >
-                추천 조정 ({result.relaxationSuggestions.length}개)
+                이렇게 살짝 풀어볼까요? 👇 ({result.relaxationSuggestions.length})
               </p>
               {result.relaxationSuggestions.map((s, i) => (
                 <button

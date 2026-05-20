@@ -35,12 +35,6 @@ const minDist = (p: LatLng, anchors: LatLng[]) =>
 /** 입지 분위기에 단지가 얼마나 맞는지 0~1. */
 export function scoreLocationVibe(vibe: LocationVibe, coord: LatLng): number {
   switch (vibe) {
-    case "hongdae":
-      return clamp01(1 - haversineKm(coord, HONGDAE) / 4);
-    case "seongsu":
-      return clamp01(1 - haversineKm(coord, SEONGSU) / 4);
-    case "gangnam":
-      return clamp01(1 - haversineKm(coord, GANGNAM) / 4);
     case "riverside":
       return clamp01(1 - minDist(coord, RIVERSIDE) / 1.5);
     case "quiet":
@@ -55,30 +49,18 @@ export const VIBE_BONUS_CAP = 16;
 
 const VIBE_EMOJI: Record<LocationVibe, string> = {
   riverside: "🌊",
-  hongdae: "🎨",
-  seongsu: "☕",
-  gangnam: "🏙️",
   quiet: "🍃",
 };
 
-// 배지·문구용 짧은 이름 ('상권' 접미사 없이)
+// 배지·문구용 짧은 이름
 const VIBE_SHORT: Record<LocationVibe, string> = {
   riverside: "한강",
-  hongdae: "홍대",
-  seongsu: "성수",
-  gangnam: "강남",
   quiet: "한적",
 };
 
-/** 단지에서 해당 입지 기준점까지 거리(km). riverside/quiet 은 최단 앵커 기준. */
+/** 단지에서 해당 입지 기준점까지 거리(km). 최단 앵커 기준. */
 export function vibeDistanceKm(vibe: LocationVibe, coord: LatLng): number {
   switch (vibe) {
-    case "hongdae":
-      return haversineKm(coord, HONGDAE);
-    case "seongsu":
-      return haversineKm(coord, SEONGSU);
-    case "gangnam":
-      return haversineKm(coord, GANGNAM);
     case "riverside":
       return minDist(coord, RIVERSIDE);
     case "quiet":

@@ -89,28 +89,16 @@ export const DEFAULT_COMMUTE_MODE: CommuteMode = "car";
 export const DEFAULT_MAX_COMMUTE_MIN = 50;
 
 // ── 선호 입지(분위기) — 재미용 소프트 가점. 단일 선택, 기본 "상관없음". ──
-export type LocationVibe =
-  | "riverside"
-  | "hongdae"
-  | "seongsu"
-  | "gangnam"
-  | "quiet";
+// 분위기(소프트 가점)는 지역과 안 겹치는 '느낌'만 — 한강변·조용함.
+// 강남/홍대/성수는 '동네'라 지역(REGION_PRESETS)으로 이동했다.
+export type LocationVibe = "riverside" | "quiet";
 
 export const LOCATION_VIBE_LABELS: Record<LocationVibe, string> = {
   riverside: "한강변",
-  hongdae: "홍대상권",
-  seongsu: "성수상권",
-  gangnam: "강남상권",
   quiet: "새소리·나뭇잎소리",
 };
 
-export const LOCATION_VIBE_ORDER: LocationVibe[] = [
-  "riverside",
-  "hongdae",
-  "seongsu",
-  "gangnam",
-  "quiet",
-];
+export const LOCATION_VIBE_ORDER: LocationVibe[] = ["riverside", "quiet"];
 
 /** 입지 강도 1~3 (조금/꽤/많이). 키별 강도 맵 — 복수선택 가능. */
 export type LocationVibes = Partial<Record<LocationVibe, number>>;
@@ -142,6 +130,13 @@ export const GYEONGGI_SIGUNGU: string[] = [
 export const REGION_GROUPS: { label: "서울" | "경기"; regions: string[] }[] = [
   { label: "서울", regions: SEOUL_GU },
   { label: "경기", regions: GYEONGGI_SIGUNGU },
+];
+
+// 핫플 빠른 선택 — 누르면 해당 시군구를 필수 지역에 추가(하드). (구 '상권' 취향을 지역으로)
+export const REGION_PRESETS: { label: string; regions: string[] }[] = [
+  { label: "강남", regions: ["강남구"] },
+  { label: "홍대·합정", regions: ["마포구"] },
+  { label: "성수", regions: ["성동구"] },
 ];
 
 // ── 직장 / 위치 ──────────────────────────────────────────────

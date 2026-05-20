@@ -188,6 +188,8 @@ export interface RecommendationResult {
   consideredComplexCount: number;
   /** 선호 입지를 골랐지만 결과에 안 잡혔을 때 솔직 안내 문구(가장 가까운 후보). 평소엔 없음. */
   vibeNote?: string;
+  /** 0건일 때, 어떤 추가 조건(하드)이 결과를 좁혔는지 지목하는 안내. 평소엔 없음. */
+  emptyReason?: string;
   /** 필수 면책 고지. */
   disclaimer: string;
 }
