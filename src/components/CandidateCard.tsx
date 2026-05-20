@@ -93,6 +93,11 @@ export function CandidateCard({
             {candidate.vibeBadge}
           </span>
         )}
+        {candidate.lowDataConfidence && (
+          <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 ring-1 ring-amber-200">
+            거래 적음 · 참고용
+          </span>
+        )}
         <span
           className="ml-auto rounded-full bg-[#f3ece4] px-3 py-1 text-xs font-semibold tabular-nums"
           style={{ color: "#6b6157" }}
@@ -171,7 +176,9 @@ export function CandidateCard({
           </span>
         </div>
         <p className="mt-1.5 text-xs" style={{ color: "#9a8f82" }}>
-          최근 6개월 실거래 {candidate.transactionCount}건의 중위값
+          {candidate.lowDataConfidence
+            ? `최근 1년 실거래 ${candidate.transactionCount}건 (거래 적어 12개월로 추정 — 참고용)`
+            : `최근 6개월 실거래 ${candidate.transactionCount}건의 중위값`}
           (국토교통부 공개 데이터, 실제 거래가와 다를 수 있음)
         </p>
       </div>

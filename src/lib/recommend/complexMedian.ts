@@ -15,6 +15,11 @@ export interface AreaMedian {
    */
   volatility: number;
   /**
+   * 최근 6개월 거래가 부족해 12개월까지 넓혀 산출한 경우 true(거래 적음·참고용).
+   * 신축/등기 직후 등 거래가 드문 단지를 살리기 위한 폴백.
+   */
+  sparse: boolean;
+  /**
    * 단지 내 다른 평형 대비 ㎡당 단가가 비정상(역전·극단치)이라 신뢰도가 낮음.
    * 대표 평형 선택에서 제외된다 (C-1: 플래그만, 가격 보정은 하지 않음).
    */
@@ -22,6 +27,10 @@ export interface AreaMedian {
 }
 
 const WINDOW_MONTHS = 6;
+// 거래 적은 단지 폴백: 6개월 거래가 FALLBACK_MIN_TX 미만이면 12개월까지 넓혀 산출.
+const FALLBACK_WINDOW_MONTHS = 12;
+const FALLBACK_MIN_TX = 8;
+const SIX_MONTHS_DAYS = WINDOW_MONTHS * 30.4;
 // 최근 거래일수록 무겁게: w = exp(-LAMBDA * daysAgo). 약 140일 반감기.
 const LAMBDA = 0.005;
 // 추세 계수 클램프 — 과보정 방지.
@@ -146,8 +155,9 @@ export function flagLowConfidence(medians: AreaMedian[]): void {
 export async function getAreaMediansForMany(
   complexIds: string[],
 ): Promise<Map<string, AreaMedian[]>> {
+  // 12개월까지 가져와 두고, 단지별로 6개월이 충분하면 6개월만, 부족하면 12개월을 쓴다.
   const since = new Date();
-  since.setMonth(since.getMonth() - WINDOW_MONTHS);
+  since.setMonth(since.getMonth() - FALLBACK_WINDOW_MONTHS);
   const now = Date.now();
 
   const CHUNK = 400;
@@ -181,13 +191,25 @@ export async function getAreaMediansForMany(
 
   const result = new Map<string, AreaMedian[]>();
   for (const [complexId, areaGroups] of byComplex) {
+    // 6개월 거래가 충분하면 6개월만, 부족하면 12개월 전체로 폴백(sparse).
+    let recent6Total = 0;
+    for (const txs of areaGroups.values()) {
+      recent6Total += txs.filter((t) => t.daysAgo <= SIX_MONTHS_DAYS).length;
+    }
+    const useFallback = recent6Total < FALLBACK_MIN_TX;
+
     const medians: AreaMedian[] = [];
-    for (const [area, txs] of areaGroups) {
+    for (const [area, txs12] of areaGroups) {
+      const txs = useFallback
+        ? txs12
+        : txs12.filter((t) => t.daysAgo <= SIX_MONTHS_DAYS);
+      if (txs.length === 0) continue;
       medians.push({
         area,
         medianKrw: estimateCurrentPrice(txs),
         count: txs.length,
         volatility: priceVolatility(txs),
+        sparse: useFallback,
         lowConfidence: false,
       });
     }

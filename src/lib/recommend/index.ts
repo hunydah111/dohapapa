@@ -592,6 +592,7 @@ export async function recommendComplexes(
         latitude: complex.latitude as number,
         longitude: complex.longitude as number,
         transactionCount: rep.count,
+        lowDataConfidence: rep.sparse,
         buildYear: complex.buildYear,
         isChopumah,
         scores,

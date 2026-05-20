@@ -130,8 +130,10 @@ export interface ComplexCandidate {
    * 단순 중위가가 아니라 "지금 거래될 가격"의 추정치 — 부동산 전문가 패널 권고.
    */
   medianPriceKrw: number;
-  /** 추정 현재가 산출에 쓴 최근 6개월 거래 건수 — 가격 신뢰도 지표. */
+  /** 추정 현재가 산출에 쓴 거래 건수 — 가격 신뢰도 지표. */
   transactionCount: number;
+  /** 최근 6개월 거래가 적어 12개월까지 넓혀 추정한 경우 true(거래 적음·참고용). */
+  lowDataConfidence?: boolean;
   /** 단지 준공년도 — UI 에 "○○○○년식" 으로 표시. null = 정보 없음. */
   buildYear: number | null;
   /** 초품아 여부 — 초등학교가 단지에서 직선 150m 이내. */

@@ -61,9 +61,9 @@ export function estimateAcquisitionCosts(
   const breakdown: string[] = [];
 
   // ── 취득세 (보유 주택 수에 따른 중과 반영) ────────────────────────────────
-  // 현재 보유 주택 수. 명시값 없으면 과거 보유 이력으로 1/0 근사.
-  const ownedCount =
-    profile.ownedHomeCount ?? (profile.hasOwnedHomeBefore ? 1 : 0);
+  // 현재 보유 주택 수(중과 판정). 명시값 없으면 0(중과 없음) — 과거 보유 이력
+  // (hasOwnedHomeBefore)은 생애최초 감면 판정에만 쓰고 중과에는 쓰지 않는다.
+  const ownedCount = profile.ownedHomeCount ?? 0;
   let acquisitionTaxKrw: number;
 
   if (ownedCount >= 2) {
