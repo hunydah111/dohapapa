@@ -209,9 +209,10 @@ export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
     // WHY 비교 기준: 정책대출이 일반 DSR 한도 초과 또는 금리 낮으면 정책 채택.
     // 같은 한도라면 금리가 낮은 정책대출을 선택.
     if (
-      effectivePolicyCapacity > dsrLoanCapacity ||
-      (effectivePolicyCapacity >= dsrLoanCapacity &&
-        policyRate < STRESS_RATE)
+      effectivePolicyCapacity > 0 &&
+      (effectivePolicyCapacity > dsrLoanCapacity ||
+        (effectivePolicyCapacity >= dsrLoanCapacity &&
+          policyRate < STRESS_RATE))
     ) {
       appliedLoanType = "policy";
       appliedPolicyName = bestPolicy.productName;
@@ -350,6 +351,11 @@ export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
     loanReasonLines.push(
       `일반 DSR 한도(약 ${eok(dsrLoanCapacity)}억)와 비교해 정책이 더 유리`,
     );
+  } else if (availableMonthly <= 0) {
+    // 가용 월상환액 0 — 추가 대출 불가. 정책/일반 비교 문구는 오해를 주므로 생략.
+    loanReasonLines.push(
+      "기존 대출이 DSR 한도를 이미 차지해 가용 월상환액 0 — 추가 대출 불가",
+    );
   } else {
     if (eligiblePolicies.length > 0 && bestPolicy !== undefined) {
       loanReasonLines.push(
@@ -358,28 +364,20 @@ export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
         )}억)보다 DSR 한도가 큼`,
       );
     } else if (policyLoanMatches.every((m) => !m.eligible)) {
-      loanReasonLines.push(
-        "적격 정책대출 없음 — 일반 DSR 한도로 산출",
-      );
+      loanReasonLines.push("적격 정책대출 없음 — 일반 DSR 한도로 산출");
     } else {
       loanReasonLines.push("일반 DSR 한도 기준 산출");
     }
-    if (availableMonthly > 0) {
-      loanReasonLines.push(
-        `DSR 40% × 연소득 ${eok(
-          householdIncomeKrwYear,
-        )}억 ÷ 12 − 기존상환 = 월 가용 ${manwon(availableMonthly)}만원`,
-      );
-      loanReasonLines.push(
-        `30년 원리금균등 + 스트레스 5.5% 환산 → DSR 한도 약 ${eok(
-          dsrLoanCapacity,
-        )}억`,
-      );
-    } else {
-      loanReasonLines.push(
-        "기존 대출이 DSR 한도를 이미 차지해 가용 월상환액 0 — 추가 대출 불가",
-      );
-    }
+    loanReasonLines.push(
+      `DSR 40% × 연소득 ${eok(
+        householdIncomeKrwYear,
+      )}억 ÷ 12 − 기존상환 = 월 가용 ${manwon(availableMonthly)}만원`,
+    );
+    loanReasonLines.push(
+      `30년 원리금균등 + 스트레스 5.5% 환산 → DSR 한도 약 ${eok(
+        dsrLoanCapacity,
+      )}억`,
+    );
   }
 
   loanReasonLines.push(

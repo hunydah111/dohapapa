@@ -18,10 +18,7 @@ const SHINSEONA_INCOME_LIMIT = 200_000_000;
 /** 디딤돌(신혼): 부부합산 연소득 8,500만 이하 */
 const DIDIMDOL_NEWLYWED_INCOME_LIMIT = 85_000_000;
 
-/** 디딤돌(일반): 기본 합산 6,000만 이하 */
-const DIDIMDOL_GENERAL_INCOME_LIMIT = 60_000_000;
-
-/** 디딤돌(일반): 생애최초·2자녀 이상 완화 기준 7,000만 이하 */
+/** 디딤돌(일반): 생애최초·2자녀 이상 완화 기준 7,000만 이하 (현 모델은 항상 생애최초로 간주). 비생애최초 기본은 6,000만. */
 const DIDIMDOL_GENERAL_INCOME_LIMIT_EXTENDED = 70_000_000;
 
 /** 보금자리론: 기본 합산 7,000만 이하 */
@@ -39,10 +36,7 @@ const SHINSEONA_LOAN_LIMIT = 400_000_000;
 /** 디딤돌(신혼) 최대 대출 한도 (원) */
 const DIDIMDOL_NEWLYWED_LOAN_LIMIT = 320_000_000;
 
-/** 디딤돌(일반) 기본 한도 (원) */
-const DIDIMDOL_GENERAL_LOAN_LIMIT = 200_000_000;
-
-/** 디딤돌(일반) 생애최초 한도 (원) */
+/** 디딤돌(일반) 생애최초 한도 (원). 비생애최초 기본 한도는 2억. */
 const DIDIMDOL_GENERAL_FIRST_LOAN_LIMIT = 240_000_000;
 
 /** 보금자리론 기본 한도 (원) */
@@ -156,8 +150,7 @@ function evaluateDidimdolNewlywed(profile: CoupleProfile): PolicyLoanMatch {
  * WHY 생애최초·2자녀 완화: 두 조건 중 하나라도 해당하면 소득 기준 7,000만으로 완화.
  */
 function evaluateDidimdolGeneral(profile: CoupleProfile): PolicyLoanMatch {
-  const { householdIncomeKrwYear, hasOwnedHomeBefore, hasTwoOrMoreChildren } =
-    profile;
+  const { householdIncomeKrwYear, hasOwnedHomeBefore } = profile;
 
   if (hasOwnedHomeBefore) {
     return {
@@ -167,39 +160,25 @@ function evaluateDidimdolGeneral(profile: CoupleProfile): PolicyLoanMatch {
     };
   }
 
-  const isFirstHome = !hasOwnedHomeBefore;
-
-  // WHY 완화 기준 적용: 생애최초 또는 2자녀 이상이면 소득 7,000만까지 허용
-  const incomeLimit =
-    isFirstHome || hasTwoOrMoreChildren
-      ? DIDIMDOL_GENERAL_INCOME_LIMIT_EXTENDED
-      : DIDIMDOL_GENERAL_INCOME_LIMIT;
-
-  const loanLimit =
-    isFirstHome ? DIDIMDOL_GENERAL_FIRST_LOAN_LIMIT : DIDIMDOL_GENERAL_LOAN_LIMIT;
-
-  if (householdIncomeKrwYear > incomeLimit) {
-    const limitLabel = incomeLimit === DIDIMDOL_GENERAL_INCOME_LIMIT_EXTENDED ? "7,000만원" : "6,000만원";
+  // WHY 항상 생애최초 기준: 현재 입력은 hasOwnedHomeBefore 불리언뿐이라, 여기
+  // 도달한 사람은 모두 '보유 이력 없음'=생애최초로 간주한다(평생 무주택). 무주택이나
+  // 과거 보유 이력자는 구분 불가 → 위에서 보수적으로 차단됨. 따라서 소득 완화
+  // 7,000만 + 생애최초 한도 2.4억을 적용. (비생애최초 무주택 기준 6,000만/2억은
+  // 입력에 '현재 무주택 vs 생애최초' 구분이 생기면 추가)
+  if (householdIncomeKrwYear > DIDIMDOL_GENERAL_INCOME_LIMIT_EXTENDED) {
     return {
       productName: "디딤돌(일반)",
       eligible: false,
-      reason: `부부합산 소득 ${(householdIncomeKrwYear / 10_000).toLocaleString("ko-KR")}만원 초과 (기준: ${limitLabel} 이하)`,
+      reason: `부부합산 소득 ${(householdIncomeKrwYear / 10_000).toLocaleString("ko-KR")}만원 초과 (기준: 7,000만원 이하)`,
     };
   }
-
-  const limitLabel = isFirstHome ? "생애최초 2.4억" : "2억";
-  const conditionLabel = isFirstHome
-    ? "생애최초 + 무주택"
-    : hasTwoOrMoreChildren
-      ? "2자녀 이상 + 무주택"
-      : "무주택";
 
   return {
     productName: "디딤돌(일반)",
     eligible: true,
     reason:
-      `${conditionLabel} + 합산 소득 기준 충족 — 주택가 요건 별도 적용 (5억 이하), 한도 ${limitLabel}`,
-    loanLimitKrw: loanLimit,
+      "생애최초 + 무주택 + 합산 소득 기준 충족 — 주택가 요건 별도 적용 (5억 이하), 한도 생애최초 2.4억",
+    loanLimitKrw: DIDIMDOL_GENERAL_FIRST_LOAN_LIMIT,
     rateMin: 2.85,
     rateMax: 4.15,
   };
