@@ -180,6 +180,8 @@ export interface RecommendationResult {
   candidates: ComplexCandidate[];
   /** 이름만 표시할 추가 후보 (보통 10개). */
   moreCandidates: MoreCandidate[];
+  /** 통근 한도(이용자 설정)를 살짝 넘는(~×1.3) 후보 — 별도 섹션. 평소 빈 배열. */
+  overLimitCandidates: MoreCandidate[];
   /** candidates 가 비었을 때 채워지는 조건 완화 제안. 평소엔 빈 배열. */
   relaxationSuggestions: RelaxationSuggestion[];
   /** 하드 필터 통과 단지 수. */

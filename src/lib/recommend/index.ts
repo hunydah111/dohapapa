@@ -358,8 +358,19 @@ export async function recommendComplexes(
   const weights = buildWeights(profile.priorities, profile.householdType);
 
   // 3. 좌표 있는 단지 전체 로드
+  // 추가 조건(하드) — 필수 지역·신축만·초품아만 을 DB 단계에서 적용
+  const requiredRegions = profile.requiredRegions ?? [];
+  const minBuildYear = profile.minBuildYear ?? 0;
   const allComplexes = await db.complex.findMany({
-    where: { latitude: { not: null }, longitude: { not: null } },
+    where: {
+      latitude: { not: null },
+      longitude: { not: null },
+      ...(requiredRegions.length > 0
+        ? { sigungu: { in: requiredRegions } }
+        : {}),
+      ...(minBuildYear > 0 ? { buildYear: { gte: minBuildYear } } : {}),
+      ...(profile.requireChopumah ? { nearestElemSchoolM: { lte: 150 } } : {}),
+    },
   });
 
   // 4. 지리적 사전필터
@@ -503,9 +514,14 @@ export async function recommendComplexes(
       const vibeBadge = badgeKey
         ? vibeBadgeLabel(badgeKey, complexCoord)
         : undefined;
+      // 대단지 선호 — 거래량(대단지일수록 거래 많음) 프록시 소프트 가점(최대 +8)
+      const largeBonus = profile.preferLargeComplex
+        ? Math.min(8, Math.max(0, (totalTransactions - MIN_TRANSACTIONS) * 0.2))
+        : 0;
       const totalScore = Math.min(
         100,
-        baseTotalScore + Math.round(Math.min(VIBE_BONUS_CAP, vibeBonus)),
+        baseTotalScore +
+          Math.round(Math.min(VIBE_BONUS_CAP, vibeBonus) + largeBonus),
       );
 
       // 초품아 — 초등학교가 단지에서 직선 150m 이내 (전문가 패널: 100m 는 너무 좁음)
@@ -597,6 +613,13 @@ export async function recommendComplexes(
   const survivors = validEvaluated
     .filter((e) => e.passedHardFilter)
     .sort((a, b) => b.candidate.totalScore - a.candidate.totalScore);
+
+  // #2 — 통근 한도(이용자 설정 maxCommuteMinutes) 이내 vs 살짝 초과(~×1.3) 분리.
+  // 메인 3티어는 한도 이내에서만 뽑고, 초과분은 별도 섹션으로.
+  const isWithinStatedLimit = (e: ScoredComplex) =>
+    e.candidate.commuteLegs.every((l) => l.withinLimit);
+  const withinLimitSurvivors = survivors.filter(isWithinStatedLimit);
+  const overLimitSurvivors = survivors.filter((e) => !isWithinStatedLimit(e));
 
   // "검토한 단지 수" 는 넓은 1차(mock) 통과 수 — 화면 풀(refined)이 아니라
   // 사용자 조건에 맞는 단지가 몇 곳인지를 의미하기 때문.
@@ -721,11 +744,11 @@ export async function recommendComplexes(
   // ── 3티어 선정 ───────────────────────────────────────────────────────────
   // [전문가 패널] 세 티어가 실제로 달라야 한다 — 차별화 조건을 각 티어에 부여한다.
 
-  const top8 = survivors.slice(0, 8);
+  const top8 = withinLimitSurvivors.slice(0, 8);
   const chosen: { entry: ScoredComplex; tier: CandidateTier }[] = [];
 
   // 균형형: 총점 최고
-  const balanced = survivors[0] ?? null;
+  const balanced = withinLimitSurvivors[0] ?? null;
   if (balanced) chosen.push({ entry: balanced, tier: "균형형" });
 
   // 안정형: top8 중 모든 통근이 허용범위 내(withinLimit) + 건물연식 점수 ≥ 60(2005년 이후)
@@ -760,7 +783,7 @@ export async function recommendComplexes(
   const tierOrder: CandidateTier[] = ["균형형", "안정형", "도전형"];
   if (chosen.length < 3) {
     const usedEntries = new Set(chosen.map((c) => c.entry));
-    for (const e of survivors) {
+    for (const e of withinLimitSurvivors) {
       if (chosen.length >= 3) break;
       if (!usedEntries.has(e)) {
         chosen.push({ entry: e, tier: tierOrder[chosen.length] });
@@ -779,19 +802,25 @@ export async function recommendComplexes(
   // ── moreCandidates — 상위 3개 다음 최대 10개, commuteSummary 포함 ──────────
 
   const chosenIds = new Set(candidates.map((c) => c.complexId));
-  const moreCandidates: MoreCandidate[] = survivors
+  const toMore = (e: ScoredComplex): MoreCandidate => ({
+    complexId: e.candidate.complexId,
+    complexName: e.candidate.complexName,
+    sigungu: e.candidate.sigungu,
+    dongName: e.candidate.dongName,
+    representativeArea: e.candidate.representativeArea,
+    medianPriceKrw: e.candidate.medianPriceKrw,
+    totalScore: e.candidate.totalScore,
+    commuteSummary: buildCommuteSummary(e.candidate.commuteLegs),
+  });
+  const moreCandidates: MoreCandidate[] = withinLimitSurvivors
     .filter((e) => !chosenIds.has(e.candidate.complexId))
     .slice(0, 10)
-    .map((e) => ({
-      complexId: e.candidate.complexId,
-      complexName: e.candidate.complexName,
-      sigungu: e.candidate.sigungu,
-      dongName: e.candidate.dongName,
-      representativeArea: e.candidate.representativeArea,
-      medianPriceKrw: e.candidate.medianPriceKrw,
-      totalScore: e.candidate.totalScore,
-      commuteSummary: buildCommuteSummary(e.candidate.commuteLegs),
-    }));
+    .map(toMore);
+
+  // #2 — 통근 한도를 살짝 넘는 후보(별도 섹션). 최대 5곳.
+  const overLimitCandidates: MoreCandidate[] = overLimitSurvivors
+    .slice(0, 5)
+    .map(toMore);
 
   // ── 입지 미스 안내(C) — 점지 입지(quiet 제외)를 골랐는데 결과에 안 잡혔을 때 ──
   // 강도 가장 센 입지 1개 기준. 표시 단지(top3) 중 매칭이 없으면 가장 가까운 후보를 솔직히 안내.
@@ -836,6 +865,7 @@ export async function recommendComplexes(
     budget,
     candidates,
     moreCandidates,
+    overLimitCandidates,
     relaxationSuggestions,
     consideredComplexCount,
     vibeNote,

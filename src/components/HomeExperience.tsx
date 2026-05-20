@@ -471,6 +471,56 @@ export function HomeExperience() {
         </section>
       )}
 
+      {/* 통근 한도를 살짝 넘는 후보 (#2) */}
+      {result.overLimitCandidates.length > 0 && (
+        <section className="flex flex-col gap-4">
+          <div>
+            <h2 className="text-lg font-bold" style={{ color: "#1d1d1f" }}>
+              통근 한도를 살짝 넘는 후보
+            </h2>
+            <p className="mt-0.5 text-sm" style={{ color: "#6e6e73" }}>
+              내가 정한 통근 시간을 조금 넘지만(약 1.3배 이내) 그 외엔 괜찮은{" "}
+              {result.overLimitCandidates.length}곳
+            </p>
+          </div>
+          <div className="overflow-hidden rounded-3xl border border-amber-200 bg-amber-50/40">
+            <ul className="divide-y divide-amber-200/60">
+              {result.overLimitCandidates.map((m: MoreCandidate) => (
+                <li
+                  key={m.complexId}
+                  className="flex items-start gap-3 px-5 py-4"
+                >
+                  <span className="mt-0.5 flex-shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">
+                    초과
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className="font-semibold text-sm leading-snug"
+                      style={{ color: "#1d1d1f" }}
+                    >
+                      {m.complexName}
+                    </p>
+                    <p
+                      className="mt-0.5 text-xs leading-relaxed"
+                      style={{ color: "#86868b" }}
+                    >
+                      {m.sigungu} · {m.dongName} · {m.representativeArea}㎡ ·{" "}
+                      {m.commuteSummary}
+                    </p>
+                  </div>
+                  <span
+                    className="flex-shrink-0 text-sm font-semibold tabular-nums"
+                    style={{ color: "#1d1d1f" }}
+                  >
+                    {formatKrwHuman(m.medianPriceKrw)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
       {/* 더 넓게 보기 — 결과가 있을 때 조건 완화 제안 */}
       {result.candidates.length > 0 &&
         result.relaxationSuggestions.length > 0 && (

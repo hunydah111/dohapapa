@@ -121,6 +121,29 @@ export const LOCATION_VIBE_LEVEL_LABELS: Record<number, string> = {
   3: "많이",
 };
 
+// ── 필수 지역(시군구) 선택지 — complex.sigungu 값과 정확히 일치해야 함 ──
+export const SEOUL_GU: string[] = [
+  "강남구", "강동구", "강북구", "강서구", "관악구", "광진구", "구로구", "금천구",
+  "노원구", "도봉구", "동대문구", "동작구", "마포구", "서대문구", "서초구", "성동구",
+  "성북구", "송파구", "양천구", "영등포구", "용산구", "은평구", "종로구", "중구", "중랑구",
+];
+
+export const GYEONGGI_SIGUNGU: string[] = [
+  "가평군", "고양시 덕양구", "고양시 일산동구", "고양시 일산서구", "과천시", "광명시",
+  "광주시", "구리시", "군포시", "김포시", "남양주시", "동두천시", "부천시 소사구",
+  "부천시 오정구", "부천시 원미구", "성남시 분당구", "성남시 수정구", "성남시 중원구",
+  "수원시 권선구", "수원시 영통구", "수원시 장안구", "수원시 팔달구", "시흥시",
+  "안산시 단원구", "안산시 상록구", "안성시", "안양시 동안구", "안양시 만안구", "양주시",
+  "양평군", "여주시", "연천군", "오산시", "용인시 기흥구", "용인시 수지구", "용인시 처인구",
+  "의왕시", "의정부시", "이천시", "파주시", "평택시", "포천시", "하남시", "화성시 남양구",
+  "화성시 동탄구", "화성시 병점구", "화성시 향남구",
+];
+
+export const REGION_GROUPS: { label: "서울" | "경기"; regions: string[] }[] = [
+  { label: "서울", regions: SEOUL_GU },
+  { label: "경기", regions: GYEONGGI_SIGUNGU },
+];
+
 // ── 직장 / 위치 ──────────────────────────────────────────────
 export interface LatLng {
   lat: number;
@@ -158,6 +181,14 @@ export interface CoupleProfile {
   preferredAreaRange: AreaRangeKey;
   /** 선호 입지(분위기) — 재미용 소프트 가점. 키별 강도(1~3)·복수선택. 없으면 영향 없음. */
   locationVibes?: LocationVibes;
+  /** 필수 지역(시군구) — 하드 필터. 비었으면 전체. OR 로직. */
+  requiredRegions?: string[];
+  /** 대단지 선호 — 소프트 가점(거래량 프록시; 세대수 데이터 확보 전 근사). */
+  preferLargeComplex?: boolean;
+  /** 신축만 — 이 준공년도 이후만(하드). 0/없으면 무제한. */
+  minBuildYear?: number;
+  /** 초품아만 — 초등학교 150m 이내만(하드). */
+  requireChopumah?: boolean;
   /** 본인 직장. 은퇴·무직(retired)이면 생략. */
   workplaceA?: Workplace;
   /** 배우자 직장. 맞벌이(dualIncome)일 때만. */

@@ -23,6 +23,7 @@ import {
   LOCATION_VIBE_LABELS,
   LOCATION_VIBE_ORDER,
   LOCATION_VIBE_LEVEL_LABELS,
+  REGION_GROUPS,
 } from "@/types/profile";
 import type { RecommendationResult } from "@/types/recommendation";
 import { Button } from "@/components/ui/Button";
@@ -294,6 +295,14 @@ export function ProfileForm({
   const [preferredAreaRange, setPreferredAreaRange] =
     useState<AreaRangeKey>(DEFAULT_AREA_RANGE);
   const [locationVibes, setLocationVibes] = useState<LocationVibes>({});
+  // 추가 조건 (접이식)
+  const [extraOpen, setExtraOpen] = useState(false);
+  const [requiredRegions, setRequiredRegions] = useState<string[]>([]);
+  const [preferLargeComplex, setPreferLargeComplex] = useState(false);
+  const [minBuildYear, setMinBuildYear] = useState(0); // 0 = 제한 없음
+  const [requireChopumah, setRequireChopumah] = useState(false);
+  const [regionTab, setRegionTab] = useState<"서울" | "경기">("서울");
+  const [regionQuery, setRegionQuery] = useState("");
 
   // ── Step 2: 직장 & 통근 ─────────────────────────────────────
   // 카카오 길찾기 API 가 자차만 지원하므로 통근 수단은 자차로 고정.
@@ -534,6 +543,10 @@ export function ProfileForm({
       priorities,
       preferredAreaRange,
       locationVibes,
+      requiredRegions: requiredRegions.length > 0 ? requiredRegions : undefined,
+      preferLargeComplex: preferLargeComplex || undefined,
+      minBuildYear: minBuildYear > 0 ? minBuildYear : undefined,
+      requireChopumah: requireChopumah || undefined,
       workplaceA: finalWpA,
       workplaceB: finalWpB,
       hasSchoolAgedChild,
@@ -554,6 +567,10 @@ export function ProfileForm({
     priorities,
     preferredAreaRange,
     locationVibes,
+    requiredRegions,
+    preferLargeComplex,
+    minBuildYear,
+    requireChopumah,
     wpA.selected,
     wpB.selected,
     maxCommuteA,
@@ -719,57 +736,231 @@ export function ProfileForm({
             />
           </div>
 
-          {/* 선호 입지 — 재미 탭. 복수선택 + 클릭마다 조금→꽤→많이. */}
-          <div className="rounded-3xl border border-dashed border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-pink-50 px-4 py-5">
-            <p className="text-[15px] font-bold text-[#1d1d1f]">
-              🎯 취향 한 스푼{" "}
-              <span className="text-[12px] font-medium text-indigo-500">
-                복수선택 가능 · 재미로
+          {/* 추가 조건 (선택) — 평소 접힘 */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setExtraOpen((v) => !v)}
+              className="flex w-full items-center justify-between rounded-2xl border border-black/[0.08] bg-[#f5f5f7] px-5 py-4 text-left transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <span className="text-sm font-semibold" style={{ color: "#1d1d1f" }}>
+                추가 조건{" "}
+                <span className="font-medium text-[#86868b]">
+                  (선택 · 지역·대단지·신축·취향)
+                </span>
               </span>
-            </p>
-            <p className="mt-1 mb-4 text-[12px] leading-relaxed text-[#6e6e73]">
-              누를 때마다 조금 → 꽤 → 많이로 강해지고, 셀수록 가점이 커져요. 여러
-              개 골라도 OK!
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {LOCATION_VIBE_ORDER.map((key) => {
-                const cfg = VIBE_CHIP[key];
-                const level = locationVibes[key] ?? 0;
-                const active = level > 0;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() =>
-                      setLocationVibes((prev) => {
-                        const cur = prev[key] ?? 0;
-                        const next = cur >= 3 ? 0 : cur + 1;
-                        const copy = { ...prev };
-                        if (next === 0) delete copy[key];
-                        else copy[key] = next;
-                        return copy;
-                      })
-                    }
-                    aria-pressed={active}
-                    className={[
-                      "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] font-bold transition-all focus:outline-none focus:ring-2 focus:ring-offset-1",
-                      active ? cfg.active : cfg.idle,
-                      active ? "scale-105 shadow-sm" : "",
-                    ].join(" ")}
-                  >
-                    <span aria-hidden="true">{cfg.emoji}</span>
-                    {active ? `${LOCATION_VIBE_LEVEL_LABELS[level]} ` : ""}
-                    {LOCATION_VIBE_LABELS[key]}
-                    {active && (
-                      <span className="ml-0.5 text-[10px] tracking-tighter opacity-90">
-                        {"●".repeat(level)}
-                        {"○".repeat(3 - level)}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+              <svg
+                className={`h-4 w-4 flex-shrink-0 transition-transform duration-200 ${extraOpen ? "rotate-180" : ""}`}
+                style={{ color: "#86868b" }}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {extraOpen && (
+              <div className="mt-3 flex flex-col gap-6">
+                {/* 필수 지역 (하드) — 2단계(서울/경기) + 검색 */}
+                <div>
+                  <p className="text-[15px] font-semibold text-[#1d1d1f]">
+                    절대 포기 못 하는 지역{" "}
+                    <span className="text-[12px] font-medium text-[#86868b]">
+                      (복수 선택)
+                    </span>
+                  </p>
+                  <p className="mt-0.5 mb-2 text-[12px] leading-relaxed text-[#6e6e73]">
+                    고른 지역의 단지만 보여줘요. 안 고르면 수도권 전체.
+                  </p>
+                  {requiredRegions.length > 0 && (
+                    <div className="mb-2 flex flex-wrap gap-1.5">
+                      {requiredRegions.map((r) => (
+                        <button
+                          key={r}
+                          type="button"
+                          onClick={() =>
+                            setRequiredRegions((prev) =>
+                              prev.filter((x) => x !== r),
+                            )
+                          }
+                          className="inline-flex items-center gap-1 rounded-full bg-indigo-600 px-2.5 py-1 text-xs font-semibold text-white"
+                        >
+                          {r} <span aria-hidden="true">✕</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <div className="mb-2 flex gap-2">
+                    {(["서울", "경기"] as const).map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setRegionTab(t)}
+                        className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                          regionTab === t
+                            ? "bg-indigo-600 text-white"
+                            : "border border-black/[0.08] bg-[#f5f5f7] text-[#6e6e73]"
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    value={regionQuery}
+                    onChange={(e) => setRegionQuery(e.target.value)}
+                    placeholder="구·시 검색 (예: 강남)"
+                    className="mb-2 w-full rounded-2xl border border-[#d1d1d6] px-4 py-2.5 text-[14px] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <div className="flex max-h-44 flex-wrap gap-1.5 overflow-y-auto">
+                    {REGION_GROUPS.find((g) => g.label === regionTab)!
+                      .regions.filter((r) => r.includes(regionQuery.trim()))
+                      .map((r) => {
+                        const sel = requiredRegions.includes(r);
+                        return (
+                          <button
+                            key={r}
+                            type="button"
+                            onClick={() =>
+                              setRequiredRegions((prev) =>
+                                sel
+                                  ? prev.filter((x) => x !== r)
+                                  : [...prev, r],
+                              )
+                            }
+                            className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
+                              sel
+                                ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+                                : "border-black/[0.10] bg-white text-[#6e6e73] hover:border-indigo-300"
+                            }`}
+                          >
+                            {r}
+                          </button>
+                        );
+                      })}
+                  </div>
+                </div>
+
+                {/* 우대·필수 */}
+                <div>
+                  <p className="mb-2 text-[15px] font-semibold text-[#1d1d1f]">
+                    우대·필수 조건
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPreferLargeComplex((v) => !v)}
+                      className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold ${
+                        preferLargeComplex
+                          ? "border-indigo-500 bg-indigo-600 text-white"
+                          : "border-black/[0.10] bg-white text-[#6e6e73] hover:border-indigo-300"
+                      }`}
+                    >
+                      🏢 대단지 선호
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRequireChopumah((v) => !v)}
+                      className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold ${
+                        requireChopumah
+                          ? "border-indigo-500 bg-indigo-600 text-white"
+                          : "border-black/[0.10] bg-white text-[#6e6e73] hover:border-indigo-300"
+                      }`}
+                    >
+                      🏫 초품아만
+                    </button>
+                  </div>
+                  <p className="mt-1.5 text-[11px] leading-relaxed text-[#86868b]">
+                    대단지 선호 = 거래량 많은 단지 가점(세대수 데이터 도입 전 근사) ·
+                    초품아만 = 초등 150m 이내만(필수)
+                  </p>
+                </div>
+
+                {/* 신축만 */}
+                <div>
+                  <p className="mb-2 text-[15px] font-semibold text-[#1d1d1f]">
+                    신축만
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { v: 0, l: "제한 없음" },
+                      { v: 2010, l: "2010년 이후" },
+                      { v: 2015, l: "2015년 이후" },
+                      { v: 2020, l: "2020년 이후" },
+                    ].map((o) => (
+                      <button
+                        key={o.v}
+                        type="button"
+                        onClick={() => setMinBuildYear(o.v)}
+                        className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold ${
+                          minBuildYear === o.v
+                            ? "border-indigo-500 bg-indigo-600 text-white"
+                            : "border-black/[0.10] bg-white text-[#6e6e73] hover:border-indigo-300"
+                        }`}
+                      >
+                        {o.l}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 취향 한 스푼 (입지) — 복수선택 + 조금→꽤→많이 */}
+                <div className="rounded-3xl border border-dashed border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-pink-50 px-4 py-5">
+                  <p className="text-[15px] font-bold text-[#1d1d1f]">
+                    🎯 취향 한 스푼{" "}
+                    <span className="text-[12px] font-medium text-indigo-500">
+                      복수선택 가능 · 재미로
+                    </span>
+                  </p>
+                  <p className="mt-1 mb-4 text-[12px] leading-relaxed text-[#6e6e73]">
+                    누를 때마다 조금 → 꽤 → 많이로 강해지고, 셀수록 가점이 커져요.
+                    여러 개 골라도 OK!
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {LOCATION_VIBE_ORDER.map((key) => {
+                      const cfg = VIBE_CHIP[key];
+                      const level = locationVibes[key] ?? 0;
+                      const active = level > 0;
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() =>
+                            setLocationVibes((prev) => {
+                              const cur = prev[key] ?? 0;
+                              const next = cur >= 3 ? 0 : cur + 1;
+                              const copy = { ...prev };
+                              if (next === 0) delete copy[key];
+                              else copy[key] = next;
+                              return copy;
+                            })
+                          }
+                          aria-pressed={active}
+                          className={[
+                            "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] font-bold transition-all focus:outline-none focus:ring-2 focus:ring-offset-1",
+                            active ? cfg.active : cfg.idle,
+                            active ? "scale-105 shadow-sm" : "",
+                          ].join(" ")}
+                        >
+                          <span aria-hidden="true">{cfg.emoji}</span>
+                          {active ? `${LOCATION_VIBE_LEVEL_LABELS[level]} ` : ""}
+                          {LOCATION_VIBE_LABELS[key]}
+                          {active && (
+                            <span className="ml-0.5 text-[10px] tracking-tighter opacity-90">
+                              {"●".repeat(level)}
+                              {"○".repeat(3 - level)}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <Button onClick={goNext} disabled={householdType === ""} fullWidth>
