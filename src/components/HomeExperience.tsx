@@ -13,6 +13,7 @@ import { BudgetSummary } from "./BudgetSummary";
 import { CandidateCard } from "./CandidateCard";
 import { HeroResultCard } from "./HeroResultCard";
 import { Homi } from "./Homi";
+import { RequiredRegionPicker } from "./RequiredRegionPicker";
 import { getHomeType } from "@/lib/homeType";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
@@ -38,6 +39,7 @@ export function HomeExperience() {
   // 분 단위 문자열 — 직장 A·B 따로. (빈 값이면 기존 profile 값 유지 — NaN 버그 방지)
   const [editMaxCommuteA, setEditMaxCommuteA] = useState("");
   const [editMaxCommuteB, setEditMaxCommuteB] = useState("");
+  const [editRequiredRegions, setEditRequiredRegions] = useState<string[]>([]);
   const [reanalyzing, setReanalyzing] = useState(false);
   const [reanalyzeError, setReanalyzeError] = useState<string | null>(null);
 
@@ -55,6 +57,7 @@ export function HomeExperience() {
       setEditMaxCommuteB(
         profile.workplaceB ? String(profile.workplaceB.maxCommuteMinutes) : "",
       );
+      setEditRequiredRegions(profile.requiredRegions ?? []);
       setReanalyzeError(null);
 
       // URL 에 프로필 인코딩 — 부부가 같은 결과 링크로 공유 가능
@@ -168,6 +171,8 @@ export function HomeExperience() {
       ...state.profile,
       seedMoneyKrw: seedKrw,
       preferredAreaRange: areaRange,
+      requiredRegions:
+        editRequiredRegions.length > 0 ? editRequiredRegions : undefined,
       ...(state.profile.workplaceA
         ? {
             workplaceA: {
@@ -691,6 +696,14 @@ export function HomeExperience() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* 필수 지역 — 결과 화면에서도 바로 수정 */}
+            <div className="flex flex-col gap-2">
+              <RequiredRegionPicker
+                value={editRequiredRegions}
+                onChange={setEditRequiredRegions}
+              />
             </div>
 
             {/* 통근 허용 시간 — 직장별로 따로 수정 */}

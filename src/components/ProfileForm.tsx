@@ -24,8 +24,6 @@ import {
   LOCATION_VIBE_LABELS,
   LOCATION_VIBE_ORDER,
   LOCATION_VIBE_LEVEL_LABELS,
-  REGION_GROUPS,
-  REGION_PRESETS,
   BUDGET_FLEX_ORDER,
   BUDGET_FLEX_LABELS,
   BUDGET_FLEX_DESC,
@@ -37,6 +35,7 @@ import { TextField } from "@/components/ui/TextField";
 import { Segmented } from "@/components/ui/Segmented";
 import { StepDots } from "@/components/ui/StepDots";
 import { Homi } from "@/components/Homi";
+import { RequiredRegionPicker } from "@/components/RequiredRegionPicker";
 import { formatKrwHuman } from "@/lib/format";
 import { estimateBudget } from "@/lib/budget";
 
@@ -298,8 +297,6 @@ export function ProfileForm({
   // 추가 조건 (접이식)
   const [extraOpen, setExtraOpen] = useState(false);
   const [requiredRegions, setRequiredRegions] = useState<string[]>([]);
-  const [regionTab, setRegionTab] = useState<"서울" | "경기">("서울");
-  const [regionQuery, setRegionQuery] = useState("");
   const [budgetFlex, setBudgetFlex] = useState<BudgetFlex>(DEFAULT_BUDGET_FLEX);
 
   // ── Step 2: 직장 & 통근 ─────────────────────────────────────
@@ -775,116 +772,10 @@ export function ProfileForm({
             {extraOpen && (
               <div className="mt-3 flex flex-col gap-6">
                 {/* 필수 지역 (하드) — 2단계(서울/경기) + 검색 */}
-                <div>
-                  <p className="text-[15px] font-semibold text-[#3a322c]">
-                    절대 포기 못 하는 지역{" "}
-                    <span className="text-[12px] font-medium text-[#9a8f82]">
-                      (복수 선택)
-                    </span>
-                  </p>
-                  <p className="mt-0.5 mb-2 text-[12px] leading-relaxed text-[#6b6157]">
-                    고른 지역의 단지만 보여줘요. 안 고르면 수도권 전체.
-                  </p>
-                  {/* 빠른 선택 (핫플 → 해당 구) */}
-                  <div className="mb-2 flex flex-wrap items-center gap-1.5">
-                    <span className="mr-1 text-[12px] font-medium text-[#9a8f82]">
-                      빠른 선택
-                    </span>
-                    {REGION_PRESETS.map((p) => {
-                      const on = p.regions.every((r) =>
-                        requiredRegions.includes(r),
-                      );
-                      return (
-                        <button
-                          key={p.label}
-                          type="button"
-                          onClick={() =>
-                            setRequiredRegions((prev) =>
-                              on
-                                ? prev.filter((r) => !p.regions.includes(r))
-                                : [...new Set([...prev, ...p.regions])],
-                            )
-                          }
-                          className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${
-                            on
-                              ? "border-coral-500 bg-coral-600 text-white"
-                              : "border-black/[0.10] bg-white text-[#6b6157] hover:border-coral-300"
-                          }`}
-                        >
-                          {p.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {requiredRegions.length > 0 && (
-                    <div className="mb-2 flex flex-wrap gap-1.5">
-                      {requiredRegions.map((r) => (
-                        <button
-                          key={r}
-                          type="button"
-                          onClick={() =>
-                            setRequiredRegions((prev) =>
-                              prev.filter((x) => x !== r),
-                            )
-                          }
-                          className="inline-flex items-center gap-1 rounded-full bg-coral-600 px-2.5 py-1 text-xs font-semibold text-white"
-                        >
-                          {r} <span aria-hidden="true">✕</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  <div className="mb-2 flex gap-2">
-                    {(["서울", "경기"] as const).map((t) => (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => setRegionTab(t)}
-                        className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                          regionTab === t
-                            ? "bg-coral-600 text-white"
-                            : "border border-black/[0.08] bg-[#f3ece4] text-[#6b6157]"
-                        }`}
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-                  <input
-                    type="text"
-                    value={regionQuery}
-                    onChange={(e) => setRegionQuery(e.target.value)}
-                    placeholder="구·시 검색 (예: 강남)"
-                    className="mb-2 w-full rounded-2xl border border-[#d1d1d6] px-4 py-2.5 text-[14px] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-coral-500"
-                  />
-                  <div className="flex max-h-44 flex-wrap gap-1.5 overflow-y-auto">
-                    {REGION_GROUPS.find((g) => g.label === regionTab)!
-                      .regions.filter((r) => r.includes(regionQuery.trim()))
-                      .map((r) => {
-                        const sel = requiredRegions.includes(r);
-                        return (
-                          <button
-                            key={r}
-                            type="button"
-                            onClick={() =>
-                              setRequiredRegions((prev) =>
-                                sel
-                                  ? prev.filter((x) => x !== r)
-                                  : [...prev, r],
-                              )
-                            }
-                            className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
-                              sel
-                                ? "border-coral-500 bg-coral-50 text-coral-700"
-                                : "border-black/[0.10] bg-white text-[#6b6157] hover:border-coral-300"
-                            }`}
-                          >
-                            {r}
-                          </button>
-                        );
-                      })}
-                  </div>
-                </div>
+                <RequiredRegionPicker
+                  value={requiredRegions}
+                  onChange={setRequiredRegions}
+                />
 
                 {/* 취향 한 스푼 (입지) — 복수선택 · 강도(한 스푼/두 스푼/듬뿍) */}
                 <div className="rounded-3xl border border-dashed border-coral-200 bg-gradient-to-br from-coral-50 via-white to-pink-50 px-4 py-5">
