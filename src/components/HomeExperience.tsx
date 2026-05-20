@@ -278,6 +278,13 @@ export function HomeExperience() {
         />
       )}
 
+      {/* 입지 미스 솔직 안내 — 고른 분위기가 결과에 안 잡혔을 때 */}
+      {result.vibeNote && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-[13px] leading-relaxed text-amber-900">
+          {result.vibeNote}
+        </div>
+      )}
+
       {/* 예산 분석 */}
       <BudgetSummary budget={result.budget} />
 

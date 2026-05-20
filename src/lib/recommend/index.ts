@@ -7,7 +7,12 @@ import {
 import type { CommuteProvider } from "@/lib/commute";
 import { db } from "@/lib/db";
 import { haversineKm } from "@/lib/geo";
-import { AREA_RANGES, AREA_RANGE_ORDER } from "@/types/profile";
+import {
+  AREA_RANGES,
+  AREA_RANGE_ORDER,
+  LOCATION_VIBE_LABELS,
+  LOCATION_VIBE_LEVEL_LABELS,
+} from "@/types/profile";
 import type {
   AreaRangeKey,
   CoupleProfile,
@@ -38,6 +43,7 @@ import {
 import {
   scoreLocationVibe,
   vibeBadgeLabel,
+  vibeDistanceKm,
   VIBE_LEVEL_BONUS,
   VIBE_BONUS_CAP,
 } from "./locationVibe";
@@ -478,19 +484,25 @@ export async function recommendComplexes(
       // 선호 입지(분위기) 소프트 가점 — 키별 강도(1~3) 합산, 상한 적용.
       const vibes = profile.locationVibes ?? {};
       let vibeBonus = 0;
-      let vibeBadge: string | undefined;
+      let badgeKey: LocationVibe | undefined;
       let bestStrength = 0;
       for (const key of Object.keys(vibes) as LocationVibe[]) {
         const level = vibes[key];
         if (!level) continue;
         const s = scoreLocationVibe(key, complexCoord);
         vibeBonus += s * (VIBE_LEVEL_BONUS[level] ?? 0);
-        const strength = s * level;
-        if (s >= 0.5 && strength > bestStrength) {
-          bestStrength = strength;
-          vibeBadge = vibeBadgeLabel(key);
+        // 배지는 quiet(새소리) 제외, 매칭(≥0.5)된 것 중 강도×점수 최고만
+        if (key !== "quiet" && s >= 0.5) {
+          const strength = s * level;
+          if (strength > bestStrength) {
+            bestStrength = strength;
+            badgeKey = key;
+          }
         }
       }
+      const vibeBadge = badgeKey
+        ? vibeBadgeLabel(badgeKey, complexCoord)
+        : undefined;
       const totalScore = Math.min(
         100,
         baseTotalScore + Math.round(Math.min(VIBE_BONUS_CAP, vibeBonus)),
@@ -781,12 +793,52 @@ export async function recommendComplexes(
       commuteSummary: buildCommuteSummary(e.candidate.commuteLegs),
     }));
 
+  // ── 입지 미스 안내(C) — 점지 입지(quiet 제외)를 골랐는데 결과에 안 잡혔을 때 ──
+  // 강도 가장 센 입지 1개 기준. 표시 단지(top3) 중 매칭이 없으면 가장 가까운 후보를 솔직히 안내.
+  let vibeNote: string | undefined;
+  const pickedVibes = (
+    Object.keys(profile.locationVibes ?? {}) as LocationVibe[]
+  )
+    .filter((k) => k !== "quiet" && (profile.locationVibes?.[k] ?? 0) > 0)
+    .sort(
+      (a, b) =>
+        (profile.locationVibes![b] ?? 0) - (profile.locationVibes![a] ?? 0),
+    );
+  const wish = pickedVibes[0];
+  if (wish && survivors.length > 0) {
+    const matchedInTop = candidates.some(
+      (c) =>
+        scoreLocationVibe(wish, { lat: c.latitude, lng: c.longitude }) >= 0.5,
+    );
+    if (!matchedInTop) {
+      let nearest = survivors[0];
+      let nearestD = Number.POSITIVE_INFINITY;
+      for (const e of survivors) {
+        const d = vibeDistanceKm(wish, {
+          lat: e.candidate.latitude,
+          lng: e.candidate.longitude,
+        });
+        if (d < nearestD) {
+          nearestD = d;
+          nearest = e;
+        }
+      }
+      const level = profile.locationVibes![wish] ?? 1;
+      const badge = vibeBadgeLabel(wish, {
+        lat: nearest.candidate.latitude,
+        lng: nearest.candidate.longitude,
+      });
+      vibeNote = `😅 '${LOCATION_VIBE_LEVEL_LABELS[level]} ${LOCATION_VIBE_LABELS[wish]}' — 예산·통근에 맞는 단지는 그 동네엔 없었어요. 가장 가까운 후보는 ${nearest.candidate.complexName} (${badge}).`;
+    }
+  }
+
   return {
     budget,
     candidates,
     moreCandidates,
     relaxationSuggestions,
     consideredComplexCount,
+    vibeNote,
     disclaimer: DISCLAIMER,
   };
 }

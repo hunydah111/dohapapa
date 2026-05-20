@@ -1,6 +1,5 @@
 import { haversineKm } from "@/lib/geo";
 import type { LatLng, LocationVibe } from "@/types/profile";
-import { LOCATION_VIBE_LABELS } from "@/types/profile";
 
 // 상권 중심 좌표
 const HONGDAE: LatLng = { lat: 37.5572, lng: 126.9245 };
@@ -62,7 +61,32 @@ const VIBE_EMOJI: Record<LocationVibe, string> = {
   quiet: "🍃",
 };
 
-/** 매칭된 단지에 붙일 배지 라벨(이모지+이름). */
-export function vibeBadgeLabel(vibe: LocationVibe): string {
-  return `${VIBE_EMOJI[vibe]} ${LOCATION_VIBE_LABELS[vibe]}`;
+// 배지·문구용 짧은 이름 ('상권' 접미사 없이)
+const VIBE_SHORT: Record<LocationVibe, string> = {
+  riverside: "한강",
+  hongdae: "홍대",
+  seongsu: "성수",
+  gangnam: "강남",
+  quiet: "한적",
+};
+
+/** 단지에서 해당 입지 기준점까지 거리(km). riverside/quiet 은 최단 앵커 기준. */
+export function vibeDistanceKm(vibe: LocationVibe, coord: LatLng): number {
+  switch (vibe) {
+    case "hongdae":
+      return haversineKm(coord, HONGDAE);
+    case "seongsu":
+      return haversineKm(coord, SEONGSU);
+    case "gangnam":
+      return haversineKm(coord, GANGNAM);
+    case "riverside":
+      return minDist(coord, RIVERSIDE);
+    case "quiet":
+      return minDist(coord, BUSY_HUBS);
+  }
+}
+
+/** 매칭 단지 배지 — 이모지+짧은이름+거리 (예: "🎨 홍대 1.2km"). */
+export function vibeBadgeLabel(vibe: LocationVibe, coord: LatLng): string {
+  return `${VIBE_EMOJI[vibe]} ${VIBE_SHORT[vibe]} ${vibeDistanceKm(vibe, coord).toFixed(1)}km`;
 }

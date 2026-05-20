@@ -184,6 +184,8 @@ export interface RecommendationResult {
   relaxationSuggestions: RelaxationSuggestion[];
   /** 하드 필터 통과 단지 수. */
   consideredComplexCount: number;
+  /** 선호 입지를 골랐지만 결과에 안 잡혔을 때 솔직 안내 문구(가장 가까운 후보). 평소엔 없음. */
+  vibeNote?: string;
   /** 필수 면책 고지. */
   disclaimer: string;
 }
