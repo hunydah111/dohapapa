@@ -170,6 +170,43 @@ async function searchKakaoAddress(
   }));
 }
 
+// 네이버 오픈API 지역검색 — 카카오 장소 DB에 없는 작은 상호(약국 등)를 보강한다.
+// 카카오 키워드 검색이 0건일 때만 호출. mapx/mapy 는 WGS84 좌표 × 1e7 (경도/위도).
+async function searchNaver(
+  query: string,
+  id: string,
+  secret: string,
+): Promise<PlaceResult[]> {
+  const url = `https://openapi.naver.com/v1/search/local.json?query=${encodeURIComponent(query)}&display=5`;
+  const res = await fetch(url, {
+    headers: {
+      "X-Naver-Client-Id": id,
+      "X-Naver-Client-Secret": secret,
+    },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`Naver API error: ${res.status}`);
+
+  const data = (await res.json()) as {
+    items: Array<{
+      title: string;
+      address: string;
+      roadAddress: string;
+      mapx: string;
+      mapy: string;
+    }>;
+  };
+
+  return data.items
+    .map((it) => ({
+      label: it.title.replace(/<[^>]+>/g, ""), // 검색 강조용 <b> 태그 제거
+      lat: parseInt(it.mapy, 10) / 1e7,
+      lng: parseInt(it.mapx, 10) / 1e7,
+      address: it.roadAddress || it.address || undefined,
+    }))
+    .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+}
+
 function searchMock(query: string): PlaceResult[] {
   const q = query.toLowerCase();
   return MOCK_PLACES.filter(
@@ -188,7 +225,20 @@ export async function searchPlaces(query: string): Promise<PlaceResult[]> {
     try {
       const byKeyword = await searchKakao(trimmed, key);
       if (byKeyword.length > 0) return byKeyword;
-      // 가게명이 카카오에 없으면(예: 작은 약국) 주소 검색으로 한 번 더 시도
+
+      // 카카오에 없는 작은 상호(예: 동네 약국) → 네이버 지역검색으로 보강
+      const naverId = process.env.NAVER_SEARCH_CLIENT_ID;
+      const naverSecret = process.env.NAVER_SEARCH_CLIENT_SECRET;
+      if (naverId && naverSecret) {
+        try {
+          const byNaver = await searchNaver(trimmed, naverId, naverSecret);
+          if (byNaver.length > 0) return byNaver;
+        } catch {
+          // 네이버 실패 시 아래 주소 검색으로 폴백
+        }
+      }
+
+      // 그래도 없으면 도로명/지번 주소로 한 번 더 시도
       const byAddress = await searchKakaoAddress(trimmed, key);
       if (byAddress.length > 0) return byAddress;
     } catch {
