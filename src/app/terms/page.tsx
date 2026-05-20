@@ -14,7 +14,7 @@ export default function TermsPage() {
       <section>
         <h2 className="mb-2 text-lg font-semibold">제1조 (목적)</h2>
         <p>
-          본 약관은 {SITE_NAME}(이하 "서비스")이 제공하는 부부 조건 기반
+          본 약관은 {SITE_NAME}(이하 &ldquo;서비스&rdquo;)이 제공하는 부부 조건 기반
           아파트 단지 정보 탐색 기능의 이용 조건을 규정함을 목적으로 합니다.
         </p>
       </section>

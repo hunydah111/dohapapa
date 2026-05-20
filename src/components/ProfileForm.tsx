@@ -94,7 +94,7 @@ function ToggleSwitch({
       </div>
       <span
         role="switch"
-        aria-pressed={checked}
+        aria-checked={checked}
         className={[
           "relative inline-flex flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ml-4",
           trackCls,
@@ -337,6 +337,8 @@ export function ProfileForm({
   useEffect(() => {
     if (debounceARef.current) clearTimeout(debounceARef.current);
     if (wpA.query.length < 2) {
+      // 검색어 짧아지면 이전 결과 즉시 비움 — 의도된 동기화
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setWpA((prev) => ({ ...prev, results: [] }));
       return;
     }
@@ -355,6 +357,8 @@ export function ProfileForm({
   useEffect(() => {
     if (debounceBRef.current) clearTimeout(debounceBRef.current);
     if (wpB.query.length < 2) {
+      // 검색어 짧아지면 이전 결과 즉시 비움 — 의도된 동기화
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setWpB((prev) => ({ ...prev, results: [] }));
       return;
     }
@@ -1083,7 +1087,7 @@ export function ProfileForm({
                     </div>
                     <span
                       role="switch"
-                      aria-pressed={existingHomeTaxExempt}
+                      aria-checked={existingHomeTaxExempt}
                       className={[
                         "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ml-4",
                         existingHomeTaxExempt ? "bg-indigo-600" : "bg-[#d1d1d6]",

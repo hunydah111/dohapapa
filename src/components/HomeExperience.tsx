@@ -69,6 +69,8 @@ export function HomeExperience() {
     const profile = decodeProfile(slug);
     if (!profile) return;
 
+    // 마운트 시 공유링크(?p=) 자동 분석을 위한 의도적 fetch 트리거 — 외부 시스템 동기화
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAutoLoading(true);
     fetch("/api/recommend", {
       method: "POST",
