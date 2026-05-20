@@ -63,19 +63,20 @@ export function Homi({
         strokeWidth="2.5"
         strokeLinejoin="round"
       />
-      {/* 굴뚝에서 폴폴 나오는 통장 한 권 (+반짝) */}
-      <g transform="rotate(-10 79 9)">
-        {/* 살짝 삐져나온 속지 */}
-        <rect x="74" y="4" width="15" height="11" rx="2" fill={MONEY_LT} stroke={MONEY_EDGE} strokeWidth="1" />
+      {/* 굴뚝에서 폴폴 나오는 통장 한 권 — 책등+표지 라벨로 '통장'임을 확실히 */}
+      <g transform="rotate(-8 80 9)">
+        {/* 페이지 (뒤로 살짝 삐져나옴) */}
+        <rect x="72" y="3" width="20" height="15" rx="2.5" fill="#FFFDF6" stroke={MONEY_EDGE} strokeWidth="1" />
         {/* 표지 */}
-        <rect x="71" y="2.5" width="15" height="12" rx="2.5" fill={MONEY} stroke={MONEY_EDGE} strokeWidth="1.5" />
-        {/* 책등 */}
-        <rect x="71" y="2.5" width="3.6" height="12" rx="1.8" fill={MONEY_EDGE} />
-        {/* ₩ 마크 */}
-        <text x="79.6" y="11.4" fontSize="7.3" fontWeight="700" fontFamily="sans-serif" textAnchor="middle" fill={MONEY_EDGE}>₩</text>
+        <rect x="69" y="1.5" width="19" height="15" rx="2.5" fill={MONEY} stroke={MONEY_EDGE} strokeWidth="1.6" />
+        {/* 책등 (binding) + 하이라이트 */}
+        <rect x="69" y="1.5" width="5" height="15" rx="2" fill={MONEY_EDGE} />
+        <line x1="71.5" y1="3.6" x2="71.5" y2="14.4" stroke={MONEY_LT} strokeWidth="0.8" strokeLinecap="round" />
+        {/* 표지 라벨 + 글자 줄 */}
+        <rect x="77.5" y="4.8" width="8.5" height="3.6" rx="1" fill="#FFFDF6" />
+        <line x1="78" y1="11" x2="85.5" y2="11" stroke="#FFFDF6" strokeWidth="1.1" strokeLinecap="round" />
+        <line x1="78" y1="13.2" x2="83.5" y2="13.2" stroke="#FFFDF6" strokeWidth="1.1" strokeLinecap="round" />
       </g>
-      {/* 반짝 */}
-      <path d="M92 3 l1 2.4 2.4 1 -2.4 1 -1 2.4 -1 -2.4 -2.4 -1 2.4 -1z" fill="#FFD24D" />
 
       {/* 볼터치 */}
       <ellipse cx="37" cy="80" rx="6.2" ry="3.7" fill={BLUSH} />
