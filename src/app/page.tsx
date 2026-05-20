@@ -34,7 +34,7 @@ export default function HomePage() {
           className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed"
           style={{ color: "#6e6e73" }}
         >
-          재미로 한번 돌려보는 우리 부부 집 찾기
+          재미로 한번 돌려보는 내 집 찾기
         </p>
       </section>
 
