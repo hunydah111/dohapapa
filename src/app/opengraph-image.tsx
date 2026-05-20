@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 // 카카오톡·페이스북·X 등에서 링크 공유 시 보이는 썸네일(1200×630).
 // 한글 렌더를 위해 Black Han Sans(OFL) 폰트를 번들해 사용한다.
-export const alt = "홈앤나사이 — 재미로 한번 돌려보는 내 집 찾기";
+export const alt = "홈앤나사이 — 내 월급으로 어디 살 수 있을까?";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -41,7 +41,7 @@ export default async function Image() {
         </svg>
         <div style={{ fontSize: 168, lineHeight: 1 }}>홈앤나사이</div>
         <div style={{ fontSize: 62, marginTop: 28, opacity: 0.96 }}>
-          재미로 한번 돌려보는 내 집 찾기
+          내 월급으로 어디 살 수 있을까?
         </div>
         <div style={{ fontSize: 42, marginTop: 52, opacity: 0.8 }}>
           homenasia.kr

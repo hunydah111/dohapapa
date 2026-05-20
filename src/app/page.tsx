@@ -33,7 +33,7 @@ export default function HomePage() {
           className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed"
           style={{ color: "#6e6e73" }}
         >
-          재미로 한번 돌려보는 내 집 찾기
+          내 월급으로 어디 살 수 있을까?
         </p>
       </section>
 

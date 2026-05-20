@@ -20,12 +20,12 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.homenasia.kr",
   ),
-  title: "홈앤나사이 — 재미로 한번 돌려보는 내 집 찾기",
+  title: "홈앤나사이 — 내 월급으로 어디 살 수 있을까?",
   description:
     "Home & 나 사이의 거리. 직장·예산·학군 조건으로 국토부 실거래가에 살 만한 아파트 단지를 좁혀주는 정보 제공 도구.",
   openGraph: {
     title: "홈앤나사이",
-    description: "재미로 한번 돌려보는 내 집 찾기",
+    description: "내 월급으로 어디 살 수 있을까?",
     type: "website",
     locale: "ko_KR",
     siteName: "홈앤나사이",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "홈앤나사이",
-    description: "재미로 한번 돌려보는 내 집 찾기",
+    description: "내 월급으로 어디 살 수 있을까?",
   },
 };
 
