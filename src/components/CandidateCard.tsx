@@ -61,6 +61,11 @@ export function CandidateCard({
     `${candidate.complexName} ${candidate.sigungu} ${candidate.dongName}`
   )}`;
 
+  // 카카오맵 — 좌표로 정확한 위치에 마커를 찍어 지도를 연다.
+  const kakaoMapUrl = `https://map.kakao.com/link/map/${encodeURIComponent(
+    candidate.complexName,
+  )},${candidate.latitude},${candidate.longitude}`;
+
   return (
     <Card className="flex flex-col gap-5">
       {/* 상단 행: 티어 배지 + 순위 + 초품아 + 종합점수 */}
@@ -101,20 +106,43 @@ export function CandidateCard({
 
       {/* 단지명 + 위치 + 시세 */}
       <div>
-        <h3
-          className="text-2xl font-extrabold leading-tight tracking-tight"
-          style={{ color: "#1d1d1f" }}
-        >
-          {candidate.complexName}
-          {candidate.buildYear !== null && (
-            <span
-              className="ml-2 text-base font-semibold tabular-nums"
-              style={{ color: "#86868b" }}
+        <div className="flex flex-wrap items-start gap-2">
+          <h3
+            className="text-2xl font-extrabold leading-tight tracking-tight"
+            style={{ color: "#1d1d1f" }}
+          >
+            {candidate.complexName}
+            {candidate.buildYear !== null && (
+              <span
+                className="ml-2 text-base font-semibold tabular-nums"
+                style={{ color: "#86868b" }}
+              >
+                ({candidate.buildYear}년식)
+              </span>
+            )}
+          </h3>
+          <a
+            href={kakaoMapUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`${candidate.complexName} 지도에서 위치 보기`}
+            className="mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 transition-colors hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="h-3.5 w-3.5"
             >
-              ({candidate.buildYear}년식)
-            </span>
-          )}
-        </h3>
+              <path
+                fillRule="evenodd"
+                d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003z"
+                clipRule="evenodd"
+              />
+            </svg>
+            지도
+          </a>
+        </div>
         <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="text-sm" style={{ color: "#6e6e73" }}>
             {candidate.sigungu}
