@@ -115,11 +115,10 @@ function calcCutoffKm(wp: Workplace): number {
 // ── 예산 밴드 ─────────────────────────────────────────────────────────────────
 
 /**
- * 추천 단지 가격 밴드 (부동산 전문가 패널 권고):
- * - 상한 = 예산 + 1억 (예산 초과는 강하게 제한 — "한참 비싼 집은 안 본다")
- * - 하한 = max(예산 − 1억, 예산 × 0.85) — 절대 ±1억은 저가 구간에서 의미가
- *   너무 넓어지므로(3억 예산에 2~4억은 완전 다른 동네), 비율 하한과 큰 쪽을 쓴다.
- * 가격은 단순 중위가가 아니라 complexMedian 의 "추정 현재가"를 받는다.
+ * 추천 단지 가격 밴드 — 예산 근접도(flex)별 비율 밴드.
+ * WHY 비율(절대 ±1억 폐기): 절대 ±1억은 저예산에선 너무 넓어 못 살 집을 노출하고
+ *   (1억 예산에 1.9억 노출), 고예산에선 너무 좁아 결과가 0이 됐다(47억 예산 ±2%).
+ *   비율로 통일하면 모든 예산대에서 일관된다. 가격은 complexMedian 의 "추정 현재가".
  */
 // 예산 근접도(flex)에 따른 가격 밴드 하/상한. 지역 고정(dropLowerBound) 시 하한은 0.
 function bandBounds(
@@ -136,11 +135,10 @@ function bandBounds(
     lower = netPurchasePowerKrw * 0.9;
     upper = netPurchasePowerKrw * 1.1;
   } else {
-    lower = Math.max(
-      netPurchasePowerKrw - 100_000_000,
-      netPurchasePowerKrw * 0.85,
-    );
-    upper = netPurchasePowerKrw + 100_000_000;
+    // relaxed (기본) — 가장 넓게. 살짝 무리(+12%)까지, 아래로는 넉넉히(−25%)
+    // 보여줘 예산보다 싼 좋은 단지도 노출한다.
+    lower = netPurchasePowerKrw * 0.75;
+    upper = netPurchasePowerKrw * 1.12;
   }
   if (dropLowerBound) lower = 0;
   return { lower, upper };
