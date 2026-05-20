@@ -28,8 +28,9 @@ export function HomeExperience() {
   // 만원 단위 문자열로 관리 (P1 단위 통일)
   const [editSeedMoneyMan, setEditSeedMoneyMan] = useState("");
   const [editAreaRange, setEditAreaRange] = useState<AreaRangeKey | "">("");
-  // 분 단위 문자열 (빈 값이면 기존 profile 값 유지 — P1 NaN 버그 수정)
-  const [editMaxCommute, setEditMaxCommute] = useState("");
+  // 분 단위 문자열 — 직장 A·B 따로. (빈 값이면 기존 profile 값 유지 — NaN 버그 방지)
+  const [editMaxCommuteA, setEditMaxCommuteA] = useState("");
+  const [editMaxCommuteB, setEditMaxCommuteB] = useState("");
   const [reanalyzing, setReanalyzing] = useState(false);
   const [reanalyzeError, setReanalyzeError] = useState<string | null>(null);
 
@@ -41,11 +42,12 @@ export function HomeExperience() {
       const seedManwon = Math.round(profile.seedMoneyKrw / 10_000);
       setEditSeedMoneyMan(String(seedManwon));
       setEditAreaRange(profile.preferredAreaRange);
-      const commuteMin =
-        profile.workplaceA?.maxCommuteMinutes ??
-        profile.workplaceB?.maxCommuteMinutes ??
-        50;
-      setEditMaxCommute(String(commuteMin));
+      setEditMaxCommuteA(
+        profile.workplaceA ? String(profile.workplaceA.maxCommuteMinutes) : "",
+      );
+      setEditMaxCommuteB(
+        profile.workplaceB ? String(profile.workplaceB.maxCommuteMinutes) : "",
+      );
       setReanalyzeError(null);
 
       // URL 에 프로필 인코딩 — 부부가 같은 결과 링크로 공유 가능
@@ -124,14 +126,16 @@ export function HomeExperience() {
     const areaRange: AreaRangeKey =
       editAreaRange !== "" ? editAreaRange : state.profile.preferredAreaRange;
 
-    // P1 NaN 버그 수정: 빈 값이면 기존 profile 값 유지
-    const parsedCommute =
-      editMaxCommute.trim() !== "" ? parseInt(editMaxCommute, 10) : NaN;
-    const maxMinA = Number.isFinite(parsedCommute)
-      ? parsedCommute
+    // 직장별로 따로 적용. 빈 값/NaN 이면 기존 profile 값 유지.
+    const parsedA =
+      editMaxCommuteA.trim() !== "" ? parseInt(editMaxCommuteA, 10) : NaN;
+    const parsedB =
+      editMaxCommuteB.trim() !== "" ? parseInt(editMaxCommuteB, 10) : NaN;
+    const maxMinA = Number.isFinite(parsedA)
+      ? parsedA
       : state.profile.workplaceA?.maxCommuteMinutes ?? 50;
-    const maxMinB = Number.isFinite(parsedCommute)
-      ? parsedCommute
+    const maxMinB = Number.isFinite(parsedB)
+      ? parsedB
       : state.profile.workplaceB?.maxCommuteMinutes ?? 50;
 
     // 기존 프로필에 변경값 머지
@@ -533,16 +537,29 @@ export function HomeExperience() {
               </div>
             </div>
 
-            {/* P1 A/B 통근시간 공통 적용 명시 */}
-            <TextField
-              label="통근 허용 시간"
-              type="number"
-              value={editMaxCommute}
-              onChange={setEditMaxCommute}
-              suffix="분"
-              placeholder="예: 50"
-              hint="본인·배우자 직장 모두 공통으로 적용됩니다. 비워두면 기존 설정 유지."
-            />
+            {/* 통근 허용 시간 — 직장별로 따로 수정 */}
+            {state.profile.workplaceA && (
+              <TextField
+                label={`통근 허용 시간 — ${state.profile.workplaceA.label}`}
+                type="number"
+                value={editMaxCommuteA}
+                onChange={setEditMaxCommuteA}
+                suffix="분"
+                placeholder="예: 50"
+                hint="이 직장 기준. 비워두면 기존 설정 유지."
+              />
+            )}
+            {state.profile.workplaceB && (
+              <TextField
+                label={`통근 허용 시간 — ${state.profile.workplaceB.label}`}
+                type="number"
+                value={editMaxCommuteB}
+                onChange={setEditMaxCommuteB}
+                suffix="분"
+                placeholder="예: 50"
+                hint="이 직장 기준. 비워두면 기존 설정 유지."
+              />
+            )}
 
             {/* P2 로딩 진행 표시 */}
             {reanalyzing && (
