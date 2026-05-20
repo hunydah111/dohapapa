@@ -16,16 +16,15 @@ export default function HomePage() {
           }}
         />
 
-        {/* 브랜드 마크 — 히어로 사이즈 */}
-        <div className="mb-6 flex justify-center text-indigo-600">
-          <BrandMark size={72} />
-        </div>
-
-        {/* 워드마크 — 큰 사이즈 */}
+        {/* 워드마크 — 로고 마크 + 텍스트 인라인 락업 */}
         <h1
-          className="text-4xl font-extrabold tracking-tight sm:text-5xl"
+          className="flex items-center justify-center gap-2.5 text-4xl font-extrabold tracking-tight sm:text-5xl"
           style={{ color: "#1d1d1f" }}
         >
+          <BrandMark
+            size={48}
+            className="h-9 w-9 text-indigo-600 sm:h-12 sm:w-12"
+          />
           홈앤나사이
         </h1>
 
