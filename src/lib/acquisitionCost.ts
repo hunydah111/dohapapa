@@ -60,30 +60,41 @@ export function estimateAcquisitionCosts(
 ): AcquisitionCost {
   const breakdown: string[] = [];
 
-  // ── 취득세 ────────────────────────────────────────────────────────────────
-  const effectiveRate = calcEffectiveTaxRate(purchasePriceKrw);
-  let acquisitionTaxKrw = Math.round(purchasePriceKrw * effectiveRate);
-  const effectivePct = (effectiveRate * 100).toFixed(1);
+  // ── 취득세 (보유 주택 수에 따른 중과 반영) ────────────────────────────────
+  // 현재 보유 주택 수. 명시값 없으면 과거 보유 이력으로 1/0 근사.
+  const ownedCount =
+    profile.ownedHomeCount ?? (profile.hasOwnedHomeBefore ? 1 : 0);
+  let acquisitionTaxKrw: number;
 
-  if (!profile.hasOwnedHomeBefore && purchasePriceKrw <= 12 * BILLION) {
-    // 생애최초 주택 취득세 감면: 최대 200만원 (지방세법 제36조의3)
-    const FIRST_HOME_DISCOUNT = 2_000_000;
-    acquisitionTaxKrw = Math.max(0, acquisitionTaxKrw - FIRST_HOME_DISCOUNT);
+  if (ownedCount >= 2) {
+    // 3주택 이상 취득 — 규제지역 12% 중과 (서울 전역 규제 가정)
+    acquisitionTaxKrw = Math.round(purchasePriceKrw * 0.12);
     breakdown.push(
-      `취득세·지방세: 약 ${formatManwon(acquisitionTaxKrw)} (실효 ${effectivePct}%)`,
+      `취득세·지방세: 약 ${formatManwon(acquisitionTaxKrw)} (3주택+ 중과 12%)`,
     );
-    breakdown.push("생애최초 취득세 감면 -200만원 적용됨");
+  } else if (ownedCount === 1) {
+    // 2주택 취득 — 규제지역 8% 중과
+    acquisitionTaxKrw = Math.round(purchasePriceKrw * 0.08);
+    breakdown.push(
+      `취득세·지방세: 약 ${formatManwon(acquisitionTaxKrw)} (2주택 중과 8%)`,
+    );
   } else {
-    breakdown.push(
-      `취득세·지방세: 약 ${formatManwon(acquisitionTaxKrw)} (실효 ${effectivePct}%)`,
-    );
-  }
-
-  if (profile.hasOwnedHomeBefore) {
-    // 계산은 기본율 유지하되, MVP 단순화임을 사용자에게 명시
-    breakdown.push(
-      "기존 주택 보유 이력 — 세대 합산 시 취득세 중과(최대 12%) 대상일 수 있어 별도 확인 필요",
-    );
+    // 무주택 → 1주택 취득: 구간별 실효율 (+ 생애최초 감면)
+    const effectiveRate = calcEffectiveTaxRate(purchasePriceKrw);
+    acquisitionTaxKrw = Math.round(purchasePriceKrw * effectiveRate);
+    const effectivePct = (effectiveRate * 100).toFixed(1);
+    if (!profile.hasOwnedHomeBefore && purchasePriceKrw <= 12 * BILLION) {
+      const FIRST_HOME_DISCOUNT = 2_000_000;
+      acquisitionTaxKrw = Math.max(0, acquisitionTaxKrw - FIRST_HOME_DISCOUNT);
+      breakdown.push(
+        `취득세·지방세: 약 ${formatManwon(acquisitionTaxKrw)} (실효 ${effectivePct}%)`,
+      );
+      breakdown.push("생애최초 취득세 감면 -200만원 적용됨");
+    } else {
+      breakdown.push(
+        `취득세·지방세: 약 ${formatManwon(acquisitionTaxKrw)} (실효 ${effectivePct}%)`,
+      );
+    }
   }
 
   // ── 중개수수료 ────────────────────────────────────────────────────────────

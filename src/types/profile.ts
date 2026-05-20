@@ -229,6 +229,17 @@ export interface CoupleProfile {
    * 권고. 현 정책대출 산식엔 영향 X (출생일 확정 후 적용 가능하므로).
    */
   isExpectingChild: boolean;
+  /**
+   * 예산 입력 방식. "simple"=가용 예산 한 칸 직접 입력(대출 계산 생략),
+   * "detailed"=소득·대출로 한도까지 계산. 없으면 detailed(기존 동작).
+   */
+  budgetMode?: "simple" | "detailed";
+  /** 간단 모드 — 집에 쓸 수 있는 총 동원 가능 자금(현금+받을 대출 다 합쳐, 원). */
+  availableBudgetKrw?: number;
+  /** 현재 보유 주택 수 (0/1/2=2채 이상). 취득세 중과·생애최초 판정에 사용. */
+  ownedHomeCount?: number;
+  /** 추가 동원자금 (전세보증금 회수·부모지원 등, 원). 자기자본에 합산. */
+  additionalFundsKrw?: number;
   /** 연 가구소득 (원). 부부면 합산. */
   householdIncomeKrwYear: number;
   /** 보유 현금 (원). */

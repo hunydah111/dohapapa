@@ -67,6 +67,11 @@ const coupleProfileSchema = z
     netAssetsKrw: z.number().nonnegative(),
     existingLoanMonthlyKrw: z.number().nonnegative(),
     hasOwnedHomeBefore: z.boolean(),
+    /** 예산 입력 방식 — 간단(가용예산 직접) / 자세히(소득·대출 계산). */
+    budgetMode: z.enum(["simple", "detailed"]).optional(),
+    availableBudgetKrw: z.number().nonnegative().optional(),
+    ownedHomeCount: z.number().int().min(0).max(10).optional(),
+    additionalFundsKrw: z.number().nonnegative().optional(),
     /** 혼인 7년 이내 신혼 여부. 정책대출 신혼 요건 판정용. */
     isNewlywed: z.boolean(),
     existingHome: existingHomeSchema.optional(),

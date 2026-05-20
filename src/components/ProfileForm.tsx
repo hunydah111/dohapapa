@@ -315,10 +315,13 @@ export function ProfileForm({
   const [hasThreeOrMoreChildren, setHasThreeOrMoreChildren] = useState(false);
   const [isExpectingChild, setIsExpectingChild] = useState(false);
   const [isNewlywed, setIsNewlywed] = useState(false);
-  const [hasOwnedHome, setHasOwnedHome] = useState(false);
+  const [ownedHomeCount, setOwnedHomeCount] = useState(0); // 보유 주택 수 (0/1/2+)
 
   // ── Step 4: 예산 / 대출 ─────────────────────────────────────
   // 모든 금액 입력: 만원 단위
+  const [detailedBudget, setDetailedBudget] = useState(false); // false=간단, true=자세히
+  const [availableBudget, setAvailableBudget] = useState(""); // 간단: 가용 예산 (만원)
+  const [additionalFunds, setAdditionalFunds] = useState(""); // 추가 동원자금 (만원)
   const [seedMoney, setSeedMoney] = useState("");          // 보유 현금 (만원)
   const [householdIncome, setHouseholdIncome] = useState(""); // 연 가구소득 (만원)
   const [netAssets, setNetAssets] = useState("");          // 순자산 총액 (만원)
@@ -546,8 +549,17 @@ export function ProfileForm({
       seedMoneyKrw: manwonToKrw(seedMoney),
       netAssetsKrw: manwonToKrw(netAssets),
       existingLoanMonthlyKrw: manwonToKrw(existingLoan),
-      hasOwnedHomeBefore: hasOwnedHome,
+      hasOwnedHomeBefore: ownedHomeCount > 0,
       isNewlywed,
+      budgetMode: detailedBudget ? "detailed" : "simple",
+      availableBudgetKrw: detailedBudget
+        ? undefined
+        : manwonToKrw(availableBudget),
+      ownedHomeCount: detailedBudget ? ownedHomeCount : undefined,
+      additionalFundsKrw:
+        detailedBudget && additionalFunds
+          ? manwonToKrw(additionalFunds)
+          : undefined,
       existingHome,
     };
   }, [
@@ -570,7 +582,10 @@ export function ProfileForm({
     seedMoney,
     netAssets,
     existingLoan,
-    hasOwnedHome,
+    ownedHomeCount,
+    detailedBudget,
+    availableBudget,
+    additionalFunds,
     isNewlywed,
     hasExistingHome,
     existingHomeSalePrice,
@@ -580,8 +595,9 @@ export function ProfileForm({
 
   // ── Step 4 예산 미리보기 ─────────────────────────────────────
   // 보유 현금·연 소득이 모두 입력돼야 추정이 의미 있으므로 그 전엔 숨긴다.
-  const canPreviewBudget =
-    (parseFloat(seedMoney) || 0) > 0 && (parseFloat(householdIncome) || 0) > 0;
+  const canPreviewBudget = detailedBudget
+    ? (parseFloat(seedMoney) || 0) > 0 && (parseFloat(householdIncome) || 0) > 0
+    : (parseFloat(availableBudget) || 0) > 0;
 
   const previewBudget = useMemo(
     () => (canPreviewBudget ? estimateBudget(buildProfile()) : null),
@@ -593,7 +609,7 @@ export function ProfileForm({
   // Step 4 입력 후 estimateBudget 이 정식 판정한다.
   const familyPolicyHints = useMemo(() => {
     const hints: string[] = [];
-    if (hasOwnedHome) return hints;
+    if (ownedHomeCount > 0) return hints;
     if (hasInfant) {
       hints.push("1세 이하 자녀 + 무주택 → 신생아 특례 디딤돌 대상 가능");
     }
@@ -604,7 +620,7 @@ export function ProfileForm({
       hints.push("자녀 2명 이상 → 디딤돌(일반) 소득 기준 완화 (7,000만원)");
     }
     return hints;
-  }, [hasInfant, hasTwoOrMoreChildren, isNewlywed, hasOwnedHome]);
+  }, [hasInfant, hasTwoOrMoreChildren, isNewlywed, ownedHomeCount]);
 
   // ── 제출 ──────────────────────────────────────────────────────
 
@@ -1122,26 +1138,6 @@ export function ProfileForm({
             </div>
           )}
 
-          {/* 주택 보유 이력 */}
-          <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm flex flex-col gap-3">
-            <div>
-              <p className="text-[15px] font-semibold text-[#3a322c]">
-                전에 집을 가져본 적 있나요?
-              </p>
-              <p className="text-[13px] text-[#9a8f82] mt-0.5">
-                생애최초 취득세 감면·정책대출 판정에 사용됩니다
-              </p>
-            </div>
-            <Segmented
-              options={[
-                { value: "yes", label: "있어요" },
-                { value: "no", label: "없어요" },
-              ]}
-              value={hasOwnedHome ? "yes" : "no"}
-              onChange={(v) => setHasOwnedHome(v === "yes")}
-            />
-          </div>
-
           {/* 정책대출 예비 안내 — 가족 구성 기준 */}
           <div className="rounded-3xl border border-coral-100 bg-coral-50/50 p-5 flex flex-col gap-2">
             <p className="text-[15px] font-semibold text-[#3a322c]">
@@ -1191,13 +1187,73 @@ export function ProfileForm({
         <div className="flex flex-col gap-6">
           <div>
             <h2 className="text-[22px] font-bold text-[#3a322c] leading-snug">
-              예산과 대출 정보를 입력해 주세요
+              예산을 알려주세요
             </h2>
             <p className="mt-1 text-[15px] text-[#6b6157]">
-              모든 금액은 만원 단위로 입력하세요
+              간단히 가용 예산만 넣어도 되고, 펼쳐서 대출까지 계산받아도 돼요
             </p>
           </div>
 
+          {/* 간단 모드 — 가용 예산 한 칸 */}
+          {!detailedBudget && (
+            <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm">
+              <TextField
+                label="집에 쓸 수 있는 총 예산"
+                value={availableBudget}
+                onChange={setAvailableBudget}
+                type="number"
+                placeholder="예: 50000"
+                suffix="만원"
+                hint={
+                  availableBudget
+                    ? `${manwonHint(availableBudget)} — 현금+받을 대출 다 합친 총 동원 자금`
+                    : "현금에 받을 수 있는 대출까지 다 합친 '집 살 수 있는 총액'. 취득세만 빼고 계산해요."
+                }
+              />
+            </div>
+          )}
+
+          {/* 간단 ↔ 자세히 전환 */}
+          <button
+            type="button"
+            onClick={() => setDetailedBudget((v) => !v)}
+            className="flex w-full items-center justify-between rounded-2xl border border-coral-200 bg-coral-50 px-5 py-4 text-left transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-coral-500"
+          >
+            <span className="text-sm font-semibold text-coral-700">
+              {detailedBudget
+                ? "← 간단 입력으로 (예산만 직접)"
+                : "💡 대출까지 포함해 얼마까지 살 수 있는지 계산받기"}
+            </span>
+            <span className="ml-3 flex-shrink-0 text-xs text-coral-500">
+              {detailedBudget ? "접기" : "소득·대출·정책"}
+            </span>
+          </button>
+
+          {/* 예산 근접도 — 항상 표시 (결과 가격대 폭) */}
+          <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm">
+            <p className="text-[15px] font-semibold text-[#3a322c] mb-1">
+              예산 근접도
+            </p>
+            <p className="text-[12px] text-[#6b6157] mb-3">
+              결과 가격대를 예산에 얼마나 딱 맞출지 골라주세요.
+            </p>
+            <Segmented
+              options={BUDGET_FLEX_ORDER.map((k) => ({
+                value: k,
+                label: BUDGET_FLEX_LABELS[k],
+              }))}
+              value={budgetFlex}
+              onChange={(v) => setBudgetFlex(v as BudgetFlex)}
+              columns={3}
+            />
+            <p className="mt-2 text-[12px] font-medium text-coral-600">
+              {BUDGET_FLEX_DESC[budgetFlex]}
+            </p>
+          </div>
+
+          {/* ── 자세히 모드 — 소득·대출로 한도 계산 ── */}
+          {detailedBudget && (
+            <div className="flex flex-col gap-6">
           {/* 정책대출 안내 배너 */}
           <div className="rounded-2xl bg-coral-50 border border-coral-100 px-4 py-3">
             <p className="text-[13px] text-coral-700 leading-relaxed">
@@ -1264,26 +1320,39 @@ export function ProfileForm({
             />
           </div>
 
-          {/* 예산 근접도 — 결과 가격대를 예산에 얼마나 맞출지 (필수) */}
-          <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm">
-            <p className="text-[15px] font-semibold text-[#3a322c] mb-1">
-              예산 근접도
-            </p>
-            <p className="text-[12px] text-[#6b6157] mb-3">
-              결과 가격대를 예산에 얼마나 딱 맞출지 골라주세요.
-            </p>
-            <Segmented
-              options={BUDGET_FLEX_ORDER.map((k) => ({
-                value: k,
-                label: BUDGET_FLEX_LABELS[k],
-              }))}
-              value={budgetFlex}
-              onChange={(v) => setBudgetFlex(v as BudgetFlex)}
-              columns={3}
+          {/* 보유 주택 수 + 추가 동원자금 */}
+          <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm flex flex-col gap-5">
+            <div>
+              <p className="text-[15px] font-semibold text-[#3a322c] mb-1">
+                보유 주택 수
+              </p>
+              <p className="text-[12px] text-[#6b6157] mb-3">
+                생애최초·취득세 중과(2주택 8%·3주택+ 12%) 판정에 사용돼요.
+              </p>
+              <Segmented
+                options={[
+                  { value: "0", label: "무주택" },
+                  { value: "1", label: "1채" },
+                  { value: "2", label: "2채 이상" },
+                ]}
+                value={String(ownedHomeCount)}
+                onChange={(v) => setOwnedHomeCount(parseInt(v, 10))}
+                columns={3}
+              />
+            </div>
+            <TextField
+              label="추가 동원자금 (선택)"
+              value={additionalFunds}
+              onChange={setAdditionalFunds}
+              type="number"
+              placeholder="없으면 비워두세요"
+              suffix="만원"
+              hint={
+                additionalFunds
+                  ? `${manwonHint(additionalFunds)} — 자기자본에 합산`
+                  : "전세보증금 회수·부모지원 등 추가로 끌어올 수 있는 돈. 자기자본에 합산돼요."
+              }
             />
-            <p className="mt-2 text-[12px] font-medium text-coral-600">
-              {BUDGET_FLEX_DESC[budgetFlex]}
-            </p>
           </div>
 
           {/* 갈아타기 토글 */}
@@ -1408,15 +1477,18 @@ export function ProfileForm({
               </div>
             )}
           </div>
+          </div>
+          )}
 
-          {/* 예산 미리보기 — 보유 현금·연 소득 입력 시 노출 */}
+          {/* 예산 미리보기 */}
           {previewBudget ? (
             <BudgetPreview budget={previewBudget} />
           ) : (
             <div className="rounded-3xl border border-dashed border-[#d1d1d6] bg-[#f3ece4] p-5">
               <p className="text-[13px] text-[#9a8f82] leading-relaxed">
-                보유 현금과 연 가구소득을 입력하면 예상 대출 가능액·실매수 가능가가
-                여기 바로 표시됩니다.
+                {detailedBudget
+                  ? "보유 현금과 연 가구소득을 입력하면 예상 대출 가능액·실매수 가능가가 여기 바로 표시됩니다."
+                  : "가용 예산을 입력하면 취득세를 뺀 실매수 가능가가 여기 바로 표시됩니다."}
               </p>
             </div>
           )}

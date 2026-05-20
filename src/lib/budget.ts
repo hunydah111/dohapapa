@@ -57,7 +57,54 @@ function monthlyPaymentFromPrincipal(
  * 항상 서울 규제지역을 가정 (opts 인자 제거).
  * 정책대출 자격 판정을 수행해 일반 DSR 한도와 비교, 유리한 쪽을 채택한다.
  */
+/**
+ * 간단 모드 — 사용자가 "가용 예산(총 동원 가능 자금)"을 직접 입력한 경우.
+ * 대출 한도·정책대출 자격을 계산하지 않고, 취득·부대비용만 차감한다.
+ */
+function estimateSimpleBudget(profile: CoupleProfile): BudgetEstimate {
+  const gross = Math.max(0, profile.availableBudgetKrw ?? 0);
+  const acResult = estimateAcquisitionCosts(gross, profile);
+  const acquisitionCostsKrw = acResult.totalKrw;
+  const warnings: string[] = [
+    "가용 예산을 직접 입력하셨습니다 — 대출 한도·정책대출 자격은 계산하지 않았어요.",
+    "실제 한도·세액은 금융기관·세무 상담 결과에 따릅니다.",
+  ];
+  let netPurchasePowerKrw = gross - acquisitionCostsKrw;
+  if (netPurchasePowerKrw < 0) {
+    warnings.push("입력 예산이 취득·부대비용보다 적어 실매수 가능가 0 처리");
+    netPurchasePowerKrw = 0;
+  }
+  return {
+    seedMoneyKrw: gross,
+    homeSaleNetKrw: 0,
+    capitalGainsTaxKrw: 0,
+    totalEquityKrw: gross,
+    loanEstimateKrw: 0,
+    appliedLoanType: "general",
+    appliedPolicyName: undefined,
+    policyLoanMatches: [],
+    monthlyPaymentKrw: 0,
+    grossBudgetKrw: gross,
+    acquisitionCostsKrw,
+    netPurchasePowerKrw,
+    isEstimate: true,
+    assumptions: [
+      "가용 예산 직접 입력 — 대출/정책 계산 생략",
+      "취득·부대비용만 차감해 실매수 가능가 산출",
+    ],
+    warnings,
+    loanReasonLines: [
+      "대출까지 포함해 계산받으려면 '자세히'를 펼쳐 소득·대출을 입력하세요.",
+    ],
+  };
+}
+
 export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
+  // 간단 모드 — 가용 예산 직접 입력 시 대출 계산을 건너뛴다.
+  if (profile.budgetMode === "simple") {
+    return estimateSimpleBudget(profile);
+  }
+
   const {
     householdIncomeKrwYear,
     seedMoneyKrw,
@@ -66,6 +113,7 @@ export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
     existingHome,
     householdType,
   } = profile;
+  const additionalFundsKrw = Math.max(0, profile.additionalFundsKrw ?? 0);
 
   const warnings: string[] = [];
 
@@ -92,7 +140,8 @@ export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
   }
 
   // ── 2. 가용 자기자본 (음수 가능) ──────────────────────────────────────────
-  const totalEquityKrw = seedMoneyKrw + homeSaleNetKrw;
+  // 추가 동원자금(전세보증금 회수·부모지원 등)도 자기자본에 합산.
+  const totalEquityKrw = seedMoneyKrw + homeSaleNetKrw + additionalFundsKrw;
 
   // ── 3. DSR 기반 대출 한도 ─────────────────────────────────────────────────
   const annualDsrAllowance = householdIncomeKrwYear * 0.4;
@@ -240,6 +289,12 @@ export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
   if (existingHome !== undefined) {
     assumptions.push(
       "기존 집 매도 순수령액을 자기자본에 합산 — 매도가·잔금·양도세는 추정",
+    );
+  }
+
+  if (additionalFundsKrw > 0) {
+    assumptions.push(
+      `추가 동원자금 ${(additionalFundsKrw / 1e8).toFixed(1)}억을 자기자본에 합산`,
     );
   }
 
