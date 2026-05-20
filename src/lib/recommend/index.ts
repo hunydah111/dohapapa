@@ -602,7 +602,7 @@ export async function recommendComplexes(
   // ── 6b. 2차 평가 — 길찾기 키가 있으면 상위 후보만 Kakao API 로 정밀화 ───────
   // geoSurvivors 전체(수천 개)에 실 API 를 쓰면 일일 쿼터(1만)·rate limit·지연이
   // 폭발한다. mock 점수 상위 REFINE_COUNT 곳만 실측으로 다시 평가하면 캐시 미스
-  // 시에도 호출은 ~REFINE_COUNT×직장수 건에 그친다. 표시되는 후보(3티어+추가 10)는
+  // 시에도 호출은 ~REFINE_COUNT×직장수 건에 그친다. 표시되는 후보(3티어+추가 24)는
   // 모두 이 정밀 구간에서 나오므로 사용자가 보는 통근 시간은 실측값이다.
   // 한계: 1차 랭킹이 mock 기반이라, mock 이 크게 빗나간 단지(직선거리는 가깝지만
   // 실제론 우회하는)가 상위 밖으로 밀리면 놓칠 수 있다.
@@ -617,7 +617,7 @@ export async function recommendComplexes(
     // 섞지 않는 이유: rest 는 낙관적인 mock 통근 점수를 그대로 갖고 있어, 실측으로
     // 통근 점수가 정직하게 깎인 refined 와 한 줄로 정렬하면 rest 가 부당하게 상위로
     // 뜬다. 따라서 화면에 쓰는 풀은 refined 로 한정한다.
-    const REFINE_COUNT = 40;
+    const REFINE_COUNT = 60;
     const CHUNK = 10; // 동시 호출을 ~CHUNK×직장수 로 제한 — rate limit 회피
     const complexById = new Map(geoSurvivors.map((c) => [c.id, c]));
     // 실측 재평가 대상 선정: mock 하드필터 통과 단지를 점수순으로 먼저 채우고,
@@ -858,7 +858,8 @@ export async function recommendComplexes(
     })),
   );
 
-  // ── moreCandidates — 상위 3개 다음 최대 10개, commuteSummary 포함 ──────────
+  // ── moreCandidates — 상위 3개 다음 최대 24개, commuteSummary 포함 ──────────
+  // (조건을 살짝 바꿔 재검색해도 보던 단지가 목록에서 사라지지 않도록 넉넉히)
 
   const chosenIds = new Set(candidates.map((c) => c.complexId));
   const toMore = (e: ScoredComplex): MoreCandidate => ({
@@ -873,7 +874,7 @@ export async function recommendComplexes(
   });
   const moreCandidates: MoreCandidate[] = withinLimitSurvivors
     .filter((e) => !chosenIds.has(e.candidate.complexId))
-    .slice(0, 10)
+    .slice(0, 24)
     .map(toMore);
 
   // #2 — 통근 한도를 살짝 넘는 후보(별도 섹션). 최대 5곳.
