@@ -5,7 +5,7 @@
 // - 예산 추정은 공개된 DSR/LTV 공식만 적용하며 항상 "추정"으로 표시.
 // - 특정 은행 상품 연결/비교 금지. 특정 매물 알선 금지 (단지 레벨까지만).
 
-import type { CommuteMode } from "./profile";
+import type { CommuteMode, AreaRangeKey } from "./profile";
 
 export type { CommuteMode };
 
@@ -170,11 +170,19 @@ export interface MoreCandidate {
  * 결과가 0건일 때, 어떤 조건을 어떻게 풀면 몇 곳이 나오는지 제안.
  * (P0 — 0건 막다른 길 해소.)
  */
+/** 완화 제안을 누르면 자동 적용할 변경 내용 (프론트가 프로필에 머지 후 재검색). */
+export type RelaxationAction =
+  | { kind: "commute"; workplace: "A" | "B"; addMinutes: number }
+  | { kind: "budget"; addKrw: number }
+  | { kind: "area"; areaRange: AreaRangeKey };
+
 export interface RelaxationSuggestion {
   /** 사용자에게 보일 제안 문구 (예: "예산을 2억 늘리면 12곳"). */
   message: string;
   /** 이 제안 적용 시 나오는 단지 수. */
   resultCount: number;
+  /** 누르면 자동 적용+재검색할 변경. */
+  action: RelaxationAction;
 }
 
 export interface RecommendationResult {

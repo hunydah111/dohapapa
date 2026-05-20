@@ -311,14 +311,18 @@ interface ScoredComplex {
  * 통근 leg 들이 (허용시간 + extraMinutes) × COMMUTE_HARD_FACTOR 를 초과하는지.
  * scoring.ts 와 동일한 COMMUTE_HARD_FACTOR 를 사용한다. (A→직장0, B→직장1)
  */
+// extraMinutes 는 직장별로 다르게 줄 수 있다(예: 본인 직장만 +20분 완화).
+type CommuteExtra = { A: number; B: number };
+
 function commuteExceedsLimit(
   legs: CommuteLeg[],
   workplaces: Workplace[],
-  extraMinutes: number,
+  extra: CommuteExtra,
 ): boolean {
   return legs.some((leg) => {
     const wp = leg.workplace === "A" ? workplaces[0] : workplaces[1];
-    const limit = (wp?.maxCommuteMinutes ?? 50) + extraMinutes;
+    const add = leg.workplace === "A" ? extra.A : extra.B;
+    const limit = (wp?.maxCommuteMinutes ?? 50) + add;
     return leg.minutes > limit * COMMUTE_HARD_FACTOR;
   });
 }
@@ -330,7 +334,7 @@ function commuteExceedsLimit(
 function countPassingHardFilter(
   evaluated: ScoredComplex[],
   netPurchasePowerKrw: number,
-  commuteExtraMinutes: number,
+  commuteExtra: CommuteExtra,
   workplaces: Workplace[],
   dropLowerBound = false,
   flex: BudgetFlex = "relaxed",
@@ -338,7 +342,7 @@ function countPassingHardFilter(
   return evaluated.filter(
     (e) =>
       priceInBudgetBand(e.medianKrw, netPurchasePowerKrw, dropLowerBound, flex) &&
-      !commuteExceedsLimit(e.candidate.commuteLegs, workplaces, commuteExtraMinutes),
+      !commuteExceedsLimit(e.candidate.commuteLegs, workplaces, commuteExtra),
   ).length;
 }
 
@@ -349,14 +353,14 @@ function countPassingHardFilter(
 function minExtraBudgetForMoreKrw(
   evaluated: ScoredComplex[],
   netPurchasePowerKrw: number,
-  commuteExtraMinutes: number,
+  commuteExtra: CommuteExtra,
   workplaces: Workplace[],
   flex: BudgetFlex = "relaxed",
 ): number | null {
   const upper = bandBounds(netPurchasePowerKrw, false, flex).upper;
   let minAbove = Number.POSITIVE_INFINITY;
   for (const e of evaluated) {
-    if (commuteExceedsLimit(e.candidate.commuteLegs, workplaces, commuteExtraMinutes)) {
+    if (commuteExceedsLimit(e.candidate.commuteLegs, workplaces, commuteExtra)) {
       continue;
     }
     if (e.medianKrw > upper && e.medianKrw < minAbove) minAbove = e.medianKrw;
@@ -675,39 +679,54 @@ export async function recommendComplexes(
 
   // 완화 시뮬레이션은 넓은 1차(mock) 평가 집합으로 한다 — refined(상위 40)만
   // 보면 "조건을 풀면 N곳"의 N 이 비현실적으로 작게 나오기 때문.
+  const NO_EXTRA: CommuteExtra = { A: 0, B: 0 };
+  const COMMUTE_ADD = 20;
+  const wpLabel = (i: number) =>
+    workplaces[i]?.label?.trim() || (i === 0 ? "본인 직장" : "배우자 직장");
+
   if (survivors.length === 0 && phase1Valid.length > 0) {
     // (a) 예산 30% 추가 확보 가정
     const relaxedBudget = netPurchasePowerKrw * 1.3;
     const countBudgetRelax = countPassingHardFilter(
       phase1Valid,
       relaxedBudget,
-      0,
+      NO_EXTRA,
       workplaces,
       dropLowerBand,
       budgetFlex,
     );
     if (countBudgetRelax > 0) {
-      const addEok = ((relaxedBudget - netPurchasePowerKrw) / 1e8).toFixed(1);
+      const addKrw = Math.round(relaxedBudget - netPurchasePowerKrw);
       relaxationSuggestions.push({
-        message: `💰 ${addEok}억만 더 모으면(=더 벌자!) ${countBudgetRelax}곳이 빵 떠요`,
+        message: `💰 예산 ${formatKrwShort(addKrw)} 더 있다 치면 → ${countBudgetRelax}곳`,
         resultCount: countBudgetRelax,
+        action: { kind: "budget", addKrw },
       });
     }
 
-    // (b) 모든 직장 통근 허용시간 +20분
-    if (workplaces.length > 0) {
-      const countCommuteRelax = countPassingHardFilter(
+    // (b) 직장별 통근 허용시간 +20분 (직장마다 따로)
+    for (let i = 0; i < workplaces.length; i++) {
+      const extra: CommuteExtra = {
+        A: i === 0 ? COMMUTE_ADD : 0,
+        B: i === 1 ? COMMUTE_ADD : 0,
+      };
+      const count = countPassingHardFilter(
         phase1Valid,
         netPurchasePowerKrw,
-        20,
+        extra,
         workplaces,
         dropLowerBand,
         budgetFlex,
       );
-      if (countCommuteRelax > 0) {
+      if (count > 0) {
         relaxationSuggestions.push({
-          message: `🏃 통근 20분만 더 열면(=더 걷자!) ${countCommuteRelax}곳이 나와요`,
-          resultCount: countCommuteRelax,
+          message: `🏃 ${wpLabel(i)} 통근 +${COMMUTE_ADD}분 → ${count}곳`,
+          resultCount: count,
+          action: {
+            kind: "commute",
+            workplace: i === 0 ? "A" : "B",
+            addMinutes: COMMUTE_ADD,
+          },
         });
       }
     }
@@ -722,8 +741,6 @@ export async function recommendComplexes(
       const nextRange = AREA_RANGES[nextAreaKey];
       const nextMin = nextRange.minM2;
       const nextMax = nextRange.maxM2 ?? Number.POSITIVE_INFINITY;
-      // 선호 평수대 변경 시 re-pick — validEvaluated 의 medianKrw 는 현재 대표 평형 기준이므로
-      // 여기서는 근사적으로 geoSurvivors 에서 nextRange 로 재집계 수를 계산한다.
       let countAreaRelax = 0;
       for (const c of geoSurvivors) {
         const medians = mediansMap.get(c.id) ?? [];
@@ -744,21 +761,21 @@ export async function recommendComplexes(
       }
       if (countAreaRelax > 0) {
         relaxationSuggestions.push({
-          message: `📐 평수를 "${nextRange.label}"로 살짝 넓히면 ${countAreaRelax}곳이 나와요`,
+          message: `📐 평수 "${nextRange.label}"로 넓히면 → ${countAreaRelax}곳`,
           resultCount: countAreaRelax,
+          action: { kind: "area", areaRange: nextAreaKey },
         });
       }
     }
   } else if (survivors.length > 0 && phase1Valid.length > 0) {
     // 결과가 있을 때 — "더 넓게 보기": 조건을 풀면 몇 곳이 "더" 나오는지(델타).
-    // 기준 모집단은 consideredComplexCount 와 동일한 1차(mock) 통과 집합.
     const currentPassing = consideredComplexCount;
 
     // (a) 예산 — 다음 단지를 잡는 데 필요한 최소 추가 예산
     const extra = minExtraBudgetForMoreKrw(
       phase1Valid,
       netPurchasePowerKrw,
-      0,
+      NO_EXTRA,
       workplaces,
       budgetFlex,
     );
@@ -766,7 +783,7 @@ export async function recommendComplexes(
       const relaxedCount = countPassingHardFilter(
         phase1Valid,
         netPurchasePowerKrw + extra,
-        0,
+        NO_EXTRA,
         workplaces,
         dropLowerBand,
         budgetFlex,
@@ -774,18 +791,23 @@ export async function recommendComplexes(
       const more = relaxedCount - currentPassing;
       if (more > 0) {
         relaxationSuggestions.push({
-          message: `💰 ${formatKrwShort(extra)}만 더 있으면(=더 벌자!) ${more}곳 더 보여요`,
+          message: `💰 예산 ${formatKrwShort(extra)} 더 → ${more}곳 더`,
           resultCount: more,
+          action: { kind: "budget", addKrw: extra },
         });
       }
     }
 
-    // (b) 통근 — 허용시간 +20분
-    if (workplaces.length > 0) {
+    // (b) 직장별 통근 +20분
+    for (let i = 0; i < workplaces.length; i++) {
+      const cextra: CommuteExtra = {
+        A: i === 0 ? COMMUTE_ADD : 0,
+        B: i === 1 ? COMMUTE_ADD : 0,
+      };
       const relaxedCount = countPassingHardFilter(
         phase1Valid,
         netPurchasePowerKrw,
-        20,
+        cextra,
         workplaces,
         dropLowerBand,
         budgetFlex,
@@ -793,8 +815,13 @@ export async function recommendComplexes(
       const more = relaxedCount - currentPassing;
       if (more > 0) {
         relaxationSuggestions.push({
-          message: `🏃 통근 20분만 더 열면(=더 걷자!) ${more}곳 더 보여요`,
+          message: `🏃 ${wpLabel(i)} 통근 +${COMMUTE_ADD}분 → ${more}곳 더`,
           resultCount: more,
+          action: {
+            kind: "commute",
+            workplace: i === 0 ? "A" : "B",
+            addMinutes: COMMUTE_ADD,
+          },
         });
       }
     }

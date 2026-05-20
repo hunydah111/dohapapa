@@ -2,7 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { ProfileForm } from "@/components/ProfileForm";
-import type { RecommendationResult, MoreCandidate } from "@/types/recommendation";
+import type {
+  RecommendationResult,
+  MoreCandidate,
+  RelaxationAction,
+} from "@/types/recommendation";
 import type { CoupleProfile, AreaRangeKey } from "@/types/profile";
 import { AREA_RANGES, AREA_RANGE_ORDER } from "@/types/profile";
 import { BudgetSummary } from "./BudgetSummary";
@@ -211,6 +215,55 @@ export function HomeExperience() {
     }
   }
 
+  // 완화 제안을 누르면 — 해당 변경을 프로필에 자동 적용하고 바로 재검색해 결과를 띄운다.
+  async function handleApplyRelaxation(action: RelaxationAction) {
+    if (!state) return;
+    const p = state.profile;
+    let merged: CoupleProfile = { ...p };
+    if (action.kind === "budget") {
+      merged = { ...p, seedMoneyKrw: p.seedMoneyKrw + action.addKrw };
+    } else if (action.kind === "area") {
+      merged = { ...p, preferredAreaRange: action.areaRange };
+    } else if (action.kind === "commute" && action.workplace === "A" && p.workplaceA) {
+      merged = {
+        ...p,
+        workplaceA: {
+          ...p.workplaceA,
+          maxCommuteMinutes: p.workplaceA.maxCommuteMinutes + action.addMinutes,
+        },
+      };
+    } else if (action.kind === "commute" && action.workplace === "B" && p.workplaceB) {
+      merged = {
+        ...p,
+        workplaceB: {
+          ...p.workplaceB,
+          maxCommuteMinutes: p.workplaceB.maxCommuteMinutes + action.addMinutes,
+        },
+      };
+    }
+
+    setReanalyzing(true);
+    setReanalyzeError(null);
+    try {
+      const res = await fetch("/api/recommend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(merged),
+      });
+      if (!res.ok) {
+        setReanalyzeError("분석 중 오류가 발생했습니다. 다시 시도해 주세요.");
+        return;
+      }
+      const newResult = (await res.json()) as RecommendationResult;
+      handleResult(newResult, merged);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {
+      setReanalyzeError("네트워크 오류가 발생했습니다. 인터넷 연결을 확인해 주세요.");
+    } finally {
+      setReanalyzing(false);
+    }
+  }
+
   // ── 입력 화면 ──────────────────────────────────────────────
   if (state === null) {
     if (autoLoading) {
@@ -256,6 +309,16 @@ export function HomeExperience() {
           </Button>
         </div>
       </div>
+
+      {/* 재검색(완화 적용) 진행 토스트 — 호미가 다시 두리번 */}
+      {reanalyzing && (
+        <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
+          <div className="flex items-center gap-2 rounded-full bg-coral-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg">
+            <Homi mood="searching" size={30} />
+            다시 찾는 중…
+          </div>
+        </div>
+      )}
 
       {/* 공유 토스트 — 스크롤 위치와 무관하게 항상 보이도록 화면 하단 고정 */}
       {shareToast && (
@@ -347,8 +410,9 @@ export function HomeExperience() {
                 <button
                   key={i}
                   type="button"
-                  onClick={() => setPanelOpen(true)}
-                  className={`group flex items-center justify-between rounded-2xl border px-5 py-4 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-coral-500 ${
+                  onClick={() => handleApplyRelaxation(s.action)}
+                  disabled={reanalyzing}
+                  className={`group flex items-center justify-between rounded-2xl border px-5 py-4 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-coral-500 disabled:opacity-50 ${
                     i === 0
                       ? "border-coral-300 bg-coral-50 hover:bg-white"
                       : "border-black/[0.08] bg-[#f3ece4] hover:bg-white hover:border-coral-300"
@@ -541,8 +605,9 @@ export function HomeExperience() {
                 <button
                   key={i}
                   type="button"
-                  onClick={() => setPanelOpen(true)}
-                  className="group flex items-center justify-between rounded-2xl border border-black/[0.08] bg-[#f3ece4] px-5 py-4 text-left transition-colors hover:border-coral-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-coral-500"
+                  onClick={() => handleApplyRelaxation(s.action)}
+                  disabled={reanalyzing}
+                  className="group flex items-center justify-between rounded-2xl border border-black/[0.08] bg-[#f3ece4] px-5 py-4 text-left transition-colors hover:border-coral-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-coral-500 disabled:opacity-50"
                 >
                   <span
                     className="text-sm font-medium leading-relaxed"
