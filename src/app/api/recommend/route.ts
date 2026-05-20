@@ -156,6 +156,7 @@ export async function POST(req: Request): Promise<Response> {
       {
         error: "INTERNAL",
         message: "추천 계산 중 오류가 발생했습니다.",
+        debug: err instanceof Error ? `${err.name}: ${err.message}` : String(err),
       },
       { status: 500 },
     );
