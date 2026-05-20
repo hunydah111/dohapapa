@@ -41,10 +41,10 @@ export function Segmented<T extends string>({
               "text-sm font-semibold select-none cursor-pointer " +
               "transition-all duration-200 active:scale-[0.97] " +
               "focus-visible:outline-none focus-visible:ring-2 " +
-              "focus-visible:ring-indigo-600 focus-visible:ring-offset-2 " +
+              "focus-visible:ring-coral-600 focus-visible:ring-offset-2 " +
               (selected
-                ? "bg-indigo-600 text-white shadow-[0_1px_2px_rgba(0,0,0,0.06),0_4px_12px_-4px_rgba(79,70,229,0.35)]"
-                : "bg-[#f5f5f7] text-[#6e6e73] hover:bg-[#eaeaec]")
+                ? "bg-coral-600 text-white shadow-[0_1px_2px_rgba(0,0,0,0.06),0_4px_12px_-4px_rgba(242,96,60,0.35)]"
+                : "bg-[#f3ece4] text-[#6b6157] hover:bg-[#eaeaec]")
             }
           >
             {opt.label}

@@ -21,7 +21,7 @@ export default function ContactPage() {
           이메일:{" "}
           <a
             href={`mailto:${CONTACT_EMAIL}`}
-            className="text-indigo-600 underline"
+            className="text-coral-600 underline"
           >
             {CONTACT_EMAIL}
           </a>

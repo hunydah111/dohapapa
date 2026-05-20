@@ -39,17 +39,17 @@ export function CommuteDiagram({
 }) {
   if (legs.length === 0) {
     return (
-      <p className="text-xs" style={{ color: "#86868b" }}>
+      <p className="text-xs" style={{ color: "#9a8f82" }}>
         통근 조건 없음
       </p>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-2xl bg-[#f5f5f7] px-4 py-4">
+    <div className="flex flex-col gap-4 rounded-2xl bg-[#f3ece4] px-4 py-4">
       <p
         className="text-xs font-semibold tracking-wide uppercase"
-        style={{ color: "#6e6e73" }}
+        style={{ color: "#6b6157" }}
       >
         통근 추정
       </p>
@@ -89,10 +89,10 @@ export function CommuteDiagram({
                   className="flex flex-col items-center gap-1"
                   style={{ width: 60 }}
                 >
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#6e6e73] flex-shrink-0" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#6b6157] flex-shrink-0" />
                   <span
                     className="text-center text-[10px] font-medium leading-tight line-clamp-2"
-                    style={{ color: "#6e6e73" }}
+                    style={{ color: "#6b6157" }}
                   >
                     {workplaceName}
                   </span>
@@ -105,7 +105,7 @@ export function CommuteDiagram({
                   />
                   <span
                     className="text-[10px]"
-                    style={{ color: "#86868b" }}
+                    style={{ color: "#9a8f82" }}
                   >
                     직선 {leg.distanceKm.toFixed(1)}km
                   </span>
@@ -121,7 +121,7 @@ export function CommuteDiagram({
                   />
                   <span
                     className="text-center text-[10px] font-medium"
-                    style={{ color: "#6e6e73" }}
+                    style={{ color: "#6b6157" }}
                   >
                     단지
                   </span>
@@ -136,7 +136,7 @@ export function CommuteDiagram({
                 >
                   {leg.minutes}분
                 </span>
-                <span className="text-[11px]" style={{ color: "#86868b" }}>
+                <span className="text-[11px]" style={{ color: "#9a8f82" }}>
                   {modeLabel} · 카카오 길찾기 기준{!ok && " · 허용 시간 초과"}
                 </span>
               </div>
@@ -147,7 +147,7 @@ export function CommuteDiagram({
                   href={directionsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-1 rounded-lg bg-white/70 py-1.5 text-[11px] font-semibold text-indigo-600 transition-colors hover:bg-white hover:text-indigo-800"
+                  className="flex items-center justify-center gap-1 rounded-lg bg-white/70 py-1.5 text-[11px] font-semibold text-coral-600 transition-colors hover:bg-white hover:text-coral-800"
                 >
                   카카오맵에서 실제 길찾기
                   <svg
@@ -171,7 +171,7 @@ export function CommuteDiagram({
 
       <p
         className="text-[11px] leading-relaxed"
-        style={{ color: "#86868b" }}
+        style={{ color: "#9a8f82" }}
       >
         통근 시간은 카카오 길찾기(자차) 표준 트래픽 기준 추정이에요. 실제
         시간은 시간대·교통 상황에 따라 달라지니 정확한 값은 본인 직장의

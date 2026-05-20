@@ -62,7 +62,7 @@ export default function PrivacyPage() {
             href="https://adssettings.google.com/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-indigo-600 underline"
+            className="text-coral-600 underline"
           >
             Google 광고 설정
           </a>
@@ -111,7 +111,7 @@ export default function PrivacyPage() {
         <p>
           개인정보 관련 문의는 아래로 연락주시기 바랍니다.
           <br />
-          이메일: <a href={`mailto:${CONTACT_EMAIL}`} className="text-indigo-600 underline">{CONTACT_EMAIL}</a>
+          이메일: <a href={`mailto:${CONTACT_EMAIL}`} className="text-coral-600 underline">{CONTACT_EMAIL}</a>
         </p>
       </section>
 

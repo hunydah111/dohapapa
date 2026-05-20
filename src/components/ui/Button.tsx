@@ -28,7 +28,7 @@ export function Button({
     "inline-flex items-center justify-center whitespace-nowrap font-semibold rounded-2xl " +
     "transition-all duration-200 select-none cursor-pointer " +
     "active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 " +
-    "focus-visible:ring-indigo-600 focus-visible:ring-offset-2 " +
+    "focus-visible:ring-coral-600 focus-visible:ring-offset-2 " +
     "disabled:opacity-40 disabled:pointer-events-none";
 
   /* ── 크기 ── */
@@ -40,14 +40,14 @@ export function Button({
   /* ── 변형 ── */
   const variants: Record<NonNullable<ButtonProps["variant"]>, string> = {
     primary:
-      "bg-indigo-600 text-white hover:bg-indigo-700 " +
-      "shadow-[0_1px_2px_rgba(0,0,0,0.06),0_4px_12px_-4px_rgba(79,70,229,0.35)]",
+      "bg-coral-600 text-white hover:bg-coral-700 " +
+      "shadow-[0_1px_2px_rgba(0,0,0,0.06),0_4px_12px_-4px_rgba(242,96,60,0.35)]",
     secondary:
-      "bg-white text-[#1d1d1f] border border-black/[0.10] " +
-      "hover:bg-[#f5f5f7] " +
+      "bg-white text-[#3a322c] border border-black/[0.10] " +
+      "hover:bg-[#f3ece4] " +
       "shadow-[0_1px_2px_rgba(0,0,0,0.04)]",
     ghost:
-      "bg-transparent text-[#1d1d1f] hover:bg-black/[0.04]",
+      "bg-transparent text-[#3a322c] hover:bg-black/[0.04]",
   };
 
   const widthClass = fullWidth ? "w-full" : "";

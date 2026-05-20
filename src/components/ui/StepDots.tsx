@@ -22,9 +22,9 @@ export function StepDots({ current, total }: StepDotsProps) {
             className={
               "block rounded-full transition-all duration-300 " +
               (isCurrent
-                ? "w-5 h-2 bg-indigo-600"
+                ? "w-5 h-2 bg-coral-600"
                 : active
-                ? "w-2 h-2 bg-indigo-400"
+                ? "w-2 h-2 bg-coral-400"
                 : "w-2 h-2 bg-[#d2d2d7]")
             }
             aria-hidden="true"

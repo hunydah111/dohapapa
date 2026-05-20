@@ -23,7 +23,7 @@ export default async function Image() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+          background: "linear-gradient(135deg, #ff7a59 0%, #7c3aed 100%)",
           color: "white",
           fontFamily: "BlackHanSans",
         }}
@@ -37,7 +37,7 @@ export default async function Image() {
         >
           <path d="M16 4 L4 13 L4 26 Q4 28 6 28 L16 28 Z" fill="#ffffff" />
           <path d="M16 4 L28 13 L28 26 Q28 28 26 28 L16 28 Z" fill="#f59e0b" />
-          <circle cx="16" cy="16" r="3.5" fill="#4f46e5" />
+          <circle cx="16" cy="16" r="3.5" fill="#ff7a59" />
         </svg>
         <div style={{ fontSize: 168, lineHeight: 1 }}>홈앤나</div>
         <div style={{ fontSize: 62, marginTop: 28, opacity: 0.96 }}>

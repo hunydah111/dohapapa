@@ -1,19 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { BrandMark } from "@/components/BrandMark";
 import { Analytics } from "@/components/Analytics";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   // og:image 등 메타 URL을 절대경로로 만들어 카카오톡·SNS가 썸네일을 가져갈 수 있게 한다.
@@ -43,7 +32,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="ko">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        {/* 본문 고운돋움 + 제목 주아체 (SIL OFL 무료, 한글 포함) */}
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        <link
+          href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className="min-h-screen flex flex-col antialiased">
         {/* ── 헤더 ── */}
         <header
@@ -56,17 +59,17 @@ export default function RootLayout({
             <a
               href="/"
               aria-label="홈앤나 홈으로"
-              className="flex items-center gap-2.5 rounded-lg transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="flex items-center gap-2.5 rounded-lg transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-coral-500"
             >
               {/* 콤파스 마크 — indigo currentColor 상속 */}
-              <span className="shrink-0 text-indigo-600" aria-hidden="true">
+              <span className="shrink-0 text-coral-600" aria-hidden="true">
                 <BrandMark size={28} />
               </span>
 
               {/* 브랜드명 */}
               <span
-                className="text-[15px] font-bold tracking-tight"
-                style={{ color: "#1d1d1f" }}
+                className="font-jua text-[18px] tracking-tight"
+                style={{ color: "#3a322c" }}
               >
                 홈앤나
               </span>
@@ -75,7 +78,7 @@ export default function RootLayout({
             {/* 서브 태그라인 */}
             <span
               className="hidden text-xs sm:inline"
-              style={{ color: "#86868b" }}
+              style={{ color: "#9a8f82" }}
             >
               Home & 나 사이의 거리
             </span>
@@ -88,17 +91,17 @@ export default function RootLayout({
         {/* ── 푸터 ── */}
         <footer className="mt-12 border-t border-black/[0.06] bg-white/60">
           <div className="mx-auto flex max-w-2xl flex-col gap-3 px-4 py-6 text-xs sm:flex-row sm:items-center sm:justify-between">
-            <p style={{ color: "#86868b" }}>
+            <p style={{ color: "#9a8f82" }}>
               © {new Date().getFullYear()} 홈앤나 — 정보 제공 도구
             </p>
-            <nav className="flex flex-wrap gap-4" style={{ color: "#6e6e73" }}>
-              <Link href="/privacy" className="hover:text-indigo-600">
+            <nav className="flex flex-wrap gap-4" style={{ color: "#6b6157" }}>
+              <Link href="/privacy" className="hover:text-coral-600">
                 개인정보처리방침
               </Link>
-              <Link href="/terms" className="hover:text-indigo-600">
+              <Link href="/terms" className="hover:text-coral-600">
                 이용약관
               </Link>
-              <Link href="/contact" className="hover:text-indigo-600">
+              <Link href="/contact" className="hover:text-coral-600">
                 연락처
               </Link>
             </nav>

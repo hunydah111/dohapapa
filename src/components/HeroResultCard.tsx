@@ -33,7 +33,7 @@ export function HeroResultCard({
   return (
     <section
       className="relative overflow-hidden rounded-3xl px-6 py-8 text-white"
-      style={{ background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)" }}
+      style={{ background: "linear-gradient(135deg, #ff7a59 0%, #7c3aed 100%)" }}
     >
       {/* 유형 공개 */}
       <p className="text-xs font-semibold uppercase tracking-wider text-white/70">
@@ -98,7 +98,7 @@ export function HeroResultCard({
       <button
         type="button"
         onClick={onShare}
-        className="mt-7 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-indigo-700 transition-transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-white/70"
+        className="mt-7 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-coral-700 transition-transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-white/70"
       >
         결과 공유하기
         <svg

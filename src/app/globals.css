@@ -1,22 +1,35 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* 본문 = 고운돋움(따뜻·가독), 제목/브랜드 = 주아체(둥글·정감) — 둘 다 SIL OFL 무료 */
+  --font-sans: "Gowun Dodum", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --font-jua: "Jua", "Gowun Dodum", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* ── 색상 토큰 ── */
-  --color-page-bg:    #f7f6f3;   /* 살짝 따뜻한 회색 — 콤파스 톤과 어울리게 */
+  /* ── 색상 토큰 (에어비앤비풍 따뜻한 코랄·크림) ── */
+  --color-page-bg:    #fff8f3;   /* 따뜻한 크림/아이보리 */
   --color-surface:    #ffffff;
-  --color-text-primary:   #1d1d1f;
-  --color-text-secondary: #6e6e73;
-  --color-text-muted:     #86868b;
-  --color-accent:     #4f46e5;   /* indigo-600 — 주 액센트, 신뢰·정확 */
-  --color-accent-hover: #4338ca; /* indigo-700 */
-  --color-warm:       #f59e0b;   /* amber-500 — 보조 액센트, 따뜻함·방향 (콤파스 북바늘) */
-  --color-warm-soft:  #fef3c7;   /* amber-100 — 배지·하이라이트 배경 */
-  --color-warm-text:  #9a3412;   /* orange-800 — 따뜻한 텍스트 (브랜드 supertitle 등) */
-  --color-success:    #10b981;   /* emerald-500 — 통과/적격 표시 */
-  --color-border:     rgba(0,0,0,0.08);
+  --color-text-primary:   #3a322c;  /* 따뜻한 다크 브라운 */
+  --color-text-secondary: #6b6157;
+  --color-text-muted:     #9a8f82;
+  --color-accent:     #ff7a59;   /* coral — 주 액센트, 따뜻·보금자리 */
+  --color-accent-hover: #f2603c;
+  --color-warm:       #ffb23c;   /* 웜 옐로 — 보조 액센트 */
+  --color-warm-soft:  #fff3e2;   /* 배지·하이라이트 배경 */
+  --color-warm-text:  #b23e22;   /* 따뜻한 텍스트 */
+  --color-success:    #10b981;   /* emerald — 통과/적격 표시 */
+  --color-border:     rgba(60,40,20,0.10);
+
+  /* ── 코랄 스케일 (전역 indigo→coral 치환용; Tailwind 4 가 bg-coral-* 등 생성) ── */
+  --color-coral-50:  #fff1ed;
+  --color-coral-100: #ffe0d6;
+  --color-coral-200: #ffc8b8;
+  --color-coral-300: #ffa589;
+  --color-coral-400: #ff8a6b;
+  --color-coral-500: #ff7a59;
+  --color-coral-600: #f2603c;
+  --color-coral-700: #d94e2e;
+  --color-coral-800: #b23e22;
 
   /* ── 그림자 토큰 ── */
   --shadow-card:
@@ -38,12 +51,19 @@ body {
 body {
   background-color: var(--color-page-bg);
   color: var(--color-text-primary);
-  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont,
-    "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  font-family: "Gowun Dodum", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-size: 15px;
-  line-height: 1.6;
+  line-height: 1.65;
+}
+
+/* 제목·브랜드용 둥근 글씨(주아체) — .font-jua 로 적용 */
+.font-jua {
+  font-family: "Jua", "Gowun Dodum", sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
 }
 
 /* ── 전역 포커스 링 ── */
@@ -61,7 +81,7 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0.15);
+  background: rgba(255,122,89,0.30);
   border-radius: 9999px;
 }
 

@@ -127,7 +127,7 @@ export default function TermsPage() {
         <h2 className="mb-2 text-lg font-semibold">문의</h2>
         <p>
           이메일:{" "}
-          <a href={`mailto:${CONTACT_EMAIL}`} className="text-indigo-600 underline">
+          <a href={`mailto:${CONTACT_EMAIL}`} className="text-coral-600 underline">
             {CONTACT_EMAIL}
           </a>
         </p>

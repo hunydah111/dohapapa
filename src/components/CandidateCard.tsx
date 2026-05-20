@@ -27,10 +27,10 @@ const TIER_CONFIG: Record<
     bar: "bg-emerald-400",
   },
   균형형: {
-    bg: "bg-indigo-50",
-    text: "text-indigo-800",
-    ring: "ring-1 ring-indigo-200",
-    bar: "bg-indigo-400",
+    bg: "bg-coral-50",
+    text: "text-coral-800",
+    ring: "ring-1 ring-coral-200",
+    bar: "bg-coral-400",
   },
   도전형: {
     bg: "bg-amber-50",
@@ -79,7 +79,7 @@ export function CandidateCard({
         </span>
         <span
           className="text-sm font-semibold tabular-nums"
-          style={{ color: "#6e6e73" }}
+          style={{ color: "#6b6157" }}
         >
           {RANK_LABELS[rank] ?? `${rank}위`}
         </span>
@@ -94,8 +94,8 @@ export function CandidateCard({
           </span>
         )}
         <span
-          className="ml-auto rounded-full bg-[#f5f5f7] px-3 py-1 text-xs font-semibold tabular-nums"
-          style={{ color: "#6e6e73" }}
+          className="ml-auto rounded-full bg-[#f3ece4] px-3 py-1 text-xs font-semibold tabular-nums"
+          style={{ color: "#6b6157" }}
         >
           종합 {candidate.totalScore}점
         </span>
@@ -105,7 +105,7 @@ export function CandidateCard({
       {candidate.rankReason && (
         <p
           className="text-xs leading-relaxed -mt-2"
-          style={{ color: "#6e6e73" }}
+          style={{ color: "#6b6157" }}
         >
           {candidate.rankReason}
         </p>
@@ -116,13 +116,13 @@ export function CandidateCard({
         <div className="flex flex-wrap items-start gap-2">
           <h3
             className="text-2xl font-extrabold leading-tight tracking-tight"
-            style={{ color: "#1d1d1f" }}
+            style={{ color: "#3a322c" }}
           >
             {candidate.complexName}
             {candidate.buildYear !== null && (
               <span
                 className="ml-2 text-base font-semibold tabular-nums"
-                style={{ color: "#86868b" }}
+                style={{ color: "#9a8f82" }}
               >
                 ({candidate.buildYear}년식)
               </span>
@@ -133,7 +133,7 @@ export function CandidateCard({
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`${candidate.complexName} 지도에서 위치 보기`}
-            className="mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 transition-colors hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-full border border-coral-200 bg-coral-50 px-2.5 py-1 text-xs font-semibold text-coral-700 transition-colors hover:bg-coral-100 focus:outline-none focus:ring-2 focus:ring-coral-500"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -151,26 +151,26 @@ export function CandidateCard({
           </a>
         </div>
         <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="text-sm" style={{ color: "#6e6e73" }}>
+          <span className="text-sm" style={{ color: "#6b6157" }}>
             {candidate.sigungu}
           </span>
           <span style={{ color: "#c7c7cc" }}>·</span>
-          <span className="text-sm" style={{ color: "#6e6e73" }}>
+          <span className="text-sm" style={{ color: "#6b6157" }}>
             {candidate.dongName}
           </span>
           <span style={{ color: "#c7c7cc" }}>·</span>
-          <span className="text-sm" style={{ color: "#6e6e73" }}>
+          <span className="text-sm" style={{ color: "#6b6157" }}>
             전용 {candidate.representativeArea}㎡
           </span>
           <span style={{ color: "#c7c7cc" }}>·</span>
           <span
             className="text-sm font-semibold"
-            style={{ color: "#1d1d1f" }}
+            style={{ color: "#3a322c" }}
           >
             실거래 중위가 {formatKrwHuman(candidate.medianPriceKrw)}
           </span>
         </div>
-        <p className="mt-1.5 text-xs" style={{ color: "#86868b" }}>
+        <p className="mt-1.5 text-xs" style={{ color: "#9a8f82" }}>
           최근 6개월 실거래 {candidate.transactionCount}건의 중위값
           (국토교통부 공개 데이터, 실제 거래가와 다를 수 있음)
         </p>
@@ -185,11 +185,11 @@ export function CandidateCard({
       >
         <p
           className="text-xs font-semibold mb-1.5"
-          style={{ color: "#4338ca" }}
+          style={{ color: "#f2603c" }}
         >
           선택 이유
         </p>
-        <p className="text-sm leading-relaxed" style={{ color: "#1d1d1f" }}>
+        <p className="text-sm leading-relaxed" style={{ color: "#3a322c" }}>
           {candidate.report}
         </p>
       </div>
@@ -206,7 +206,7 @@ export function CandidateCard({
 
       {/* 신호 바 — 항목별 점수 */}
       <div className="flex flex-col gap-3">
-        <p className="text-xs font-semibold" style={{ color: "#86868b" }}>
+        <p className="text-xs font-semibold" style={{ color: "#9a8f82" }}>
           항목별 점수
         </p>
         {SIGNAL_ORDER.map((key) => {
@@ -216,13 +216,13 @@ export function CandidateCard({
               <div className="flex items-center justify-between">
                 <span
                   className="text-xs font-medium"
-                  style={{ color: "#6e6e73" }}
+                  style={{ color: "#6b6157" }}
                 >
                   {CANDIDATE_SIGNAL_LABELS[key]}
                 </span>
                 <span
                   className="text-xs tabular-nums font-semibold"
-                  style={{ color: "#1d1d1f" }}
+                  style={{ color: "#3a322c" }}
                 >
                   {score}
                 </span>
@@ -243,8 +243,8 @@ export function CandidateCard({
         href={naverSearchUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-black/[0.08] bg-[#f5f5f7] px-5 py-3 text-sm font-semibold transition-colors hover:bg-white hover:border-indigo-300 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        style={{ color: "#1d1d1f" }}
+        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-black/[0.08] bg-[#f3ece4] px-5 py-3 text-sm font-semibold transition-colors hover:bg-white hover:border-coral-300 hover:text-coral-700 focus:outline-none focus:ring-2 focus:ring-coral-500"
+        style={{ color: "#3a322c" }}
       >
         네이버 부동산에서 매물 보기
         <svg

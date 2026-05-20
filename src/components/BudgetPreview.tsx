@@ -12,12 +12,12 @@ export function BudgetPreview({ budget }: { budget: BudgetEstimate }) {
   const negative = budget.netPurchasePowerKrw <= 0;
 
   return (
-    <div className="rounded-3xl border border-indigo-100 bg-indigo-50/50 p-5 flex flex-col gap-3">
+    <div className="rounded-3xl border border-coral-100 bg-coral-50/50 p-5 flex flex-col gap-3">
       <div className="flex items-baseline justify-between">
-        <p className="text-[15px] font-semibold text-[#1d1d1f]">
+        <p className="text-[15px] font-semibold text-[#3a322c]">
           예상 예산 미리보기
         </p>
-        <span className="text-[11px] text-[#86868b]">입력에 따라 자동 갱신</span>
+        <span className="text-[11px] text-[#9a8f82]">입력에 따라 자동 갱신</span>
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -36,19 +36,19 @@ export function BudgetPreview({ budget }: { budget: BudgetEstimate }) {
       </div>
 
       <div className="rounded-2xl bg-white px-4 py-3 flex items-center justify-between">
-        <span className="text-[13px] font-medium text-[#6e6e73]">
+        <span className="text-[13px] font-medium text-[#6b6157]">
           실매수 가능가
         </span>
         <span
           className="text-[22px] font-extrabold tabular-nums tracking-tight"
-          style={{ color: negative ? "#dc2626" : "#1d1d1f" }}
+          style={{ color: negative ? "#dc2626" : "#3a322c" }}
         >
           {formatKrwHuman(budget.netPurchasePowerKrw)}
         </span>
       </div>
 
       {budget.monthlyPaymentKrw > 0 && (
-        <p className="text-[12px] text-[#6e6e73]">
+        <p className="text-[12px] text-[#6b6157]">
           추정 월 원리금 상환액 약 {formatKrwHuman(budget.monthlyPaymentKrw)}
         </p>
       )}
@@ -58,7 +58,7 @@ export function BudgetPreview({ budget }: { budget: BudgetEstimate }) {
           {eligible.map((m) => (
             <span
               key={m.productName}
-              className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-700"
+              className="rounded-full bg-coral-100 px-2.5 py-0.5 text-[11px] font-semibold text-coral-700"
             >
               {m.productName} 적격
             </span>
@@ -72,7 +72,7 @@ export function BudgetPreview({ budget }: { budget: BudgetEstimate }) {
         </p>
       )}
 
-      <p className="text-[11px] leading-relaxed text-[#86868b]">
+      <p className="text-[11px] leading-relaxed text-[#9a8f82]">
         공개된 DSR·LTV 공식 기반 추정치예요. 항목별 상세 내역은 마지막 단계 후
         결과 화면에서 확인할 수 있어요.
       </p>
@@ -83,8 +83,8 @@ export function BudgetPreview({ budget }: { budget: BudgetEstimate }) {
 function PreviewRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-[13px] text-[#6e6e73]">{label}</span>
-      <span className="text-[14px] font-semibold tabular-nums text-[#1d1d1f]">
+      <span className="text-[13px] text-[#6b6157]">{label}</span>
+      <span className="text-[14px] font-semibold tabular-nums text-[#3a322c]">
         {value}
       </span>
     </div>

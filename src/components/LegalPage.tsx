@@ -12,17 +12,17 @@ export function LegalPage({ title, effectiveDate, children }: Props) {
       <header className="mb-8">
         <h1
           className="text-2xl font-bold tracking-tight sm:text-3xl"
-          style={{ color: "#1d1d1f" }}
+          style={{ color: "#3a322c" }}
         >
           {title}
         </h1>
-        <p className="mt-2 text-sm" style={{ color: "#86868b" }}>
+        <p className="mt-2 text-sm" style={{ color: "#9a8f82" }}>
           시행일: {effectiveDate}
         </p>
       </header>
       <div
         className="space-y-6 text-[15px] leading-relaxed"
-        style={{ color: "#1d1d1f" }}
+        style={{ color: "#3a322c" }}
       >
         {children}
       </div>

@@ -114,11 +114,11 @@ function ToggleSwitch({
       className="flex items-center justify-between w-full text-left"
     >
       <div>
-        <p className="text-[15px] font-semibold text-[#1d1d1f] leading-snug">
+        <p className="text-[15px] font-semibold text-[#3a322c] leading-snug">
           {label}
         </p>
         {description && (
-          <p className="text-[13px] text-[#86868b] mt-0.5">{description}</p>
+          <p className="text-[13px] text-[#9a8f82] mt-0.5">{description}</p>
         )}
       </div>
       <span
@@ -127,7 +127,7 @@ function ToggleSwitch({
         className={[
           "relative inline-flex flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ml-4",
           trackCls,
-          checked ? "bg-indigo-600" : "bg-[#d1d1d6]",
+          checked ? "bg-coral-600" : "bg-[#d1d1d6]",
         ].join(" ")}
       >
         <span
@@ -183,18 +183,18 @@ function WorkplaceInput({
 
   return (
     <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 flex flex-col gap-4 shadow-sm">
-      <p className="text-[15px] font-semibold text-[#1d1d1f]">{label}</p>
+      <p className="text-[15px] font-semibold text-[#3a322c]">{label}</p>
 
       {/* 직장 검색 / 선택 */}
       {hasSelected ? (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-indigo-50 border border-indigo-200">
-          <span className="flex-1 text-[15px] text-[#1d1d1f] font-medium">
+        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-coral-50 border border-coral-200">
+          <span className="flex-1 text-[15px] text-[#3a322c] font-medium">
             {state.selected!.label}
           </span>
           <button
             type="button"
             onClick={onClear}
-            className="text-sm text-indigo-600 font-medium hover:text-indigo-800 transition-colors"
+            className="text-sm text-coral-600 font-medium hover:text-coral-800 transition-colors"
           >
             변경
           </button>
@@ -208,10 +208,10 @@ function WorkplaceInput({
               onChange={(e) => onQueryChange(e.target.value)}
               placeholder="직장명 또는 주소 입력"
               autoFocus={autoFocus}
-              className="w-full px-4 py-3 rounded-2xl border border-[#d1d1d6] bg-white text-[#1d1d1f] placeholder-[#86868b] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition text-[15px]"
+              className="w-full px-4 py-3 rounded-2xl border border-[#d1d1d6] bg-white text-[#3a322c] placeholder-[#9a8f82] focus:outline-none focus:ring-2 focus:ring-coral-500 focus:border-transparent transition text-[15px]"
             />
             {state.loading && (
-              <span className="absolute right-4 text-xs text-[#86868b]">
+              <span className="absolute right-4 text-xs text-[#9a8f82]">
                 검색 중...
               </span>
             )}
@@ -223,7 +223,7 @@ function WorkplaceInput({
               <p className="mt-2 text-[13px] text-amber-600 leading-snug">
                 결과가 없어요. 가까운 지하철역·지역명으로 입력해 보세요
                 <br />
-                <span className="text-[#86868b]">예: 강남역, 판교, 여의도</span>
+                <span className="text-[#9a8f82]">예: 강남역, 판교, 여의도</span>
               </p>
             )}
 
@@ -234,11 +234,11 @@ function WorkplaceInput({
                   <button
                     type="button"
                     onClick={() => onSelect(r)}
-                    className="w-full text-left px-4 py-3 hover:bg-indigo-50 transition-colors text-[14px] text-[#1d1d1f]"
+                    className="w-full text-left px-4 py-3 hover:bg-coral-50 transition-colors text-[14px] text-[#3a322c]"
                   >
                     <span className="font-medium">{r.label}</span>
                     {r.address && (
-                      <span className="ml-2 text-[#86868b]">{r.address}</span>
+                      <span className="ml-2 text-[#9a8f82]">{r.address}</span>
                     )}
                   </button>
                 </li>
@@ -257,7 +257,7 @@ function WorkplaceInput({
         aria-disabled={!hasSelected}
       >
         <div>
-          <p className="text-[13px] text-[#6e6e73] mb-2">통근 허용시간 (자차 기준)</p>
+          <p className="text-[13px] text-[#6b6157] mb-2">통근 허용시간 (자차 기준)</p>
           <TextField
             value={maxCommuteValue}
             onChange={onMaxCommuteChange}
@@ -648,7 +648,7 @@ export function ProfileForm({
       {/* 진행 표시 */}
       <div className="flex flex-col items-center gap-2 pt-2">
         <StepDots current={visualStep} total={visualTotal} />
-        <p className="text-[13px] text-[#86868b]">
+        <p className="text-[13px] text-[#9a8f82]">
           {visualStep + 1}단계 / {visualTotal}
         </p>
       </div>
@@ -657,10 +657,10 @@ export function ProfileForm({
       {step === 1 && (
         <div className="flex flex-col gap-6">
           <div>
-            <h2 className="text-[22px] font-bold text-[#1d1d1f] leading-snug">
+            <h2 className="text-[22px] font-bold text-[#3a322c] leading-snug">
               가구 유형을 선택해 주세요
             </h2>
-            <p className="mt-1 text-[15px] text-[#6e6e73]">
+            <p className="mt-1 text-[15px] text-[#6b6157]">
               통근 조건과 분석 방식이 달라집니다
             </p>
           </div>
@@ -682,21 +682,21 @@ export function ProfileForm({
                     type="button"
                     onClick={() => setHouseholdType(type)}
                     className={[
-                      "rounded-3xl border-2 px-4 py-5 text-left transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-400",
+                      "rounded-3xl border-2 px-4 py-5 text-left transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-coral-400",
                       selected
-                        ? "border-indigo-600 bg-indigo-50 shadow-md"
-                        : "border-[#e5e5ea] bg-white hover:border-indigo-300",
+                        ? "border-coral-600 bg-coral-50 shadow-md"
+                        : "border-[#e5e5ea] bg-white hover:border-coral-300",
                     ].join(" ")}
                   >
                     <span
                       className={[
                         "block text-[15px] font-semibold leading-snug",
-                        selected ? "text-indigo-700" : "text-[#1d1d1f]",
+                        selected ? "text-coral-700" : "text-[#3a322c]",
                       ].join(" ")}
                     >
                       {HOUSEHOLD_TYPE_LABELS[type]}
                     </span>
-                    <span className="mt-1 block text-[12px] text-[#86868b]">
+                    <span className="mt-1 block text-[12px] text-[#9a8f82]">
                       {subtitles[type]}
                     </span>
                   </button>
@@ -707,7 +707,7 @@ export function ProfileForm({
 
           {/* 선호 평수 */}
           <div>
-            <p className="text-[15px] font-semibold text-[#1d1d1f] mb-3">
+            <p className="text-[15px] font-semibold text-[#3a322c] mb-3">
               선호 평수
             </p>
             <Segmented
@@ -726,17 +726,17 @@ export function ProfileForm({
             <button
               type="button"
               onClick={() => setExtraOpen((v) => !v)}
-              className="flex w-full items-center justify-between rounded-2xl border border-black/[0.08] bg-[#f5f5f7] px-5 py-4 text-left transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="flex w-full items-center justify-between rounded-2xl border border-black/[0.08] bg-[#f3ece4] px-5 py-4 text-left transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-coral-500"
             >
-              <span className="text-sm font-semibold" style={{ color: "#1d1d1f" }}>
+              <span className="text-sm font-semibold" style={{ color: "#3a322c" }}>
                 추가 조건{" "}
-                <span className="font-medium text-[#86868b]">
+                <span className="font-medium text-[#9a8f82]">
                   (선택 · 지역·거래량·신축·취향)
                 </span>
               </span>
               <svg
                 className={`h-4 w-4 flex-shrink-0 transition-transform duration-200 ${extraOpen ? "rotate-180" : ""}`}
-                style={{ color: "#86868b" }}
+                style={{ color: "#9a8f82" }}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -750,18 +750,18 @@ export function ProfileForm({
               <div className="mt-3 flex flex-col gap-6">
                 {/* 필수 지역 (하드) — 2단계(서울/경기) + 검색 */}
                 <div>
-                  <p className="text-[15px] font-semibold text-[#1d1d1f]">
+                  <p className="text-[15px] font-semibold text-[#3a322c]">
                     절대 포기 못 하는 지역{" "}
-                    <span className="text-[12px] font-medium text-[#86868b]">
+                    <span className="text-[12px] font-medium text-[#9a8f82]">
                       (복수 선택)
                     </span>
                   </p>
-                  <p className="mt-0.5 mb-2 text-[12px] leading-relaxed text-[#6e6e73]">
+                  <p className="mt-0.5 mb-2 text-[12px] leading-relaxed text-[#6b6157]">
                     고른 지역의 단지만 보여줘요. 안 고르면 수도권 전체.
                   </p>
                   {/* 빠른 선택 (핫플 → 해당 구) */}
                   <div className="mb-2 flex flex-wrap items-center gap-1.5">
-                    <span className="mr-1 text-[12px] font-medium text-[#86868b]">
+                    <span className="mr-1 text-[12px] font-medium text-[#9a8f82]">
                       빠른 선택
                     </span>
                     {REGION_PRESETS.map((p) => {
@@ -781,8 +781,8 @@ export function ProfileForm({
                           }
                           className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${
                             on
-                              ? "border-indigo-500 bg-indigo-600 text-white"
-                              : "border-black/[0.10] bg-white text-[#6e6e73] hover:border-indigo-300"
+                              ? "border-coral-500 bg-coral-600 text-white"
+                              : "border-black/[0.10] bg-white text-[#6b6157] hover:border-coral-300"
                           }`}
                         >
                           {p.label}
@@ -801,7 +801,7 @@ export function ProfileForm({
                               prev.filter((x) => x !== r),
                             )
                           }
-                          className="inline-flex items-center gap-1 rounded-full bg-indigo-600 px-2.5 py-1 text-xs font-semibold text-white"
+                          className="inline-flex items-center gap-1 rounded-full bg-coral-600 px-2.5 py-1 text-xs font-semibold text-white"
                         >
                           {r} <span aria-hidden="true">✕</span>
                         </button>
@@ -816,8 +816,8 @@ export function ProfileForm({
                         onClick={() => setRegionTab(t)}
                         className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                           regionTab === t
-                            ? "bg-indigo-600 text-white"
-                            : "border border-black/[0.08] bg-[#f5f5f7] text-[#6e6e73]"
+                            ? "bg-coral-600 text-white"
+                            : "border border-black/[0.08] bg-[#f3ece4] text-[#6b6157]"
                         }`}
                       >
                         {t}
@@ -829,7 +829,7 @@ export function ProfileForm({
                     value={regionQuery}
                     onChange={(e) => setRegionQuery(e.target.value)}
                     placeholder="구·시 검색 (예: 강남)"
-                    className="mb-2 w-full rounded-2xl border border-[#d1d1d6] px-4 py-2.5 text-[14px] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="mb-2 w-full rounded-2xl border border-[#d1d1d6] px-4 py-2.5 text-[14px] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-coral-500"
                   />
                   <div className="flex max-h-44 flex-wrap gap-1.5 overflow-y-auto">
                     {REGION_GROUPS.find((g) => g.label === regionTab)!
@@ -849,8 +849,8 @@ export function ProfileForm({
                             }
                             className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
                               sel
-                                ? "border-indigo-500 bg-indigo-50 text-indigo-700"
-                                : "border-black/[0.10] bg-white text-[#6e6e73] hover:border-indigo-300"
+                                ? "border-coral-500 bg-coral-50 text-coral-700"
+                                : "border-black/[0.10] bg-white text-[#6b6157] hover:border-coral-300"
                             }`}
                           >
                             {r}
@@ -861,14 +861,14 @@ export function ProfileForm({
                 </div>
 
                 {/* 취향 한 스푼 (입지) — 복수선택 · 강도(한 스푼/두 스푼/듬뿍) */}
-                <div className="rounded-3xl border border-dashed border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-pink-50 px-4 py-5">
-                  <p className="text-[15px] font-bold text-[#1d1d1f]">
+                <div className="rounded-3xl border border-dashed border-coral-200 bg-gradient-to-br from-coral-50 via-white to-pink-50 px-4 py-5">
+                  <p className="text-[15px] font-bold text-[#3a322c]">
                     🎯 취향 한 스푼{" "}
-                    <span className="text-[12px] font-medium text-indigo-500">
+                    <span className="text-[12px] font-medium text-coral-500">
                       복수선택 가능 · 재미로
                     </span>
                   </p>
-                  <p className="mt-1 mb-4 text-[12px] leading-relaxed text-[#6e6e73]">
+                  <p className="mt-1 mb-4 text-[12px] leading-relaxed text-[#6b6157]">
                     누를 때마다 한 스푼 → 두 스푼 → 듬뿍으로 진해지고, 많이
                     담을수록 가점이 커져요. 여러 개 골라도 OK!
                   </p>
@@ -926,10 +926,10 @@ export function ProfileForm({
       {step === 2 && (
         <div className="flex flex-col gap-6">
           <div>
-            <h2 className="text-[22px] font-bold text-[#1d1d1f] leading-snug">
+            <h2 className="text-[22px] font-bold text-[#3a322c] leading-snug">
               직장 위치를 알려주세요
             </h2>
-            <p className="mt-1 text-[15px] text-[#6e6e73]">
+            <p className="mt-1 text-[15px] text-[#6b6157]">
               {householdType === "dualIncome"
                 ? "두 분의 직장을 모두 입력해 주세요"
                 : "직장명이나 주소를 검색하세요"}
@@ -964,9 +964,9 @@ export function ProfileForm({
           )}
 
           {/* 대중교통 안내 — 현재 자차 기준, 대중교통 추후 지원 */}
-          <p className="rounded-2xl bg-[#f5f5f7] px-4 py-3 text-[13px] leading-relaxed text-[#6e6e73]">
+          <p className="rounded-2xl bg-[#f3ece4] px-4 py-3 text-[13px] leading-relaxed text-[#6b6157]">
             현재 통근 시간은{" "}
-            <strong className="font-semibold text-[#1d1d1f]">자차 기준</strong>
+            <strong className="font-semibold text-[#3a322c]">자차 기준</strong>
             으로 계산돼요. 대중교통 이용 시 소요시간은 추후 업데이트 예정입니다.
           </p>
 
@@ -985,10 +985,10 @@ export function ProfileForm({
       {step === 3 && (
         <div className="flex flex-col gap-6">
           <div>
-            <h2 className="text-[22px] font-bold text-[#1d1d1f] leading-snug">
+            <h2 className="text-[22px] font-bold text-[#3a322c] leading-snug">
               가족 구성을 알려주세요
             </h2>
-            <p className="mt-1 text-[15px] text-[#6e6e73]">
+            <p className="mt-1 text-[15px] text-[#6b6157]">
               학군·정책대출 요건 판정에 활용됩니다
             </p>
           </div>
@@ -996,10 +996,10 @@ export function ProfileForm({
           {/* 자녀·가족 신호 — 해당 항목 모두 선택 */}
           <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm flex flex-col gap-3">
             <div>
-              <p className="text-[15px] font-semibold text-[#1d1d1f]">
+              <p className="text-[15px] font-semibold text-[#3a322c]">
                 자녀 / 가족 상황
               </p>
-              <p className="text-[13px] text-[#86868b] mt-0.5">
+              <p className="text-[13px] text-[#9a8f82] mt-0.5">
                 해당되는 항목을 모두 선택해 주세요. 학군 점수와 정책대출 자격
                 판정에 활용됩니다.
               </p>
@@ -1067,24 +1067,24 @@ export function ProfileForm({
                   onClick={() => item.set((v) => !v)}
                   className={`flex items-center justify-between px-4 py-3 rounded-2xl border transition-colors text-left ${
                     item.state
-                      ? "bg-indigo-50 border-indigo-300"
+                      ? "bg-coral-50 border-coral-300"
                       : "bg-white border-[#e5e5ea] hover:border-[#d1d1d6]"
                   }`}
                 >
                   <div>
                     <p
-                      className={`text-[15px] font-medium ${item.state ? "text-indigo-900" : "text-[#1d1d1f]"}`}
+                      className={`text-[15px] font-medium ${item.state ? "text-coral-900" : "text-[#3a322c]"}`}
                     >
                       {item.label}
                     </p>
-                    <p className="text-[12px] text-[#86868b] mt-0.5">
+                    <p className="text-[12px] text-[#9a8f82] mt-0.5">
                       {item.why}
                     </p>
                   </div>
                   <div
                     className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
                       item.state
-                        ? "bg-indigo-600 border-indigo-600"
+                        ? "bg-coral-600 border-coral-600"
                         : "border-[#d1d1d6]"
                     }`}
                   >
@@ -1124,10 +1124,10 @@ export function ProfileForm({
           {/* 주택 보유 이력 */}
           <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm flex flex-col gap-3">
             <div>
-              <p className="text-[15px] font-semibold text-[#1d1d1f]">
+              <p className="text-[15px] font-semibold text-[#3a322c]">
                 전에 집을 가져본 적 있나요?
               </p>
-              <p className="text-[13px] text-[#86868b] mt-0.5">
+              <p className="text-[13px] text-[#9a8f82] mt-0.5">
                 생애최초 취득세 감면·정책대출 판정에 사용됩니다
               </p>
             </div>
@@ -1142,13 +1142,13 @@ export function ProfileForm({
           </div>
 
           {/* 정책대출 예비 안내 — 가족 구성 기준 */}
-          <div className="rounded-3xl border border-indigo-100 bg-indigo-50/50 p-5 flex flex-col gap-2">
-            <p className="text-[15px] font-semibold text-[#1d1d1f]">
+          <div className="rounded-3xl border border-coral-100 bg-coral-50/50 p-5 flex flex-col gap-2">
+            <p className="text-[15px] font-semibold text-[#3a322c]">
               정책대출 예비 안내
             </p>
             {familyPolicyHints.length > 0 ? (
               <>
-                <p className="text-[13px] text-[#6e6e73] leading-relaxed">
+                <p className="text-[13px] text-[#6b6157] leading-relaxed">
                   지금까지 입력한 가족 구성 기준으로 아래 항목에 해당할 수 있어요.
                   소득·순자산 요건은 다음 단계에서 확인합니다.
                 </p>
@@ -1156,9 +1156,9 @@ export function ProfileForm({
                   {familyPolicyHints.map((hint) => (
                     <li
                       key={hint}
-                      className="flex gap-1.5 text-[13px] text-indigo-800 leading-relaxed"
+                      className="flex gap-1.5 text-[13px] text-coral-800 leading-relaxed"
                     >
-                      <span className="mt-0.5 flex-shrink-0 text-indigo-400">
+                      <span className="mt-0.5 flex-shrink-0 text-coral-400">
                         &#9679;
                       </span>
                       {hint}
@@ -1167,7 +1167,7 @@ export function ProfileForm({
                 </ul>
               </>
             ) : (
-              <p className="text-[13px] text-[#6e6e73] leading-relaxed">
+              <p className="text-[13px] text-[#6b6157] leading-relaxed">
                 다음 단계에서 소득·순자산을 입력하면 디딤돌·신생아 특례·보금자리론
                 등 정책대출 자격을 확인해 드려요.
               </p>
@@ -1189,24 +1189,24 @@ export function ProfileForm({
       {step === 4 && (
         <div className="flex flex-col gap-6">
           <div>
-            <h2 className="text-[22px] font-bold text-[#1d1d1f] leading-snug">
+            <h2 className="text-[22px] font-bold text-[#3a322c] leading-snug">
               예산과 대출 정보를 입력해 주세요
             </h2>
-            <p className="mt-1 text-[15px] text-[#6e6e73]">
+            <p className="mt-1 text-[15px] text-[#6b6157]">
               모든 금액은 만원 단위로 입력하세요
             </p>
           </div>
 
           {/* 정책대출 안내 배너 */}
-          <div className="rounded-2xl bg-indigo-50 border border-indigo-100 px-4 py-3">
-            <p className="text-[13px] text-indigo-700 leading-relaxed">
+          <div className="rounded-2xl bg-coral-50 border border-coral-100 px-4 py-3">
+            <p className="text-[13px] text-coral-700 leading-relaxed">
               입력 정보로 디딤돌·신생아 특례·보금자리론 등 정책대출 자격도 함께 확인해 드립니다
             </p>
           </div>
 
           {/* 기본 재무 정보 */}
           <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm flex flex-col gap-5">
-            <p className="text-[15px] font-semibold text-[#1d1d1f]">
+            <p className="text-[15px] font-semibold text-[#3a322c]">
               기본 재무 정보
             </p>
 
@@ -1265,10 +1265,10 @@ export function ProfileForm({
 
           {/* 예산 근접도 — 결과 가격대를 예산에 얼마나 맞출지 (필수) */}
           <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm">
-            <p className="text-[15px] font-semibold text-[#1d1d1f] mb-1">
+            <p className="text-[15px] font-semibold text-[#3a322c] mb-1">
               예산 근접도
             </p>
-            <p className="text-[12px] text-[#6e6e73] mb-3">
+            <p className="text-[12px] text-[#6b6157] mb-3">
               결과 가격대를 예산에 얼마나 딱 맞출지 골라주세요.
             </p>
             <Segmented
@@ -1280,7 +1280,7 @@ export function ProfileForm({
               onChange={(v) => setBudgetFlex(v as BudgetFlex)}
               columns={3}
             />
-            <p className="mt-2 text-[12px] font-medium text-indigo-600">
+            <p className="mt-2 text-[12px] font-medium text-coral-600">
               {BUDGET_FLEX_DESC[budgetFlex]}
             </p>
           </div>
@@ -1328,7 +1328,7 @@ export function ProfileForm({
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-1.5">
-                        <p className="text-[14px] font-medium text-[#1d1d1f]">
+                        <p className="text-[14px] font-medium text-[#3a322c]">
                           2년 이상 살면서 보유했어요
                         </p>
                         <span
@@ -1345,12 +1345,12 @@ export function ProfileForm({
                             }
                           }}
                           aria-label="양도세 비과세 요건 안내 보기"
-                          className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-[#c7c7cc] text-[10px] font-bold text-[#86868b] hover:border-indigo-400 hover:text-indigo-600 cursor-pointer"
+                          className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-[#c7c7cc] text-[10px] font-bold text-[#9a8f82] hover:border-coral-400 hover:text-coral-600 cursor-pointer"
                         >
                           ?
                         </span>
                       </div>
-                      <p className="text-[12px] text-[#86868b]">
+                      <p className="text-[12px] text-[#9a8f82]">
                         세금 절감 — 1세대 1주택 양도세 비과세 요건
                       </p>
                     </div>
@@ -1359,7 +1359,7 @@ export function ProfileForm({
                       aria-checked={existingHomeTaxExempt}
                       className={[
                         "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ml-4",
-                        existingHomeTaxExempt ? "bg-indigo-600" : "bg-[#d1d1d6]",
+                        existingHomeTaxExempt ? "bg-coral-600" : "bg-[#d1d1d6]",
                       ].join(" ")}
                     >
                       <span
@@ -1375,11 +1375,11 @@ export function ProfileForm({
 
                   {/* 양도세 비과세 미니 가이드 — ? 클릭 시 표시 */}
                   {showTaxGuide && (
-                    <div className="rounded-2xl bg-indigo-50/60 border border-indigo-200 px-4 py-3">
-                      <p className="text-[12px] font-semibold text-indigo-800 mb-2">
+                    <div className="rounded-2xl bg-coral-50/60 border border-coral-200 px-4 py-3">
+                      <p className="text-[12px] font-semibold text-coral-800 mb-2">
                         1세대 1주택 양도세 비과세 — 모두 충족해야 적용
                       </p>
-                      <ul className="flex flex-col gap-1.5 text-[12px] leading-relaxed text-indigo-900">
+                      <ul className="flex flex-col gap-1.5 text-[12px] leading-relaxed text-coral-900">
                         <li className="flex gap-2">
                           <span className="flex-shrink-0">①</span>
                           <span>매도하는 집이 <strong>1세대 1주택</strong> (세대원 모두 다른 집 없음)</span>
@@ -1397,7 +1397,7 @@ export function ProfileForm({
                           <span><strong>양도가 12억원 이하</strong> (12억 초과분은 과세)</span>
                         </li>
                       </ul>
-                      <p className="mt-2 text-[11px] text-indigo-700 leading-relaxed">
+                      <p className="mt-2 text-[11px] text-coral-700 leading-relaxed">
                         헷갈리면 ❌ 그대로 두세요 — 양도세 6% 정도가 계산에 반영돼
                         보수적으로 추정됩니다. 정확한 판정은 세무사 상담 권장.
                       </p>
@@ -1412,8 +1412,8 @@ export function ProfileForm({
           {previewBudget ? (
             <BudgetPreview budget={previewBudget} />
           ) : (
-            <div className="rounded-3xl border border-dashed border-[#d1d1d6] bg-[#f5f5f7] p-5">
-              <p className="text-[13px] text-[#86868b] leading-relaxed">
+            <div className="rounded-3xl border border-dashed border-[#d1d1d6] bg-[#f3ece4] p-5">
+              <p className="text-[13px] text-[#9a8f82] leading-relaxed">
                 보유 현금과 연 가구소득을 입력하면 예상 대출 가능액·실매수 가능가가
                 여기 바로 표시됩니다.
               </p>
@@ -1435,10 +1435,10 @@ export function ProfileForm({
       {step === 5 && (
         <div className="flex flex-col gap-6">
           <div>
-            <h2 className="text-[22px] font-bold text-[#1d1d1f] leading-snug">
+            <h2 className="text-[22px] font-bold text-[#3a322c] leading-snug">
               무엇을 중요하게 볼까요?
             </h2>
-            <p className="mt-1 text-[15px] text-[#6e6e73]">
+            <p className="mt-1 text-[15px] text-[#6b6157]">
               세 조건의 중요도가 분석 가중치에 반영됩니다
             </p>
           </div>
@@ -1458,10 +1458,10 @@ export function ProfileForm({
               >
                 <div className="flex items-baseline justify-between">
                   <div>
-                    <p className="text-[15px] font-semibold text-[#1d1d1f]">
+                    <p className="text-[15px] font-semibold text-[#3a322c]">
                       {PRIORITY_LABELS[key]}
                     </p>
-                    <p className="text-[11px] text-[#86868b] mt-0.5">
+                    <p className="text-[11px] text-[#9a8f82] mt-0.5">
                       {hints[key]}
                     </p>
                   </div>
@@ -1469,8 +1469,8 @@ export function ProfileForm({
                     className={[
                       "text-[13px] font-medium",
                       priorities[key] >= 4
-                        ? "text-indigo-600"
-                        : "text-[#86868b]",
+                        ? "text-coral-600"
+                        : "text-[#9a8f82]",
                     ].join(" ")}
                   >
                     {PRIORITY_SCALE_LABELS[priorities[key]]}
@@ -1496,8 +1496,8 @@ export function ProfileForm({
 
           {/* 분석 중 안내 */}
           {submitting && (
-            <div className="rounded-2xl bg-indigo-50 border border-indigo-100 px-4 py-3">
-              <p className="text-[13px] text-indigo-700 leading-relaxed">
+            <div className="rounded-2xl bg-coral-50 border border-coral-100 px-4 py-3">
+              <p className="text-[13px] text-coral-700 leading-relaxed">
                 조건에 맞는 단지를 탐색하고 예산·대출을 계산하고 있습니다. 잠시만 기다려 주세요.
               </p>
             </div>
