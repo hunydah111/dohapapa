@@ -17,9 +17,9 @@ const DOOR = "#FF9B72"; // 문 = 입
 const INK = "#4A3B30";
 const BLUSH = "#F4B8C1";
 const GLASS = "#FFE6B0";
-const MONEY = "#A7DBA9"; // 굴뚝에서 폴폴 나오는 통장 표지
-const MONEY_LT = "#EAF7EA"; // 통장 속지
-const MONEY_EDGE = "#5FA968";
+const COIN = "#FFD24D"; // 굴뚝에서 폴폴 나오는 동전(₩)
+const COIN_EDGE = "#E0A21E";
+const COIN_SHINE = "#FFF1C2";
 
 export function Homi({
   mood = "wave",
@@ -63,19 +63,12 @@ export function Homi({
         strokeWidth="2.5"
         strokeLinejoin="round"
       />
-      {/* 굴뚝에서 폴폴 나오는 통장 한 권 — 책등+표지 라벨로 '통장'임을 확실히 */}
-      <g transform="rotate(-8 80 9)">
-        {/* 페이지 (뒤로 살짝 삐져나옴) */}
-        <rect x="72" y="3" width="20" height="15" rx="2.5" fill="#FFFDF6" stroke={MONEY_EDGE} strokeWidth="1" />
-        {/* 표지 */}
-        <rect x="69" y="1.5" width="19" height="15" rx="2.5" fill={MONEY} stroke={MONEY_EDGE} strokeWidth="1.6" />
-        {/* 책등 (binding) + 하이라이트 */}
-        <rect x="69" y="1.5" width="5" height="15" rx="2" fill={MONEY_EDGE} />
-        <line x1="71.5" y1="3.6" x2="71.5" y2="14.4" stroke={MONEY_LT} strokeWidth="0.8" strokeLinecap="round" />
-        {/* 표지 라벨 + 글자 줄 */}
-        <rect x="77.5" y="4.8" width="8.5" height="3.6" rx="1" fill="#FFFDF6" />
-        <line x1="78" y1="11" x2="85.5" y2="11" stroke="#FFFDF6" strokeWidth="1.1" strokeLinecap="round" />
-        <line x1="78" y1="13.2" x2="83.5" y2="13.2" stroke="#FFFDF6" strokeWidth="1.1" strokeLinecap="round" />
+      {/* 굴뚝에서 폴폴 나오는 동전(₩) — 통통 금화 + 반짝 */}
+      <g transform="rotate(-6 81 9)">
+        <circle cx="81" cy="9" r="9.5" fill={COIN} stroke={COIN_EDGE} strokeWidth="2" />
+        <circle cx="81" cy="9" r="6" fill="none" stroke={COIN_EDGE} strokeWidth="1.2" />
+        <text x="81" y="12.3" fontSize="9" fontWeight="800" fontFamily="sans-serif" textAnchor="middle" fill={COIN_EDGE}>₩</text>
+        <ellipse cx="77.3" cy="5.6" rx="1.7" ry="1" fill={COIN_SHINE} transform="rotate(-35 77.3 5.6)" />
       </g>
 
       {/* 볼터치 */}
