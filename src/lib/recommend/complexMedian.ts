@@ -9,6 +9,11 @@ export interface AreaMedian {
   medianKrw: number;
   /** 최근 6개월 거래 건수 — 가격 신뢰도 지표. */
   count: number;
+  /**
+   * 단지 내 다른 평형 대비 ㎡당 단가가 비정상(역전·극단치)이라 신뢰도가 낮음.
+   * 대표 평형 선택에서 제외된다 (C-1: 플래그만, 가격 보정은 하지 않음).
+   */
+  lowConfidence: boolean;
 }
 
 const WINDOW_MONTHS = 6;
@@ -17,6 +22,13 @@ const LAMBDA = 0.005;
 // 추세 계수 클램프 — 과보정 방지.
 const TREND_MIN = 0.9;
 const TREND_MAX = 1.12;
+
+// ── 평형 간 ㎡당 단가 교차검증 (C-1) ──
+// 신뢰표본(거래 N건 이상)들의 ㎡당 단가를 기준으로, 빈약표본 평형의 단가가
+// [LOW, HIGH] 배수를 벗어나면(역전·극단치) 신뢰도 낮음으로 표시한다.
+const CROSS_RELIABLE_COUNT = 5;
+const CROSS_LOW_RATIO = 0.7;
+const CROSS_HIGH_RATIO = 1.5;
 
 /** 가중 중위값 — 가격 오름차순 정렬 후 누적 가중치가 절반을 넘는 가격. */
 function weightedMedian(items: { price: number; weight: number }[]): number {
@@ -85,6 +97,33 @@ function estimateCurrentPrice(txs: Tx[]): number {
 }
 
 /**
+ * 단지 내 평형들의 ㎡당 단가를 교차검증해 비정상 평형을 표시한다 (C-1: 플래그만).
+ * 신뢰표본(거래 CROSS_RELIABLE_COUNT 건 이상)이 2개 이상일 때만 동작한다. 그 신뢰표본들의
+ * ㎡당 단가(count 가중 중위)를 기준으로, 빈약표본 평형이 [LOW, HIGH] 배수를 벗어나면
+ * lowConfidence = true 로 표시한다. 가격을 보정하지는 않는다.
+ */
+export function flagLowConfidence(medians: AreaMedian[]): void {
+  const reliable = medians.filter(
+    (m) => m.count >= CROSS_RELIABLE_COUNT && m.area > 0 && m.medianKrw > 0,
+  );
+  if (reliable.length < 2) return;
+
+  const refPerM2 = weightedMedian(
+    reliable.map((m) => ({ price: m.medianKrw / m.area, weight: m.count })),
+  );
+  if (refPerM2 <= 0) return;
+
+  for (const m of medians) {
+    // 신뢰표본은 데이터가 두꺼우므로 그대로 신뢰 (프리미엄/할인일 수 있음).
+    if (m.count >= CROSS_RELIABLE_COUNT || m.area <= 0 || m.medianKrw <= 0) continue;
+    const ratio = m.medianKrw / m.area / refPerM2;
+    if (ratio < CROSS_LOW_RATIO || ratio > CROSS_HIGH_RATIO) {
+      m.lowConfidence = true;
+    }
+  }
+}
+
+/**
  * 여러 단지의 평형별 추정 현재가를 청크 단위 쿼리로 한 번에 집계한다.
  * 단지별로 N번 쿼리하면 동시 쿼리 폭주로 SQLite 가 막히므로 일괄 처리.
  */
@@ -131,8 +170,10 @@ export async function getAreaMediansForMany(
         area,
         medianKrw: estimateCurrentPrice(txs),
         count: txs.length,
+        lowConfidence: false,
       });
     }
+    flagLowConfidence(medians);
     result.set(
       complexId,
       medians.sort((a, b) => b.count - a.count),
@@ -156,7 +197,11 @@ export function pickRepresentative(
   minCount: number = 3,
 ): AreaMedian | null {
   const eligible = medians.filter(
-    (m) => m.area >= minArea && m.area < maxArea && m.count >= minCount,
+    (m) =>
+      m.area >= minArea &&
+      m.area < maxArea &&
+      m.count >= minCount &&
+      !m.lowConfidence,
   );
   // getAreaMediansForMany 가 count 내림차순으로 정렬해 반환하므로 [0] = 최다 거래 평형
   return eligible.length > 0 ? eligible[0] : null;
