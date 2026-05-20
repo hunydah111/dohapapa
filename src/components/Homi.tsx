@@ -17,7 +17,9 @@ const DOOR = "#FF9B72"; // 문 = 입
 const INK = "#4A3B30";
 const BLUSH = "#F4B8C1";
 const GLASS = "#FFE6B0";
-const SMOKE = "#E2D8C8";
+const MONEY = "#A7DBA9"; // 굴뚝에서 폴폴 나오는 지폐
+const MONEY_LT = "#C4E9C5";
+const MONEY_EDGE = "#5FA968";
 
 export function Homi({
   mood = "wave",
@@ -51,6 +53,8 @@ export function Homi({
       {/* 몸통 (네모 벽 — 모서리만 살짝 둥근) */}
       <rect x="22" y="48" width="76" height="70" rx="13" fill={BODY} stroke={BODY_EDGE} strokeWidth="2.5" />
 
+      {/* 굴뚝 (지붕 뒤로 — 지붕이 아랫부분을 덮어 자연스럽게) */}
+      <rect x="73" y="18" width="13" height="26" rx="6" fill={ROOF} stroke={ROOF_EDGE} strokeWidth="2" />
       {/* 삼각 지붕 (네모 벽 위에) — 양옆 처마 살짝 */}
       <path
         d="M60 12 L102 50 L18 50 Z"
@@ -59,10 +63,15 @@ export function Homi({
         strokeWidth="2.5"
         strokeLinejoin="round"
       />
-      {/* 통통 굴뚝 + 연기 */}
-      <rect x="74" y="24" width="13" height="18" rx="6" fill={ROOF} stroke={ROOF_EDGE} strokeWidth="2" />
-      <circle cx="80.5" cy="18" r="3.2" fill={SMOKE} />
-      <circle cx="85.5" cy="13" r="2.2" fill={SMOKE} />
+      {/* 굴뚝에서 폴폴 나오는 지폐(₩) */}
+      <g transform="rotate(-12 81 12)">
+        <rect x="74" y="8" width="14" height="9" rx="2" fill={MONEY} stroke={MONEY_EDGE} strokeWidth="1.5" />
+        <circle cx="81" cy="12.5" r="2" fill={MONEY_EDGE} />
+      </g>
+      <g transform="rotate(13 88 5)">
+        <rect x="83" y="1.5" width="10" height="7" rx="1.8" fill={MONEY_LT} stroke={MONEY_EDGE} strokeWidth="1.3" />
+        <circle cx="88" cy="5" r="1.3" fill={MONEY_EDGE} />
+      </g>
 
       {/* 볼터치 */}
       <ellipse cx="37" cy="80" rx="6.2" ry="3.7" fill={BLUSH} />
