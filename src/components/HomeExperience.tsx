@@ -326,7 +326,7 @@ export function HomeExperience() {
             <span className="font-semibold" style={{ color: "#1d1d1f" }}>
               {result.consideredComplexCount.toLocaleString("ko-KR")}곳
             </span>
-            을 다 뒤졌는데 조건이 살짝 빡셌나봐요!
+            을 살펴봤는데 조건이 살짝 타이트했나봐요!
             {result.relaxationSuggestions.length > 0
               ? " 아래처럼 살짝만 풀면 바로 나와요 👇"
               : " 한두 가지만 크게 풀어볼까요?"}

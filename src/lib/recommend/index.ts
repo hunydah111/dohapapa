@@ -883,7 +883,7 @@ export async function recommendComplexes(
     if (minBuildYear > 0) causes.push(`신축 ${minBuildYear}년+`);
     if (profile.requireChopumah) causes.push("초품아만");
     if (causes.length > 0) {
-      emptyReason = `🧐 이 조건들이 좀 빡셌나봐요 — ${causes.join(", ")}. 하나만 살짝 풀어볼까요?`;
+      emptyReason = `🧐 이 조건들이 좀 타이트했나봐요 — ${causes.join(", ")}. 하나만 살짝 풀어볼까요?`;
     }
   }
 
