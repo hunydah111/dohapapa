@@ -746,7 +746,7 @@ export function ProfileForm({
               <span className="text-sm font-semibold" style={{ color: "#1d1d1f" }}>
                 추가 조건{" "}
                 <span className="font-medium text-[#86868b]">
-                  (선택 · 지역·대단지·신축·취향)
+                  (선택 · 지역·거래량·신축·취향)
                 </span>
               </span>
               <svg
@@ -859,7 +859,7 @@ export function ProfileForm({
                           : "border-black/[0.10] bg-white text-[#6e6e73] hover:border-indigo-300"
                       }`}
                     >
-                      🏢 대단지 선호
+                      🔥 거래 많은 단지
                     </button>
                     <button
                       type="button"
@@ -874,8 +874,8 @@ export function ProfileForm({
                     </button>
                   </div>
                   <p className="mt-1.5 text-[11px] leading-relaxed text-[#86868b]">
-                    대단지 선호 = 거래량 많은 단지 가점(세대수 데이터 도입 전 근사) ·
-                    초품아만 = 초등 150m 이내만(필수)
+                    거래 많은 단지 = 최근 6개월 거래량 기준 가점(대체로 대단지·인기
+                    단지) · 초품아만 = 초등 150m 이내만(필수)
                   </p>
                 </div>
 
