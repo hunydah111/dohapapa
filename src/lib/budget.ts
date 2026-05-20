@@ -10,10 +10,10 @@
 //   - 정책대출 자격 판정 후 일반 DSR 한도와 비교해 유리한 쪽 채택
 
 import type { CoupleProfile } from "@/types/profile";
-import type { BudgetEstimate } from "@/types/recommendation";
+import type { BudgetEstimate, PolicyLoanMatch } from "@/types/recommendation";
 import { estimateCapitalGainsTax } from "@/lib/capitalGainsTax";
 import { estimateAcquisitionCosts } from "@/lib/acquisitionCost";
-import { evaluatePolicyLoans } from "@/lib/policyLoan";
+import { evaluatePolicyLoans, POLICY_BASIS } from "@/lib/policyLoan";
 
 const HUNDRED_MILLION = 100_000_000; // 1억
 
@@ -176,49 +176,52 @@ export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
   // 한도가 크기 때문에, 적격이면 일반 DSR 한도와 비교해 유리한 쪽을 채택.
   const policyLoanMatches = evaluatePolicyLoans(profile);
 
-  // 적격 상품 중 한도가 가장 큰 것을 선택
   const eligiblePolicies = policyLoanMatches.filter(
     (m) => m.eligible && m.loanLimitKrw !== undefined,
   );
-  const bestPolicy =
-    eligiblePolicies.length > 0
-      ? eligiblePolicies.reduce((best, cur) =>
-          (cur.loanLimitKrw ?? 0) > (best.loanLimitKrw ?? 0) ? cur : best,
-        )
-      : undefined;
 
-  // 정책대출 한도와 DSR 한도 비교: 한도가 크고 금리가 낮은 쪽 채택.
-  // WHY 금리 낮은 쪽 선호: 대출 가능액이 같다면 금리가 낮을수록 유리.
+  // 적격 정책 중 '실효 한도'가 가장 큰 것을 선택.
+  // 실효 한도 = min(정책 한도, 해당 금리로 DSR 역산한 대출가능액).
+  // WHY 한도 숫자가 아니라 금리 반영: 금리가 낮을수록 같은 월상환액으로 더 많은
+  //   원금이 가능하다. 저소득(DSR이 한도보다 작은 경우) 저금리 디딤돌이 고금리
+  //   보금자리보다 실제로 더 많이 빌릴 수 있는데, '한도 숫자'로만 고르면 손해.
+  //   동률이면 금리가 낮은 상품을 택한다.
+  const monthlyForPolicy = availableMonthly > 0 ? availableMonthly : 0;
+  let bestPolicy: PolicyLoanMatch | undefined;
+  let bestPolicyCapacity = 0;
+  let bestPolicyRate = STRESS_RATE;
+  for (const m of eligiblePolicies) {
+    const rate = ((m.rateMin ?? 0) + (m.rateMax ?? 0)) / 2 / 100;
+    const cap = Math.min(
+      m.loanLimitKrw ?? 0,
+      loanPrincipalFromMonthlyPayment(monthlyForPolicy, rate, LOAN_MONTHS),
+    );
+    if (
+      cap > bestPolicyCapacity ||
+      (cap === bestPolicyCapacity && rate < bestPolicyRate)
+    ) {
+      bestPolicy = m;
+      bestPolicyCapacity = cap;
+      bestPolicyRate = rate;
+    }
+  }
+
   let appliedLoanType: "policy" | "general" = "general";
   let appliedPolicyName: string | undefined = undefined;
   let finalLoanCapacity = dsrLoanCapacity;
   let appliedRate = STRESS_RATE; // 월상환액 계산용 금리
 
-  if (bestPolicy !== undefined && bestPolicy.loanLimitKrw !== undefined) {
-    const policyLimit = bestPolicy.loanLimitKrw;
-    // 정책대출 금리 중간값을 대출 가능액 계산에 사용
-    const policyRate = ((bestPolicy.rateMin ?? 0) + (bestPolicy.rateMax ?? 0)) / 2 / 100;
-    const policyCapacity = loanPrincipalFromMonthlyPayment(
-      availableMonthly > 0 ? availableMonthly : 0,
-      policyRate,
-      LOAN_MONTHS,
-    );
-    // 정책대출 한도와 DSR로 역산된 정책대출 가능액 중 작은 값
-    const effectivePolicyCapacity = Math.min(policyLimit, policyCapacity);
-
-    // WHY 비교 기준: 정책대출이 일반 DSR 한도 초과 또는 금리 낮으면 정책 채택.
-    // 같은 한도라면 금리가 낮은 정책대출을 선택.
-    if (
-      effectivePolicyCapacity > 0 &&
-      (effectivePolicyCapacity > dsrLoanCapacity ||
-        (effectivePolicyCapacity >= dsrLoanCapacity &&
-          policyRate < STRESS_RATE))
-    ) {
-      appliedLoanType = "policy";
-      appliedPolicyName = bestPolicy.productName;
-      finalLoanCapacity = effectivePolicyCapacity;
-      appliedRate = policyRate;
-    }
+  // 정책 실효 한도가 일반 DSR보다 크거나, 같더라도 금리가 낮으면 정책 채택.
+  if (
+    bestPolicy !== undefined &&
+    bestPolicyCapacity > 0 &&
+    (bestPolicyCapacity > dsrLoanCapacity ||
+      (bestPolicyCapacity >= dsrLoanCapacity && bestPolicyRate < STRESS_RATE))
+  ) {
+    appliedLoanType = "policy";
+    appliedPolicyName = bestPolicy.productName;
+    finalLoanCapacity = bestPolicyCapacity;
+    appliedRate = bestPolicyRate;
   }
 
   // ── 5. LTV 한도 ──────────────────────────────────────────────────────────
@@ -297,6 +300,7 @@ export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
     "30년 원리금균등 상환 가정",
     `LTV ${ltvLabel} 적용`,
     "취득·부대비용 정밀 산출 (취득세 구간·중개수수료·법무사 등)",
+    `정책대출 기준: ${POLICY_BASIS}`,
   ];
 
   if (appliedLoanType === "policy" && appliedPolicyName !== undefined) {
@@ -349,19 +353,20 @@ export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
   const loanReasonLines: string[] = [];
 
   if (appliedLoanType === "policy" && bestPolicy !== undefined) {
-    const policyLimit = bestPolicy.loanLimitKrw ?? 0;
+    const bp = bestPolicy;
+    const policyLimit = bp.loanLimitKrw ?? 0;
     loanReasonLines.push(
-      `${bestPolicy.productName} 채택 — 정책 한도 ${eok(policyLimit)}억`,
+      `${bp.productName} 채택 — 금리 약 ${(bestPolicyRate * 100).toFixed(2)}%, 정책 한도 ${eok(policyLimit)}억`,
     );
-    loanReasonLines.push(`자격 사유: ${bestPolicy.reason}`);
+    loanReasonLines.push(`자격 사유: ${bp.reason}`);
 
     if (eligiblePolicies.length > 1) {
       const others = eligiblePolicies
-        .filter((p) => p.productName !== bestPolicy.productName)
+        .filter((p) => p.productName !== bp.productName)
         .map((p) => `${p.productName} ${eok(p.loanLimitKrw ?? 0)}억`)
         .join(", ");
       loanReasonLines.push(
-        `적격 정책 ${eligiblePolicies.length}종 중 한도가 가장 큼 (그 외: ${others})`,
+        `적격 정책 ${eligiblePolicies.length}종 중 금리까지 반영해 실제 빌릴 수 있는 금액이 가장 큼 (그 외: ${others})`,
       );
     }
     loanReasonLines.push(
