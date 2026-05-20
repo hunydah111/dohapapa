@@ -91,7 +91,8 @@ export type CandidateSignalKey =
   | "commute"
   | "budgetFit"
   | "school"
-  | "buildingAge";
+  | "buildingAge"
+  | "largeComplex";
 
 /**
  * 참고용 기본 가중치 (UI 안내·문서용). 실제 추천 가중치는 사용자가 입력한
@@ -102,6 +103,7 @@ export const CANDIDATE_SIGNAL_WEIGHTS: Record<CandidateSignalKey, number> = {
   budgetFit: 30,
   school: 20,
   buildingAge: 10,
+  largeComplex: 10,
 };
 
 export const CANDIDATE_SIGNAL_LABELS: Record<CandidateSignalKey, string> = {
@@ -109,6 +111,7 @@ export const CANDIDATE_SIGNAL_LABELS: Record<CandidateSignalKey, string> = {
   budgetFit: "예산 적합도",
   school: "학군·자녀",
   buildingAge: "단지 연식",
+  largeComplex: "거래량",
 };
 
 export type CandidateTier = "안정형" | "균형형" | "도전형";

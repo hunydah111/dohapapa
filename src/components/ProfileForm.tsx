@@ -289,9 +289,6 @@ export function ProfileForm({
   // 추가 조건 (접이식)
   const [extraOpen, setExtraOpen] = useState(false);
   const [requiredRegions, setRequiredRegions] = useState<string[]>([]);
-  const [preferLargeComplex, setPreferLargeComplex] = useState(false);
-  const [minBuildYear, setMinBuildYear] = useState(0); // 0 = 제한 없음
-  const [requireChopumah, setRequireChopumah] = useState(false);
   const [regionTab, setRegionTab] = useState<"서울" | "경기">("서울");
   const [regionQuery, setRegionQuery] = useState("");
   const [budgetFlex, setBudgetFlex] = useState<BudgetFlex>(DEFAULT_BUDGET_FLEX);
@@ -536,9 +533,6 @@ export function ProfileForm({
       preferredAreaRange,
       locationVibes,
       requiredRegions: requiredRegions.length > 0 ? requiredRegions : undefined,
-      preferLargeComplex: preferLargeComplex || undefined,
-      minBuildYear: minBuildYear > 0 ? minBuildYear : undefined,
-      requireChopumah: requireChopumah || undefined,
       budgetFlex,
       workplaceA: finalWpA,
       workplaceB: finalWpB,
@@ -561,9 +555,6 @@ export function ProfileForm({
     preferredAreaRange,
     locationVibes,
     requiredRegions,
-    preferLargeComplex,
-    minBuildYear,
-    requireChopumah,
     budgetFlex,
     wpA.selected,
     wpB.selected,
@@ -869,70 +860,7 @@ export function ProfileForm({
                   </div>
                 </div>
 
-                {/* 우대·필수 */}
-                <div>
-                  <p className="mb-2 text-[15px] font-semibold text-[#1d1d1f]">
-                    우대·필수 조건
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setPreferLargeComplex((v) => !v)}
-                      className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold ${
-                        preferLargeComplex
-                          ? "border-indigo-500 bg-indigo-600 text-white"
-                          : "border-black/[0.10] bg-white text-[#6e6e73] hover:border-indigo-300"
-                      }`}
-                    >
-                      🔥 거래 많은 단지
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRequireChopumah((v) => !v)}
-                      className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold ${
-                        requireChopumah
-                          ? "border-indigo-500 bg-indigo-600 text-white"
-                          : "border-black/[0.10] bg-white text-[#6e6e73] hover:border-indigo-300"
-                      }`}
-                    >
-                      🏫 초품아만
-                    </button>
-                  </div>
-                  <p className="mt-1.5 text-[11px] leading-relaxed text-[#86868b]">
-                    거래 많은 단지 = 최근 6개월 거래량 기준 가점(대체로 대단지·인기
-                    단지) · 초품아만 = 초등 150m 이내만(필수)
-                  </p>
-                </div>
-
-                {/* 신축만 */}
-                <div>
-                  <p className="mb-2 text-[15px] font-semibold text-[#1d1d1f]">
-                    신축만
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { v: 0, l: "제한 없음" },
-                      { v: 2010, l: "2010년 이후" },
-                      { v: 2015, l: "2015년 이후" },
-                      { v: 2020, l: "2020년 이후" },
-                    ].map((o) => (
-                      <button
-                        key={o.v}
-                        type="button"
-                        onClick={() => setMinBuildYear(o.v)}
-                        className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold ${
-                          minBuildYear === o.v
-                            ? "border-indigo-500 bg-indigo-600 text-white"
-                            : "border-black/[0.10] bg-white text-[#6e6e73] hover:border-indigo-300"
-                        }`}
-                      >
-                        {o.l}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 취향 한 스푼 (입지) — 복수선택 + 조금→꽤→많이 */}
+                {/* 취향 한 스푼 (입지) — 복수선택 · 강도(한 스푼/두 스푼/듬뿍) */}
                 <div className="rounded-3xl border border-dashed border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-pink-50 px-4 py-5">
                   <p className="text-[15px] font-bold text-[#1d1d1f]">
                     🎯 취향 한 스푼{" "}
@@ -1521,6 +1449,7 @@ export function ProfileForm({
                 commute: "자차 통근 시간 기준 (대중교통 미반영)",
                 school: "초등학교 도보 거리 기준 (중·고·학업성취도·학원가 미반영)",
                 buildingAge: "준공년도 — 신축일수록 가점",
+                largeComplex: "최근 거래량 기준 — 대단지·인기 단지일수록 가점",
               };
               return (
               <div

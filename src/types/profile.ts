@@ -22,12 +22,17 @@ export const HOUSEHOLD_TYPE_LABELS: Record<HouseholdType, string> = {
 };
 
 // ── 우선순위 ─────────────────────────────────────────────────
-export type PriorityKey = "commute" | "school" | "buildingAge";
+export type PriorityKey =
+  | "commute"
+  | "school"
+  | "buildingAge"
+  | "largeComplex";
 
 export const PRIORITY_LABELS: Record<PriorityKey, string> = {
   commute: "출퇴근 거리",
   school: "초품아 여부",
   buildingAge: "단지 연식",
+  largeComplex: "거래 많은 단지",
 };
 
 export const PRIORITY_SCALE_LABELS: Record<number, string> = {
@@ -42,6 +47,7 @@ export const DEFAULT_PRIORITIES: Record<PriorityKey, number> = {
   commute: 3,
   school: 3,
   buildingAge: 3,
+  largeComplex: 2,
 };
 
 // ── 선호 평수 ────────────────────────────────────────────────
@@ -193,12 +199,6 @@ export interface CoupleProfile {
   locationVibes?: LocationVibes;
   /** 필수 지역(시군구) — 하드 필터. 비었으면 전체. OR 로직. */
   requiredRegions?: string[];
-  /** 대단지 선호 — 소프트 가점(거래량 프록시; 세대수 데이터 확보 전 근사). */
-  preferLargeComplex?: boolean;
-  /** 신축만 — 이 준공년도 이후만(하드). 0/없으면 무제한. */
-  minBuildYear?: number;
-  /** 초품아만 — 초등학교 150m 이내만(하드). */
-  requireChopumah?: boolean;
   /** 예산 근접도 — 결과 가격대를 예산에 얼마나 맞출지. 없으면 넉넉히(기존). */
   budgetFlex?: BudgetFlex;
   /** 본인 직장. 은퇴·무직(retired)이면 생략. */

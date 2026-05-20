@@ -15,7 +15,7 @@ import type { CommuteLeg } from "@/types/recommendation";
 function makeProfile(overrides: Partial<CoupleProfile> = {}): CoupleProfile {
   return {
     householdType: "dualIncome",
-    priorities: { commute: 5, school: 3, buildingAge: 2 },
+    priorities: { commute: 5, school: 3, buildingAge: 2, largeComplex: 2 },
     preferredAreaRange: "p32_35",
     workplaceA: {
       label: "직장A",

@@ -13,6 +13,7 @@ const SIGNAL_ORDER: CandidateSignalKey[] = [
   "budgetFit",
   "school",
   "buildingAge",
+  "largeComplex",
 ];
 
 const TIER_CONFIG: Record<

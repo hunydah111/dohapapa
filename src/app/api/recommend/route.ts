@@ -29,6 +29,7 @@ const coupleProfileSchema = z
       commute: z.number().min(0).max(5),
       school: z.number().min(0).max(5),
       buildingAge: z.number().min(0).max(5),
+      largeComplex: z.number().min(0).max(5).optional(),
     }),
     preferredAreaRange: z.enum([
       "under18",
@@ -46,9 +47,6 @@ const coupleProfileSchema = z
       })
       .optional(),
     requiredRegions: z.array(z.string()).max(72).optional(),
-    preferLargeComplex: z.boolean().optional(),
-    minBuildYear: z.number().int().min(1900).max(2100).optional(),
-    requireChopumah: z.boolean().optional(),
     budgetFlex: z.enum(["tight", "normal", "relaxed"]).optional(),
     // 1인 가구: workplaceA 만, retired: 둘 다 없을 수 있음
     workplaceA: workplaceSchema.optional(),

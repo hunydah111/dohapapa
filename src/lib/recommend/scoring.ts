@@ -227,3 +227,18 @@ export function scoreBuildingAge(buildYear: number | null): ScoreResult {
     };
   }
 }
+
+// ── 거래 많은 단지(대단지·인기) 점수 ─────────────────────────────────────────
+
+/**
+ * 최근 6개월 거래량을 "대단지·인기 단지" 프록시로 점수화한다.
+ * (세대수 데이터 도입 전 근사 — 거래가 활발할수록 규모·환금성이 큰 경향)
+ * 거래 8건(분석 최소) → 0점, 약 50건 이상 → 100점.
+ */
+export function scoreLargeComplex(transactionCount: number): ScoreResult {
+  const score = Math.max(
+    0,
+    Math.min(100, Math.round((transactionCount - 8) * 2.4)),
+  );
+  return { score, reason: `최근 6개월 거래 ${transactionCount}건` };
+}

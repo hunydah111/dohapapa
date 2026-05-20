@@ -39,6 +39,7 @@ import {
   scoreBudgetFit,
   scoreBuildingAge,
   scoreCommute,
+  scoreLargeComplex,
   scoreSchool,
 } from "./scoring";
 import {
@@ -61,7 +62,12 @@ function buildWeights(
   priorities: CoupleProfile["priorities"],
   householdType: CoupleProfile["householdType"],
 ): Record<CandidateSignalKey, number> {
-  const userKeys: PriorityKey[] = ["commute", "school", "buildingAge"];
+  const userKeys: PriorityKey[] = [
+    "commute",
+    "school",
+    "buildingAge",
+    "largeComplex",
+  ];
   const userVals = userKeys.map((k) => Math.max(0, priorities[k] ?? 0));
 
   // retired 이면 통근 가중치를 0 으로 강제 — 통근 신호 자체가 무의미한 가구
@@ -76,6 +82,7 @@ function buildWeights(
     commute: userVals[0],
     school: userVals[1],
     buildingAge: userVals[2],
+    largeComplex: userVals[3],
     budgetFit: budgetFitRaw,
   };
   const keys = Object.keys(raw) as CandidateSignalKey[];
@@ -387,7 +394,6 @@ export async function recommendComplexes(
   // 3. 좌표 있는 단지 전체 로드
   // 추가 조건(하드) — 필수 지역·신축만·초품아만 을 DB 단계에서 적용
   const requiredRegions = profile.requiredRegions ?? [];
-  const minBuildYear = profile.minBuildYear ?? 0;
   // 필수 지역을 고른 경우 예산 하한("너무 쌈")을 풀어 그 지역 저가 단지도 노출
   const dropLowerBand = requiredRegions.length > 0;
   // 예산 근접도 — 결과 가격 밴드 폭(딱맞게/적당히/넉넉히). 미지정 시 넉넉히(기존).
@@ -399,8 +405,6 @@ export async function recommendComplexes(
       ...(requiredRegions.length > 0
         ? { sigungu: { in: requiredRegions } }
         : {}),
-      ...(minBuildYear > 0 ? { buildYear: { gte: minBuildYear } } : {}),
-      ...(profile.requireChopumah ? { nearestElemSchoolM: { lte: 150 } } : {}),
     },
   });
 
@@ -504,18 +508,21 @@ export async function recommendComplexes(
         profile.hasSchoolAgedChild,
       );
       const ageResult = scoreBuildingAge(complex.buildYear);
+      const largeResult = scoreLargeComplex(totalTransactions);
 
       const scores: Record<CandidateSignalKey, number> = {
         commute: commuteResult.score,
         budgetFit: budgetResult.score,
         school: schoolResult.score,
         buildingAge: ageResult.score,
+        largeComplex: largeResult.score,
       };
       const reasoning: Record<CandidateSignalKey, string> = {
         commute: commuteResult.reason,
         budgetFit: budgetResult.reason,
         school: schoolResult.reason,
         buildingAge: ageResult.reason,
+        largeComplex: largeResult.reason,
       };
 
       const baseTotalScore = Math.round(
@@ -547,14 +554,9 @@ export async function recommendComplexes(
       const vibeBadge = badgeKey
         ? vibeBadgeLabel(badgeKey, complexCoord)
         : undefined;
-      // 대단지 선호 — 거래량(대단지일수록 거래 많음) 프록시 소프트 가점(최대 +8)
-      const largeBonus = profile.preferLargeComplex
-        ? Math.min(8, Math.max(0, (totalTransactions - MIN_TRANSACTIONS) * 0.2))
-        : 0;
       const totalScore = Math.min(
         100,
-        baseTotalScore +
-          Math.round(Math.min(VIBE_BONUS_CAP, vibeBonus) + largeBonus),
+        baseTotalScore + Math.round(Math.min(VIBE_BONUS_CAP, vibeBonus)),
       );
 
       // 초품아 — 초등학교가 단지에서 직선 150m 이내 (전문가 패널: 100m 는 너무 좁음)
@@ -924,8 +926,6 @@ export async function recommendComplexes(
     const causes: string[] = [];
     if (requiredRegions.length > 0)
       causes.push(`지역(${requiredRegions.join("·")})`);
-    if (minBuildYear > 0) causes.push(`신축 ${minBuildYear}년+`);
-    if (profile.requireChopumah) causes.push("초품아만");
     if (causes.length > 0) {
       emptyReason = `🧐 이 조건들이 좀 타이트했나봐요 — ${causes.join(", ")}. 하나만 살짝 풀어볼까요?`;
     }
