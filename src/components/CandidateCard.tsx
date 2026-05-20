@@ -54,8 +54,11 @@ export function CandidateCard({
 }) {
   const tier = TIER_CONFIG[candidate.tier];
 
-  const naverSearchUrl = `https://m.land.naver.com/search/result/${encodeURIComponent(
-    `${candidate.complexName} ${candidate.dongName}`
+  // 네이버 통합검색으로 보낸다 — 단지명+구+동으로 검색하면 상단에 해당 단지의
+  // 부동산 단지 카드(매물 링크 포함)가 안정적으로 노출된다.
+  // (m.land 직접 검색은 "단지명 동" 조합을 한 덩어리로 인식해 매칭 실패가 잦았음)
+  const naverSearchUrl = `https://search.naver.com/search.naver?query=${encodeURIComponent(
+    `${candidate.complexName} ${candidate.sigungu} ${candidate.dongName}`
   )}`;
 
   return (
