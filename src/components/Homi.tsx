@@ -81,8 +81,9 @@ export function Homi({
         </>
       )}
 
-      {/* 문 = 입 (가로로 긴 둥근 문 → 귀여운 입) */}
-      <rect x="44" y="86" width="32" height="16" rx="8" fill={DOOR} />
+      {/* 입 = 문 — 작은 문 모양(윗부분 둥근) 하나가 곧 입. 손잡이까지. */}
+      <path d="M51 102 L51 92 Q51 83 60 83 Q69 83 69 92 L69 102 Z" fill={DOOR} />
+      <circle cx="65.5" cy="94" r="1.6" fill={ROOF_EDGE} />
 
       {/* 돋보기 (searching) */}
       {mood === "searching" && (
