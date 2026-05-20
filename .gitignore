@@ -45,6 +45,7 @@ next-env.d.ts
 *.db
 *.db-journal
 prisma/dev.db*
+prisma/_dump.json
 
 # claude code local settings
 .claude/settings.local.json

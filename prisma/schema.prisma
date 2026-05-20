@@ -1,5 +1,5 @@
 // Dohapapa — 부부 프로필 기반 주거지 탐색 의사결정 도구
-// Dev: SQLite (file). Prod: switch provider to "postgresql" and DATABASE_URL.
+// DB: Postgres (Neon). DATABASE_URL=pooled(런타임), DIRECT_URL=direct(마이그레이션).
 //
 // 컴플라이언스 주의: 사용자 프로필(소득·자산·직장)은 DB에 저장하지 않는다.
 // 요청당 1회 계산 후 폐기. 영속 데이터는 공개 데이터(실거래가)와 캐시뿐.
@@ -9,8 +9,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Complex {

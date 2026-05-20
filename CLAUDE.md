@@ -46,7 +46,7 @@ npx tsx --env-file=.env.local scripts/enrich-schools.ts         # fills nearestE
 ## Environment
 
 `.env.local` (see `.env.example`). All keys are optional — the app degrades gracefully:
-- `DATABASE_URL` — SQLite file in dev (`file:./dev.db`). For prod, also change `provider` in `prisma/schema.prisma` to `postgresql`.
+- `DATABASE_URL` / `DIRECT_URL` — **Postgres (Neon)** for both dev and prod. `DATABASE_URL` is the pooled connection (runtime, `-pooler` host, `pgbouncer=true`); `DIRECT_URL` is the direct connection used by `prisma migrate`. Prisma CLI reads `.env` not `.env.local`, so run migrations with the env injected (e.g. `set -a; . ./.env.local; set +a; npx prisma migrate dev`). The old SQLite `dev.db` is retired (kept locally as a backup only).
 - `MOLIT_API_KEY` — only needed by `fetch-molit.ts`.
 - `KAKAO_REST_KEY` — one key serves both geocoding (`src/lib/geocode.ts`) and commute routing (`src/lib/commute/kakaoProvider.ts`). **Without it, commute times fall back to the haversine `mockProvider`** and geocoding uses a built-in dictionary.
 - `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_CONTACT_EMAIL`, `NEXT_PUBLIC_GA_MEASUREMENT_ID` — SEO/analytics, fallbacks exist.
