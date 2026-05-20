@@ -37,7 +37,7 @@ export default function HomePage() {
           className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed"
           style={{ color: "#6b6157" }}
         >
-          어떤 집 찾아줄까요? 🏡 내 월급으로 어디 살 수 있을지 같이 봐요.
+          내 월급으로 어디 살 수 있을까?
         </p>
       </section>
 
