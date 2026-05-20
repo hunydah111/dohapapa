@@ -52,16 +52,6 @@ const CODE_TO_GU: Record<string, string> = Object.fromEntries(
 // Fields arrive as numbers or numeric strings depending on the record.
 // ---------------------------------------------------------------------------
 
-// Coerces a value to a number or returns null when absent/blank/"-".
-const coerceNum = z
-  .union([z.number(), z.string()])
-  .transform((v) => {
-    const n = Number(String(v).replace(/,/g, "").trim());
-    return Number.isFinite(n) ? n : null;
-  })
-  .nullable()
-  .optional();
-
 const MolitItemSchema = z
   .object({
     aptNm: z.string().optional().default(""),
