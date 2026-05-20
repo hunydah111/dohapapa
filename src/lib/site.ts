@@ -2,7 +2,7 @@ export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
   "https://www.homenasia.kr";
 
-export const SITE_NAME = "홈앤나사이";
+export const SITE_NAME = "홈앤나";
 
 export const CONTACT_EMAIL =
   process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "hunydah111@gmail.com";

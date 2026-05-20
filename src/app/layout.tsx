@@ -20,19 +20,19 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.homenasia.kr",
   ),
-  title: "홈앤나사이 — 내 월급으로 어디 살 수 있을까?",
+  title: "홈앤나 — 내 월급으로 어디 살 수 있을까?",
   description:
     "Home & 나 사이의 거리. 직장·예산·학군 조건으로 국토부 실거래가에 살 만한 아파트 단지를 좁혀주는 정보 제공 도구.",
   openGraph: {
-    title: "홈앤나사이",
+    title: "홈앤나",
     description: "내 월급으로 어디 살 수 있을까?",
     type: "website",
     locale: "ko_KR",
-    siteName: "홈앤나사이",
+    siteName: "홈앤나",
   },
   twitter: {
     card: "summary_large_image",
-    title: "홈앤나사이",
+    title: "홈앤나",
     description: "내 월급으로 어디 살 수 있을까?",
   },
 };
@@ -55,7 +55,7 @@ export default function RootLayout({
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a
               href="/"
-              aria-label="홈앤나사이 홈으로"
+              aria-label="홈앤나 홈으로"
               className="flex items-center gap-2.5 rounded-lg transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               {/* 콤파스 마크 — indigo currentColor 상속 */}
@@ -68,7 +68,7 @@ export default function RootLayout({
                 className="text-[15px] font-bold tracking-tight"
                 style={{ color: "#1d1d1f" }}
               >
-                홈앤나사이
+                홈앤나
               </span>
             </a>
 
@@ -89,7 +89,7 @@ export default function RootLayout({
         <footer className="mt-12 border-t border-black/[0.06] bg-white/60">
           <div className="mx-auto flex max-w-2xl flex-col gap-3 px-4 py-6 text-xs sm:flex-row sm:items-center sm:justify-between">
             <p style={{ color: "#86868b" }}>
-              © {new Date().getFullYear()} 홈앤나사이 — 정보 제공 도구
+              © {new Date().getFullYear()} 홈앤나 — 정보 제공 도구
             </p>
             <nav className="flex flex-wrap gap-4" style={{ color: "#6e6e73" }}>
               <Link href="/privacy" className="hover:text-indigo-600">

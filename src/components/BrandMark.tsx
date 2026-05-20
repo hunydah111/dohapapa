@@ -1,4 +1,4 @@
-// 홈앤나사이 — 브랜드 마크.
+// 홈앤나 — 브랜드 마크.
 //
 // 컨셉: 브랜드 이름 "Home & 나 사이" 의 시각화.
 //   - 왼쪽 indigo 반쪽 = 나 (currentColor 상속으로 헤더 톤과 동기화)
@@ -19,7 +19,7 @@ export function BrandMark({ size = 24, className }: Props) {
       viewBox="0 0 32 32"
       fill="none"
       role="img"
-      aria-label="홈앤나사이 로고"
+      aria-label="홈앤나 로고"
       className={className}
     >
       {/* 나 (왼쪽 반쪽, indigo) — 바닥 모서리 라운드 */}

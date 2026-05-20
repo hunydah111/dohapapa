@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 // 카카오톡·페이스북·X 등에서 링크 공유 시 보이는 썸네일(1200×630).
 // 한글 렌더를 위해 Black Han Sans(OFL) 폰트를 번들해 사용한다.
-export const alt = "홈앤나사이 — 내 월급으로 어디 살 수 있을까?";
+export const alt = "홈앤나 — 내 월급으로 어디 살 수 있을까?";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -39,7 +39,7 @@ export default async function Image() {
           <path d="M16 4 L28 13 L28 26 Q28 28 26 28 L16 28 Z" fill="#f59e0b" />
           <circle cx="16" cy="16" r="3.5" fill="#4f46e5" />
         </svg>
-        <div style={{ fontSize: 168, lineHeight: 1 }}>홈앤나사이</div>
+        <div style={{ fontSize: 168, lineHeight: 1 }}>홈앤나</div>
         <div style={{ fontSize: 62, marginTop: 28, opacity: 0.96 }}>
           내 월급으로 어디 살 수 있을까?
         </div>

@@ -25,7 +25,7 @@ export default function HomePage() {
             size={48}
             className="h-9 w-9 text-indigo-600 sm:h-12 sm:w-12"
           />
-          홈앤나사이
+          홈앤나
         </h1>
 
         {/* 캐주얼 태그라인 — "재미로 한번 돌려본다" 톤 */}

@@ -97,7 +97,7 @@ export function HomeExperience() {
     if (!state) return;
     const url = window.location.href;
     const shareData = {
-      title: "홈앤나사이",
+      title: "홈앤나",
       text: "재미로 한번 돌려보는 내 집 찾기 — 내 결과 보기",
       url,
     };
