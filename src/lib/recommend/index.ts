@@ -264,9 +264,24 @@ interface ScoredComplex {
 // ── 하드 필터 통과 건수 계산 (relaxation 시뮬레이션용) ──────────────────────
 
 /**
+ * 통근 leg 들이 (허용시간 + extraMinutes) × COMMUTE_HARD_FACTOR 를 초과하는지.
+ * scoring.ts 와 동일한 COMMUTE_HARD_FACTOR 를 사용한다. (A→직장0, B→직장1)
+ */
+function commuteExceedsLimit(
+  legs: CommuteLeg[],
+  workplaces: Workplace[],
+  extraMinutes: number,
+): boolean {
+  return legs.some((leg) => {
+    const wp = leg.workplace === "A" ? workplaces[0] : workplaces[1];
+    const limit = (wp?.maxCommuteMinutes ?? 50) + extraMinutes;
+    return leg.minutes > limit * COMMUTE_HARD_FACTOR;
+  });
+}
+
+/**
  * 평가된 단지 목록을 받아 변경된 구매력·통근 한도로 하드필터 통과 건수를 반환한다.
  * 이미 평가된 결과(medianKrw, commuteLegs)를 재사용하므로 추가 DB/API 호출 없음.
- * 통근 하드필터 배수는 scoring.ts 와 동일한 COMMUTE_HARD_FACTOR 를 사용한다.
  */
 function countPassingHardFilter(
   evaluated: ScoredComplex[],
@@ -274,23 +289,42 @@ function countPassingHardFilter(
   commuteExtraMinutes: number,
   workplaces: Workplace[],
 ): number {
-  return evaluated.filter((e) => {
-    const priceOutOfBand = !priceInBudgetBand(e.medianKrw, netPurchasePowerKrw);
-    if (priceOutOfBand) return false;
+  return evaluated.filter(
+    (e) =>
+      priceInBudgetBand(e.medianKrw, netPurchasePowerKrw) &&
+      !commuteExceedsLimit(e.candidate.commuteLegs, workplaces, commuteExtraMinutes),
+  ).length;
+}
 
-    // 통근 한도를 extraMinutes 만큼 늘렸을 때도 초과하는지 확인
-    const commuteTooLong = e.candidate.commuteLegs.some((leg) => {
-      const wp = workplaces.find((w) =>
-        leg.workplace === "A"
-          ? w === workplaces[0]
-          : w === workplaces[1],
-      );
-      const limit = (wp?.maxCommuteMinutes ?? 50) + commuteExtraMinutes;
-      // scoring.ts 와 동일한 COMMUTE_HARD_FACTOR 로 통일 (구버전 ×1.5 → ×1.3)
-      return leg.minutes > limit * COMMUTE_HARD_FACTOR;
-    });
-    return !commuteTooLong;
-  }).length;
+/**
+ * 통근 조건은 만족하지만 가격이 예산 밴드 상한을 넘어 탈락한 단지 중 가장 싼 것을
+ * 잡기 위해 필요한 "최소 추가 예산(원)"을 반환한다. 없으면 null. 1천만원 단위 올림.
+ */
+function minExtraBudgetForMoreKrw(
+  evaluated: ScoredComplex[],
+  netPurchasePowerKrw: number,
+  commuteExtraMinutes: number,
+  workplaces: Workplace[],
+): number | null {
+  const upper = netPurchasePowerKrw + 100_000_000;
+  let minAbove = Number.POSITIVE_INFINITY;
+  for (const e of evaluated) {
+    if (commuteExceedsLimit(e.candidate.commuteLegs, workplaces, commuteExtraMinutes)) {
+      continue;
+    }
+    if (e.medianKrw > upper && e.medianKrw < minAbove) minAbove = e.medianKrw;
+  }
+  if (!Number.isFinite(minAbove)) return null;
+  return Math.ceil((minAbove - upper) / 10_000_000) * 10_000_000;
+}
+
+/** 원(KRW)을 "1억 5천만"·"3천만" 식 짧은 한국어로. 1천만원 단위 가정. */
+function formatKrwShort(krw: number): string {
+  const eok = Math.floor(krw / 1e8);
+  const cheonman = Math.round((krw - eok * 1e8) / 1e7);
+  if (eok > 0 && cheonman > 0) return `${eok}억 ${cheonman}천만`;
+  if (eok > 0) return `${eok}억`;
+  return `${cheonman}천만`;
 }
 
 // ── 메인 추천 함수 ───────────────────────────────────────────────────────────
@@ -594,6 +628,50 @@ export async function recommendComplexes(
         relaxationSuggestions.push({
           message: `선호 평수대를 "${nextRange.label}"로 조정하면 ${countAreaRelax}곳이 조건에 맞습니다`,
           resultCount: countAreaRelax,
+        });
+      }
+    }
+  } else if (survivors.length > 0 && phase1Valid.length > 0) {
+    // 결과가 있을 때 — "더 넓게 보기": 조건을 풀면 몇 곳이 "더" 나오는지(델타).
+    // 기준 모집단은 consideredComplexCount 와 동일한 1차(mock) 통과 집합.
+    const currentPassing = consideredComplexCount;
+
+    // (a) 예산 — 다음 단지를 잡는 데 필요한 최소 추가 예산
+    const extra = minExtraBudgetForMoreKrw(
+      phase1Valid,
+      netPurchasePowerKrw,
+      0,
+      workplaces,
+    );
+    if (extra !== null) {
+      const relaxedCount = countPassingHardFilter(
+        phase1Valid,
+        netPurchasePowerKrw + extra,
+        0,
+        workplaces,
+      );
+      const more = relaxedCount - currentPassing;
+      if (more > 0) {
+        relaxationSuggestions.push({
+          message: `예산을 약 ${formatKrwShort(extra)} 더 확보하면 ${more}곳을 더 볼 수 있어요`,
+          resultCount: more,
+        });
+      }
+    }
+
+    // (b) 통근 — 허용시간 +20분
+    if (workplaces.length > 0) {
+      const relaxedCount = countPassingHardFilter(
+        phase1Valid,
+        netPurchasePowerKrw,
+        20,
+        workplaces,
+      );
+      const more = relaxedCount - currentPassing;
+      if (more > 0) {
+        relaxationSuggestions.push({
+          message: `통근 허용시간을 20분 늘리면 ${more}곳을 더 볼 수 있어요`,
+          resultCount: more,
         });
       }
     }

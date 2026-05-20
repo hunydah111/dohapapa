@@ -429,6 +429,41 @@ export function HomeExperience() {
         </section>
       )}
 
+      {/* 더 넓게 보기 — 결과가 있을 때 조건 완화 제안 */}
+      {result.candidates.length > 0 &&
+        result.relaxationSuggestions.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <div>
+              <h2 className="text-lg font-bold" style={{ color: "#1d1d1f" }}>
+                더 넓게 보기
+              </h2>
+              <p className="mt-0.5 text-sm" style={{ color: "#6e6e73" }}>
+                조건을 조금 풀면 후보가 더 늘어나요
+              </p>
+            </div>
+            <div className="flex flex-col gap-3">
+              {result.relaxationSuggestions.map((s, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setPanelOpen(true)}
+                  className="group flex items-center justify-between rounded-2xl border border-black/[0.08] bg-[#f5f5f7] px-5 py-4 text-left transition-colors hover:border-indigo-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <span
+                    className="text-sm font-medium leading-relaxed"
+                    style={{ color: "#1d1d1f" }}
+                  >
+                    {s.message}
+                  </span>
+                  <span className="ml-4 flex-shrink-0 rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-bold text-indigo-700">
+                    +{s.resultCount}곳
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
       {/* 조건 빠른 수정 패널 (접이식) */}
       <section>
         <button
