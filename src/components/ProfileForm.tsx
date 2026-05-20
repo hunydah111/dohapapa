@@ -1022,7 +1022,7 @@ export function ProfileForm({
               hint={
                 existingLoan && existingLoan !== "0"
                   ? manwonHint(existingLoan)
-                  : "주담대·신용대출·할부 전부 합산. 없으면 0"
+                  : "주담대·신용대출·전세·자동차할부·카드론 등 매달 갚는 가계대출만 합산하세요. 사업자(기업)대출은 보통 DSR에 안 잡혀 빼도 됩니다. 없으면 0."
               }
             />
           </div>
