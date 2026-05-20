@@ -104,7 +104,8 @@ export const LOCATION_VIBE_LABELS: Record<LocationVibe, string> = {
   quiet: "새소리·나뭇잎소리",
 };
 
-export const LOCATION_VIBE_ORDER: LocationVibe[] = ["riverside", "quiet"];
+// 한적(quiet)은 UI에서 제외 — 현재는 한강변만 노출. (타입/점수 코드는 유지)
+export const LOCATION_VIBE_ORDER: LocationVibe[] = ["riverside"];
 
 /** 입지 강도 1~3 (조금/꽤/많이). 키별 강도 맵 — 복수선택 가능. */
 export type LocationVibes = Partial<Record<LocationVibe, number>>;

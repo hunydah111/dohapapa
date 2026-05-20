@@ -544,7 +544,7 @@ export async function recommendComplexes(
       for (const key of Object.keys(vibes) as LocationVibe[]) {
         const level = vibes[key];
         if (!level) continue;
-        const s = scoreLocationVibe(key, complexCoord);
+        const s = scoreLocationVibe(key, complexCoord, level);
         vibeBonus += s * (VIBE_LEVEL_BONUS[level] ?? 0);
         // 배지는 quiet(새소리) 제외, 매칭(≥0.5)된 것 중 강도×점수 최고만
         if (key !== "quiet" && s >= 0.5) {
@@ -934,7 +934,11 @@ export async function recommendComplexes(
   if (wish && survivors.length > 0) {
     const matchedInTop = candidates.some(
       (c) =>
-        scoreLocationVibe(wish, { lat: c.latitude, lng: c.longitude }) >= 0.5,
+        scoreLocationVibe(
+          wish,
+          { lat: c.latitude, lng: c.longitude },
+          profile.locationVibes?.[wish],
+        ) >= 0.5,
     );
     if (!matchedInTop) {
       let nearest = survivors[0];

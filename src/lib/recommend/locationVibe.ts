@@ -32,11 +32,24 @@ const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const minDist = (p: LatLng, anchors: LatLng[]) =>
   Math.min(...anchors.map((a) => haversineKm(p, a)));
 
-/** 입지 분위기에 단지가 얼마나 맞는지 0~1. */
-export function scoreLocationVibe(vibe: LocationVibe, coord: LatLng): number {
+// 스푼 단계별 '한강 인정 반경'(km) — 듬뿍일수록 강에 더 가까워야 점수가 붙는다.
+export const RIVERSIDE_REACH_KM: Record<number, number> = {
+  1: 1.5, // 한 스푼
+  2: 1.0, // 두 스푼
+  3: 0.5, // 듬뿍 (강 바로 옆)
+};
+
+/** 입지 분위기에 단지가 얼마나 맞는지 0~1. 한강변은 level(스푼)이 클수록 반경이 좁아진다. */
+export function scoreLocationVibe(
+  vibe: LocationVibe,
+  coord: LatLng,
+  level?: number,
+): number {
   switch (vibe) {
-    case "riverside":
-      return clamp01(1 - minDist(coord, RIVERSIDE) / 1.5);
+    case "riverside": {
+      const reach = (level && RIVERSIDE_REACH_KM[level]) || 1.5;
+      return clamp01(1 - minDist(coord, RIVERSIDE) / reach);
+    }
     case "quiet":
       return clamp01((minDist(coord, BUSY_HUBS) - 1.5) / 3);
   }
@@ -71,4 +84,15 @@ export function vibeDistanceKm(vibe: LocationVibe, coord: LatLng): number {
 /** 매칭 단지 배지 — 이모지+짧은이름+거리 (예: "🎨 홍대 1.2km"). */
 export function vibeBadgeLabel(vibe: LocationVibe, coord: LatLng): string {
   return `${VIBE_EMOJI[vibe]} ${VIBE_SHORT[vibe]} ${vibeDistanceKm(vibe, coord).toFixed(1)}km`;
+}
+
+/** UI용 — 선택한 스푼이 점수에 어떻게 반영되는지 한 줄 설명. */
+export function vibeReflectionLabel(vibe: LocationVibe, level: number): string {
+  const max = VIBE_LEVEL_BONUS[level] ?? 0;
+  if (vibe === "riverside") {
+    const reach = RIVERSIDE_REACH_KM[level] ?? 1.5;
+    const reachLabel = reach >= 1 ? `${reach}km` : `${Math.round(reach * 1000)}m`;
+    return `한강 ${reachLabel} 이내일수록 가산 · 최대 +${max}점 (그보다 멀면 미반영)`;
+  }
+  return `번화가에서 멀수록 가산 · 최대 +${max}점`;
 }

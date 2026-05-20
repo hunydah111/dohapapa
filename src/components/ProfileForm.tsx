@@ -36,6 +36,7 @@ import { Segmented } from "@/components/ui/Segmented";
 import { StepDots } from "@/components/ui/StepDots";
 import { Homi } from "@/components/Homi";
 import { RequiredRegionPicker } from "@/components/RequiredRegionPicker";
+import { vibeReflectionLabel } from "@/lib/recommend/locationVibe";
 import { formatKrwHuman } from "@/lib/format";
 import { estimateBudget } from "@/lib/budget";
 
@@ -780,14 +781,16 @@ export function ProfileForm({
                 {/* 취향 한 스푼 (입지) — 복수선택 · 강도(한 스푼/두 스푼/듬뿍) */}
                 <div className="rounded-3xl border border-dashed border-coral-200 bg-gradient-to-br from-coral-50 via-white to-pink-50 px-4 py-5">
                   <p className="text-[15px] font-bold text-[#3a322c]">
-                    🎯 취향 한 스푼{" "}
+                    🌊 한강변 한 스푼{" "}
                     <span className="text-[12px] font-medium text-coral-500">
-                      복수선택 가능 · 재미로
+                      재미로
                     </span>
                   </p>
                   <p className="mt-1 mb-4 text-[12px] leading-relaxed text-[#6b6157]">
-                    누를 때마다 한 스푼 → 두 스푼 → 듬뿍으로 진해지고, 많이
-                    담을수록 가점이 커져요. 여러 개 골라도 OK!
+                    누를 때마다 한 스푼 → 두 스푼 → 듬뿍. 진해질수록 점수도
+                    커지고,{" "}
+                    <strong className="font-semibold">한강에 더 가까워야</strong>{" "}
+                    인정돼요.
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {LOCATION_VIBE_ORDER.map((key) => {
@@ -828,6 +831,21 @@ export function ProfileForm({
                       );
                     })}
                   </div>
+                  {/* 선택한 스푼이 점수에 어떻게 반영되는지 */}
+                  {LOCATION_VIBE_ORDER.map((key) => {
+                    const lv = locationVibes[key] ?? 0;
+                    if (!lv) return null;
+                    return (
+                      <p
+                        key={key}
+                        className="mt-3 text-[12px] leading-relaxed text-coral-700"
+                      >
+                        {VIBE_CHIP[key].emoji} {LOCATION_VIBE_LABELS[key]}{" "}
+                        {LOCATION_VIBE_LEVEL_LABELS[lv]} →{" "}
+                        {vibeReflectionLabel(key, lv)}
+                      </p>
+                    );
+                  })}
                 </div>
               </div>
             )}
