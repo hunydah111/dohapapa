@@ -37,7 +37,7 @@ export default function HomePage() {
           className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed"
           style={{ color: "#6b6157" }}
         >
-          내 월급으로 어디 살 수 있을까?
+          내 통장으로 어디 살 수 있을까?
         </p>
       </section>
 
