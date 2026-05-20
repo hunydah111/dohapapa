@@ -95,15 +95,33 @@ export function HomeExperience() {
 
   async function handleShare() {
     if (!state) return;
+    const url = window.location.href;
+    const shareData = {
+      title: "홈앤나사이",
+      text: "재미로 한번 돌려보는 내 집 찾기 — 내 결과 보기",
+      url,
+    };
+
+    // 1. Web Share API — 모바일에선 카카오톡 등 네이티브 공유 시트가 뜬다.
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (err) {
+        // 사용자가 공유를 취소한 경우(AbortError)엔 조용히 종료
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        // 그 외 오류는 아래 링크 복사로 폴백
+      }
+    }
+
+    // 2. 폴백 — 링크 복사 (공유 API 미지원 브라우저)
     try {
-      const url = window.location.href;
       await navigator.clipboard.writeText(url);
-      setShareToast("주소를 복사했어요. 카톡·SNS에 붙여넣으면 배우자도 같은 결과를 볼 수 있어요.");
-      setTimeout(() => setShareToast(null), 3500);
+      setShareToast("링크를 복사했어요. 카톡·SNS에 붙여넣으면 같은 결과를 볼 수 있어요.");
     } catch {
       setShareToast("복사에 실패했어요. 주소창에서 직접 복사해주세요.");
-      setTimeout(() => setShareToast(null), 3500);
     }
+    setTimeout(() => setShareToast(null), 3500);
   }
 
   function handleRestart() {
@@ -242,10 +260,12 @@ export function HomeExperience() {
         </div>
       </div>
 
-      {/* 공유 토스트 */}
+      {/* 공유 토스트 — 스크롤 위치와 무관하게 항상 보이도록 화면 하단 고정 */}
       {shareToast && (
-        <div className="rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-medium text-indigo-800">
-          {shareToast}
+        <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
+          <div className="rounded-full bg-indigo-600 px-5 py-3 text-sm font-medium text-white shadow-lg">
+            {shareToast}
+          </div>
         </div>
       )}
 
