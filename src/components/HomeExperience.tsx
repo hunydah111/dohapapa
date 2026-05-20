@@ -8,6 +8,7 @@ import { AREA_RANGES, AREA_RANGE_ORDER } from "@/types/profile";
 import { BudgetSummary } from "./BudgetSummary";
 import { CandidateCard } from "./CandidateCard";
 import { HeroResultCard } from "./HeroResultCard";
+import { Homi } from "./Homi";
 import { getHomeType } from "@/lib/homeType";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
@@ -214,16 +215,12 @@ export function HomeExperience() {
   if (state === null) {
     if (autoLoading) {
       return (
-        <div className="flex flex-col items-center gap-3 rounded-3xl border border-coral-100 bg-coral-50/60 px-6 py-12 text-center">
-          <span className="flex h-3 w-3">
-            <span className="animate-ping inline-flex h-full w-full rounded-full bg-coral-400 opacity-75" />
-          </span>
+        <div className="flex flex-col items-center gap-2 rounded-3xl border border-coral-100 bg-coral-50/60 px-6 py-12 text-center">
+          <Homi mood="searching" size={92} />
           <p className="text-sm font-semibold text-coral-700">
             공유 링크 분석 중…
           </p>
-          <p className="text-xs text-coral-500/80">
-            잠시만 기다려 주세요
-          </p>
+          <p className="text-xs text-coral-500/80">잠시만 기다려 주세요</p>
         </div>
       );
     }
@@ -291,17 +288,17 @@ export function HomeExperience() {
       {/* 조건에 맞는 단지 or 0건 */}
       {result.candidates.length > 0 ? (
         <section className="flex flex-col gap-5">
-          <div>
-            <h2
-              className="text-xl font-bold"
-              style={{ color: "#3a322c" }}
-            >
-              조건에 맞는 단지
-            </h2>
-            <p className="mt-0.5 text-sm" style={{ color: "#6b6157" }}>
-              검토 {result.consideredComplexCount.toLocaleString()}개 중 상위{" "}
-              {result.candidates.length}곳
-            </p>
+          <div className="flex items-center gap-3">
+            <Homi mood="happy" size={56} className="shrink-0" />
+            <div>
+              <h2 className="text-xl font-bold" style={{ color: "#3a322c" }}>
+                딱 맞는 집 찾았어요!
+              </h2>
+              <p className="mt-0.5 text-sm" style={{ color: "#6b6157" }}>
+                검토 {result.consideredComplexCount.toLocaleString()}개 중 상위{" "}
+                {result.candidates.length}곳
+              </p>
+            </div>
           </div>
 
           <ul className="flex flex-col gap-6">
@@ -315,8 +312,9 @@ export function HomeExperience() {
       ) : (
         /* 0건 화면 */
         <Card>
+          <Homi mood="sheepish" size={96} className="mx-auto mb-1" />
           <h2
-            className="text-xl font-bold mb-2"
+            className="text-xl font-bold mb-2 text-center"
             style={{ color: "#3a322c" }}
           >
             앗, 딱 맞는 집을 못 찾았어요 😅

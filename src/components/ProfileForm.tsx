@@ -36,6 +36,7 @@ import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { Segmented } from "@/components/ui/Segmented";
 import { StepDots } from "@/components/ui/StepDots";
+import { Homi } from "@/components/Homi";
 import { formatKrwHuman } from "@/lib/format";
 import { estimateBudget } from "@/lib/budget";
 
@@ -1494,11 +1495,15 @@ export function ProfileForm({
             })}
           </div>
 
-          {/* 분석 중 안내 */}
+          {/* 분석 중 안내 — 호미가 돋보기 들고 두리번 */}
           {submitting && (
-            <div className="rounded-2xl bg-coral-50 border border-coral-100 px-4 py-3">
-              <p className="text-[13px] text-coral-700 leading-relaxed">
-                조건에 맞는 단지를 탐색하고 예산·대출을 계산하고 있습니다. 잠시만 기다려 주세요.
+            <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-coral-50 border border-coral-100 px-4 py-5">
+              <Homi mood="searching" size={88} />
+              <p className="text-[14px] font-semibold text-coral-700">
+                열심히 찾는 중…
+              </p>
+              <p className="text-[12px] text-coral-600">
+                조건에 맞는 단지·예산을 계산하고 있어요
               </p>
             </div>
           )}

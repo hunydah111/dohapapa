@@ -66,6 +66,27 @@ body {
   letter-spacing: -0.01em;
 }
 
+/* ── 마스코트 호미 모션 ── */
+@keyframes homi-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+@keyframes homi-search {
+  0%, 100% { transform: rotate(-4deg) translateY(0); }
+  50% { transform: rotate(4deg) translateY(-3px); }
+}
+@keyframes homi-glass {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-6px, 4px); }
+}
+.homi-bob { animation: homi-bob 3.2s ease-in-out infinite; transform-origin: 50% 90%; }
+.homi-search { animation: homi-search 1.6s ease-in-out infinite; transform-origin: 50% 90%; }
+.homi-glass { animation: homi-glass 1.6s ease-in-out infinite; transform-origin: 108px 78px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .homi-bob, .homi-search, .homi-glass { animation: none; }
+}
+
 /* ── 전역 포커스 링 ── */
 :focus-visible {
   outline: 2px solid var(--color-accent);
