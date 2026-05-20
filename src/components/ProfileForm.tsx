@@ -727,6 +727,13 @@ export function ProfileForm({
             />
           )}
 
+          {/* 대중교통 안내 — 현재 자차 기준, 대중교통 추후 지원 */}
+          <p className="rounded-2xl bg-[#f5f5f7] px-4 py-3 text-[13px] leading-relaxed text-[#6e6e73]">
+            현재 통근 시간은{" "}
+            <strong className="font-semibold text-[#1d1d1f]">자차 기준</strong>
+            으로 계산돼요. 대중교통 이용 시 소요시간은 추후 업데이트 예정입니다.
+          </p>
+
           <div className="flex gap-3">
             <Button variant="secondary" onClick={goPrev}>
               이전
