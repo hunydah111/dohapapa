@@ -7,6 +7,13 @@ export interface AreaMedian {
    * 단순 중위가가 아니라 "지금 거래될 가격" 추정 — 부동산 전문가 패널 권고.
    */
   medianKrw: number;
+  /**
+   * 추정 현재가 범위 하단 (원). 최근 거래의 분위/최저. 신축 입주장처럼 같은 평형이
+   * 층·향 따라 크게 벌어지는 단지의 "정직한 폭"을 점추정 대신 보여주기 위한 값.
+   */
+  priceLow: number;
+  /** 추정 현재가 범위 상단 (원). 최근 거래의 분위/최고. */
+  priceHigh: number;
   /** 최근 6개월 거래 건수 — 가격 신뢰도 지표. */
   count: number;
   /**
@@ -37,6 +44,19 @@ const LAMBDA = 0.005;
 const TREND_MIN = 0.9;
 const TREND_MAX = 1.12;
 
+// ── 얇은표본 보정 (A) ──
+// 거래가 THIN_SAMPLE_MAX 건 이하인 평형은 가중중위값이 "최근 고가"를 묻어버린다.
+// 신축 입주장에선 같은 평형이 같은 주에도 층·향 따라 4~5억씩 벌어지는데, 중위값은
+// 가운데 한 건(흔히 저층·초기 등기분)을 골라 시세를 과소평가 → 저예산 유저에게
+// 비싼 단지를 과노출시킨다. 그래서 "최근분기 최고 실거래" 쪽으로 ALPHA 만큼 보수적으로
+// 끌어올린다. 단, 최근가가 추정가보다 높을 때만 — 하락 단지를 과대평가하지 않는다.
+const THIN_SAMPLE_MAX = 7;
+const THIN_LIFT_ALPHA = 0.4;
+// 표시용 가격범위: 표본이 작으면(≤SMALL_POOL_MAX) 최저~최고 그대로, 크면 분위로 트림.
+const SMALL_POOL_MAX = 5;
+const RANGE_LOW_Q = 0.1;
+const RANGE_HIGH_Q = 0.9;
+
 // ── 평형 간 ㎡당 단가 교차검증 (C-1) ──
 // 신뢰표본(거래 N건 이상)들의 ㎡당 단가를 기준으로, 빈약표본 평형의 단가가
 // [LOW, HIGH] 배수를 벗어나면(역전·극단치) 신뢰도 낮음으로 표시한다.
@@ -57,9 +77,30 @@ function weightedMedian(items: { price: number; weight: number }[]): number {
   return sorted[sorted.length - 1].price;
 }
 
-interface Tx {
+/** 분위수(선형보간). q∈[0,1]. 빈 배열이면 0. */
+function percentile(prices: number[], q: number): number {
+  if (prices.length === 0) return 0;
+  const s = [...prices].sort((a, b) => a - b);
+  if (s.length === 1) return s[0];
+  const idx = q * (s.length - 1);
+  const lo = Math.floor(idx);
+  const hi = Math.ceil(idx);
+  if (lo === hi) return s[lo];
+  return s[lo] + (idx - lo) * (s[hi] - s[lo]);
+}
+
+export interface Tx {
   price: number;
   daysAgo: number;
+}
+
+export interface PriceEstimate {
+  /** 추정 현재가(원). */
+  price: number;
+  /** 표시용 범위 하단(원). */
+  low: number;
+  /** 표시용 범위 상단(원). */
+  high: number;
 }
 
 function decayWeight(daysAgo: number): number {
@@ -77,9 +118,9 @@ function priceVolatility(txs: Tx[]): number {
   return Math.sqrt(variance) / mean;
 }
 
-/** 한 평형 그룹의 거래들로 추정 현재가를 산출한다. */
-function estimateCurrentPrice(txs: Tx[]): number {
-  if (txs.length === 0) return 0;
+/** 한 평형 그룹의 거래들로 추정 현재가와 표시용 범위를 산출한다. */
+export function estimateCurrentPrice(txs: Tx[]): PriceEstimate {
+  if (txs.length === 0) return { price: 0, low: 0, high: 0 };
 
   // 1. 최근 거래 가중 중위값
   const base = weightedMedian(
@@ -118,7 +159,37 @@ function estimateCurrentPrice(txs: Tx[]): number {
     estimated = Math.max(estimated, Math.round(recentMed));
   }
 
-  return estimated;
+  // 4. 얇은표본 보정 — 최근분기 최고 실거래 쪽으로 보수 보정(저예산 과노출 방지).
+  // 최근가가 추정가보다 높을 때만 끌어올린다. 하락 단지는 최근가가 낮으므로 보정 안 됨.
+  if (txs.length <= THIN_SAMPLE_MAX) {
+    const pool =
+      recent.length > 0
+        ? recent
+        : [...txs].sort((a, b) => a.daysAgo - b.daysAgo).slice(0, 3);
+    const recentMax = Math.max(...pool.map((t) => t.price));
+    if (recentMax > estimated) {
+      estimated = Math.round(estimated + THIN_LIFT_ALPHA * (recentMax - estimated));
+    }
+  }
+
+  // 5. 표시용 범위 — 최근 거래(2건↑이면 최근, 아니면 전체)의 최저~최고 또는 분위.
+  const rangePool = (recent.length >= 2 ? recent : txs).map((t) => t.price);
+  let low: number;
+  let high: number;
+  if (rangePool.length <= SMALL_POOL_MAX) {
+    low = Math.min(...rangePool);
+    high = Math.max(...rangePool);
+  } else {
+    low = Math.round(percentile(rangePool, RANGE_LOW_Q));
+    high = Math.round(percentile(rangePool, RANGE_HIGH_Q));
+  }
+
+  return {
+    price: estimated,
+    // 범위가 점추정을 항상 감싸도록 보정(보정으로 estimated 가 high 를 넘지 않게).
+    low: Math.min(low, estimated),
+    high: Math.max(high, estimated),
+  };
 }
 
 /**
@@ -204,9 +275,12 @@ export async function getAreaMediansForMany(
         ? txs12
         : txs12.filter((t) => t.daysAgo <= SIX_MONTHS_DAYS);
       if (txs.length === 0) continue;
+      const est = estimateCurrentPrice(txs);
       medians.push({
         area,
-        medianKrw: estimateCurrentPrice(txs),
+        medianKrw: est.price,
+        priceLow: est.low,
+        priceHigh: est.high,
         count: txs.length,
         volatility: priceVolatility(txs),
         sparse: useFallback,

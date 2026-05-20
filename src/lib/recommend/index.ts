@@ -180,7 +180,7 @@ function buildReport(
         "."
       : "";
 
-  const head = `${c.sigungu} ${c.dongName} ${c.complexName}, 전용 ${c.representativeArea}㎡ 실거래 중위가 ${eok}억(최근 6개월).${legText}`;
+  const head = `${c.sigungu} ${c.dongName} ${c.complexName}, 전용 ${c.representativeArea}㎡ 실거래 기반 추정가 ${eok}억(최근 6개월).${legText}`;
 
   const orderedKeys = (Object.keys(weights) as CandidateSignalKey[])
     .filter((k) => c.commuteLegs.length > 0 || k !== "commute")
@@ -630,6 +630,8 @@ export async function recommendComplexes(
       const candidate: ComplexCandidate = {
         complexId: complex.id,
         ...base,
+        priceLowKrw: rep.priceLow,
+        priceHighKrw: rep.priceHigh,
         latitude: complex.latitude as number,
         longitude: complex.longitude as number,
         transactionCount: rep.count,

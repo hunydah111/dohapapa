@@ -6,7 +6,7 @@ import type {
 import { CANDIDATE_SIGNAL_LABELS } from "@/types/recommendation";
 import { Card } from "@/components/ui/Card";
 import { CommuteDiagram } from "./CommuteDiagram";
-import { formatKrwHuman } from "@/lib/format";
+import { formatKrwHuman, formatEok } from "@/lib/format";
 
 const SIGNAL_ORDER: CandidateSignalKey[] = [
   "commute",
@@ -54,6 +54,14 @@ export function CandidateCard({
   rank: number;
 }) {
   const tier = TIER_CONFIG[candidate.tier];
+
+  // 가격 편차가 클 때(신축 입주장 등 같은 평형이 층·향 따라 크게 벌어짐)는 단일가가
+  // 거짓 정밀이라 "31~36억" 범위로 정직하게 표시한다. ±12%↑ 벌어질 때만.
+  const showPriceRange =
+    candidate.priceLowKrw != null &&
+    candidate.priceHighKrw != null &&
+    candidate.priceLowKrw > 0 &&
+    candidate.priceHighKrw >= candidate.priceLowKrw * 1.12;
 
   // 네이버 통합검색으로 보낸다 — 단지명+구+동으로 검색하면 상단에 해당 단지의
   // 부동산 단지 카드(매물 링크 포함)가 안정적으로 노출된다.
@@ -180,13 +188,17 @@ export function CandidateCard({
             className="text-sm font-semibold"
             style={{ color: "#3a322c" }}
           >
-            실거래 중위가 {formatKrwHuman(candidate.medianPriceKrw)}
+            {showPriceRange
+              ? `추정 ${formatEok(candidate.priceLowKrw!)}~${formatEok(candidate.priceHighKrw!)}`
+              : `실거래 중위가 ${formatKrwHuman(candidate.medianPriceKrw)}`}
           </span>
         </div>
         <p className="mt-1.5 text-xs" style={{ color: "#9a8f82" }}>
-          {candidate.lowDataConfidence
-            ? `최근 1년 실거래 ${candidate.transactionCount}건 (거래 적어 12개월로 추정 — 참고용)`
-            : `최근 6개월 실거래 ${candidate.transactionCount}건의 중위값`}
+          {showPriceRange
+            ? `최근 실거래 ${candidate.transactionCount}건이 층·향 따라 ${formatEok(candidate.priceLowKrw!)}~${formatEok(candidate.priceHighKrw!)}로 편차가 큰 단지예요 (신축 입주장 등). 중앙 추정 ${formatKrwHuman(candidate.medianPriceKrw)} — `
+            : candidate.lowDataConfidence
+              ? `최근 1년 실거래 ${candidate.transactionCount}건 (거래 적어 12개월로 추정 — 참고용) `
+              : `최근 6개월 실거래 ${candidate.transactionCount}건의 중위값 `}
           (국토교통부 공개 데이터, 실제 거래가와 다를 수 있음)
         </p>
       </div>

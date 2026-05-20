@@ -130,6 +130,12 @@ export interface ComplexCandidate {
    * 단순 중위가가 아니라 "지금 거래될 가격"의 추정치 — 부동산 전문가 패널 권고.
    */
   medianPriceKrw: number;
+  /**
+   * 추정 현재가 범위 하단·상단(원). 신축 입주장처럼 같은 평형이 층·향 따라 크게
+   * 벌어지는 단지는 단일가 대신 "31~36억" 범위로 정직하게 표시하기 위한 값.
+   */
+  priceLowKrw?: number;
+  priceHighKrw?: number;
   /** 추정 현재가 산출에 쓴 거래 건수 — 가격 신뢰도 지표. */
   transactionCount: number;
   /** 최근 6개월 거래가 적어 12개월까지 넓혀 추정한 경우 true(거래 적음·참고용). */
