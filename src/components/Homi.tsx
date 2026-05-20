@@ -17,9 +17,11 @@ const DOOR = "#FF9B72"; // 문 = 입
 const INK = "#4A3B30";
 const BLUSH = "#F4B8C1";
 const GLASS = "#FFE6B0";
-const COIN = "#FFD24D"; // 굴뚝에서 폴폴 나오는 동전(₩)
-const COIN_EDGE = "#E0A21E";
-const COIN_SHINE = "#FFF1C2";
+const COIN = "#D7DCE2"; // 굴뚝에서 폴폴 나오는 은색 동전(₩)
+const COIN_EDGE = "#9BA6B2";
+const COIN_SHINE = "#FFFFFF";
+const COIN_INK = "#7C8896"; // ₩ 글자
+const COIN_SMOKE = "#C9D0D8"; // 연기 퍼프
 
 export function Homi({
   mood = "wave",
@@ -63,12 +65,14 @@ export function Homi({
         strokeWidth="2.5"
         strokeLinejoin="round"
       />
-      {/* 굴뚝에서 폴폴 나오는 동전(₩) — 통통 금화 + 반짝 */}
-      <g transform="rotate(-6 81 9)">
-        <circle cx="81" cy="9" r="9.5" fill={COIN} stroke={COIN_EDGE} strokeWidth="2" />
-        <circle cx="81" cy="9" r="6" fill="none" stroke={COIN_EDGE} strokeWidth="1.2" />
-        <text x="81" y="12.3" fontSize="9" fontWeight="800" fontFamily="sans-serif" textAnchor="middle" fill={COIN_EDGE}>₩</text>
-        <ellipse cx="77.3" cy="5.6" rx="1.7" ry="1" fill={COIN_SHINE} transform="rotate(-35 77.3 5.6)" />
+      {/* 굴뚝에서 폴폴 — 은색 동전(₩)이 연기처럼 살짝 떠오름 */}
+      <circle cx="80" cy="16.5" r="2.3" fill={COIN_SMOKE} opacity="0.5" />
+      <circle cx="82.3" cy="13.8" r="1.7" fill={COIN_SMOKE} opacity="0.4" />
+      <g transform="rotate(-6 81 10)">
+        <circle cx="81" cy="10" r="6.4" fill={COIN} stroke={COIN_EDGE} strokeWidth="1.7" />
+        <circle cx="81" cy="10" r="3.9" fill="none" stroke={COIN_EDGE} strokeWidth="1" />
+        <text x="81" y="12.5" fontSize="6.2" fontWeight="800" fontFamily="sans-serif" textAnchor="middle" fill={COIN_INK}>₩</text>
+        <ellipse cx="78.4" cy="7.4" rx="1.3" ry="0.8" fill={COIN_SHINE} transform="rotate(-35 78.4 7.4)" />
       </g>
 
       {/* 볼터치 */}
