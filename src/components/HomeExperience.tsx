@@ -7,6 +7,8 @@ import type { CoupleProfile, AreaRangeKey } from "@/types/profile";
 import { AREA_RANGES, AREA_RANGE_ORDER } from "@/types/profile";
 import { BudgetSummary } from "./BudgetSummary";
 import { CandidateCard } from "./CandidateCard";
+import { HeroResultCard } from "./HeroResultCard";
+import { getHomeType } from "@/lib/homeType";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { Card } from "@/components/ui/Card";
@@ -245,6 +247,15 @@ export function HomeExperience() {
         <div className="rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-medium text-indigo-800">
           {shareToast}
         </div>
+      )}
+
+      {/* 결과 공개 히어로 카드 — 집 찾기 유형 + 1순위 단지 */}
+      {result.candidates.length > 0 && (
+        <HeroResultCard
+          candidate={result.candidates[0]}
+          homeType={getHomeType(state.profile)}
+          onShare={handleShare}
+        />
       )}
 
       {/* 예산 분석 */}
