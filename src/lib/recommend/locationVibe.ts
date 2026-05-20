@@ -18,7 +18,7 @@ const RIVERSIDE: LatLng[] = [
   { lat: 37.5133, lng: 127.1001 }, // 잠실
 ];
 
-// 번화가 허브 — '조용한 동네'는 이들과 멀수록 가점.
+// 번화가 허브 — '새소리·나뭇잎소리'(조용함)는 이들과 멀수록 가점.
 const BUSY_HUBS: LatLng[] = [
   HONGDAE,
   GANGNAM,
@@ -33,7 +33,7 @@ const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const minDist = (p: LatLng, anchors: LatLng[]) =>
   Math.min(...anchors.map((a) => haversineKm(p, a)));
 
-/** 선택한 입지 분위기에 단지가 얼마나 맞는지 0~1. none 이면 0. */
+/** 입지 분위기에 단지가 얼마나 맞는지 0~1. */
 export function scoreLocationVibe(vibe: LocationVibe, coord: LatLng): number {
   switch (vibe) {
     case "hongdae":
@@ -46,14 +46,15 @@ export function scoreLocationVibe(vibe: LocationVibe, coord: LatLng): number {
       return clamp01(1 - minDist(coord, RIVERSIDE) / 1.5);
     case "quiet":
       return clamp01((minDist(coord, BUSY_HUBS) - 1.5) / 3);
-    case "none":
-    default:
-      return 0;
   }
 }
 
+// 강도별 가점(조금/꽤/많이) — '많이'일수록 가점이 커진다.
+export const VIBE_LEVEL_BONUS: Record<number, number> = { 1: 3, 2: 6, 3: 11 };
+// 여러 입지를 골랐을 때 합산 가점 상한.
+export const VIBE_BONUS_CAP = 16;
+
 const VIBE_EMOJI: Record<LocationVibe, string> = {
-  none: "",
   riverside: "🌊",
   hongdae: "🎨",
   seongsu: "☕",
@@ -63,5 +64,5 @@ const VIBE_EMOJI: Record<LocationVibe, string> = {
 
 /** 매칭된 단지에 붙일 배지 라벨(이모지+이름). */
 export function vibeBadgeLabel(vibe: LocationVibe): string {
-  return `${VIBE_EMOJI[vibe]} ${LOCATION_VIBE_LABELS[vibe]}`.trim();
+  return `${VIBE_EMOJI[vibe]} ${LOCATION_VIBE_LABELS[vibe]}`;
 }

@@ -90,7 +90,6 @@ export const DEFAULT_MAX_COMMUTE_MIN = 50;
 
 // ── 선호 입지(분위기) — 재미용 소프트 가점. 단일 선택, 기본 "상관없음". ──
 export type LocationVibe =
-  | "none"
   | "riverside"
   | "hongdae"
   | "seongsu"
@@ -98,22 +97,29 @@ export type LocationVibe =
   | "quiet";
 
 export const LOCATION_VIBE_LABELS: Record<LocationVibe, string> = {
-  none: "상관없음",
   riverside: "한강변",
-  hongdae: "홍대",
-  seongsu: "성수",
-  gangnam: "강남",
+  hongdae: "홍대상권",
+  seongsu: "성수상권",
+  gangnam: "강남상권",
   quiet: "새소리·나뭇잎소리",
 };
 
 export const LOCATION_VIBE_ORDER: LocationVibe[] = [
-  "none",
   "riverside",
   "hongdae",
   "seongsu",
   "gangnam",
   "quiet",
 ];
+
+/** 입지 강도 1~3 (조금/꽤/많이). 키별 강도 맵 — 복수선택 가능. */
+export type LocationVibes = Partial<Record<LocationVibe, number>>;
+
+export const LOCATION_VIBE_LEVEL_LABELS: Record<number, string> = {
+  1: "조금",
+  2: "꽤",
+  3: "많이",
+};
 
 // ── 직장 / 위치 ──────────────────────────────────────────────
 export interface LatLng {
@@ -150,8 +156,8 @@ export interface CoupleProfile {
   priorities: Record<PriorityKey, number>;
   /** 선호 평수대 — 대표 평형 필터. */
   preferredAreaRange: AreaRangeKey;
-  /** 선호 입지(분위기) — 재미용 소프트 가점. 미선택('none')이면 영향 없음. */
-  locationVibe?: LocationVibe;
+  /** 선호 입지(분위기) — 재미용 소프트 가점. 키별 강도(1~3)·복수선택. 없으면 영향 없음. */
+  locationVibes?: LocationVibes;
   /** 본인 직장. 은퇴·무직(retired)이면 생략. */
   workplaceA?: Workplace;
   /** 배우자 직장. 맞벌이(dualIncome)일 때만. */

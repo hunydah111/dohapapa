@@ -8,6 +8,7 @@ import type {
   Workplace,
   AreaRangeKey,
   LocationVibe,
+  LocationVibes,
   ExistingHome,
 } from "@/types/profile";
 import {
@@ -21,6 +22,7 @@ import {
   DEFAULT_AREA_RANGE,
   LOCATION_VIBE_LABELS,
   LOCATION_VIBE_ORDER,
+  LOCATION_VIBE_LEVEL_LABELS,
 } from "@/types/profile";
 import type { RecommendationResult } from "@/types/recommendation";
 import { Button } from "@/components/ui/Button";
@@ -35,11 +37,6 @@ const VIBE_CHIP: Record<
   LocationVibe,
   { emoji: string; active: string; idle: string }
 > = {
-  none: {
-    emoji: "🤷",
-    active: "border-gray-600 bg-gray-700 text-white focus:ring-gray-400",
-    idle: "border-gray-200 bg-white text-gray-500 hover:border-gray-400",
-  },
   riverside: {
     emoji: "🌊",
     active: "border-sky-500 bg-sky-500 text-white focus:ring-sky-300",
@@ -297,7 +294,7 @@ export function ProfileForm({
     useState<HouseholdType>("dualIncome");
   const [preferredAreaRange, setPreferredAreaRange] =
     useState<AreaRangeKey>(DEFAULT_AREA_RANGE);
-  const [locationVibe, setLocationVibe] = useState<LocationVibe>("none");
+  const [locationVibes, setLocationVibes] = useState<LocationVibes>({});
 
   // ── Step 2: 직장 & 통근 ─────────────────────────────────────
   // 카카오 길찾기 API 가 자차만 지원하므로 통근 수단은 자차로 고정.
@@ -537,7 +534,7 @@ export function ProfileForm({
       householdType,
       priorities,
       preferredAreaRange,
-      locationVibe,
+      locationVibes,
       workplaceA: finalWpA,
       workplaceB: finalWpB,
       hasSchoolAgedChild,
@@ -557,7 +554,7 @@ export function ProfileForm({
     householdType,
     priorities,
     preferredAreaRange,
-    locationVibe,
+    locationVibes,
     wpA.selected,
     wpB.selected,
     maxCommuteA,
@@ -723,26 +720,37 @@ export function ProfileForm({
             />
           </div>
 
-          {/* 선호 입지 — 재미 탭. 다른 입력과 달리 컬러풀하게. */}
+          {/* 선호 입지 — 재미 탭. 복수선택 + 클릭마다 조금→꽤→많이. */}
           <div className="rounded-3xl border border-dashed border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-pink-50 px-4 py-5">
             <p className="text-[15px] font-bold text-[#1d1d1f]">
               🎯 취향 한 스푼{" "}
               <span className="text-[12px] font-medium text-indigo-500">
-                선택 · 재미로
+                복수선택 가능 · 재미로
               </span>
             </p>
             <p className="mt-1 mb-4 text-[12px] leading-relaxed text-[#6e6e73]">
-              끌리는 분위기를 찍으면 그쪽 단지가 살짝 위로 올라와요. 안 골라도 OK!
+              누를 때마다 조금 → 꽤 → 많이로 세지고, 셀수록 가점이 커져요. 여러
+              개 골라도 OK!
             </p>
             <div className="flex flex-wrap gap-2">
               {LOCATION_VIBE_ORDER.map((key) => {
                 const cfg = VIBE_CHIP[key];
-                const active = locationVibe === key;
+                const level = locationVibes[key] ?? 0;
+                const active = level > 0;
                 return (
                   <button
                     key={key}
                     type="button"
-                    onClick={() => setLocationVibe(key)}
+                    onClick={() =>
+                      setLocationVibes((prev) => {
+                        const cur = prev[key] ?? 0;
+                        const next = cur >= 3 ? 0 : cur + 1;
+                        const copy = { ...prev };
+                        if (next === 0) delete copy[key];
+                        else copy[key] = next;
+                        return copy;
+                      })
+                    }
                     aria-pressed={active}
                     className={[
                       "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] font-bold transition-all focus:outline-none focus:ring-2 focus:ring-offset-1",
@@ -751,7 +759,14 @@ export function ProfileForm({
                     ].join(" ")}
                   >
                     <span aria-hidden="true">{cfg.emoji}</span>
+                    {active ? `${LOCATION_VIBE_LEVEL_LABELS[level]} ` : ""}
                     {LOCATION_VIBE_LABELS[key]}
+                    {active && (
+                      <span className="ml-0.5 text-[10px] tracking-tighter opacity-90">
+                        {"●".repeat(level)}
+                        {"○".repeat(3 - level)}
+                      </span>
+                    )}
                   </button>
                 );
               })}

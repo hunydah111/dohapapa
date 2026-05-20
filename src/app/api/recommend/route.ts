@@ -39,8 +39,14 @@ const coupleProfileSchema = z
       "p41_45",
       "over45",
     ]),
-    locationVibe: z
-      .enum(["none", "riverside", "hongdae", "seongsu", "gangnam", "quiet"])
+    locationVibes: z
+      .object({
+        riverside: z.number().int().min(1).max(3).optional(),
+        hongdae: z.number().int().min(1).max(3).optional(),
+        seongsu: z.number().int().min(1).max(3).optional(),
+        gangnam: z.number().int().min(1).max(3).optional(),
+        quiet: z.number().int().min(1).max(3).optional(),
+      })
       .optional(),
     // 1인 가구: workplaceA 만, retired: 둘 다 없을 수 있음
     workplaceA: workplaceSchema.optional(),

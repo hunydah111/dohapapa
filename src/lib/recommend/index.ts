@@ -12,6 +12,7 @@ import type {
   AreaRangeKey,
   CoupleProfile,
   LatLng,
+  LocationVibe,
   PriorityKey,
   Workplace,
 } from "@/types/profile";
@@ -34,10 +35,12 @@ import {
   scoreCommute,
   scoreSchool,
 } from "./scoring";
-import { scoreLocationVibe, vibeBadgeLabel } from "./locationVibe";
-
-// 선호 입지(분위기) 소프트 가점 상한 — 종합점수에 더해지는 최대 점수
-const VIBE_BONUS = 8;
+import {
+  scoreLocationVibe,
+  vibeBadgeLabel,
+  VIBE_LEVEL_BONUS,
+  VIBE_BONUS_CAP,
+} from "./locationVibe";
 
 // ── 가중치 빌드 ──────────────────────────────────────────────────────────────
 
@@ -472,13 +475,25 @@ export async function recommendComplexes(
         ),
       );
 
-      // 선호 입지(분위기) 소프트 가점 — 선택 시 매칭도(0~1)에 따라 최대 +VIBE_BONUS
-      const vibe = profile.locationVibe ?? "none";
-      const vibeScore01 =
-        vibe === "none" ? 0 : scoreLocationVibe(vibe, complexCoord);
+      // 선호 입지(분위기) 소프트 가점 — 키별 강도(1~3) 합산, 상한 적용.
+      const vibes = profile.locationVibes ?? {};
+      let vibeBonus = 0;
+      let vibeBadge: string | undefined;
+      let bestStrength = 0;
+      for (const key of Object.keys(vibes) as LocationVibe[]) {
+        const level = vibes[key];
+        if (!level) continue;
+        const s = scoreLocationVibe(key, complexCoord);
+        vibeBonus += s * (VIBE_LEVEL_BONUS[level] ?? 0);
+        const strength = s * level;
+        if (s >= 0.5 && strength > bestStrength) {
+          bestStrength = strength;
+          vibeBadge = vibeBadgeLabel(key);
+        }
+      }
       const totalScore = Math.min(
         100,
-        baseTotalScore + Math.round(vibeScore01 * VIBE_BONUS),
+        baseTotalScore + Math.round(Math.min(VIBE_BONUS_CAP, vibeBonus)),
       );
 
       // 초품아 — 초등학교가 단지에서 직선 150m 이내 (전문가 패널: 100m 는 너무 좁음)
@@ -506,10 +521,7 @@ export async function recommendComplexes(
         buildYear: complex.buildYear,
         isChopumah,
         scores,
-        vibeBadge:
-          vibe !== "none" && vibeScore01 >= 0.5
-            ? vibeBadgeLabel(vibe)
-            : undefined,
+        vibeBadge,
         tier: "균형형", // 후처리에서 재할당
         report: buildReport(base, weights),
         rankReason: "", // 3티어 선정 후 후처리에서 채움
