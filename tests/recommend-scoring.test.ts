@@ -299,27 +299,11 @@ describe("scoreSchool", () => {
 // ── scoreBuildingAge ──────────────────────────────────────────────────────────
 
 describe("scoreBuildingAge", () => {
-  it("buildYear 2020 → high score (≥85)", () => {
-    const { score, reason } = scoreBuildingAge(2020);
-
-    expect(score).toBeGreaterThanOrEqual(85);
-    expect(inRange(score)).toBe(true);
-    expect(reason.length).toBeGreaterThan(0);
-  });
-
-  it("buildYear 1980 → low score (≤45)", () => {
-    const { score, reason } = scoreBuildingAge(1980);
-
-    expect(score).toBeLessThanOrEqual(45);
-    expect(inRange(score)).toBe(true);
-    expect(reason.length).toBeGreaterThan(0);
-  });
-
-  it("buildYear null → score ~50", () => {
-    const { score, reason } = scoreBuildingAge(null);
-
-    expect(score).toBe(50);
-    expect(reason.length).toBeGreaterThan(0);
+  it("연식과 무관하게 중립(60) — 가치는 실거래가에 반영되므로 별도 감점/가점 안 함", () => {
+    expect(scoreBuildingAge(2020).score).toBe(60);
+    expect(scoreBuildingAge(2000).score).toBe(60);
+    expect(scoreBuildingAge(1980).score).toBe(60);
+    expect(scoreBuildingAge(null).score).toBe(60);
   });
 
   it("score is always in [0, 100] and reason is non-empty", () => {
@@ -337,14 +321,5 @@ describe("scoreBuildingAge", () => {
       expect(inRange(score)).toBe(true);
       expect(reason.length).toBeGreaterThan(0);
     }
-  });
-
-  it("newer buildings score higher than older buildings", () => {
-    const score2020 = scoreBuildingAge(2020).score;
-    const score2000 = scoreBuildingAge(2000).score;
-    const score1985 = scoreBuildingAge(1985).score;
-
-    expect(score2020).toBeGreaterThan(score2000);
-    expect(score2000).toBeGreaterThan(score1985);
   });
 });

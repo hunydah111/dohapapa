@@ -93,6 +93,14 @@ export function CandidateCard({
             {candidate.vibeBadge}
           </span>
         )}
+        {candidate.pricierThanPeers && (
+          <span
+            className="inline-flex items-center rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700 ring-1 ring-rose-200"
+            title="같은 동·비슷한 연식 단지보다 ㎡당 단가가 높아요 (시장 평가가 높은 단지)"
+          >
+            🔥 동네 또래보다 비싸요
+          </span>
+        )}
         {candidate.lowDataConfidence && (
           <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 ring-1 ring-amber-200">
             거래 적음 · 참고용

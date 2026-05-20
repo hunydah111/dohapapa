@@ -138,6 +138,8 @@ export interface ComplexCandidate {
   buildYear: number | null;
   /** 초품아 여부 — 초등학교가 단지에서 직선 150m 이내. */
   isChopumah: boolean;
+  /** 같은 동·비슷한 연식 단지보다 ㎡당 단가가 높음 — '동네 인기단지' 배지용. */
+  pricierThanPeers?: boolean;
   /** 선호 입지(분위기) 매칭 시 표시할 배지 라벨(예: "🌊 한강변"). 미매칭/미선택이면 없음. */
   vibeBadge?: string;
   commuteLegs: CommuteLeg[];

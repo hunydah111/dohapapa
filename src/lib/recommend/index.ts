@@ -441,6 +441,37 @@ export async function recommendComplexes(
   // 소규모 건물 배제 — 6개월 거래 건수를 대단지 프록시로 사용
   const MIN_TRANSACTIONS = 8;
 
+  // ── 또래 평단가 벤치마크 — '동네 또래단지보다 비싸요' 배지용 ──────────────────
+  // 같은 동·비슷한 연식(5년 버킷) 단지들의 ㎡당 단가 중위값. geoSurvivors 전체로
+  // 계산(예산/통근 필터 전이라 동네 전반 반영). '재건축 기대' 같은 미검증 해석 대신,
+  // 시장이 또래보다 높게 평가한다는 '사실'만 표시한다.
+  const PEER_AGE_BUCKET = 5;
+  const PEER_MIN_COUNT = 3;
+  const PEER_PREMIUM_RATIO = 1.15; // 또래 중위 평단가 대비 +15%↑면 '비쌈'
+  const peerKey = (dong: string, by: number) =>
+    `${dong}|${Math.floor(by / PEER_AGE_BUCKET) * PEER_AGE_BUCKET}`;
+  const peerPerM2 = new Map<string, number[]>();
+  for (const c of geoSurvivors) {
+    if (c.buildYear == null || !c.dongName) continue;
+    const ms = mediansMap.get(c.id);
+    if (!ms) continue;
+    const r = pickRepresentative(ms, minArea, maxArea);
+    if (!r || r.area <= 0) continue;
+    const perM2 = r.medianKrw / r.area;
+    const k = peerKey(c.dongName, c.buildYear);
+    const arr = peerPerM2.get(k);
+    if (arr) arr.push(perM2);
+    else peerPerM2.set(k, [perM2]);
+  }
+  const peerMedianPerM2 = new Map<string, { median: number; count: number }>();
+  for (const [k, arr] of peerPerM2) {
+    const sorted = [...arr].sort((a, b) => a - b);
+    peerMedianPerM2.set(k, {
+      median: sorted[Math.floor(sorted.length / 2)],
+      count: arr.length,
+    });
+  }
+
   // 6. 단지별 평가 — evaluateComplex 를 commute provider 만 바꿔 2단계로 재사용한다.
   const evaluateComplex = async (
     complex: (typeof geoSurvivors)[number],
@@ -575,6 +606,18 @@ export async function recommendComplexes(
         complex.nearestElemSchoolM !== null &&
         complex.nearestElemSchoolM <= 150;
 
+      // '동네 또래단지보다 비싸요' — 같은 동·비슷한 연식 대비 ㎡당이 +15%↑면 표시.
+      let pricierThanPeers = false;
+      if (complex.buildYear != null && complex.dongName && rep.area > 0) {
+        const peer = peerMedianPerM2.get(
+          peerKey(complex.dongName, complex.buildYear),
+        );
+        if (peer && peer.count >= PEER_MIN_COUNT && peer.median > 0) {
+          pricierThanPeers =
+            rep.medianKrw / rep.area >= peer.median * PEER_PREMIUM_RATIO;
+        }
+      }
+
       const base = {
         complexName: complex.name,
         sigungu: complex.sigungu,
@@ -595,6 +638,7 @@ export async function recommendComplexes(
         lowDataConfidence: rep.sparse,
         buildYear: complex.buildYear,
         isChopumah,
+        pricierThanPeers,
         scores,
         vibeBadge,
         tier: "균형형", // 후처리에서 재할당

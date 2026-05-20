@@ -204,28 +204,18 @@ export function scoreSchool(
 
 // ── 건축연도 점수 ────────────────────────────────────────────────────────────
 
+// WHY 중립화: 연식의 가치(신축 프리미엄·재건축 기대 등)는 이미 실거래가에 반영된다.
+// 노후 단지를 점수로 감점하면 "재건축 기대가 높아 비싼 구축"을 가격과 모순되게 깎게 됨.
+// 따라서 연식은 별도 감점/가점하지 않고 중립(60)으로 둔다. 시장의 평가는 budgetFit(실거래가)과
+// '동네 또래단지보다 비싸요' 배지(또래 대비 평단가)로 드러낸다.
 export function scoreBuildingAge(buildYear: number | null): ScoreResult {
-  if (buildYear === null) {
-    return { score: 50, reason: "건축년도 정보 없음" };
-  }
-
-  if (buildYear >= 2015) {
-    return { score: 90, reason: `${buildYear}년 준공 — 신축급` };
-  } else if (buildYear >= 2005) {
-    return { score: 75, reason: `${buildYear}년 준공 — 준신축` };
-  } else if (buildYear >= 1995) {
-    return { score: 60, reason: `${buildYear}년 준공 — 중간 연식` };
-  } else if (buildYear >= 1985) {
-    return {
-      score: 45,
-      reason: `${buildYear}년 준공 — 노후 단지 — 재건축 가능성은 별도 검토`,
-    };
-  } else {
-    return {
-      score: 40,
-      reason: `${buildYear}년 준공 — 노후 단지 — 재건축 이슈 확인 필요`,
-    };
-  }
+  return {
+    score: 60,
+    reason:
+      buildYear !== null
+        ? `${buildYear}년 준공 — 연식 가치는 실거래가에 반영(별도 감점 없음)`
+        : "건축년도 정보 없음",
+  };
 }
 
 // ── 거래 많은 단지(대단지·인기) 점수 ─────────────────────────────────────────
