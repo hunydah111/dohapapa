@@ -919,7 +919,9 @@ export async function recommendComplexes(
 
   // ── 입지 미스 안내(C) — 점지 입지(quiet 제외)를 골랐는데 결과에 안 잡혔을 때 ──
   // 강도 가장 센 입지 1개 기준. 표시 단지(top3) 중 매칭이 없으면 가장 가까운 후보를 솔직히 안내.
-  let vibeNote: string | undefined;
+  let vibeNote:
+    | { message: string; complexName: string; dongName: string }
+    | undefined;
   const pickedVibes = (
     Object.keys(profile.locationVibes ?? {}) as LocationVibe[]
   )
@@ -952,7 +954,11 @@ export async function recommendComplexes(
         lat: nearest.candidate.latitude,
         lng: nearest.candidate.longitude,
       });
-      vibeNote = `😅 '${LOCATION_VIBE_LEVEL_LABELS[level]} ${LOCATION_VIBE_LABELS[wish]}' — 예산·통근에 맞는 단지는 그 동네엔 없었어요. 가장 가까운 후보는 ${nearest.candidate.complexName} (${badge}).`;
+      vibeNote = {
+        message: `😅 '${LOCATION_VIBE_LEVEL_LABELS[level]} ${LOCATION_VIBE_LABELS[wish]}' — 예산·통근에 맞는 단지는 그 동네엔 없었어요. 가장 가까운 후보는 ${nearest.candidate.complexName} (${badge}).`,
+        complexName: nearest.candidate.complexName,
+        dongName: nearest.candidate.dongName,
+      };
     }
   }
 

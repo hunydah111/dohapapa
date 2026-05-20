@@ -199,8 +199,12 @@ export interface RecommendationResult {
   relaxationSuggestions: RelaxationSuggestion[];
   /** 하드 필터 통과 단지 수. */
   consideredComplexCount: number;
-  /** 선호 입지를 골랐지만 결과에 안 잡혔을 때 솔직 안내 문구(가장 가까운 후보). 평소엔 없음. */
-  vibeNote?: string;
+  /** 선호 입지를 골랐지만 결과에 안 잡혔을 때 솔직 안내(가장 가까운 후보 + 지도 버튼용 정보). 평소엔 없음. */
+  vibeNote?: {
+    message: string;
+    complexName: string;
+    dongName: string;
+  };
   /** 0건일 때, 어떤 추가 조건(하드)이 결과를 좁혔는지 지목하는 안내. 평소엔 없음. */
   emptyReason?: string;
   /** 필수 면책 고지. */
