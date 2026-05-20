@@ -313,6 +313,7 @@ export function ProfileForm({
   const [hasInfant, setHasInfant] = useState(false);
   const [hasTwoOrMoreChildren, setHasTwoOrMoreChildren] = useState(false);
   const [hasThreeOrMoreChildren, setHasThreeOrMoreChildren] = useState(false);
+  const [childCount, setChildCount] = useState<"0" | "1" | "2" | "3">("0");
   const [isExpectingChild, setIsExpectingChild] = useState(false);
   const [isNewlywed, setIsNewlywed] = useState(false);
   const [ownedHomeCount, setOwnedHomeCount] = useState(0); // 보유 주택 수 (0/1/2+)
@@ -1022,6 +1023,28 @@ export function ProfileForm({
               </p>
             </div>
 
+            {/* 자녀 수 — 없음/1명/2명/3명 이상 */}
+            <div className="flex flex-col gap-2">
+              <p className="text-[14px] font-medium text-[#3a322c]">자녀 수</p>
+              <Segmented
+                options={[
+                  { value: "0", label: "없음" },
+                  { value: "1", label: "1명" },
+                  { value: "2", label: "2명" },
+                  { value: "3", label: "3명 이상" },
+                ]}
+                value={childCount}
+                onChange={(v) => {
+                  setChildCount(v);
+                  setHasTwoOrMoreChildren(v === "2" || v === "3");
+                  setHasThreeOrMoreChildren(v === "3");
+                }}
+              />
+              <p className="text-[12px] text-[#9a8f82]">
+                2명 이상이면 디딤돌(일반) 소득 기준 완화 대상이에요.
+              </p>
+            </div>
+
             <div className="flex flex-col gap-2">
               {(
                 [
@@ -1045,34 +1068,6 @@ export function ProfileForm({
                     why: "출산 후 신생아 특례 재시뮬레이션 권고 — 현 결과엔 미반영",
                     state: isExpectingChild,
                     set: setIsExpectingChild,
-                  },
-                  {
-                    key: "two",
-                    label: "자녀 2명 이상",
-                    why: "디딤돌(일반) 소득 기준 완화 판정",
-                    state: hasTwoOrMoreChildren,
-                    set: (updater: boolean | ((v: boolean) => boolean)) => {
-                      const next =
-                        typeof updater === "function"
-                          ? updater(hasTwoOrMoreChildren)
-                          : updater;
-                      setHasTwoOrMoreChildren(next);
-                      if (!next) setHasThreeOrMoreChildren(false);
-                    },
-                  },
-                  {
-                    key: "three",
-                    label: "자녀 3명 이상 (다자녀)",
-                    why: "다자녀 추가 정책 확인 권고 — 현 계산엔 디딤돌(일반) 완화만 반영",
-                    state: hasThreeOrMoreChildren,
-                    set: (updater: boolean | ((v: boolean) => boolean)) => {
-                      const next =
-                        typeof updater === "function"
-                          ? updater(hasThreeOrMoreChildren)
-                          : updater;
-                      setHasThreeOrMoreChildren(next);
-                      if (next) setHasTwoOrMoreChildren(true);
-                    },
                   },
                 ] as const
               ).map((item) => (
