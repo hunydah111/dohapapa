@@ -51,21 +51,26 @@ export default function RootLayout({
           style={{ WebkitBackdropFilter: "blur(12px)" }}
         >
           <div className="mx-auto flex h-14 max-w-2xl items-center gap-2.5 px-4">
-            {/* 콤파스 마크 — indigo currentColor 상속 */}
-            <span
-              className="shrink-0 text-indigo-600"
-              aria-hidden="true"
+            {/* 로고+브랜드명 클릭 → 첫 화면(홈)으로. 풀 리로드로 결과 화면 상태까지 초기화한다. */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+            <a
+              href="/"
+              aria-label="홈앤나사이 홈으로"
+              className="flex items-center gap-2.5 rounded-lg transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
-              <BrandMark size={28} />
-            </span>
+              {/* 콤파스 마크 — indigo currentColor 상속 */}
+              <span className="shrink-0 text-indigo-600" aria-hidden="true">
+                <BrandMark size={28} />
+              </span>
 
-            {/* 브랜드명 */}
-            <span
-              className="text-[15px] font-bold tracking-tight"
-              style={{ color: "#1d1d1f" }}
-            >
-              홈앤나사이
-            </span>
+              {/* 브랜드명 */}
+              <span
+                className="text-[15px] font-bold tracking-tight"
+                style={{ color: "#1d1d1f" }}
+              >
+                홈앤나사이
+              </span>
+            </a>
 
             {/* 서브 태그라인 */}
             <span
