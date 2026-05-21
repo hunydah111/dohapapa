@@ -11,8 +11,7 @@ export default function HomePage() {
         className="py-10 text-center text-xs leading-relaxed"
         style={{ color: "#9a8f82" }}
       >
-        본 서비스는 국토교통부 공개 실거래가를 바탕으로 한 정보 제공 도구이며,
-        부동산 중개 또는 투자 자문이 아닙니다.
+        본 서비스는 정보 제공 도구이며, 부동산 중개·투자 자문이 아닙니다.
       </p>
     </div>
   );

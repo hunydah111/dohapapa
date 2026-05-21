@@ -25,17 +25,19 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
         }}
       />
 
-      {/* 마스코트 비지 — 작게(120) */}
-      <Homi mood="smile" size={120} className="mx-auto" />
+      {/* 마스코트 비지 — 작게(120) + 1회성 등장 모션(통통) */}
+      <div className="biji-pop-in flex justify-center">
+        <Homi mood="smile" size={120} />
+      </div>
 
-      {/* 가치 제안 헤드라인 */}
+      {/* 가치 제안 헤드라인 — 단정형으로 임팩트 */}
       <h1
         className="font-jua mt-2 text-[2rem] leading-[1.2] tracking-tight sm:text-[2.7rem]"
         style={{ color: "#3a2c1d" }}
       >
         내 월급으로 살 수 있는 집,
         <br />
-        수도권에서 찾아드려요
+        수도권에 다 있어요
       </h1>
 
       {/* 서브카피 — 속도 중심으로 축약(출처는 아래 신뢰줄에만 1회) */}
