@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
 import { BrandMark } from "@/components/BrandMark";
+import { Homi } from "@/components/Homi";
 import { Analytics } from "@/components/Analytics";
 
 export const metadata: Metadata = {
@@ -73,6 +74,9 @@ export default function RootLayout({
               >
                 비집고
               </span>
+
+              {/* 마스코트 비지 얼굴 — 브랜드 악센트 */}
+              <Homi mood="face" size={26} className="-ml-0.5" />
             </a>
 
             {/* 서브 태그라인 */}

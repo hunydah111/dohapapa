@@ -38,12 +38,12 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
         수도권에서 찾아드려요
       </h1>
 
-      {/* 서브카피 */}
+      {/* 서브카피 — 속도 중심으로 축약(출처는 아래 신뢰줄에만 1회) */}
       <p
         className="mx-auto mt-3 max-w-md text-[14px] leading-relaxed sm:text-[15px]"
         style={{ color: "#6b6157" }}
       >
-        소득·자산만 넣으면 3분 안에 — 국토교통부 실거래가 기반 추정
+        소득·자산만 넣으면 3분 안에 끝나요
       </p>
 
       {/* 예시 결과 미니카드 — 무엇을 받는지 미리 보여주기(가짜임을 명시) */}
