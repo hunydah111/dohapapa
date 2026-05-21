@@ -73,12 +73,12 @@ export default function RootLayout({
               </span>
             </a>
 
-            {/* 서브 태그라인 */}
+            {/* 서브 태그라인 — 캐치프레이즈로 통일 */}
             <span
               className="hidden text-xs sm:inline"
               style={{ color: "#9a8f82" }}
             >
-              내 보금자리, 비집고 들어가기
+              내 통장으로 살 집 찾기
             </span>
           </div>
         </header>
