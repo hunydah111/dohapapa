@@ -373,6 +373,11 @@ export function ProfileForm({
   const debounceARef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debounceBRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // 단계 전환 시 폼 상단으로 스크롤 — 다음/이전 누르면 화면이 중간·아래에서
+  // 시작하던 문제 방지. 최초 마운트(첫 단계)에선 스크롤하지 않는다.
+  const formTopRef = useRef<HTMLDivElement>(null);
+  const stepScrollMountRef = useRef(true);
+
   const fetchGeocode = useCallback(
     async (
       query: string,
@@ -440,6 +445,15 @@ export function ProfileForm({
       if (debounceBRef.current) clearTimeout(debounceBRef.current);
     };
   }, [wpB.query, fetchGeocode]);
+
+  // 단계가 바뀌면 폼 상단을 화면 위로 끌어올린다(부드럽게).
+  useEffect(() => {
+    if (stepScrollMountRef.current) {
+      stepScrollMountRef.current = false;
+      return;
+    }
+    formTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [step]);
 
   // ── 헬퍼 ─────────────────────────────────────────────────────
 
@@ -691,7 +705,10 @@ export function ProfileForm({
   // ── 렌더 ──────────────────────────────────────────────────────
 
   return (
-    <div className="w-full max-w-lg mx-auto flex flex-col gap-6">
+    <div
+      ref={formTopRef}
+      className="w-full max-w-lg mx-auto flex flex-col gap-6 scroll-mt-4"
+    >
       {/* 진행 표시 */}
       <div className="flex flex-col items-center gap-2 pt-2">
         <StepDots current={visualStep} total={visualTotal} />
@@ -931,7 +948,8 @@ export function ProfileForm({
             <strong className="font-semibold text-[#3a322c]">
               자동차는 카카오 길찾기, 대중교통은 ODsay 길찾기
             </strong>{" "}
-            기준 추정이에요. 결과 화면에서 실제 소요시간을 보여드려요.
+            기준 추정이에요. 결과 화면의 주요 단지에서 대중교통 실제 소요시간을
+            보여드려요.
           </p>
 
           <div className="flex gap-3">

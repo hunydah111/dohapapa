@@ -84,7 +84,8 @@ export default function TermsPage() {
             운영자에게 있습니다.
           </li>
           <li>
-            국토교통부·카카오 등 외부 데이터의 권리는 각 출처에 귀속됩니다.
+            국토교통부·카카오·네이버·ODsay 등 외부 데이터의 권리는 각 출처에
+            귀속됩니다.
           </li>
         </ol>
       </section>

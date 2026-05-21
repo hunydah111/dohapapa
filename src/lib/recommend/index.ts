@@ -303,8 +303,14 @@ function fillRankReasons(candidates: ComplexCandidate[]): ComplexCandidate[] {
 
 function buildCommuteSummary(commuteLegs: CommuteLeg[]): string {
   if (commuteLegs.length === 0) return "통근 정보 없음";
+  // 대중교통 분은 서버에선 mock(직선거리)이고 보조 리스트는 ODsay 실측을 안 거치므로
+  // 구체 분 대신 "대중교통(추정)"으로 표기. 자동차는 실측(카카오) 분 그대로.
   return commuteLegs
-    .map((l) => `${l.workplaceLabel} ${l.minutes}분`)
+    .map((l) =>
+      l.mode === "transit"
+        ? `${l.workplaceLabel} 대중교통(추정)`
+        : `${l.workplaceLabel} ${l.minutes}분`,
+    )
     .join("·");
 }
 

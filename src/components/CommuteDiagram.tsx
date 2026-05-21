@@ -45,6 +45,19 @@ export function CommuteDiagram({
     );
   }
 
+  const hasCar = legs.some((l) => l.mode === "car");
+  const hasTransit = legs.some((l) => l.mode === "transit");
+  // 대중교통 실측을 못 받아 직선거리로 추정한 leg 가 있는지 (푸터 안내용)
+  const anyTransitFallback = legs.some(
+    (l) => l.mode === "transit" && l.realTransit === false,
+  );
+  const footerBasis =
+    hasCar && hasTransit
+      ? "통근 시간은 자동차는 카카오 길찾기, 대중교통은 ODsay 길찾기(표준 소요) 추정이에요."
+      : hasTransit
+        ? "대중교통 통근 시간은 ODsay 길찾기(표준 소요) 추정이에요."
+        : "통근 시간은 카카오 길찾기 표준 트래픽 기준 추정이에요.";
+
   return (
     <div className="flex flex-col gap-4 rounded-2xl bg-[#f3ece4] px-4 py-4">
       <p
@@ -56,24 +69,25 @@ export function CommuteDiagram({
 
       <div className="flex flex-col gap-5">
         {legs.map((leg) => {
+          const isTransit = leg.mode === "transit";
+          // 대중교통 실측 대기 중(ODsay 호출 전)이면 mock 분·색을 보이지 않는다 — 숫자 점프 방지.
+          const pending = isTransit && leg.realTransit === undefined;
           const ok = leg.withinLimit;
-          const accentColor = ok ? "#059669" : "#d97706";
-          const bgColor = ok ? "bg-emerald-50" : "bg-amber-50";
-          const dotEnd = ok ? "bg-emerald-500" : "bg-amber-500";
-          const lineColor = ok ? "bg-emerald-300" : "bg-amber-300";
+          const accentColor = pending ? "#9a8f82" : ok ? "#059669" : "#d97706";
+          const bgColor = pending ? "bg-[#efe8df]" : ok ? "bg-emerald-50" : "bg-amber-50";
+          const dotEnd = pending ? "bg-[#c9bfb2]" : ok ? "bg-emerald-500" : "bg-amber-500";
+          const lineColor = pending ? "bg-[#d8cfc2]" : ok ? "bg-emerald-300" : "bg-amber-300";
           const fallbackLabel =
             leg.workplace === "A" ? "본인 직장" : "배우자 직장";
           const workplaceName = leg.workplaceLabel || fallbackLabel;
-          const isTransit = leg.mode === "transit";
           const modeLabel = isTransit ? "대중교통" : "자차";
-          // 대중교통: 아직 미확인(undefined)=확인 중, true=ODsay 실측, false=직선거리 추정
           const sourceText = isTransit
             ? leg.realTransit
               ? "ODsay 대중교통 기준"
-              : leg.realTransit === false
-                ? "대중교통 추정(직선거리)"
-                : "대중교통 확인 중…"
+              : "대중교통 추정(직선거리)"
             : "카카오 길찾기 기준";
+          // 색상에만 의존하지 않도록 허용여부를 텍스트로도 표기 (접근성).
+          const limitText = ok ? " · 허용 범위 내" : " · 허용 시간 초과";
 
           const directionsUrl = complex
             ? kakaoDirectionsUrl(
@@ -138,16 +152,31 @@ export function CommuteDiagram({
               </div>
 
               {/* 시간 + 수단 */}
-              <div className="flex items-center justify-center gap-2">
-                <span
-                  className="text-base font-bold tabular-nums"
-                  style={{ color: accentColor }}
-                >
-                  {leg.minutes}분
-                </span>
-                <span className="text-[11px]" style={{ color: "#9a8f82" }}>
-                  {modeLabel} · {sourceText}{!ok && " · 허용 시간 초과"}
-                </span>
+              <div
+                className="flex items-center justify-center gap-2"
+                aria-live="polite"
+              >
+                {pending ? (
+                  <span
+                    className="text-[13px] font-semibold"
+                    style={{ color: "#9a8f82" }}
+                  >
+                    대중교통 계산 중…
+                  </span>
+                ) : (
+                  <>
+                    <span
+                      className="text-base font-bold tabular-nums"
+                      style={{ color: accentColor }}
+                    >
+                      {leg.minutes}분
+                    </span>
+                    <span className="text-[11px]" style={{ color: "#9a8f82" }}>
+                      {modeLabel} · {sourceText}
+                      {limitText}
+                    </span>
+                  </>
+                )}
               </div>
 
               {/* 카카오맵 길찾기 — 직장→단지 실제 소요시간 확인 */}
@@ -158,7 +187,9 @@ export function CommuteDiagram({
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-1 rounded-lg bg-white/70 py-1.5 text-[11px] font-semibold text-coral-600 transition-colors hover:bg-white hover:text-coral-800"
                 >
-                  {isTransit ? "카카오맵에서 경로 보기" : "카카오맵에서 실제 길찾기"}
+                  {isTransit
+                    ? "카카오맵에서 길찾기 (대중교통 탭)"
+                    : "카카오맵에서 실제 길찾기"}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
@@ -182,8 +213,10 @@ export function CommuteDiagram({
         className="text-[11px] leading-relaxed"
         style={{ color: "#9a8f82" }}
       >
-        통근 시간은 자동차는 카카오 길찾기, 대중교통은 ODsay 길찾기(출퇴근 기준)
-        추정이에요. 실제 시간은 시간대·교통 상황·환승에 따라 달라질 수 있어요.
+        {footerBasis}
+        {anyTransitFallback &&
+          " '직선거리' 표시는 대중교통 실측을 받지 못해 거리로 추정한 값이에요."}{" "}
+        실제 시간은 시간대·교통 상황·환승에 따라 달라질 수 있어요.
       </p>
     </div>
   );

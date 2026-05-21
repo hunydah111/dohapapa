@@ -29,6 +29,10 @@ export function HeroResultCard({
   const hasTransit = candidate.commuteLegs.some((l) => l.mode === "transit");
   const commuteIcon =
     hasCar && hasTransit ? "🚗🚌" : hasTransit ? "🚌" : "🚗";
+  // 대중교통 실측(ODsay) 대기 중이면 합계가 mock→실측으로 점프하므로 숫자 대신 "계산 중".
+  const transitPending = candidate.commuteLegs.some(
+    (l) => l.mode === "transit" && l.realTransit === undefined,
+  );
 
   const kakaoMapUrl = `https://map.kakao.com/?q=${encodeURIComponent(
     `${candidate.complexName} ${candidate.dongName}`,
@@ -92,7 +96,11 @@ export function HeroResultCard({
       {/* 핵심 스탯 뱃지 */}
       <div className="mt-5 flex flex-wrap gap-2">
         <Badge>💰 {formatKrwHuman(candidate.medianPriceKrw)}</Badge>
-        {totalCommute > 0 && <Badge>{commuteIcon} {totalCommute}분</Badge>}
+        {totalCommute > 0 && (
+          <Badge>
+            {commuteIcon} {transitPending ? "계산 중…" : `${totalCommute}분`}
+          </Badge>
+        )}
         <Badge>⭐ 종합 {candidate.totalScore}점</Badge>
         {candidate.isChopumah && <Badge>🏫 초품아</Badge>}
         {candidate.vibeBadge && <Badge>{candidate.vibeBadge}</Badge>}

@@ -120,11 +120,14 @@ export function HomeExperience() {
       setEditRequiredRegions(profile.requiredRegions ?? []);
       setReanalyzeError(null);
 
-      // URL 에 프로필 인코딩 — 부부가 같은 결과 링크로 공유 가능
+      // URL 에 프로필 인코딩 — 부부가 같은 결과 링크로 공유 가능.
+      // 프로필(소득·자산·직장)을 쿼리(?p=) 대신 해시(#p=)에 둔다 — 해시는 서버 로그·
+      // Referer·외부 스크립트(GA/광고/ODsay 등)로 전송되지 않아 민감정보 유출을 막는다.
       try {
         const slug = encodeProfile(profile);
         const url = new URL(window.location.href);
-        url.searchParams.set(SHARE_PARAM, slug);
+        url.searchParams.delete(SHARE_PARAM); // 레거시 ?p= 제거
+        url.hash = `${SHARE_PARAM}=${slug}`;
         window.history.replaceState(null, "", url.toString());
       } catch {
         // 인코딩 실패해도 결과는 정상 노출 — URL 만 갱신 안 됨
@@ -133,10 +136,13 @@ export function HomeExperience() {
     [],
   );
 
-  // 공유 링크 진입 시 자동 분석 — ?p={encoded} 가 있으면 폼 건너뛰고 결과 로드
+  // 공유 링크 진입 시 자동 분석 — #p={encoded}(신규) 또는 ?p=(레거시) 가 있으면
+  // 폼 건너뛰고 결과 로드. 해시 우선, 없으면 기존 쿼리 링크도 호환.
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const slug = params.get(SHARE_PARAM);
+    const rawHash = window.location.hash.replace(/^#/, "");
+    const hashParams = new URLSearchParams(rawHash);
+    const queryParams = new URLSearchParams(window.location.search);
+    const slug = hashParams.get(SHARE_PARAM) ?? queryParams.get(SHARE_PARAM);
     if (!slug) return;
     const profile = decodeProfile(slug);
     if (!profile) return;
@@ -292,9 +298,10 @@ export function HomeExperience() {
 
   function handleRestart() {
     setState(null);
-    // URL 의 공유 파라미터 제거
+    // URL 의 공유 파라미터 제거 (해시·쿼리 모두)
     const url = new URL(window.location.href);
     url.searchParams.delete(SHARE_PARAM);
+    url.hash = "";
     window.history.replaceState(null, "", url.toString());
   }
 

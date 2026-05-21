@@ -58,19 +58,39 @@ npx tsx scripts/fetch-molit.ts --months=3 --gu="강남구,서초구,송파구"
 | 환경 변수 | `KAKAO_REST_KEY` |
 | Fallback | `KAKAO_REST_KEY` 미설정 시 시드 좌표 테이블에서 조회 |
 
-#### Kakao Mobility API — 통근 시간
+#### Kakao Mobility API — 자동차 통근 시간
 
-단지 좌표에서 각 직장까지의 대중교통·자동차 통근 시간을 계산합니다.
+단지 좌표에서 각 직장까지의 **자동차** 통근 시간을 계산합니다(서버 호출).
 
 | 항목 | 내용 |
 |------|------|
-| 용도 | 출발지 → 목적지 이동 시간(분) 계산 |
-| 모드 | `transit` (대중교통) / `car` (자동차) |
-| 환경 변수 | `KAKAO_REST_KEY` |
+| 용도 | 출발지 → 목적지 자동차 이동 시간(분) 계산 |
+| 모드 | `car` (자동차) 전용 — 대중교통은 ODsay 사용 |
+| 엔드포인트 | `https://apis-navi.kakaomobility.com/v1/directions` |
+| 환경 변수 | `KAKAO_REST_KEY` (서버) |
 | Fallback | `KAKAO_REST_KEY` 미설정 시 `MockCommuteProvider` 사용 |
-| 캐시 | `CommuteCache` 테이블 (originKey: 좌표 소수 3자리 반올림) |
+| 캐시 | `CommuteCache` 테이블 (mode=`car`, originKey: 좌표 소수 3자리 반올림) |
 
 `KAKAO_REST_KEY`는 선택 환경 변수입니다. 미설정 시 앱은 `MockCommuteProvider`(직선거리 기반 추정)로 대체 동작하며 기능 전체가 유지됩니다.
+
+---
+
+### ODsay 대중교통 길찾기 API (선택, mock fallback 있음)
+
+대중교통(`transit`) 통근 시간을 계산합니다. **카카오는 대중교통 길찾기를 제공하지 않아 ODsay를 사용**합니다.
+
+| 항목 | 내용 |
+|------|------|
+| 용도 | 직장 → 단지 대중교통 소요시간(분) 계산 |
+| 엔드포인트 | `https://api.odsay.com/v1/api/searchPubTransPathT` |
+| 경로 선택 | 반환 경로 중 **`info.totalTime` 최소(최단 시간)** 경로 채택 (최소 환승 아님) |
+| 환경 변수 | `NEXT_PUBLIC_ODSAY_KEY` (URI/웹 키) |
+| 호출 위치 | **브라우저(클라이언트)** — URI 키는 등록 도메인(Referer)으로 잠김 |
+| 적용 범위 | 화면에 보이는 후보(메인 3개 카드)만 실측. 랭킹·보조 리스트는 mock(직선거리) |
+| Fallback | 키 미설정·호출 실패 시 직선거리 mock 추정 |
+| 캐시 | `CommuteCache` 테이블 (mode=`transit`) — `/api/transit`로 적재, 무료 1,000콜/일 절약 |
+
+> WHY 서버키 대신 URI 키: ODsay 서버키는 호출 IP 화이트리스트라 Vercel 동적 IP에선 불가. URI 키(도메인 Referer 잠금)를 브라우저에서 호출한다. 시각(출발시각) 파라미터는 보내지 않으므로 **표준(평균) 소요**이며 러시아워 기준이 아니다.
 
 ---
 
