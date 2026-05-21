@@ -129,6 +129,8 @@ function calcCutoffKm(wp: Workplace): number {
 // 따라서 지역 선택 시에도 하한을 0이 아니라 예산의 0.75배로 둬 — 지역 여유는 주되
 // 예산보다 한참 싼 단지는 배제한다. (그 결과가 0건이면 완화 제안으로 안내)
 const REGION_LOWER_FACTOR = 0.75;
+// 예산을 조금 넘는(상한 초과) 후보를 별도 섹션에 노출할 때의 상한 — 예산의 1.4배까지.
+const OVER_BUDGET_FACTOR = 1.4;
 function bandBounds(
   netPurchasePowerKrw: number,
   dropLowerBound: boolean,
@@ -326,6 +328,8 @@ interface ScoredComplex {
   candidate: ComplexCandidate;
   medianKrw: number;
   passedHardFilter: boolean;
+  /** 가격이 예산 상한을 넘지만(≤ 1.4배) 그 외 조건(지역·평수·통근)은 맞는 후보. */
+  overBudgetOk: boolean;
 }
 
 // ── 하드 필터 통과 건수 계산 (relaxation 시뮬레이션용) ──────────────────────
@@ -622,12 +626,13 @@ export async function recommendComplexes(
       const commuteLegs = await Promise.all(legPromises);
 
       // 하드 필터 — 가격은 예산 밴드 안, 통근은 허용시간의 COMMUTE_HARD_FACTOR 배 안
-      const priceOutOfBand = !priceInBudgetBand(
-        rep.medianKrw,
+      const { lower: bandLower, upper: bandUpper } = bandBounds(
         netPurchasePowerKrw,
         dropLowerBand,
         budgetFlex,
       );
+      const priceOutOfBand =
+        rep.medianKrw < bandLower || rep.medianKrw > bandUpper;
       // 직장 없으면 통근 제약 없음 (retired)
       const commuteTooLong = commuteLegs.some((leg) => {
         const wp = workplaces.find((_, i) =>
@@ -637,6 +642,12 @@ export async function recommendComplexes(
         return leg.minutes > (wp?.maxCommuteMinutes ?? 50) * COMMUTE_HARD_FACTOR;
       });
       const passedHardFilter = !priceOutOfBand && !commuteTooLong;
+      // 예산 상한만 넘고(≤1.4배) 통근은 메인 후보와 동일 기준(하드필터 이내)이면
+      // "예산 조금 넘는 후보"로 분류 — 가격만 문제고 나머지(지역·평수·통근)는 맞는 경우.
+      const overBudgetOk =
+        rep.medianKrw > bandUpper &&
+        rep.medianKrw <= netPurchasePowerKrw * OVER_BUDGET_FACTOR &&
+        !commuteTooLong;
 
       // 신호별 점수
       const commuteResult = scoreCommute(commuteLegs, profile);
@@ -757,7 +768,7 @@ export async function recommendComplexes(
         rankReason: "", // 3티어 선정 후 후처리에서 채움
       };
 
-      return { candidate, medianKrw: rep.medianKrw, passedHardFilter };
+      return { candidate, medianKrw: rep.medianKrw, passedHardFilter, overBudgetOk };
   };
 
   // ── 6a. 1차 평가 — geoSurvivors 전체를 mock 통근으로 평가 (즉시·무료) ───────
@@ -1074,6 +1085,14 @@ export async function recommendComplexes(
     .slice(0, 5)
     .map(toMore);
 
+  // 예산을 조금 넘는(상한 초과 ≤1.4배) 후보 — 지역·평수·통근은 맞음. 최대 5곳, 점수순.
+  // "13억인데 8억 추천" 대신, 예산을 조금 더 쓰면 닿는 단지를 별도로 솔직히 노출.
+  const overBudgetCandidates: MoreCandidate[] = validEvaluated
+    .filter((e) => e.overBudgetOk && !chosenIds.has(e.candidate.complexId))
+    .sort((a, b) => b.candidate.totalScore - a.candidate.totalScore)
+    .slice(0, 5)
+    .map(toMore);
+
   // ── 입지 미스 안내(C) — 점지 입지(quiet 제외)를 골랐는데 결과에 안 잡혔을 때 ──
   // 강도 가장 센 입지 1개 기준. 표시 단지(top3) 중 매칭이 없으면 가장 가까운 후보를 솔직히 안내.
   let vibeNote:
@@ -1139,6 +1158,7 @@ export async function recommendComplexes(
     candidates,
     moreCandidates,
     overLimitCandidates,
+    overBudgetCandidates,
     relaxationSuggestions,
     consideredComplexCount,
     vibeNote,

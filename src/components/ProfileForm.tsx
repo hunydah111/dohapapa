@@ -373,9 +373,7 @@ export function ProfileForm({
   const debounceARef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debounceBRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 단계 전환 시 폼 상단으로 스크롤 — 다음/이전 누르면 화면이 중간·아래에서
-  // 시작하던 문제 방지. 최초 마운트(첫 단계)에선 스크롤하지 않는다.
-  const formTopRef = useRef<HTMLDivElement>(null);
+  // 단계 전환 시 맨 위로 스크롤 — 최초 마운트(첫 단계)에선 스크롤하지 않는다.
   const stepScrollMountRef = useRef(true);
 
   const fetchGeocode = useCallback(
@@ -446,13 +444,16 @@ export function ProfileForm({
     };
   }, [wpB.query, fetchGeocode]);
 
-  // 단계가 바뀌면 폼 상단을 화면 위로 끌어올린다(부드럽게).
+  // 단계가 바뀌면 항상 맨 위부터 보이게 — 즉시 최상단으로(레이아웃 변동에도 안정),
+  // 레이아웃 확정 후 한 번 더 보정. scrollIntoView 는 다음 단계 높이 변화 때 중간/하단에
+  // 멈추는 문제가 있어 window 절대 스크롤로 교체.
   useEffect(() => {
     if (stepScrollMountRef.current) {
       stepScrollMountRef.current = false;
       return;
     }
-    formTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.scrollTo(0, 0);
+    requestAnimationFrame(() => window.scrollTo(0, 0));
   }, [step]);
 
   // ── 헬퍼 ─────────────────────────────────────────────────────
@@ -705,10 +706,7 @@ export function ProfileForm({
   // ── 렌더 ──────────────────────────────────────────────────────
 
   return (
-    <div
-      ref={formTopRef}
-      className="w-full max-w-lg mx-auto flex flex-col gap-6 scroll-mt-4"
-    >
+    <div className="w-full max-w-lg mx-auto flex flex-col gap-6">
       {/* 진행 표시 */}
       <div className="flex flex-col items-center gap-2 pt-2">
         <StepDots current={visualStep} total={visualTotal} />

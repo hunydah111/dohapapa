@@ -226,6 +226,8 @@ export interface RecommendationResult {
   moreCandidates: MoreCandidate[];
   /** 통근 한도(이용자 설정)를 살짝 넘는(~×1.3) 후보 — 별도 섹션. 평소 빈 배열. */
   overLimitCandidates: MoreCandidate[];
+  /** 예산 상한을 조금 넘지만(≤1.4배) 지역·평수·통근은 맞는 후보 — 별도 섹션. 평소 빈 배열. */
+  overBudgetCandidates: MoreCandidate[];
   /** candidates 가 비었을 때 채워지는 조건 완화 제안. 평소엔 빈 배열. */
   relaxationSuggestions: RelaxationSuggestion[];
   /** 하드 필터 통과 단지 수. */

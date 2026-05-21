@@ -159,6 +159,9 @@ export function HomeExperience() {
       } catch {
         // 인코딩 실패해도 결과는 정상 노출 — URL 만 갱신 안 됨
       }
+
+      // 결과 화면은 항상 맨 위부터 — 폼 하단(분석 시작)에서 스크롤된 위치를 초기화.
+      window.scrollTo({ top: 0 });
     },
     [],
   );
@@ -870,6 +873,62 @@ export function HomeExperience() {
                   </span>
                 </li>
               ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
+      {/* 예산을 조금 넘는 후보 — 예산대 결과가 적을 때만(예산 동떨어진 추천 대신 솔직 노출) */}
+      {result.overBudgetCandidates.length > 0 && result.candidates.length < 3 && (
+        <section className="flex flex-col gap-4">
+          <div>
+            <h2 className="text-lg font-bold" style={{ color: "#3a322c" }}>
+              예산을 조금 더 쓰면 닿는 후보
+            </h2>
+            <p className="mt-0.5 text-sm" style={{ color: "#6b6157" }}>
+              예산보다 조금 비싸지만 지역·평수·통근 조건엔 맞는{" "}
+              {result.overBudgetCandidates.length}곳
+            </p>
+          </div>
+          <div className="overflow-hidden rounded-3xl border border-coral-200 bg-coral-50/40">
+            <ul className="divide-y divide-coral-200/60">
+              {result.overBudgetCandidates.map((m: MoreCandidate) => {
+                const diff = Math.max(
+                  0,
+                  m.medianPriceKrw - result.budget.netPurchasePowerKrw,
+                );
+                return (
+                  <li
+                    key={m.complexId}
+                    className="flex items-start gap-3 px-5 py-4"
+                  >
+                    <span className="mt-0.5 flex-shrink-0 rounded-full bg-coral-100 px-2 py-0.5 text-[11px] font-bold text-coral-700">
+                      +{formatKrwHuman(diff)}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className="font-semibold text-sm leading-snug"
+                        style={{ color: "#3a322c" }}
+                      >
+                        {m.complexName}
+                      </p>
+                      <p
+                        className="mt-0.5 text-xs leading-relaxed"
+                        style={{ color: "#9a8f82" }}
+                      >
+                        {m.sigungu} · {m.dongName} · {m.representativeArea}㎡ ·{" "}
+                        {m.commuteSummary}
+                      </p>
+                    </div>
+                    <span
+                      className="flex-shrink-0 text-sm font-semibold tabular-nums"
+                      style={{ color: "#3a322c" }}
+                    >
+                      {formatKrwHuman(m.medianPriceKrw)}
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </section>
