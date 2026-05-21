@@ -30,22 +30,20 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
         <Homi mood="think" size={120} />
       </div>
 
-      {/* 가치 제안 헤드라인 — 단정형으로 임팩트 */}
+      {/* 메인 캐치프레이즈 — 슬로건 */}
       <h1
-        className="font-jua mt-2 text-[2rem] leading-[1.2] tracking-tight sm:text-[2.7rem]"
+        className="font-jua mt-2 text-[2.1rem] leading-[1.2] tracking-tight sm:text-[2.9rem]"
         style={{ color: "#3a2c1d" }}
       >
-        내 월급으로 살 수 있는 집,
-        <br />
-        수도권에 다 있어요
+        묻고, 따지고, <span className="text-coral-600">비집고</span>
       </h1>
 
-      {/* 서브카피 — 속도 중심으로 축약(출처는 아래 신뢰줄에만 1회) */}
+      {/* 서브 캐치프레이즈 — 무엇을 하는 서비스인지 */}
       <p
-        className="mx-auto mt-3 max-w-md text-[14px] leading-relaxed sm:text-[15px]"
+        className="font-jua mx-auto mt-2 text-[17px] sm:text-[19px]"
         style={{ color: "#6b6157" }}
       >
-        소득·자산만 넣으면 3분 안에 끝나요
+        내 통장으로 살 집 찾기
       </p>
 
       {/* 예시 결과 미니카드 — 무엇을 받는지 미리 보여주기(가짜임을 명시) */}
