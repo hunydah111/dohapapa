@@ -9,6 +9,12 @@ export interface AreaMedian {
    */
   medianKrw: number;
   /**
+   * 시점 보정(추세 브리지) 적용 전 추정가 (원). 인근 단지 환산 추정(estimateRep)에서
+   * 비교점으로 쓴다 — 활발한 comp 는 이미 최근가라 coarse 한 시군구 브리지로 또 깎으면
+   * 그 동네 프리미엄을 잃기 때문(브리지는 묵은 자기 데이터 보정용).
+   */
+  rawMedianKrw: number;
+  /**
    * 추정 현재가 범위 하단 (원). 최근 거래의 분위/최저. 신축 입주장처럼 같은 평형이
    * 층·향 따라 크게 벌어지는 단지의 "정직한 폭"을 점추정 대신 보여주기 위한 값.
    */
@@ -34,6 +40,13 @@ export interface AreaMedian {
    * 대표 평형 선택에서 제외된다 (C-1: 플래그만, 가격 보정은 하지 않음).
    */
   lowConfidence: boolean;
+  /**
+   * 이 평형 자체의 실거래가 아니라 인근 단지 환산으로 추정한 값(등기 지연 등으로
+   * 직접 실거래가 아직 없는 경우). true 면 UI 에 "추정·실거래 미확정" 표시.
+   */
+  estimated?: boolean;
+  /** 추정 근거 문구(예: "인근 3개 단지 시세 환산"). estimated 일 때만. */
+  estimateBasis?: string;
 }
 
 const WINDOW_MONTHS = 6;
@@ -314,6 +327,7 @@ export async function getAreaMediansForMany(
       medians.push({
         area,
         medianKrw: Math.round(est.price * factor),
+        rawMedianKrw: est.price,
         priceLow: Math.round(est.low * factor),
         priceHigh: Math.round(est.high * factor),
         midpointMonth,

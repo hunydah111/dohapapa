@@ -140,6 +140,13 @@ export interface ComplexCandidate {
   transactionCount: number;
   /** 최근 6개월 거래가 적어 12개월까지 넓혀 추정한 경우 true(거래 적음·참고용). */
   lowDataConfidence?: boolean;
+  /**
+   * 이 평형의 직접 실거래가 없어 인근 단지 환산으로 추정한 가격(등기 지연 신축 등).
+   * true 면 UI 에 "추정 시세 · 실거래 미확정" 명시.
+   */
+  priceEstimated?: boolean;
+  /** 추정 근거(예: "인근 3개 단지 시세 환산"). priceEstimated 일 때만. */
+  estimateBasis?: string;
   /** 단지 준공년도 — UI 에 "○○○○년식" 으로 표시. null = 정보 없음. */
   buildYear: number | null;
   /** 초품아 여부 — 초등학교가 단지에서 직선 150m 이내. */

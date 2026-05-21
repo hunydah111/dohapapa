@@ -34,6 +34,9 @@ import type {
 } from "@/types/recommendation";
 import { getAreaMediansForMany, pickRepresentative } from "./complexMedian";
 import type { AreaMedian } from "./complexMedian";
+import { estimateRepFromComps, riverDistanceKm } from "./estimateRep";
+import type { CompPoint } from "./estimateRep";
+import { trendLatestMonth } from "./trendIndex";
 import {
   COMMUTE_HARD_FACTOR,
   scoreBudgetFit,
@@ -443,6 +446,11 @@ export async function recommendComplexes(
   // 소규모 건물 배제 — 6개월 거래 건수를 대단지 프록시로 사용
   const MIN_TRANSACTIONS = 8;
 
+  // 인근 단지 환산 추정 허용 연식 — 등기지연은 신축만의 현상. 최근 N년 내 준공만 추정한다.
+  // (옛 단지가 특정 평형이 없는 건 등기문제가 아니라 그냥 그 평형이 없는 것 → 추정 금지.)
+  const ESTIMATE_MAX_AGE_YEARS = 3;
+  const nowYear = new Date().getFullYear();
+
   // ── 또래 평단가 벤치마크 — '동네 또래단지보다 비싸요' 배지용 ──────────────────
   // 같은 동·비슷한 연식(5년 버킷) 단지들의 ㎡당 단가 중위값. geoSurvivors 전체로
   // 계산(예산/통근 필터 전이라 동네 전반 반영). '재건축 기대' 같은 미검증 해석 대신,
@@ -453,6 +461,8 @@ export async function recommendComplexes(
   const peerKey = (dong: string, by: number) =>
     `${dong}|${Math.floor(by / PEER_AGE_BUCKET) * PEER_AGE_BUCKET}`;
   const peerPerM2 = new Map<string, number[]>();
+  // 환산 추정용 비교점(거리·연식·한강근접 가중) — 직접 실거래 없는 신축의 가격을 잇는다.
+  const comps: CompPoint[] = [];
   for (const c of geoSurvivors) {
     if (c.buildYear == null || !c.dongName) continue;
     const ms = mediansMap.get(c.id);
@@ -464,7 +474,20 @@ export async function recommendComplexes(
     const arr = peerPerM2.get(k);
     if (arr) arr.push(perM2);
     else peerPerM2.set(k, [perM2]);
+    // 비교점 — 직접 실거래로 대표 평형이 잡힌 단지만(추정 단지는 제외).
+    // ㎡단가는 브리지 전 raw 를 쓴다(활발한 인근 comp 를 coarse 브리지로 깎지 않기 위해).
+    if (!r.estimated && c.latitude != null && c.longitude != null) {
+      comps.push({
+        buildYear: c.buildYear,
+        perM2: r.rawMedianKrw / r.area,
+        area: r.area,
+        lat: c.latitude,
+        lng: c.longitude,
+        riverKm: riverDistanceKm(c.latitude, c.longitude),
+      });
+    }
   }
+  const latestMonth = trendLatestMonth();
   const peerMedianPerM2 = new Map<string, { median: number; count: number }>();
   for (const [k, arr] of peerPerM2) {
     const sorted = [...arr].sort((a, b) => a - b);
@@ -482,11 +505,45 @@ export async function recommendComplexes(
       const medians: AreaMedian[] = mediansMap.get(complex.id) ?? [];
 
       const totalTransactions = medians.reduce((s, m) => s + m.count, 0);
-      if (totalTransactions < MIN_TRANSACTIONS) return null;
 
       // pickRepresentative 의 minCount 기본값(3) 그대로 사용
-      const rep = pickRepresentative(medians, minArea, maxArea);
-      if (rep === null) return null;
+      let rep = pickRepresentative(medians, minArea, maxArea);
+      if (rep !== null) {
+        // 직접 실거래 대표 — 소규모 건물 배제(대단지 프록시) 적용.
+        if (totalTransactions < MIN_TRANSACTIONS) return null;
+      } else {
+        // 해당 평형 직접 실거래 없음 — 등기지연 신축 등. 인근 단지 환산 추정 시도.
+        // 가드: ① MOLIT 에 한 건이라도 등록(실재 확인) ② 최근 N년 내 준공(등기지연 신축만).
+        if (totalTransactions < 1) return null;
+        if (
+          complex.buildYear == null ||
+          complex.buildYear < nowYear - ESTIMATE_MAX_AGE_YEARS
+        )
+          return null;
+        const tLat = complex.latitude as number;
+        const tLng = complex.longitude as number;
+        const est = estimateRepFromComps(comps, {
+          buildYear: complex.buildYear,
+          lat: tLat,
+          lng: tLng,
+          riverKm: riverDistanceKm(tLat, tLng),
+        });
+        if (est === null) return null;
+        rep = {
+          area: est.area,
+          medianKrw: est.priceKrw,
+          rawMedianKrw: est.priceKrw,
+          priceLow: Math.round(est.priceKrw * 0.92),
+          priceHigh: Math.round(est.priceKrw * 1.08),
+          midpointMonth: latestMonth,
+          count: 0,
+          volatility: 0,
+          sparse: true,
+          lowConfidence: true,
+          estimated: true,
+          estimateBasis: est.basis,
+        };
+      }
 
       const complexCoord: LatLng = {
         lat: complex.latitude as number,
@@ -640,6 +697,8 @@ export async function recommendComplexes(
         longitude: complex.longitude as number,
         transactionCount: rep.count,
         lowDataConfidence: rep.sparse,
+        priceEstimated: rep.estimated,
+        estimateBasis: rep.estimateBasis,
         buildYear: complex.buildYear,
         isChopumah,
         pricierThanPeers,

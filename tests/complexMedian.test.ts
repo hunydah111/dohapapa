@@ -14,6 +14,7 @@ const med = (
 ): AreaMedian => ({
   area,
   medianKrw,
+  rawMedianKrw: medianKrw,
   priceLow: medianKrw,
   priceHigh: medianKrw,
   midpointMonth: "2026-05",

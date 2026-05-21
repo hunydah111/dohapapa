@@ -109,10 +109,19 @@ export function CandidateCard({
             🔥 동네 또래보다 비싸요
           </span>
         )}
-        {candidate.lowDataConfidence && (
-          <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 ring-1 ring-amber-200">
-            거래 적음 · 참고용
+        {candidate.priceEstimated ? (
+          <span
+            className="inline-flex items-center rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700 ring-1 ring-orange-200"
+            title="이 평형의 직접 실거래가 아직 없어 인근 단지 시세로 환산한 추정값입니다 (등기 진행 중 신축 등)"
+          >
+            추정 시세 · 실거래 미확정
           </span>
+        ) : (
+          candidate.lowDataConfidence && (
+            <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 ring-1 ring-amber-200">
+              거래 적음 · 참고용
+            </span>
+          )
         )}
         <span
           className="ml-auto rounded-full bg-[#f3ece4] px-3 py-1 text-xs font-semibold tabular-nums"
@@ -194,11 +203,13 @@ export function CandidateCard({
           </span>
         </div>
         <p className="mt-1.5 text-xs" style={{ color: "#9a8f82" }}>
-          {showPriceRange
-            ? `최근 실거래 ${candidate.transactionCount}건이 층·향 따라 ${formatEok(candidate.priceLowKrw!)}~${formatEok(candidate.priceHighKrw!)}로 편차가 큰 단지예요 (신축 입주장 등). 중앙 추정 ${formatKrwHuman(candidate.medianPriceKrw)} — `
-            : candidate.lowDataConfidence
-              ? `최근 1년 실거래 ${candidate.transactionCount}건 (거래 적어 12개월로 추정 — 참고용) `
-              : `최근 6개월 실거래 ${candidate.transactionCount}건의 중위값 `}
+          {candidate.priceEstimated
+            ? `아직 실거래가 등재되기 전이라 ${candidate.estimateBasis ?? "주변 시세 연동"}으로 추정한 값이에요 (등기 진행 중 신축 등). 실제 등재 시 조망·층·향 따라 차이 날 수 있어요. `
+            : showPriceRange
+              ? `최근 실거래 ${candidate.transactionCount}건이 층·향 따라 ${formatEok(candidate.priceLowKrw!)}~${formatEok(candidate.priceHighKrw!)}로 편차가 큰 단지예요 (신축 입주장 등). 중앙 추정 ${formatKrwHuman(candidate.medianPriceKrw)} — `
+              : candidate.lowDataConfidence
+                ? `최근 1년 실거래 ${candidate.transactionCount}건 (거래 적어 12개월로 추정 — 참고용) `
+                : `최근 6개월 실거래 ${candidate.transactionCount}건의 중위값 `}
           (국토교통부 공개 데이터, 실제 거래가와 다를 수 있음)
         </p>
       </div>
