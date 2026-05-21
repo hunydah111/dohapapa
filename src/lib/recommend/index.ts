@@ -429,8 +429,12 @@ export async function recommendComplexes(
           });
         });
 
-  // 5. 중위가 일괄 조회
-  const mediansMap = await getAreaMediansForMany(geoSurvivors.map((c) => c.id));
+  // 5. 중위가 일괄 조회 — sigunguById 를 넘겨 (지역×가격대) 추세 시점 보정 적용.
+  const sigunguById = new Map(geoSurvivors.map((c) => [c.id, c.sigungu]));
+  const mediansMap = await getAreaMediansForMany(
+    geoSurvivors.map((c) => c.id),
+    sigunguById,
+  );
 
   const areaRange = AREA_RANGES[profile.preferredAreaRange];
   const minArea = areaRange.minM2;

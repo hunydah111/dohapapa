@@ -16,6 +16,7 @@ const med = (
   medianKrw,
   priceLow: medianKrw,
   priceHigh: medianKrw,
+  midpointMonth: "2026-05",
   count,
   volatility: 0,
   sparse: false,

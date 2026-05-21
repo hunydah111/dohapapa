@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { bridgeFactor, tierOf, trendLatestMonth } from "./trendIndex";
 
 export interface AreaMedian {
   area: number;
@@ -14,6 +15,8 @@ export interface AreaMedian {
   priceLow: number;
   /** 추정 현재가 범위 상단 (원). 최근 거래의 분위/최고. */
   priceHigh: number;
+  /** 데이터 유효시점 month("YYYY-MM") — 추세 시점 보정의 출발점. */
+  midpointMonth: string;
   /** 최근 6개월 거래 건수 — 가격 신뢰도 지표. */
   count: number;
   /**
@@ -89,6 +92,11 @@ function percentile(prices: number[], q: number): number {
   return s[lo] + (idx - lo) * (s[hi] - s[lo]);
 }
 
+/** Date → "YYYY-MM" (UTC). 빌드 스크립트 monthKey 와 동일 규칙. */
+function monthKey(d: Date): string {
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
 export interface Tx {
   price: number;
   daysAgo: number;
@@ -101,6 +109,11 @@ export interface PriceEstimate {
   low: number;
   /** 표시용 범위 상단(원). */
   high: number;
+  /**
+   * 데이터의 "유효 시점" — 거래일들의 최근가중 평균 daysAgo. 시점 보정(추세 지수)의
+   * 출발점을 잡는 데 쓴다. 최근 거래가 많을수록 작다(=지금에 가깝다).
+   */
+  midpointDaysAgo: number;
 }
 
 function decayWeight(daysAgo: number): number {
@@ -120,7 +133,8 @@ function priceVolatility(txs: Tx[]): number {
 
 /** 한 평형 그룹의 거래들로 추정 현재가와 표시용 범위를 산출한다. */
 export function estimateCurrentPrice(txs: Tx[]): PriceEstimate {
-  if (txs.length === 0) return { price: 0, low: 0, high: 0 };
+  if (txs.length === 0)
+    return { price: 0, low: 0, high: 0, midpointDaysAgo: 0 };
 
   // 1. 최근 거래 가중 중위값
   const base = weightedMedian(
@@ -184,11 +198,19 @@ export function estimateCurrentPrice(txs: Tx[]): PriceEstimate {
     high = Math.round(percentile(rangePool, RANGE_HIGH_Q));
   }
 
+  // 데이터 유효시점 — 거래일들의 최근가중 평균 daysAgo.
+  const wsum = txs.reduce((s, t) => s + decayWeight(t.daysAgo), 0);
+  const midpointDaysAgo =
+    wsum > 0
+      ? txs.reduce((s, t) => s + t.daysAgo * decayWeight(t.daysAgo), 0) / wsum
+      : 0;
+
   return {
     price: estimated,
     // 범위가 점추정을 항상 감싸도록 보정(보정으로 estimated 가 high 를 넘지 않게).
     low: Math.min(low, estimated),
     high: Math.max(high, estimated),
+    midpointDaysAgo,
   };
 }
 
@@ -225,11 +247,14 @@ export function flagLowConfidence(medians: AreaMedian[]): void {
  */
 export async function getAreaMediansForMany(
   complexIds: string[],
+  sigunguById?: Map<string, string>,
 ): Promise<Map<string, AreaMedian[]>> {
   // 12개월까지 가져와 두고, 단지별로 6개월이 충분하면 6개월만, 부족하면 12개월을 쓴다.
   const since = new Date();
   since.setMonth(since.getMonth() - FALLBACK_WINDOW_MONTHS);
   const now = Date.now();
+  // 추세 시점 보정 도착 시점. sigunguById 가 주어지고 지수가 있을 때만 보정한다.
+  const latestMonth = sigunguById ? trendLatestMonth() : "";
 
   const CHUNK = 400;
   // complexId → (area → Tx[])
@@ -276,11 +301,22 @@ export async function getAreaMediansForMany(
         : txs12.filter((t) => t.daysAgo <= SIX_MONTHS_DAYS);
       if (txs.length === 0) continue;
       const est = estimateCurrentPrice(txs);
+      const midpointMonth = monthKey(new Date(now - est.midpointDaysAgo * 86_400_000));
+
+      // 시점 보정 — 데이터 유효시점(midpointMonth) → 최신월. 가격대(tier)는 보정 전
+      // 추정가 기준. 점추정·범위에 같은 계수를 곱해 일관성 유지.
+      let factor = 1;
+      const sigungu = sigunguById?.get(complexId);
+      if (latestMonth && sigungu) {
+        factor = bridgeFactor(sigungu, tierOf(est.price), midpointMonth, latestMonth);
+      }
+
       medians.push({
         area,
-        medianKrw: est.price,
-        priceLow: est.low,
-        priceHigh: est.high,
+        medianKrw: Math.round(est.price * factor),
+        priceLow: Math.round(est.low * factor),
+        priceHigh: Math.round(est.high * factor),
+        midpointMonth,
         count: txs.length,
         volatility: priceVolatility(txs),
         sparse: useFallback,
