@@ -1,5 +1,4 @@
 import { HomeExperience } from "@/components/HomeExperience";
-import { BrandMark } from "@/components/BrandMark";
 import { Homi } from "@/components/Homi";
 
 export default function HomePage() {
@@ -17,15 +16,11 @@ export default function HomePage() {
           }}
         />
 
-        {/* 워드마크 — 비버 위 (로고 마크 + 텍스트 인라인 락업, 주아체) */}
+        {/* 워드마크 — 비버 위 (텍스트만, 로고 마크 생략, 주아체) */}
         <h1
-          className="font-jua flex items-center justify-center gap-3 text-[3.4rem] leading-none tracking-tight sm:text-7xl"
+          className="font-jua text-center text-[3.4rem] leading-none tracking-wide sm:text-7xl"
           style={{ color: "#3a2c1d" }}
         >
-          <BrandMark
-            size={64}
-            className="h-12 w-12 text-coral-600 sm:h-16 sm:w-16"
-          />
           비집고
         </h1>
 
