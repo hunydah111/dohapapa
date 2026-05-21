@@ -13,6 +13,7 @@ import { AREA_RANGES, AREA_RANGE_ORDER } from "@/types/profile";
 import { BudgetSummary } from "./BudgetSummary";
 import { CandidateCard } from "./CandidateCard";
 import { HeroResultCard } from "./HeroResultCard";
+import { LandingHero } from "./LandingHero";
 import { Homi } from "./Homi";
 import { RequiredRegionPicker } from "./RequiredRegionPicker";
 import { getHomeType } from "@/lib/homeType";
@@ -114,6 +115,7 @@ function markRealTransit(
 export function HomeExperience() {
   const [state, setState] = useState<ResultState | null>(null);
   const [autoLoading, setAutoLoading] = useState(false);
+  const [started, setStarted] = useState(false); // 랜딩 CTA 누르면 폼 시작
   const [shareToast, setShareToast] = useState<string | null>(null);
 
   // 조건 수정 패널 상태
@@ -375,6 +377,7 @@ export function HomeExperience() {
 
   function handleRestart() {
     setState(null);
+    setStarted(false); // 랜딩으로 복귀
     // URL 의 공유 파라미터 제거 (해시·쿼리 모두)
     const url = new URL(window.location.href);
     url.searchParams.delete(SHARE_PARAM);
@@ -516,12 +519,23 @@ export function HomeExperience() {
     if (autoLoading) {
       return (
         <div className="flex flex-col items-center gap-2 rounded-3xl border border-coral-100 bg-coral-50/60 px-6 py-12 text-center">
-          <Homi mood="searching" size={92} />
+          <Homi mood="running" size={92} />
           <p className="text-sm font-semibold text-coral-700">
             공유 링크 분석 중…
           </p>
           <p className="text-xs text-coral-500/80">잠시만 기다려 주세요</p>
         </div>
+      );
+    }
+    // 시작 전 = 랜딩 히어로(가치제안+단일 CTA). CTA 누르면 폼 노출.
+    if (!started) {
+      return (
+        <LandingHero
+          onStart={() => {
+            setStarted(true);
+            window.scrollTo({ top: 0 });
+          }}
+        />
       );
     }
     return <ProfileForm onResult={handleResult} />;
@@ -561,7 +575,7 @@ export function HomeExperience() {
       {reanalyzing && (
         <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
           <div className="flex items-center gap-2 rounded-full bg-coral-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg">
-            <Homi mood="searching" size={30} />
+            <Homi mood="running" size={30} />
             다시 찾는 중…
           </div>
         </div>
@@ -570,8 +584,11 @@ export function HomeExperience() {
       {/* 공유 토스트 — 스크롤 위치와 무관하게 항상 보이도록 화면 하단 고정 */}
       {shareToast && (
         <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
-          <div className="rounded-full bg-coral-600 px-5 py-3 text-sm font-medium text-white shadow-lg">
-            {shareToast}
+          <div className="flex items-center gap-2 rounded-full bg-coral-600 px-5 py-3 text-sm font-medium text-white shadow-lg">
+            {shareToast.includes("복사됨") && (
+              <Homi mood="thumbsup" size={28} className="shrink-0" />
+            )}
+            <span>{shareToast}</span>
           </div>
         </div>
       )}
@@ -622,7 +639,7 @@ export function HomeExperience() {
       {result.candidates.length > 0 ? (
         <section className="flex flex-col gap-5">
           <div className="flex items-center gap-3">
-            <Homi mood="happy" size={56} className="shrink-0" />
+            <Homi mood="cheer" size={56} className="shrink-0" />
             <div>
               <h2 className="text-xl font-bold" style={{ color: "#3a322c" }}>
                 딱 맞는 집 찾았어요!
@@ -645,7 +662,7 @@ export function HomeExperience() {
       ) : (
         /* 0건 화면 */
         <Card>
-          <Homi mood="sheepish" size={96} className="mx-auto mb-1" />
+          <Homi mood="crying" size={96} className="mx-auto mb-1" />
           <h2
             className="text-xl font-bold mb-2 text-center"
             style={{ color: "#3a322c" }}
@@ -1008,8 +1025,9 @@ export function HomeExperience() {
             )}
 
             {reanalyzeError && (
-              <div className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-                {reanalyzeError}
+              <div className="flex items-center gap-2.5 rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                <Homi mood="flustered" size={34} className="shrink-0" />
+                <span>{reanalyzeError}</span>
               </div>
             )}
 

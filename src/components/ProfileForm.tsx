@@ -1529,7 +1529,7 @@ export function ProfileForm({
           {/* 분석 중 안내 — 호미가 돋보기 들고 두리번 */}
           {submitting && (
             <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-coral-50 border border-coral-100 px-4 py-5">
-              <Homi mood="searching" size={88} />
+              <Homi mood="running" size={88} />
               <p className="text-[14px] font-semibold text-coral-700">
                 열심히 찾는 중…
               </p>
@@ -1539,10 +1539,11 @@ export function ProfileForm({
             </div>
           )}
 
-          {/* 에러 */}
+          {/* 에러 — 비지가 화남 */}
           {submitError && (
-            <div className="px-4 py-3 rounded-2xl bg-red-50 border border-red-200 text-[14px] text-red-700 leading-snug">
-              {submitError}
+            <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-red-50 border border-red-200 text-[14px] text-red-700 leading-snug">
+              <Homi mood="angry" size={36} className="shrink-0" />
+              <span>{submitError}</span>
             </div>
           )}
 

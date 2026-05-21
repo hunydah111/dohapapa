@@ -1,29 +1,36 @@
 // 비집고 마스코트 "비지(Biji)" — 비버. 시안 일러스트(public/biji/*.png)를 그대로 쓰되
-// 정적이지 않게 부드러운 모션(숨쉬기 bob / 분석 중 통통)을 입혔다. 손코딩 SVG로는 이 그림체
-// 퀄리티가 안 나와서, 예쁜 원본을 살리고 움직임만 코드로 더했다. (정밀 캐릭터 모션은 추후 Lottie)
+// 정적이지 않게 부드러운 모션(숨쉬기 bob / 분석 중 통통)을 입혔다. 표정 9종.
 // 호출부(<Homi mood=... size=... />)는 그대로 동작.
 
 export type HomiMood =
-  | "wave" // 첫 화면 — 그루터기에 앉아 반김
-  | "searching" // 분석 중 — 나뭇가지 짊어지고 통통
-  | "happy" // 결과 좋음 — 만세
-  | "sheepish" // 결과 빈약 — 시무룩
-  | "calm"; // 면책/주의 — 차분
+  | "smile" // 웃는 — 첫 화면 인사·입력
+  | "flustered" // 당황 — 결과 빈약·경계
+  | "angry" // 화난 — 오류
+  | "running" // 달리는 — 분석 중·재검색
+  | "crying" // 우는 — 0건
+  | "think" // 통장 보며 고민 — 예산·"내 통장"
+  | "cheer" // 만세 — 결과 좋음·히어로
+  | "thumbsup" // 따봉 — 성공 마이크로
+  | "face"; // 얼굴만 — 소형 인라인
 
-const BIJI_ASPECT = 0.9; // 트림 후 약 0.8~1.0 (w/h) — 레이아웃 시프트 방지용 힌트
+const BIJI_ASPECT = 0.9; // 레이아웃 시프트 방지용 힌트(실제 렌더는 width:auto)
 
-// ?v= 캐시버스트 — 배경 투명 처리된 새 이미지를 브라우저가 다시 받게.
-const V = "?v=7";
+// ?v= 캐시버스트 — 새 표정 이미지 반영.
+const V = "?v=8";
 const SRC: Record<HomiMood, string> = {
-  wave: `/biji/biji-input.png${V}`,
-  calm: `/biji/biji-input.png${V}`,
-  searching: `/biji/biji-loading.png${V}`,
-  happy: `/biji/biji-happy.png${V}`,
-  sheepish: `/biji/biji-sad.png${V}`,
+  smile: `/biji/biji-smile.png${V}`,
+  flustered: `/biji/biji-flustered.png${V}`,
+  angry: `/biji/biji-angry.png${V}`,
+  running: `/biji/biji-running.png${V}`,
+  crying: `/biji/biji-crying.png${V}`,
+  think: `/biji/biji-think.png${V}`,
+  cheer: `/biji/biji-cheer.png${V}`,
+  thumbsup: `/biji/biji-thumbsup.png${V}`,
+  face: `/biji/biji-face.png${V}`,
 };
 
 export function Homi({
-  mood = "wave",
+  mood = "smile",
   size = 120,
   className = "",
 }: {
@@ -31,9 +38,10 @@ export function Homi({
   size?: number;
   className?: string;
 }) {
-  const src = SRC[mood] ?? SRC.wave;
-  const anim = mood === "searching" ? "biji-hop" : "biji-breathe";
-  // 반응형 높이 — 좁은 화면에선 약 78%까지 줄고, 넓은 화면에선 size 까지. 폭은 화면을 안 넘게.
+  const src = SRC[mood] ?? SRC.smile;
+  // 달리기·만세는 통통 튀고, 나머지는 숨쉬기.
+  const anim = mood === "running" || mood === "cheer" ? "biji-hop" : "biji-breathe";
+  // 반응형 높이 — 좁은 화면에선 약 78%까지 줄고, 넓은 화면에선 size 까지.
   const minH = Math.round(size * 0.78);
   const height = `clamp(${minH}px, ${Math.round(size * 0.55)}px + 9vw, ${size}px)`;
   return (

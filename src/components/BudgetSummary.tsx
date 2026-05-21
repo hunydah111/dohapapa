@@ -1,5 +1,6 @@
 import type { BudgetEstimate, PolicyLoanMatch } from "@/types/recommendation";
 import { Card } from "@/components/ui/Card";
+import { Homi } from "@/components/Homi";
 import { formatKrwHuman, formatManwon } from "@/lib/format";
 
 export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
@@ -11,14 +12,17 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
 
   return (
     <Card>
-      {/* 섹션 제목 */}
-      <div className="mb-6">
-        <h2 className="text-lg font-bold" style={{ color: "#3a322c" }}>
-          예산 분석
-        </h2>
-        <p className="mt-0.5 text-sm" style={{ color: "#6b6157" }}>
-          공개 공식 기반 추정치입니다. 실제 한도는 금융기관 상담 결과에 따릅니다.
-        </p>
+      {/* 섹션 제목 — 비지가 통장 보며 고민 */}
+      <div className="mb-6 flex items-center gap-3">
+        <Homi mood="think" size={46} className="shrink-0" />
+        <div>
+          <h2 className="text-lg font-bold" style={{ color: "#3a322c" }}>
+            예산 분석
+          </h2>
+          <p className="mt-0.5 text-sm" style={{ color: "#6b6157" }}>
+            공개 공식 기반 추정치입니다. 실제 한도는 금융기관 상담 결과에 따릅니다.
+          </p>
+        </div>
       </div>
 
       {/* P0: 갈아타기 음수 경고 */}
