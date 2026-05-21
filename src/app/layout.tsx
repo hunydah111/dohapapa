@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
-import { BrandMark } from "@/components/BrandMark";
 import { Homi } from "@/components/Homi";
 import { Analytics } from "@/components/Analytics";
 
@@ -62,10 +61,8 @@ export default function RootLayout({
               aria-label="비집고 홈으로"
               className="flex items-center gap-2.5 rounded-lg transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-coral-500"
             >
-              {/* 콤파스 마크 — indigo currentColor 상속 */}
-              <span className="shrink-0 text-coral-600" aria-hidden="true">
-                <BrandMark size={28} />
-              </span>
+              {/* 마스코트 비지 얼굴 — 로고 */}
+              <Homi mood="face" size={28} className="shrink-0" />
 
               {/* 브랜드명 */}
               <span
@@ -74,9 +71,6 @@ export default function RootLayout({
               >
                 비집고
               </span>
-
-              {/* 마스코트 비지 얼굴 — 브랜드 악센트 */}
-              <Homi mood="face" size={26} className="-ml-0.5" />
             </a>
 
             {/* 서브 태그라인 */}

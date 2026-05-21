@@ -25,9 +25,9 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
         }}
       />
 
-      {/* 마스코트 비지 — 작게(120) + 1회성 등장 모션(통통) */}
+      {/* 마스코트 비지 — 통장 들고 고민(헤드라인 "내 월급으로?"와 호응) + 등장 모션 */}
       <div className="biji-pop-in flex justify-center">
-        <Homi mood="smile" size={120} />
+        <Homi mood="think" size={120} />
       </div>
 
       {/* 가치 제안 헤드라인 — 단정형으로 임팩트 */}
