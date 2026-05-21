@@ -123,7 +123,12 @@ function calcCutoffKm(wp: Workplace): number {
  *   (1억 예산에 1.9억 노출), 고예산에선 너무 좁아 결과가 0이 됐다(47억 예산 ±2%).
  *   비율로 통일하면 모든 예산대에서 일관된다. 가격은 complexMedian 의 "추정 현재가".
  */
-// 예산 근접도(flex)에 따른 가격 밴드 하/상한. 지역 고정(dropLowerBound) 시 하한은 0.
+// 예산 근접도(flex)에 따른 가격 밴드 하/상한.
+// 필수 지역 선택(dropLowerBound) 시: 하한을 0으로 풀면 13억 예산에 7억대 단지가
+// 1순위로 뜨는 등 "예산과 동떨어진 추천" 문제가 생긴다(사용자 원칙: 비슷한 가격대).
+// 따라서 지역 선택 시에도 하한을 0이 아니라 예산의 0.75배로 둬 — 지역 여유는 주되
+// 예산보다 한참 싼 단지는 배제한다. (그 결과가 0건이면 완화 제안으로 안내)
+const REGION_LOWER_FACTOR = 0.75;
 function bandBounds(
   netPurchasePowerKrw: number,
   dropLowerBound: boolean,
@@ -143,7 +148,8 @@ function bandBounds(
     lower = netPurchasePowerKrw * 0.75;
     upper = netPurchasePowerKrw * 1.12;
   }
-  if (dropLowerBound) lower = 0;
+  // 지역 선택 시 하한 완화 — 단, 0이 아니라 예산의 0.75배까지만(예산 동떨어진 추천 방지).
+  if (dropLowerBound) lower = Math.min(lower, netPurchasePowerKrw * REGION_LOWER_FACTOR);
   return { lower, upper };
 }
 
