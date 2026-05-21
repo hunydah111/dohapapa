@@ -27,61 +27,86 @@ type ResultState = {
   profile: CoupleProfile;
 };
 
-// ── 대중교통 실측(ODsay) 헬퍼 ────────────────────────────────────────────────
-// 서버 랭킹은 mock(직선거리)로 잡고, 화면에 보이는 후보의 대중교통 leg 만 브라우저에서
-// ODsay 실측으로 채운다(B+C — 보이는 것만 호출). 캐시 우선 → 미스만 ODsay → 결과 재적재.
+// ── 대중교통 실측(ODsay) → 티어 재정렬 헬퍼 ────────────────────────────────────
+// 서버 1차 결과는 mock(직선거리) 통근으로 랭킹된다. 화면 후보 풀(상위 ~12)에 대해
+// 브라우저에서 ODsay 실측을 모은 뒤 그 값을 서버 recommend 에 다시 넘겨(override)
+// 점수·하드필터·티어를 실측 기준으로 재계산한다(2-pass). 비용을 위해 풀에 상한을 둔다.
 
-type TransitLegRef = {
+const RERANK_POOL_MAX = 12;
+
+type PoolLegRef = {
   key: string; // `${complexId}:${workplace}`
   complexId: string;
+  workplace: "A" | "B";
   originLat: number;
   originLng: number;
   destLat: number;
   destLng: number;
 };
 
-function collectUnresolvedTransitLegs(result: RecommendationResult): TransitLegRef[] {
-  const out: TransitLegRef[] = [];
-  for (const c of result.candidates) {
-    for (const leg of c.commuteLegs) {
-      if (leg.mode === "transit" && leg.realTransit === undefined) {
-        out.push({
-          key: `${c.complexId}:${leg.workplace}`,
-          complexId: c.complexId,
-          originLat: leg.workplaceLat,
-          originLng: leg.workplaceLng,
-          destLat: c.latitude,
-          destLng: c.longitude,
-        });
-      }
-    }
-  }
-  return out;
+// 재정렬 대상 풀(후보 + 상위 moreCandidates, 상한)의 대중교통 leg 목록.
+function buildRerankLegs(
+  result: RecommendationResult,
+  profile: CoupleProfile,
+): PoolLegRef[] {
+  const transitWps: { label: "A" | "B"; lat: number; lng: number }[] = [];
+  if (profile.workplaceA?.commuteMode === "transit")
+    transitWps.push({
+      label: "A",
+      lat: profile.workplaceA.lat,
+      lng: profile.workplaceA.lng,
+    });
+  if (profile.workplaceB?.commuteMode === "transit")
+    transitWps.push({
+      label: "B",
+      lat: profile.workplaceB.lat,
+      lng: profile.workplaceB.lng,
+    });
+  if (transitWps.length === 0) return [];
+
+  const pool: { id: string; lat: number; lng: number }[] = [];
+  const seen = new Set<string>();
+  const add = (id: string, lat: number, lng: number) => {
+    if (seen.has(id) || pool.length >= RERANK_POOL_MAX) return;
+    seen.add(id);
+    pool.push({ id, lat, lng });
+  };
+  for (const c of result.candidates) add(c.complexId, c.latitude, c.longitude);
+  for (const m of result.moreCandidates) add(m.complexId, m.latitude, m.longitude);
+
+  const legs: PoolLegRef[] = [];
+  for (const c of pool)
+    for (const w of transitWps)
+      legs.push({
+        key: `${c.id}:${w.label}`,
+        complexId: c.id,
+        workplace: w.label,
+        originLat: w.lat,
+        originLng: w.lng,
+        destLat: c.lat,
+        destLng: c.lng,
+      });
+  return legs;
 }
 
-// resolved[key]: number(실측 분) | null(ODsay 실패 → mock 유지). 둘 다 realTransit 를
-// 정의해 재수집을 막는다.
-function applyTransit(
+// 결과의 대중교통 leg 에 realTransit 표식 — override 가 있던 leg 은 실측(true),
+// 없으면 폴백(false=직선거리 추정). 도식 라벨·재실행 방지에 사용.
+function markRealTransit(
   result: RecommendationResult,
-  resolved: Record<string, number | null>,
+  overrides: Record<string, { A?: number; B?: number }>,
 ): RecommendationResult {
   return {
     ...result,
     candidates: result.candidates.map((c) => ({
       ...c,
-      commuteLegs: c.commuteLegs.map((leg) => {
-        if (leg.mode !== "transit" || leg.realTransit !== undefined) return leg;
-        const key = `${c.complexId}:${leg.workplace}`;
-        if (!(key in resolved)) return leg;
-        const m = resolved[key];
-        if (m == null) return { ...leg, realTransit: false };
-        return {
-          ...leg,
-          minutes: m,
-          withinLimit: m <= leg.maxCommuteMinutes,
-          realTransit: true,
-        };
-      }),
+      commuteLegs: c.commuteLegs.map((leg) =>
+        leg.mode === "transit"
+          ? {
+              ...leg,
+              realTransit: overrides[c.complexId]?.[leg.workplace] != null,
+            }
+          : leg,
+      ),
     })),
   };
 }
@@ -167,29 +192,34 @@ export function HomeExperience() {
     // handleResult 는 안정적 — 의존성 OK
   }, [handleResult]);
 
-  // ── 대중교통 실측(ODsay) — 결과가 뜨면 보이는 후보의 대중교통 leg 를 브라우저에서
-  //    실측으로 채운다. 한 result 객체당 한 번만 처리(ref 가드)해 루프를 막는다.
-  const transitDoneRef = useRef<RecommendationResult | null>(null);
+  // ── 대중교통 실측(ODsay) → 티어 재정렬 ─────────────────────────────────────
+  // 1차(mock) 결과가 뜨면, 후보 풀의 대중교통 시간을 브라우저에서 실측한 뒤 그 값으로
+  // 서버 recommend 를 다시 호출해 점수·티어를 실측 기준으로 재계산한다. result 객체당
+  // 한 번만 처리(ref 가드)해 루프를 막는다.
+  const rerankDoneRef = useRef<RecommendationResult | null>(null);
   useEffect(() => {
     const result = state?.result;
-    if (!result) return;
-    if (transitDoneRef.current === result) return;
-    const legs = collectUnresolvedTransitLegs(result);
+    const profile = state?.profile;
+    if (!result || !profile) return;
+    if (rerankDoneRef.current === result) return;
+    const legs = buildRerankLegs(result, profile);
     if (legs.length === 0) {
-      transitDoneRef.current = result;
+      rerankDoneRef.current = result; // 대중교통 없음 — 재정렬 불필요
       return;
     }
-    transitDoneRef.current = result;
+    rerankDoneRef.current = result; // 재진입 방지
 
     let cancelled = false;
-    (async () => {
-      const resolved: Record<string, number | null> = {};
+    const headers = { "Content-Type": "application/json" };
 
-      // 1. 서버 캐시(CommuteCache mode=transit) 조회
+    (async () => {
+      const resolved: Record<string, number> = {};
+
+      // 1. 캐시(CommuteCache mode=transit) 조회
       try {
         const r = await fetch("/api/transit", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({
             op: "lookup",
             legs: legs.map(({ key, complexId, originLat, originLng }) => ({
@@ -202,17 +232,16 @@ export function HomeExperience() {
         });
         if (r.ok) {
           const j = (await r.json()) as { results?: Record<string, number | null> };
-          if (j.results) {
-            for (const k in j.results) {
-              if (typeof j.results[k] === "number") resolved[k] = j.results[k];
-            }
+          for (const k in j.results ?? {}) {
+            const v = j.results![k];
+            if (typeof v === "number") resolved[k] = v;
           }
         }
       } catch {
-        // 캐시 조회 실패해도 ODsay 로 진행
+        // 캐시 실패해도 ODsay 로 진행
       }
 
-      // 2. 캐시 미스 → ODsay 실측 (브라우저, 등록 도메인 Referer 로 인증)
+      // 2. 캐시 미스 → ODsay 실측 (브라우저, 등록 도메인 Referer 인증)
       const misses = legs.filter((l) => typeof resolved[l.key] !== "number");
       const fetched = await Promise.all(
         misses.map(async (l) => ({
@@ -230,8 +259,8 @@ export function HomeExperience() {
         minutes: number;
       }[] = [];
       for (const { l, m } of fetched) {
-        resolved[l.key] = m;
         if (m != null) {
+          resolved[l.key] = m;
           toSave.push({
             complexId: l.complexId,
             originLat: l.originLat,
@@ -240,30 +269,78 @@ export function HomeExperience() {
           });
         }
       }
-      for (const l of legs) if (!(l.key in resolved)) resolved[l.key] = null;
-
-      // 3. 새 실측값을 캐시에 적재 (fire-and-forget)
       if (toSave.length > 0) {
         fetch("/api/transit", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({ op: "save", legs: toSave }),
         }).catch(() => {});
       }
 
+      // 3. 실측값으로 override 구성
+      const overrides: Record<string, { A?: number; B?: number }> = {};
+      for (const l of legs) {
+        const m = resolved[l.key];
+        if (typeof m === "number") (overrides[l.complexId] ??= {})[l.workplace] = m;
+      }
+
       if (cancelled) return;
-      // 4. 결과에 실측 반영 — 같은 result 일 때만 교체
+
+      // 실측이 하나도 없으면(키 없음/전부 실패) 재정렬 생략 — 표시만 폴백(직선거리)으로.
+      if (Object.keys(overrides).length === 0) {
+        const fb = markRealTransit(result, overrides);
+        rerankDoneRef.current = fb;
+        setState((prev) =>
+          prev && prev.result === result ? { ...prev, result: fb } : prev,
+        );
+        return;
+      }
+
+      // 4. 실측 override 로 서버 재랭킹(restrictToComplexIds = 풀)
+      const poolIds = [...new Set(legs.map((l) => l.complexId))];
+      let reranked: RecommendationResult | null = null;
+      try {
+        const res = await fetch("/api/recommend", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            ...profile,
+            transitOverrides: overrides,
+            restrictToComplexIds: poolIds,
+          }),
+        });
+        if (res.ok) reranked = (await res.json()) as RecommendationResult;
+      } catch {
+        // 재랭킹 실패 → 폴백
+      }
+
+      if (cancelled) return;
+
+      if (!reranked || reranked.candidates.length === 0) {
+        const fb = markRealTransit(result, overrides);
+        rerankDoneRef.current = fb;
+        setState((prev) =>
+          prev && prev.result === result ? { ...prev, result: fb } : prev,
+        );
+        return;
+      }
+
+      // 5. 재랭킹 결과 적용 — 검토 단지 수·예산은 1차(넓은) 결과 값 유지.
+      const final: RecommendationResult = {
+        ...markRealTransit(reranked, overrides),
+        consideredComplexCount: result.consideredComplexCount,
+        budget: result.budget,
+      };
+      rerankDoneRef.current = final;
       setState((prev) =>
-        prev && prev.result === result
-          ? { ...prev, result: applyTransit(result, resolved) }
-          : prev,
+        prev && prev.result === result ? { ...prev, result: final } : prev,
       );
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [state?.result]);
+  }, [state?.result, state?.profile]);
 
   async function handleShare() {
     if (!state) return;

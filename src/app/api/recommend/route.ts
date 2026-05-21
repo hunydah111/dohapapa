@@ -1,8 +1,23 @@
 import { z } from "zod";
 import { recommendComplexes } from "@/lib/recommend";
+import type { RecommendOptions } from "@/lib/recommend";
 import type { CoupleProfile } from "@/types/profile";
 
 export const runtime = "nodejs";
+
+// ── 2-pass 재랭킹 옵션 — 클라가 모은 대중교통 실측을 넘겨 티어를 실측 기준으로 재계산 ──
+const recommendOptionsSchema = z.object({
+  transitOverrides: z
+    .record(
+      z.string(),
+      z.object({
+        A: z.number().int().positive().max(600).optional(),
+        B: z.number().int().positive().max(600).optional(),
+      }),
+    )
+    .optional(),
+  restrictToComplexIds: z.array(z.string()).max(60).optional(),
+});
 
 // ── Workplace 스키마 — 자차/대중교통(ODsay) ───────────────────────────────────
 // 대중교통 랭킹은 서버 mock(직선거리) 기준, 실측 시간은 결과 화면에서 ODsay(브라우저)로 채운다.
@@ -162,7 +177,12 @@ export async function POST(req: Request): Promise<Response> {
     // ── 3. 추천 계산 ──────────────────────────────────────────
     // safeParse 통과 후 zod 추론 타입이 CoupleProfile 와 일치하므로 단언 안전
     const profile = parsed.data as CoupleProfile;
-    const result = await recommendComplexes(profile);
+
+    // 재랭킹 옵션(있으면) — 본문에서 별도 파싱. 실패해도 기본 추천은 진행.
+    const optsParsed = recommendOptionsSchema.safeParse(body);
+    const opts: RecommendOptions = optsParsed.success ? optsParsed.data : {};
+
+    const result = await recommendComplexes(profile, opts);
 
     return Response.json(result);
   } catch (err: unknown) {

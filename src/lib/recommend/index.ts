@@ -397,8 +397,20 @@ function formatKrwShort(krw: number): string {
 
 // ── 메인 추천 함수 ───────────────────────────────────────────────────────────
 
+/**
+ * 2-pass 재랭킹 옵션.
+ * - transitOverrides: (단지ID → {A?,B?} 분) 실측 대중교통 시간. 있으면 mock 대신 사용해
+ *   점수·하드필터·티어 선정이 실측 기준으로 계산된다.
+ * - restrictToComplexIds: 재랭킹 대상을 이 단지들로 한정(클라가 실측을 모은 풀).
+ */
+export interface RecommendOptions {
+  transitOverrides?: Record<string, { A?: number; B?: number }>;
+  restrictToComplexIds?: string[];
+}
+
 export async function recommendComplexes(
   profile: CoupleProfile,
+  opts: RecommendOptions = {},
 ): Promise<RecommendationResult> {
   // 1. 예산 추정
   const budget = estimateBudget(profile);
@@ -419,13 +431,17 @@ export async function recommendComplexes(
   const dropLowerBand = requiredRegions.length > 0;
   // 예산 근접도 — 결과 가격 밴드 폭(딱맞게/적당히/넉넉히). 미지정 시 넉넉히(기존).
   const budgetFlex: BudgetFlex = profile.budgetFlex ?? "relaxed";
+  // 재랭킹(2-pass) 시엔 클라가 실측을 모은 풀로 한정 — 그 안에서만 점수·티어 재계산.
+  const restrictIds = opts.restrictToComplexIds;
   const allComplexes = await db.complex.findMany({
     where: {
       latitude: { not: null },
       longitude: { not: null },
-      ...(requiredRegions.length > 0
-        ? { sigungu: { in: requiredRegions } }
-        : {}),
+      ...(restrictIds && restrictIds.length > 0
+        ? { id: { in: restrictIds } }
+        : requiredRegions.length > 0
+          ? { sigungu: { in: requiredRegions } }
+          : {}),
     },
   });
 
@@ -566,16 +582,24 @@ export async function recommendComplexes(
         lng: complex.longitude as number,
       };
 
-      // 직장별 통근 leg 계산 — 각 직장의 commuteMode 사용
+      // 직장별 통근 leg 계산 — 각 직장의 commuteMode 사용.
+      // 대중교통 실측 override(2-pass 재랭킹)가 있으면 mock 대신 그 값을 쓴다.
+      const overrideForComplex = opts.transitOverrides?.[complex.id];
       const legPromises: Promise<CommuteLeg>[] = workplaces.map((wp, idx) => {
         const wpLabel: "A" | "B" = idx === 0 ? "A" : "B";
-        return getCommuteMinutes(
-          wp,
-          complex.id,
-          complexCoord,
-          wp.commuteMode,
-          commuteProvider,
-        ).then(
+        const override =
+          wp.commuteMode === "transit" ? overrideForComplex?.[wpLabel] : undefined;
+        const minutesP =
+          typeof override === "number"
+            ? Promise.resolve(override)
+            : getCommuteMinutes(
+                wp,
+                complex.id,
+                complexCoord,
+                wp.commuteMode,
+                commuteProvider,
+              );
+        return minutesP.then(
           (minutes): CommuteLeg => ({
             workplace: wpLabel,
             workplaceLabel: wp.label,
@@ -1027,6 +1051,8 @@ export async function recommendComplexes(
     complexName: e.candidate.complexName,
     sigungu: e.candidate.sigungu,
     dongName: e.candidate.dongName,
+    latitude: e.candidate.latitude,
+    longitude: e.candidate.longitude,
     representativeArea: e.candidate.representativeArea,
     medianPriceKrw: e.candidate.medianPriceKrw,
     totalScore: e.candidate.totalScore,

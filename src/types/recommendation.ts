@@ -189,6 +189,9 @@ export interface MoreCandidate {
   complexName: string;
   sigungu: string;
   dongName: string;
+  /** 단지 좌표 — 클라이언트가 대중교통 실측(ODsay) 재정렬 시 도착지로 사용. */
+  latitude: number;
+  longitude: number;
   representativeArea: number;
   medianPriceKrw: number;
   totalScore: number;
