@@ -63,6 +63,7 @@ const MolitItemSchema = z
     floor: z.union([z.number(), z.string()]).optional().nullable(),
     umdNm: z.string().optional().default(""),
     buildYear: z.union([z.number(), z.string()]).optional().nullable(),
+    ownershipGbn: z.string().optional().nullable(), // 분양권전매(SilvTrade)만: "분"|"입"
   })
   .passthrough()  // tolerate extra fields the API may add without breaking schema
   .transform((item) => {
@@ -95,6 +96,11 @@ const MolitItemSchema = z
       if (Number.isFinite(by) && by > 0) buildYear = by;
     }
 
+    const ownershipGbn =
+      typeof item.ownershipGbn === "string" && item.ownershipGbn.trim() !== ""
+        ? item.ownershipGbn.trim()
+        : undefined;
+
     return {
       _aptNm: item.aptNm,
       _dealDate: dealDate,
@@ -103,6 +109,7 @@ const MolitItemSchema = z
       _floor: floor,
       _umdNm: item.umdNm,
       _buildYear: buildYear,
+      _ownershipGbn: ownershipGbn,
     };
   });
 
@@ -125,6 +132,7 @@ function toDeal(
     sigunguName: CODE_TO_GU[sigunguCode] ?? sigunguCode,
     dongName: transformed._umdNm,
     buildYear: transformed._buildYear,
+    ownershipGbn: transformed._ownershipGbn,
   };
 }
 
@@ -158,6 +166,11 @@ const MolitResponseSchema = z.object({
 
 const BASE_URL =
   "https://apis.data.go.kr/1613000/RTMSDataSvcAptTrade/getRTMSDataSvcAptTrade";
+
+// 아파트 분양권전매 신고 자료 — 등기 전 신축의 분양권/입주권 실거래. 매매와 응답 필드 동일
+// (+ ownershipGbn). 별도 활용신청 필요.
+export const SILV_BASE_URL =
+  "https://apis.data.go.kr/1613000/RTMSDataSvcSilvTrade/getRTMSDataSvcSilvTrade";
 
 // ---------------------------------------------------------------------------
 // fetchDeals — fetch a single month's transactions.
@@ -221,15 +234,19 @@ export async function fetchDealsForRange(opts: {
   sigunguCode: string;
   fromYearMonth: string;
   toYearMonth: string;
+  /** 엔드포인트 — 기본 매매(BASE_URL), 분양권은 SILV_BASE_URL. */
+  baseUrl?: string;
 }): Promise<MolitDeal[]> {
   const months = expandMonthRange(opts.fromYearMonth, opts.toYearMonth);
   const numOfRows = 1000;
+  const baseUrl = opts.baseUrl ?? BASE_URL;
   const all: MolitDeal[] = [];
 
   for (const ym of months) {
     // Fetch first page to learn totalCount.
     const firstPage = await fetchDealsPageRaw(
       { sigunguCode: opts.sigunguCode, dealYearMonth: ym, pageNo: 1, numOfRows },
+      baseUrl,
     );
 
     all.push(...parsePage(firstPage.rawItems, opts.sigunguCode));
@@ -241,6 +258,7 @@ export async function fetchDealsForRange(opts: {
     for (let page = 2; page <= totalPages; page++) {
       const pageData = await fetchDealsPageRaw(
         { sigunguCode: opts.sigunguCode, dealYearMonth: ym, pageNo: page, numOfRows },
+        baseUrl,
       );
       all.push(...parsePage(pageData.rawItems, opts.sigunguCode));
     }
@@ -249,12 +267,24 @@ export async function fetchDealsForRange(opts: {
   return all;
 }
 
+/** 분양권전매(SilvTrade) 범위 수집 — fetchDealsForRange 의 분양권 엔드포인트 버전. */
+export async function fetchSilvForRange(opts: {
+  sigunguCode: string;
+  fromYearMonth: string;
+  toYearMonth: string;
+}): Promise<MolitDeal[]> {
+  return fetchDealsForRange({ ...opts, baseUrl: SILV_BASE_URL });
+}
+
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
 
 /** Fetch a page and return the raw items array + totalCount without parsing deals. */
-async function fetchDealsPageRaw(opts: Required<MolitFetchOptions>): Promise<{
+async function fetchDealsPageRaw(
+  opts: Required<MolitFetchOptions>,
+  baseUrl: string = BASE_URL,
+): Promise<{
   rawItems: unknown[];
   totalCount: number;
 }> {
@@ -262,7 +292,7 @@ async function fetchDealsPageRaw(opts: Required<MolitFetchOptions>): Promise<{
   if (!apiKey) throw new Error("MOLIT_API_KEY not configured");
 
   const url =
-    `${BASE_URL}?serviceKey=${apiKey}` +
+    `${baseUrl}?serviceKey=${apiKey}` +
     `&LAWD_CD=${opts.sigunguCode}` +
     `&DEAL_YMD=${opts.dealYearMonth}` +
     `&pageNo=${opts.pageNo}` +

@@ -147,6 +147,11 @@ export interface ComplexCandidate {
   priceEstimated?: boolean;
   /** 추정 근거(예: "인근 3개 단지 시세 환산"). priceEstimated 일 때만. */
   estimateBasis?: string;
+  /**
+   * 대표 평형의 거래가 대부분 분양권/입주권(등기 전 권리 거래)인 경우 true.
+   * 매매와 권리 상태가 달라 "분양권 거래"로 구분 표시.
+   */
+  priceFromPresale?: boolean;
   /** 단지 준공년도 — UI 에 "○○○○년식" 으로 표시. null = 정보 없음. */
   buildYear: number | null;
   /** 초품아 여부 — 초등학교가 단지에서 직선 150m 이내. */

@@ -47,6 +47,11 @@ export interface AreaMedian {
   estimated?: boolean;
   /** 추정 근거 문구(예: "인근 3개 단지 시세 환산"). estimated 일 때만. */
   estimateBasis?: string;
+  /**
+   * 이 평형의 거래가 대부분 분양권/입주권(등기 전 권리 거래)인 경우 true.
+   * 매매(소유권 이전)와 권리 상태가 달라 UI 에 "분양권 거래"로 구분 표시한다.
+   */
+  presale?: boolean;
 }
 
 const WINDOW_MONTHS = 6;
@@ -113,6 +118,13 @@ function monthKey(d: Date): string {
 export interface Tx {
   price: number;
   daysAgo: number;
+  /** 거래 출처 — "MOLIT"(매매) | "분양권" | "입주권". 분양권 라벨 판정용. */
+  source?: string;
+}
+
+/** 분양권/입주권(등기 전 권리 거래) 여부. */
+function isPresaleSource(source: string | undefined): boolean {
+  return source === "분양권" || source === "입주권";
 }
 
 export interface PriceEstimate {
@@ -277,7 +289,7 @@ export async function getAreaMediansForMany(
     const ids = complexIds.slice(i, i + CHUNK);
     const rows = await db.transaction.findMany({
       where: { complexId: { in: ids }, dealDate: { gte: since } },
-      select: { complexId: true, area: true, priceKrw: true, dealDate: true },
+      select: { complexId: true, area: true, priceKrw: true, dealDate: true, source: true },
     });
     for (const row of rows) {
       let areaGroups = byComplex.get(row.complexId);
@@ -293,6 +305,7 @@ export async function getAreaMediansForMany(
       list.push({
         price: Number(row.priceKrw),
         daysAgo: (now - row.dealDate.getTime()) / 86_400_000,
+        source: row.source,
       });
       areaGroups.set(key, list);
     }
@@ -324,6 +337,7 @@ export async function getAreaMediansForMany(
         factor = bridgeFactor(sigungu, tierOf(est.price), midpointMonth, latestMonth);
       }
 
+      const presaleCount = txs.filter((t) => isPresaleSource(t.source)).length;
       medians.push({
         area,
         medianKrw: Math.round(est.price * factor),
@@ -335,6 +349,7 @@ export async function getAreaMediansForMany(
         volatility: priceVolatility(txs),
         sparse: useFallback,
         lowConfidence: false,
+        presale: presaleCount > txs.length / 2,
       });
     }
     flagLowConfidence(medians);

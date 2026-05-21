@@ -699,6 +699,7 @@ export async function recommendComplexes(
         lowDataConfidence: rep.sparse,
         priceEstimated: rep.estimated,
         estimateBasis: rep.estimateBasis,
+        priceFromPresale: rep.presale,
         buildYear: complex.buildYear,
         isChopumah,
         pricierThanPeers,

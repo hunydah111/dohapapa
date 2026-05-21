@@ -116,6 +116,13 @@ export function CandidateCard({
           >
             추정 시세 · 실거래 미확정
           </span>
+        ) : candidate.priceFromPresale ? (
+          <span
+            className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700 ring-1 ring-indigo-200"
+            title="등기 전 신축이라 분양권/입주권 실거래가 기준입니다 (소유권 이전 매매와 권리 상태가 다름)"
+          >
+            분양권·입주권
+          </span>
         ) : (
           candidate.lowDataConfidence && (
             <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 ring-1 ring-amber-200">
@@ -205,7 +212,9 @@ export function CandidateCard({
         <p className="mt-1.5 text-xs" style={{ color: "#9a8f82" }}>
           {candidate.priceEstimated
             ? `아직 실거래가 등재되기 전이라 ${candidate.estimateBasis ?? "주변 시세 연동"}으로 추정한 값이에요 (등기 진행 중 신축 등). 실제 등재 시 조망·층·향 따라 차이 날 수 있어요. `
-            : showPriceRange
+            : candidate.priceFromPresale
+              ? `분양권/입주권 실거래 ${candidate.transactionCount}건 기준이에요 (등기 전 권리 거래라 이후 소유권 매매가와 차이 날 수 있음). `
+              : showPriceRange
               ? `최근 실거래 ${candidate.transactionCount}건이 층·향 따라 ${formatEok(candidate.priceLowKrw!)}~${formatEok(candidate.priceHighKrw!)}로 편차가 큰 단지예요 (신축 입주장 등). 중앙 추정 ${formatKrwHuman(candidate.medianPriceKrw)} — `
               : candidate.lowDataConfidence
                 ? `최근 1년 실거래 ${candidate.transactionCount}건 (거래 적어 12개월로 추정 — 참고용) `

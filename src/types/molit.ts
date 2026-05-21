@@ -11,6 +11,11 @@ export interface MolitDeal {
   sigunguName: string;      // e.g. "강남구"
   dongName: string;         // 법정동
   buildYear: number | null;
+  /**
+   * 분양권/입주권 구분 — 분양권전매 API(SilvTrade)에서만 채워진다. 매매(AptTrade)는 undefined.
+   * 원본 ownershipGbn: "분"(분양권) | "입"(입주권). 매매 적재 시엔 없음.
+   */
+  ownershipGbn?: string;
 }
 
 export interface MolitFetchOptions {
