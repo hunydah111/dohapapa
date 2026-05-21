@@ -1,27 +1,26 @@
-// 홈앤나 마스코트 "호미(Homi)" — 네모 집 몸통 + 삼각지붕 + 통통 굴뚝.
-// 베이지 네모 벽(모서리만 살짝 둥근) 위에 주황 삼각지붕, 얼굴: 점 두 개 눈 + 발그레한
-// 볼. '입 = 문' — 윗부분 둥근 작은 문 하나가 곧 입. 통통 팔다리. 인라인 SVG(저작권 0).
+// 비집고 마스코트 "비지(Biji)" — 비버. 시안 일러스트(public/biji/*.png)를 그대로 쓰되
+// 정적이지 않게 부드러운 모션(숨쉬기 bob / 분석 중 통통)을 입혔다. 손코딩 SVG로는 이 그림체
+// 퀄리티가 안 나와서, 예쁜 원본을 살리고 움직임만 코드로 더했다. (정밀 캐릭터 모션은 추후 Lottie)
+// 호출부(<Homi mood=... size=... />)는 그대로 동작.
 
 export type HomiMood =
-  | "wave" // 첫 화면 — 방긋
-  | "searching" // 분석 중 — 작은 돋보기 + 가벼운 두리번
-  | "happy" // 결과 좋음 — 눈 ^ ^ + 작은 반짝
-  | "sheepish" // 결과 빈약 — 살짝 머쓱
+  | "wave" // 첫 화면 — 그루터기에 앉아 반김
+  | "searching" // 분석 중 — 나뭇가지 짊어지고 통통
+  | "happy" // 결과 좋음 — 만세
+  | "sheepish" // 결과 빈약 — 시무룩
   | "calm"; // 면책/주의 — 차분
 
-const ROOF = "#FF7A59"; // 주황 지붕
-const ROOF_EDGE = "#EC5E3B";
-const BODY = "#F2E3C0"; // 베이지 벽 (춘식이 톤)
-const BODY_EDGE = "#E0C99B";
-const DOOR = "#FF9B72"; // 문 = 입
-const INK = "#4A3B30";
-const BLUSH = "#F4B8C1";
-const GLASS = "#FFE6B0";
-const COIN = "#D7DCE2"; // 굴뚝에서 폴폴 나오는 은색 동전(₩)
-const COIN_EDGE = "#9BA6B2";
-const COIN_SHINE = "#FFFFFF";
-const COIN_INK = "#7C8896"; // ₩ 글자
-const COIN_SMOKE = "#C9D0D8"; // 연기 퍼프
+const BIJI_ASPECT = 0.9; // 트림 후 약 0.8~1.0 (w/h) — 레이아웃 시프트 방지용 힌트
+
+// ?v= 캐시버스트 — 배경 투명 처리된 새 이미지를 브라우저가 다시 받게.
+const V = "?v=7";
+const SRC: Record<HomiMood, string> = {
+  wave: `/biji/biji-input.png${V}`,
+  calm: `/biji/biji-input.png${V}`,
+  searching: `/biji/biji-loading.png${V}`,
+  happy: `/biji/biji-happy.png${V}`,
+  sheepish: `/biji/biji-sad.png${V}`,
+};
 
 export function Homi({
   mood = "wave",
@@ -32,82 +31,21 @@ export function Homi({
   size?: number;
   className?: string;
 }) {
+  const src = SRC[mood] ?? SRC.wave;
+  const anim = mood === "searching" ? "biji-hop" : "biji-breathe";
+  // 반응형 높이 — 좁은 화면에선 약 78%까지 줄고, 넓은 화면에선 size 까지. 폭은 화면을 안 넘게.
+  const minH = Math.round(size * 0.78);
+  const height = `clamp(${minH}px, ${Math.round(size * 0.55)}px + 9vw, ${size}px)`;
   return (
-    <svg
-      viewBox="0 0 120 134"
-      width={size}
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt="비지 마스코트"
+      width={Math.round(size * BIJI_ASPECT)}
       height={size}
-      role="img"
-      aria-label="홈앤나 마스코트 호미"
-      className={`${mood === "searching" ? "homi-search" : "homi-bob"} ${className}`}
-    >
-      {/* 바닥 그림자 */}
-      <ellipse cx="60" cy="127" rx="33" ry="5" fill="#000000" opacity="0.06" />
-
-      {/* 발 두 개 */}
-      <ellipse cx="46" cy="121" rx="9" ry="6.5" fill={BODY} stroke={BODY_EDGE} strokeWidth="2" />
-      <ellipse cx="74" cy="121" rx="9" ry="6.5" fill={BODY} stroke={BODY_EDGE} strokeWidth="2" />
-
-      {/* 양팔 (몸에 붙은 통통 stub) */}
-      <ellipse cx="16" cy="90" rx="8" ry="11" fill={BODY} stroke={BODY_EDGE} strokeWidth="2" />
-      <ellipse cx="104" cy="90" rx="8" ry="11" fill={BODY} stroke={BODY_EDGE} strokeWidth="2" />
-
-      {/* 몸통 (네모 벽 — 모서리만 살짝 둥근) */}
-      <rect x="22" y="48" width="76" height="70" rx="13" fill={BODY} stroke={BODY_EDGE} strokeWidth="2.5" />
-
-      {/* 굴뚝 (지붕 뒤로 — 지붕이 아랫부분을 덮어 자연스럽게) */}
-      <rect x="73" y="18" width="13" height="26" rx="6" fill={ROOF} stroke={ROOF_EDGE} strokeWidth="2" />
-      {/* 삼각 지붕 (네모 벽 위에) — 양옆 처마 살짝 */}
-      <path
-        d="M60 12 L102 50 L18 50 Z"
-        fill={ROOF}
-        stroke={ROOF_EDGE}
-        strokeWidth="2.5"
-        strokeLinejoin="round"
-      />
-      {/* 굴뚝에서 폴폴 — 은색 동전(₩)이 연기처럼 살짝 떠오름 */}
-      <circle cx="80" cy="16.5" r="2.3" fill={COIN_SMOKE} opacity="0.5" />
-      <circle cx="82.3" cy="13.8" r="1.7" fill={COIN_SMOKE} opacity="0.4" />
-      <g transform="rotate(-6 81 10)">
-        <circle cx="81" cy="10" r="6.4" fill={COIN} stroke={COIN_EDGE} strokeWidth="1.7" />
-        <circle cx="81" cy="10" r="3.9" fill="none" stroke={COIN_EDGE} strokeWidth="1" />
-        <text x="81" y="12.5" fontSize="6.2" fontWeight="800" fontFamily="sans-serif" textAnchor="middle" fill={COIN_INK}>₩</text>
-        <ellipse cx="78.4" cy="7.4" rx="1.3" ry="0.8" fill={COIN_SHINE} transform="rotate(-35 78.4 7.4)" />
-      </g>
-
-      {/* 볼터치 */}
-      <ellipse cx="37" cy="80" rx="6.2" ry="3.7" fill={BLUSH} />
-      <ellipse cx="83" cy="80" rx="6.2" ry="3.7" fill={BLUSH} />
-
-      {/* 눈 — 점 두 개 (happy 만 ^ ^) */}
-      {mood === "happy" ? (
-        <>
-          <path d="M42 72 q5 -5 10 0" fill="none" stroke={INK} strokeWidth="3.4" strokeLinecap="round" />
-          <path d="M68 72 q5 -5 10 0" fill="none" stroke={INK} strokeWidth="3.4" strokeLinecap="round" />
-        </>
-      ) : (
-        <>
-          <circle cx="47" cy="72" r="4.8" fill={INK} />
-          <circle cx="73" cy="72" r="4.8" fill={INK} />
-        </>
-      )}
-
-      {/* 입 = 문 — 윗부분 둥근 작은 문 하나가 곧 입(+손잡이) */}
-      <path d="M51 107 L51 97 Q51 88 60 88 Q69 88 69 97 L69 107 Z" fill={DOOR} />
-      <circle cx="65.5" cy="99" r="1.6" fill={ROOF_EDGE} />
-
-      {/* 돋보기 (searching) */}
-      {mood === "searching" && (
-        <g className="homi-glass">
-          <circle cx="98" cy="104" r="9" fill={GLASS} stroke={INK} strokeWidth="3" />
-          <line x1="105" y1="111" x2="112" y2="118" stroke={INK} strokeWidth="4" strokeLinecap="round" />
-        </g>
-      )}
-
-      {/* 반짝 (happy) */}
-      {mood === "happy" && (
-        <path d="M104 34 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#FFC23C" />
-      )}
-    </svg>
+      style={{ height, width: "auto", maxWidth: "100%" }}
+      draggable={false}
+      className={`${anim} ${className}`}
+    />
   );
 }

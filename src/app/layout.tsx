@@ -9,19 +9,19 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.homenasia.kr",
   ),
-  title: "홈앤나 — 내 통장으로 어디 살 수 있을까?",
+  title: "비집고 — 내 통장으로 어디 살 수 있을까?",
   description:
-    "Home & 나 사이의 거리. 직장·예산·학군 조건으로 국토부 실거래가에 살 만한 아파트 단지를 좁혀주는 정보 제공 도구.",
+    "비버 비지가 직장·예산·학군 조건으로 국토부 실거래가에서 살 만한 아파트 단지를 비집고 찾아주는 정보 제공 도구.",
   openGraph: {
-    title: "홈앤나",
+    title: "비집고",
     description: "내 통장으로 어디 살 수 있을까?",
     type: "website",
     locale: "ko_KR",
-    siteName: "홈앤나",
+    siteName: "비집고",
   },
   twitter: {
     card: "summary_large_image",
-    title: "홈앤나",
+    title: "비집고",
     description: "내 통장으로 어디 살 수 있을까?",
   },
 };
@@ -58,7 +58,7 @@ export default function RootLayout({
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a
               href="/"
-              aria-label="홈앤나 홈으로"
+              aria-label="비집고 홈으로"
               className="flex items-center gap-2.5 rounded-lg transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-coral-500"
             >
               {/* 콤파스 마크 — indigo currentColor 상속 */}
@@ -71,7 +71,7 @@ export default function RootLayout({
                 className="font-jua text-[18px] tracking-tight"
                 style={{ color: "#3a322c" }}
               >
-                홈앤나
+                비집고
               </span>
             </a>
 
@@ -80,7 +80,7 @@ export default function RootLayout({
               className="hidden text-xs sm:inline"
               style={{ color: "#9a8f82" }}
             >
-              Home & 나 사이의 거리
+              내 보금자리, 비집고 들어가기
             </span>
           </div>
         </header>
@@ -92,7 +92,7 @@ export default function RootLayout({
         <footer className="mt-12 border-t border-black/[0.06] bg-white/60">
           <div className="mx-auto flex max-w-2xl flex-col gap-3 px-4 py-6 text-xs sm:flex-row sm:items-center sm:justify-between">
             <p style={{ color: "#9a8f82" }}>
-              © {new Date().getFullYear()} 홈앤나 — 정보 제공 도구
+              © {new Date().getFullYear()} 비집고 — 정보 제공 도구
             </p>
             <nav className="flex flex-wrap gap-4" style={{ color: "#6b6157" }}>
               <Link href="/privacy" className="hover:text-coral-600">

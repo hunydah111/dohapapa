@@ -6,30 +6,34 @@
   --font-jua: "Jua", "Gowun Dodum", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* ── 색상 토큰 (에어비앤비풍 따뜻한 코랄·크림) ── */
-  --color-page-bg:    #fff8f3;   /* 따뜻한 크림/아이보리 */
-  --color-surface:    #ffffff;
-  --color-text-primary:   #3a322c;  /* 따뜻한 다크 브라운 */
-  --color-text-secondary: #6b6157;
-  --color-text-muted:     #9a8f82;
-  --color-accent:     #ff7a59;   /* coral — 주 액센트, 따뜻·보금자리 */
-  --color-accent-hover: #f2603c;
-  --color-warm:       #ffb23c;   /* 웜 옐로 — 보조 액센트 */
-  --color-warm-soft:  #fff3e2;   /* 배지·하이라이트 배경 */
-  --color-warm-text:  #b23e22;   /* 따뜻한 텍스트 */
-  --color-success:    #10b981;   /* emerald — 통과/적격 표시 */
-  --color-border:     rgba(60,40,20,0.10);
+  /* ── 비집고 우디 팔레트 (비버·나무·보금자리) ── */
+  --color-page-bg:    #f5ecd9;   /* 따뜻한 오트밀/우드 크림 */
+  --color-surface:    #fffdf8;   /* 따뜻한 화이트 */
+  --color-text-primary:   #3a2c1d;  /* 진한 우드 브라운 */
+  --color-text-secondary: #6e5b46;
+  --color-text-muted:     #9c8a72;
+  --color-accent:     #4f9d54;   /* 잎새 그린 — 주 CTA (시안의 초록 버튼) */
+  --color-accent-hover: #3f8444;
+  --color-warm:       #e0a23a;   /* 허니 앰버 — 보조 액센트 */
+  --color-warm-soft:  #f7ead0;   /* 배지·하이라이트 배경 */
+  --color-warm-text:  #9a5a1e;   /* 따뜻한 텍스트 */
+  --color-success:    #4f9d54;   /* 그린 통일 (통과/적격) */
+  --color-border:     rgba(70,48,24,0.12);
 
-  /* ── 코랄 스케일 (전역 indigo→coral 치환용; Tailwind 4 가 bg-coral-* 등 생성) ── */
-  --color-coral-50:  #fff1ed;
-  --color-coral-100: #ffe0d6;
-  --color-coral-200: #ffc8b8;
-  --color-coral-300: #ffa589;
-  --color-coral-400: #ff8a6b;
-  --color-coral-500: #ff7a59;
-  --color-coral-600: #f2603c;
-  --color-coral-700: #d94e2e;
-  --color-coral-800: #b23e22;
+  /* 비버 우드 톤 (구조·테두리·텍스처용 보조) */
+  --color-wood:       #8a6240;
+  --color-wood-soft:  #efe2cf;
+
+  /* ── coral-* 스케일 → 잎새 그린 리맵 (레거시 토큰명 유지, 값만 교체) ── */
+  --color-coral-50:  #eef7ee;
+  --color-coral-100: #d7ecd8;
+  --color-coral-200: #b3dbb5;
+  --color-coral-300: #88c78c;
+  --color-coral-400: #66b46c;
+  --color-coral-500: #4f9d54;
+  --color-coral-600: #3f8444;
+  --color-coral-700: #336c38;
+  --color-coral-800: #28552d;
 
   /* ── 그림자 토큰 ── */
   --shadow-card:
@@ -66,7 +70,37 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* ── 마스코트 호미 모션 ── */
+/* ── 마스코트 비지(비버) 모션 — 부드러운 숨쉬기·깜빡임·나침반 흔들림·꼬리 ── */
+@keyframes biji-breathe {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50% { transform: translateY(-2.5px) scaleY(1.03); }
+}
+@keyframes biji-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  96% { transform: scaleY(0.1); }
+}
+@keyframes biji-compass {
+  0%, 100% { transform: rotate(-7deg); }
+  50% { transform: rotate(7deg); }
+}
+@keyframes biji-tail {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-5deg); }
+}
+@keyframes biji-hop {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-7px) rotate(2deg); }
+}
+.biji-breathe { animation: biji-breathe 3s ease-in-out infinite; transform-origin: 50% 100%; }
+.biji-blink   { animation: biji-blink 4.5s ease-in-out infinite; transform-origin: center; }
+.biji-compass { animation: biji-compass 2.6s ease-in-out infinite; transform-origin: 60px 92px; }
+.biji-tail    { animation: biji-tail 2.8s ease-in-out infinite; transform-origin: 34px 84px; }
+.biji-hop     { animation: biji-hop 1.05s ease-in-out infinite; transform-origin: 50% 100%; }
+@media (prefers-reduced-motion: reduce) {
+  .biji-breathe, .biji-blink, .biji-compass, .biji-tail, .biji-hop { animation: none; }
+}
+
+/* ── (구) 마스코트 호미 모션 ── */
 @keyframes homi-bob {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-5px); }

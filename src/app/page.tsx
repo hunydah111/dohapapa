@@ -13,24 +13,24 @@ export default function HomePage() {
           className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[380px]"
           style={{
             background:
-              "radial-gradient(60% 70% at 50% 10%, rgba(255,194,60,0.16) 0%, rgba(255,122,89,0.12) 40%, rgba(255,255,255,0) 75%)",
+              "radial-gradient(60% 70% at 50% 10%, rgba(224,162,58,0.18) 0%, rgba(79,157,84,0.12) 42%, rgba(245,236,217,0) 75%)",
           }}
         />
 
-        {/* 마스코트 호미 — 손 흔들며 방긋 */}
-        <Homi mood="wave" size={140} className="mx-auto h-32 w-auto sm:h-36" />
-
-        {/* 워드마크 — 로고 마크 + 텍스트 인라인 락업 (주아체) */}
+        {/* 워드마크 — 비버 위 (로고 마크 + 텍스트 인라인 락업, 주아체) */}
         <h1
-          className="font-jua mt-1 flex items-center justify-center gap-2.5 text-4xl tracking-tight sm:text-5xl"
-          style={{ color: "#3a322c" }}
+          className="font-jua flex items-center justify-center gap-3 text-[3.4rem] leading-none tracking-tight sm:text-7xl"
+          style={{ color: "#3a2c1d" }}
         >
           <BrandMark
-            size={48}
-            className="h-9 w-9 text-coral-600 sm:h-12 sm:w-12"
+            size={64}
+            className="h-12 w-12 text-coral-600 sm:h-16 sm:w-16"
           />
-          홈앤나
+          비집고
         </h1>
+
+        {/* 마스코트 비지 — 워드마크 아래 */}
+        <Homi mood="wave" size={230} className="mx-auto mt-2" />
 
         {/* 캐주얼 태그라인 — 호미가 말 거는 톤 */}
         <p
