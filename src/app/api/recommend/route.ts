@@ -4,12 +4,13 @@ import type { CoupleProfile } from "@/types/profile";
 
 export const runtime = "nodejs";
 
-// ── Workplace 스키마 — 자차 통근만 지원 (대중교통 API 미연동) ──────────────
+// ── Workplace 스키마 — 자차/대중교통(ODsay) ───────────────────────────────────
+// 대중교통 랭킹은 서버 mock(직선거리) 기준, 실측 시간은 결과 화면에서 ODsay(브라우저)로 채운다.
 const workplaceSchema = z.object({
   label: z.string().min(1),
   lat: z.number(),
   lng: z.number(),
-  commuteMode: z.literal("car"),
+  commuteMode: z.enum(["car", "transit"]),
   maxCommuteMinutes: z.number().int().positive(),
 });
 

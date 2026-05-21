@@ -5,7 +5,7 @@
 //
 // 참고: 타입명 CoupleProfile 은 레거시 — 제품은 1인·은퇴 가구까지 다룬다.
 
-export type CommuteMode = "car";
+export type CommuteMode = "car" | "transit";
 
 /** 가구 유형 — 입력 흐름과 추천 처리를 분기한다. */
 export type HouseholdType =

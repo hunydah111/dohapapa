@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ProfileForm } from "@/components/ProfileForm";
 import type {
   RecommendationResult,
   MoreCandidate,
   RelaxationAction,
 } from "@/types/recommendation";
+import { odsayTransitMinutes } from "@/lib/commute/odsayClient";
 import type { CoupleProfile, AreaRangeKey } from "@/types/profile";
 import { AREA_RANGES, AREA_RANGE_ORDER } from "@/types/profile";
 import { BudgetSummary } from "./BudgetSummary";
@@ -25,6 +26,65 @@ type ResultState = {
   result: RecommendationResult;
   profile: CoupleProfile;
 };
+
+// ── 대중교통 실측(ODsay) 헬퍼 ────────────────────────────────────────────────
+// 서버 랭킹은 mock(직선거리)로 잡고, 화면에 보이는 후보의 대중교통 leg 만 브라우저에서
+// ODsay 실측으로 채운다(B+C — 보이는 것만 호출). 캐시 우선 → 미스만 ODsay → 결과 재적재.
+
+type TransitLegRef = {
+  key: string; // `${complexId}:${workplace}`
+  complexId: string;
+  originLat: number;
+  originLng: number;
+  destLat: number;
+  destLng: number;
+};
+
+function collectUnresolvedTransitLegs(result: RecommendationResult): TransitLegRef[] {
+  const out: TransitLegRef[] = [];
+  for (const c of result.candidates) {
+    for (const leg of c.commuteLegs) {
+      if (leg.mode === "transit" && leg.realTransit === undefined) {
+        out.push({
+          key: `${c.complexId}:${leg.workplace}`,
+          complexId: c.complexId,
+          originLat: leg.workplaceLat,
+          originLng: leg.workplaceLng,
+          destLat: c.latitude,
+          destLng: c.longitude,
+        });
+      }
+    }
+  }
+  return out;
+}
+
+// resolved[key]: number(실측 분) | null(ODsay 실패 → mock 유지). 둘 다 realTransit 를
+// 정의해 재수집을 막는다.
+function applyTransit(
+  result: RecommendationResult,
+  resolved: Record<string, number | null>,
+): RecommendationResult {
+  return {
+    ...result,
+    candidates: result.candidates.map((c) => ({
+      ...c,
+      commuteLegs: c.commuteLegs.map((leg) => {
+        if (leg.mode !== "transit" || leg.realTransit !== undefined) return leg;
+        const key = `${c.complexId}:${leg.workplace}`;
+        if (!(key in resolved)) return leg;
+        const m = resolved[key];
+        if (m == null) return { ...leg, realTransit: false };
+        return {
+          ...leg,
+          minutes: m,
+          withinLimit: m <= leg.maxCommuteMinutes,
+          realTransit: true,
+        };
+      }),
+    })),
+  };
+}
 
 export function HomeExperience() {
   const [state, setState] = useState<ResultState | null>(null);
@@ -100,6 +160,104 @@ export function HomeExperience() {
       .finally(() => setAutoLoading(false));
     // handleResult 는 안정적 — 의존성 OK
   }, [handleResult]);
+
+  // ── 대중교통 실측(ODsay) — 결과가 뜨면 보이는 후보의 대중교통 leg 를 브라우저에서
+  //    실측으로 채운다. 한 result 객체당 한 번만 처리(ref 가드)해 루프를 막는다.
+  const transitDoneRef = useRef<RecommendationResult | null>(null);
+  useEffect(() => {
+    const result = state?.result;
+    if (!result) return;
+    if (transitDoneRef.current === result) return;
+    const legs = collectUnresolvedTransitLegs(result);
+    if (legs.length === 0) {
+      transitDoneRef.current = result;
+      return;
+    }
+    transitDoneRef.current = result;
+
+    let cancelled = false;
+    (async () => {
+      const resolved: Record<string, number | null> = {};
+
+      // 1. 서버 캐시(CommuteCache mode=transit) 조회
+      try {
+        const r = await fetch("/api/transit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            op: "lookup",
+            legs: legs.map(({ key, complexId, originLat, originLng }) => ({
+              key,
+              complexId,
+              originLat,
+              originLng,
+            })),
+          }),
+        });
+        if (r.ok) {
+          const j = (await r.json()) as { results?: Record<string, number | null> };
+          if (j.results) {
+            for (const k in j.results) {
+              if (typeof j.results[k] === "number") resolved[k] = j.results[k];
+            }
+          }
+        }
+      } catch {
+        // 캐시 조회 실패해도 ODsay 로 진행
+      }
+
+      // 2. 캐시 미스 → ODsay 실측 (브라우저, 등록 도메인 Referer 로 인증)
+      const misses = legs.filter((l) => typeof resolved[l.key] !== "number");
+      const fetched = await Promise.all(
+        misses.map(async (l) => ({
+          l,
+          m: await odsayTransitMinutes(
+            { lat: l.originLat, lng: l.originLng },
+            { lat: l.destLat, lng: l.destLng },
+          ),
+        })),
+      );
+      const toSave: {
+        complexId: string;
+        originLat: number;
+        originLng: number;
+        minutes: number;
+      }[] = [];
+      for (const { l, m } of fetched) {
+        resolved[l.key] = m;
+        if (m != null) {
+          toSave.push({
+            complexId: l.complexId,
+            originLat: l.originLat,
+            originLng: l.originLng,
+            minutes: m,
+          });
+        }
+      }
+      for (const l of legs) if (!(l.key in resolved)) resolved[l.key] = null;
+
+      // 3. 새 실측값을 캐시에 적재 (fire-and-forget)
+      if (toSave.length > 0) {
+        fetch("/api/transit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ op: "save", legs: toSave }),
+        }).catch(() => {});
+      }
+
+      if (cancelled) return;
+      // 4. 결과에 실측 반영 — 같은 result 일 때만 교체
+      setState((prev) =>
+        prev && prev.result === result
+          ? { ...prev, result: applyTransit(result, resolved) }
+          : prev,
+      );
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [state?.result]);
 
   async function handleShare() {
     if (!state) return;
@@ -479,7 +637,7 @@ export function HomeExperience() {
                 <li className="flex gap-2">
                   <span className="flex-shrink-0">·</span>
                   <span>
-                    <strong>통근 시간이 짧음</strong> — 자차 30분 이내는 도심 근무자에게 좁아요. 40~50분으로 늘려보세요
+                    <strong>통근 시간이 짧음</strong> — 30분 이내는 도심 근무자에게 좁아요. 40~50분으로 늘려보세요
                   </span>
                 </li>
                 <li className="flex gap-2">

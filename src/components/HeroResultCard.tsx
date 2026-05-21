@@ -25,6 +25,10 @@ export function HeroResultCard({
     (sum, leg) => sum + leg.minutes,
     0,
   );
+  const hasCar = candidate.commuteLegs.some((l) => l.mode === "car");
+  const hasTransit = candidate.commuteLegs.some((l) => l.mode === "transit");
+  const commuteIcon =
+    hasCar && hasTransit ? "🚗🚌" : hasTransit ? "🚌" : "🚗";
 
   const kakaoMapUrl = `https://map.kakao.com/?q=${encodeURIComponent(
     `${candidate.complexName} ${candidate.dongName}`,
@@ -88,7 +92,7 @@ export function HeroResultCard({
       {/* 핵심 스탯 뱃지 */}
       <div className="mt-5 flex flex-wrap gap-2">
         <Badge>💰 {formatKrwHuman(candidate.medianPriceKrw)}</Badge>
-        {totalCommute > 0 && <Badge>🚗 {totalCommute}분</Badge>}
+        {totalCommute > 0 && <Badge>{commuteIcon} {totalCommute}분</Badge>}
         <Badge>⭐ 종합 {candidate.totalScore}점</Badge>
         {candidate.isChopumah && <Badge>🏫 초품아</Badge>}
         {candidate.vibeBadge && <Badge>{candidate.vibeBadge}</Badge>}

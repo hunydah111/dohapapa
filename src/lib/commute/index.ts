@@ -23,11 +23,16 @@ export async function getCommuteMinutes(
   mode: CommuteMode,
   provider: CommuteProvider = getCommuteProvider(),
 ): Promise<number> {
+  // 대중교통(ODsay)은 URI(웹) 키라 브라우저에서만 호출 가능 — 서버에선 못 부른다.
+  // 따라서 서버 랭킹용 대중교통 시간은 mock(직선거리)로 잡고, 실측은 결과 화면에서
+  // 클라이언트가 ODsay 로 채운다. mock 값은 캐시하지 않는다(실측이 아니므로).
+  const effectiveProvider = mode === "transit" ? mockProvider : provider;
+
   // mock provider 는 순수 계산(haversine)이라 DB 캐시가 오히려 오버헤드다.
   // 캐시는 비싼 외부 호출(Kakao 길찾기)에만 의미가 있으므로 mock 은 바로 계산.
   // (단지 1만 개 추천 시 캐시 upsert 폭주로 SQLite 가 socket timeout 나던 문제.)
-  if (provider.name === "mock") {
-    return provider.travelMinutes(origin, complexCoord, mode);
+  if (effectiveProvider.name === "mock") {
+    return effectiveProvider.travelMinutes(origin, complexCoord, mode);
   }
 
   const originKey = `${origin.lat.toFixed(3)},${origin.lng.toFixed(3)}`;

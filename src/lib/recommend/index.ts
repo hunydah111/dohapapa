@@ -176,10 +176,16 @@ function buildReport(
   const eok = (c.medianPriceKrw / 1e8).toFixed(1);
 
   // 통근 정보 없으면 통근 문구 생략 (retired 등)
+  // 대중교통은 서버 mock 분이 화면(ODsay 실측)과 어긋나므로 분 대신 "대중교통"으로만 표기.
   const legText =
     c.commuteLegs.length > 0
       ? " 통근은 " +
-        c.commuteLegs.map((l) => `${l.workplaceLabel} ${l.minutes}분`).join(", ") +
+        c.commuteLegs
+          .map(
+            (l) =>
+              `${l.workplaceLabel} ${l.mode === "transit" ? "대중교통" : `${l.minutes}분`}`,
+          )
+          .join(", ") +
         "."
       : "";
 
@@ -231,9 +237,13 @@ function compareTo(a: ComplexCandidate, b: ComplexCandidate, bLabel: string): st
     );
   }
 
+  // 대중교통 leg 가 끼면 서버 통근분이 mock 이라 비교가 부정확 → 통근 비교 문구 생략.
+  const anyTransit =
+    a.commuteLegs.some((l) => l.mode === "transit") ||
+    b.commuteLegs.some((l) => l.mode === "transit");
   const commuteA = a.commuteLegs.reduce((s, l) => s + l.minutes, 0);
   const commuteB = b.commuteLegs.reduce((s, l) => s + l.minutes, 0);
-  if (commuteA > 0 && commuteB > 0 && Math.abs(commuteA - commuteB) >= 5) {
+  if (!anyTransit && commuteA > 0 && commuteB > 0 && Math.abs(commuteA - commuteB) >= 5) {
     diffs.push(
       `통근 ${Math.abs(commuteA - commuteB)}분 ${commuteA < commuteB ? "짧음" : "김"}`,
     );
@@ -568,6 +578,7 @@ export async function recommendComplexes(
             minutes,
             distanceKm: Math.round(haversineKm(wp, complexCoord) * 10) / 10,
             mode: wp.commuteMode,
+            maxCommuteMinutes: wp.maxCommuteMinutes,
             withinLimit: minutes <= wp.maxCommuteMinutes,
           }),
         );

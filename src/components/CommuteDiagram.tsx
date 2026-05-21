@@ -64,7 +64,16 @@ export function CommuteDiagram({
           const fallbackLabel =
             leg.workplace === "A" ? "본인 직장" : "배우자 직장";
           const workplaceName = leg.workplaceLabel || fallbackLabel;
-          const modeLabel = "자차";
+          const isTransit = leg.mode === "transit";
+          const modeLabel = isTransit ? "대중교통" : "자차";
+          // 대중교통: 아직 미확인(undefined)=확인 중, true=ODsay 실측, false=직선거리 추정
+          const sourceText = isTransit
+            ? leg.realTransit
+              ? "ODsay 대중교통 기준"
+              : leg.realTransit === false
+                ? "대중교통 추정(직선거리)"
+                : "대중교통 확인 중…"
+            : "카카오 길찾기 기준";
 
           const directionsUrl = complex
             ? kakaoDirectionsUrl(
@@ -137,7 +146,7 @@ export function CommuteDiagram({
                   {leg.minutes}분
                 </span>
                 <span className="text-[11px]" style={{ color: "#9a8f82" }}>
-                  {modeLabel} · 카카오 길찾기 기준{!ok && " · 허용 시간 초과"}
+                  {modeLabel} · {sourceText}{!ok && " · 허용 시간 초과"}
                 </span>
               </div>
 
@@ -149,7 +158,7 @@ export function CommuteDiagram({
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-1 rounded-lg bg-white/70 py-1.5 text-[11px] font-semibold text-coral-600 transition-colors hover:bg-white hover:text-coral-800"
                 >
-                  카카오맵에서 실제 길찾기
+                  {isTransit ? "카카오맵에서 경로 보기" : "카카오맵에서 실제 길찾기"}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
@@ -173,9 +182,8 @@ export function CommuteDiagram({
         className="text-[11px] leading-relaxed"
         style={{ color: "#9a8f82" }}
       >
-        통근 시간은 카카오 길찾기(자차) 표준 트래픽 기준 추정이에요. 실제
-        시간은 시간대·교통 상황에 따라 달라지니 정확한 값은 본인 직장의
-        카카오맵 길찾기로 확인하세요.
+        통근 시간은 자동차는 카카오 길찾기, 대중교통은 ODsay 길찾기(출퇴근 기준)
+        추정이에요. 실제 시간은 시간대·교통 상황·환승에 따라 달라질 수 있어요.
       </p>
     </div>
   );

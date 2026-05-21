@@ -45,7 +45,7 @@ function inRange(score: number): boolean {
 
 /**
  * CommuteLeg 픽스처 — 필수 필드: workplace, workplaceLabel, workplaceLat,
- * workplaceLng, minutes, distanceKm, mode, withinLimit.
+ * workplaceLng, minutes, distanceKm, mode, maxCommuteMinutes, withinLimit.
  */
 function leg(
   workplace: "A" | "B",
@@ -60,6 +60,7 @@ function leg(
     minutes,
     distanceKm: 0,
     mode: "car",
+    maxCommuteMinutes: 50,
     withinLimit,
   };
 }

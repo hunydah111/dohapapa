@@ -82,8 +82,16 @@ export interface CommuteLeg {
   distanceKm: number;
   /** 시간 추정에 쓴 교통수단. */
   mode: CommuteMode;
+  /** 이 직장의 허용 통근시간(분) — 클라이언트가 실측 반영 후 withinLimit 재계산에 사용. */
+  maxCommuteMinutes: number;
   /** 프로필의 허용 통근시간 이내인지. */
   withinLimit: boolean;
+  /**
+   * (클라이언트 전용) 대중교통 leg 의 실측 시간이 ODsay 로 채워졌는지.
+   * 서버는 설정 안 함(=undefined, mock 직선거리 추정). 결과 화면에서 ODsay 호출 후 true.
+   * mode==="transit" 이고 undefined 면 아직 mock 추정값.
+   */
+  realTransit?: boolean;
 }
 
 // ── 단지 후보 ────────────────────────────────────────────────

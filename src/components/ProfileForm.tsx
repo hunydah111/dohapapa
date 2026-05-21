@@ -6,6 +6,7 @@ import type {
   HouseholdType,
   PriorityKey,
   Workplace,
+  CommuteMode,
   AreaRangeKey,
   LocationVibe,
   LocationVibes,
@@ -17,6 +18,7 @@ import {
   PRIORITY_LABELS,
   PRIORITY_SCALE_LABELS,
   DEFAULT_PRIORITIES,
+  DEFAULT_COMMUTE_MODE,
   DEFAULT_MAX_COMMUTE_MIN,
   AREA_RANGES,
   AREA_RANGE_ORDER,
@@ -167,6 +169,8 @@ interface WorkplaceInputProps {
   onClear: () => void;
   onMaxCommuteChange: (minutes: string) => void;
   maxCommuteValue: string;
+  mode: CommuteMode;
+  onModeChange: (m: CommuteMode) => void;
   autoFocus?: boolean;
 }
 
@@ -178,6 +182,8 @@ function WorkplaceInput({
   onClear,
   onMaxCommuteChange,
   maxCommuteValue,
+  mode,
+  onModeChange,
   autoFocus,
 }: WorkplaceInputProps) {
   const hasSelected = !!state.selected;
@@ -266,7 +272,20 @@ function WorkplaceInput({
         aria-disabled={!hasSelected}
       >
         <div>
-          <p className="text-[13px] text-[#6b6157] mb-2">통근 허용시간 (자차 기준)</p>
+          <p className="text-[13px] text-[#6b6157] mb-2">통근 수단</p>
+          <Segmented<CommuteMode>
+            options={[
+              { value: "car", label: "자동차" },
+              { value: "transit", label: "대중교통" },
+            ]}
+            value={mode}
+            onChange={onModeChange}
+          />
+        </div>
+        <div>
+          <p className="text-[13px] text-[#6b6157] mb-2">
+            통근 허용시간 ({mode === "transit" ? "대중교통" : "자동차"} 기준)
+          </p>
           <TextField
             value={maxCommuteValue}
             onChange={onMaxCommuteChange}
@@ -301,7 +320,7 @@ export function ProfileForm({
   const [budgetFlex, setBudgetFlex] = useState<BudgetFlex>(DEFAULT_BUDGET_FLEX);
 
   // ── Step 2: 직장 & 통근 ─────────────────────────────────────
-  // 카카오 길찾기 API 가 자차만 지원하므로 통근 수단은 자차로 고정.
+  // 통근 수단은 직장별로 자동차/대중교통 선택. 대중교통은 ODsay 길찾기 기준.
   const [wpA, setWpA] = useState<WorkplaceFormState>(makeEmptyWorkplace());
   const [wpB, setWpB] = useState<WorkplaceFormState>(makeEmptyWorkplace());
   const [maxCommuteA, setMaxCommuteA] = useState(
@@ -310,6 +329,8 @@ export function ProfileForm({
   const [maxCommuteB, setMaxCommuteB] = useState(
     String(DEFAULT_MAX_COMMUTE_MIN)
   );
+  const [modeA, setModeA] = useState<CommuteMode>(DEFAULT_COMMUTE_MODE);
+  const [modeB, setModeB] = useState<CommuteMode>(DEFAULT_COMMUTE_MODE);
 
   // ── Step 3: 가족 ────────────────────────────────────────────
   // 자녀 신호는 boolean 3개로 단순화 — 학교 데이터가 초등 거리뿐이라 정밀한
@@ -431,7 +452,7 @@ export function ProfileForm({
       label: r.label,
       lat: r.lat,
       lng: r.lng,
-      commuteMode: "car",
+      commuteMode: which === "A" ? modeA : modeB,
       maxCommuteMinutes: parseInt(maxMin, 10) || DEFAULT_MAX_COMMUTE_MIN,
     };
     if (which === "A") {
@@ -522,7 +543,7 @@ export function ProfileForm({
     const finalWpA: Workplace | undefined = wpA.selected
       ? {
           ...wpA.selected,
-          commuteMode: "car",
+          commuteMode: modeA,
           maxCommuteMinutes:
             parseInt(maxCommuteA, 10) || DEFAULT_MAX_COMMUTE_MIN,
         }
@@ -532,7 +553,7 @@ export function ProfileForm({
       householdType === "dualIncome" && wpB.selected
         ? {
             ...wpB.selected,
-            commuteMode: "car",
+            commuteMode: modeB,
             maxCommuteMinutes:
               parseInt(maxCommuteB, 10) || DEFAULT_MAX_COMMUTE_MIN,
           }
@@ -580,6 +601,8 @@ export function ProfileForm({
     wpB.selected,
     maxCommuteA,
     maxCommuteB,
+    modeA,
+    modeB,
     hasSchoolAgedChild,
     hasInfant,
     hasTwoOrMoreChildren,
@@ -881,6 +904,8 @@ export function ProfileForm({
             onClear={() => clearWorkplace("A")}
             onMaxCommuteChange={handleMaxCommuteA}
             maxCommuteValue={maxCommuteA}
+            mode={modeA}
+            onModeChange={setModeA}
             autoFocus
           />
 
@@ -895,14 +920,18 @@ export function ProfileForm({
               onClear={() => clearWorkplace("B")}
               onMaxCommuteChange={handleMaxCommuteB}
               maxCommuteValue={maxCommuteB}
+              mode={modeB}
+              onModeChange={setModeB}
             />
           )}
 
-          {/* 대중교통 안내 — 현재 자차 기준, 대중교통 추후 지원 */}
+          {/* 통근 계산 안내 — 자동차는 카카오, 대중교통은 ODsay 기준 */}
           <p className="rounded-2xl bg-[#f3ece4] px-4 py-3 text-[13px] leading-relaxed text-[#6b6157]">
-            현재 통근 시간은{" "}
-            <strong className="font-semibold text-[#3a322c]">자차 기준</strong>
-            으로 계산돼요. 대중교통 이용 시 소요시간은 추후 업데이트 예정입니다.
+            통근 시간은{" "}
+            <strong className="font-semibold text-[#3a322c]">
+              자동차는 카카오 길찾기, 대중교통은 ODsay 길찾기
+            </strong>{" "}
+            기준 추정이에요. 결과 화면에서 실제 소요시간을 보여드려요.
           </p>
 
           <div className="flex gap-3">
@@ -1431,7 +1460,7 @@ export function ProfileForm({
           <div className="flex flex-col gap-4">
             {(Object.keys(PRIORITY_LABELS) as PriorityKey[]).map((key) => {
               const hints: Record<PriorityKey, string> = {
-                commute: "자차 통근 시간 기준 (대중교통 미반영)",
+                commute: "직장별 자동차·대중교통 통근 시간 기준",
                 school: "초등학교 도보 거리 기준 (중·고·학업성취도·학원가 미반영)",
                 buildingAge: "준공년도 — 신축일수록 가점",
                 largeComplex: "최근 거래량 기준 — 대단지·인기 단지일수록 가점",

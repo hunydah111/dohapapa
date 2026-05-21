@@ -38,6 +38,11 @@ export function scoreCommute(
   const bMin = legB?.minutes ?? null;
   const bothPresent = bMin !== null;
 
+  // 대중교통 leg 는 서버 분이 mock(직선거리)이고 화면에선 ODsay 실측으로 덮어써지므로,
+  // 문구엔 구체 분을 박지 않고 "대중교통 기준"으로 표기해 도식과의 숫자 불일치를 막는다.
+  const aStr = legA?.mode === "transit" ? "대중교통 기준" : `${aMin}분`;
+  const bStr = legB?.mode === "transit" ? "대중교통 기준" : `${bMin}분`;
+
   // 하드필터 기준(×1.3)을 초과했는지 여부
   const aHardOver = aMin > limitA * COMMUTE_HARD_FACTOR;
   const bHardOver = bMin !== null ? bMin > limitB * COMMUTE_HARD_FACTOR : false;
@@ -78,23 +83,23 @@ export function scoreCommute(
     score = ratioToScore(blended);
 
     if (aHardOver || bHardOver) {
-      reason = `본인 ${aMin}분(한도 ${limitA}분)·배우자 ${bMin}분(한도 ${limitB}분), 한도 초과`;
+      reason = `본인 ${aStr}(한도 ${limitA}분)·배우자 ${bStr}(한도 ${limitB}분), 한도 초과`;
     } else if (aMin > limitA || bMin > limitB) {
-      const over = aMin > limitA ? `본인 ${aMin}분` : `배우자 ${bMin}분`;
+      const over = aMin > limitA ? `본인 ${aStr}` : `배우자 ${bStr}`;
       reason = `${over} 허용범위 초과 — 상대방은 범위 내`;
     } else {
-      reason = `본인 ${aMin}분·배우자 ${bMin}분, 둘 다 허용 범위 내`;
+      reason = `본인 ${aStr}·배우자 ${bStr}, 둘 다 허용 범위 내`;
     }
   } else {
     const aRatio = aMin / limitA;
     score = ratioToScore(aRatio);
 
     if (aHardOver) {
-      reason = `통근 ${aMin}분, 허용 한도(${limitA}분)의 ${COMMUTE_HARD_FACTOR}배 초과`;
+      reason = `통근 ${aStr}, 허용 한도(${limitA}분)의 ${COMMUTE_HARD_FACTOR}배 초과`;
     } else if (aMin > limitA) {
-      reason = `통근 ${aMin}분, 허용 한도 ${limitA}분 초과`;
+      reason = `통근 ${aStr}, 허용 한도 ${limitA}분 초과`;
     } else {
-      reason = `통근 ${aMin}분, 허용 범위 내`;
+      reason = `통근 ${aStr}, 허용 범위 내`;
     }
   }
 
