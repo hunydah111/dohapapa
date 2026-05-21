@@ -1093,6 +1093,18 @@ export async function recommendComplexes(
     .slice(0, 5)
     .map(toMore);
 
+  // 안전망 — 위 어떤 섹션에도 단지가 없으면(완전 0건), 지역·평수에 맞는(예산·통근은
+  // 차이날 수 있는) 가장 점수 높은 단지를 보여준다. "아무것도 안 뜸"으로 신뢰를 잃지 않게.
+  const closestCandidates: MoreCandidate[] =
+    candidates.length === 0 &&
+    overBudgetCandidates.length === 0 &&
+    overLimitCandidates.length === 0
+      ? [...phase1Valid]
+          .sort((a, b) => b.candidate.totalScore - a.candidate.totalScore)
+          .slice(0, 5)
+          .map(toMore)
+      : [];
+
   // ── 입지 미스 안내(C) — 점지 입지(quiet 제외)를 골랐는데 결과에 안 잡혔을 때 ──
   // 강도 가장 센 입지 1개 기준. 표시 단지(top3) 중 매칭이 없으면 가장 가까운 후보를 솔직히 안내.
   let vibeNote:
@@ -1159,6 +1171,7 @@ export async function recommendComplexes(
     moreCandidates,
     overLimitCandidates,
     overBudgetCandidates,
+    closestCandidates,
     relaxationSuggestions,
     consideredComplexCount,
     vibeNote,

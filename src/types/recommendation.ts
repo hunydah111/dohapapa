@@ -228,6 +228,8 @@ export interface RecommendationResult {
   overLimitCandidates: MoreCandidate[];
   /** 예산 상한을 조금 넘지만(≤1.4배) 지역·평수·통근은 맞는 후보 — 별도 섹션. 평소 빈 배열. */
   overBudgetCandidates: MoreCandidate[];
+  /** 안전망 — 모든 섹션이 0건일 때만 채워지는 "조건과 가장 가까운 후보"(예산·통근 차이 가능). */
+  closestCandidates: MoreCandidate[];
   /** candidates 가 비었을 때 채워지는 조건 완화 제안. 평소엔 빈 배열. */
   relaxationSuggestions: RelaxationSuggestion[];
   /** 하드 필터 통과 단지 수. */

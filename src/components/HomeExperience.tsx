@@ -934,6 +934,53 @@ export function HomeExperience() {
         </section>
       )}
 
+      {/* 안전망 — 모든 섹션이 0건일 때만: 조건과 가장 가까운 후보(빈 화면 방지) */}
+      {result.closestCandidates.length > 0 && (
+        <section className="flex flex-col gap-4">
+          <div>
+            <h2 className="text-lg font-bold" style={{ color: "#3a322c" }}>
+              조건과 가장 가까운 후보
+            </h2>
+            <p className="mt-0.5 text-sm" style={{ color: "#6b6157" }}>
+              딱 맞는 곳은 없었지만, 예산·통근과 차이가 있더라도 가장 가까운{" "}
+              {result.closestCandidates.length}곳이에요
+            </p>
+          </div>
+          <div className="overflow-hidden rounded-3xl border border-[#e5e0d6] bg-[#f3ece4]/50">
+            <ul className="divide-y divide-[#e5e0d6]">
+              {result.closestCandidates.map((m: MoreCandidate) => (
+                <li
+                  key={m.complexId}
+                  className="flex items-start gap-3 px-5 py-4"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className="font-semibold text-sm leading-snug"
+                      style={{ color: "#3a322c" }}
+                    >
+                      {m.complexName}
+                    </p>
+                    <p
+                      className="mt-0.5 text-xs leading-relaxed"
+                      style={{ color: "#9a8f82" }}
+                    >
+                      {m.sigungu} · {m.dongName} · {m.representativeArea}㎡ ·{" "}
+                      {m.commuteSummary}
+                    </p>
+                  </div>
+                  <span
+                    className="flex-shrink-0 text-sm font-semibold tabular-nums"
+                    style={{ color: "#3a322c" }}
+                  >
+                    {formatKrwHuman(m.medianPriceKrw)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
       {/* 더 넓게 보기 — 결과가 있을 때 조건 완화 제안 */}
       {result.candidates.length > 0 &&
         result.relaxationSuggestions.length > 0 && (
