@@ -92,7 +92,7 @@ export const AREA_RANGE_ORDER: AreaRangeKey[] = [
 
 export const DEFAULT_AREA_RANGE: AreaRangeKey = "p32_35";
 export const DEFAULT_COMMUTE_MODE: CommuteMode = "car";
-export const DEFAULT_MAX_COMMUTE_MIN = 50;
+export const DEFAULT_MAX_COMMUTE_MIN = 60;
 
 // ── 선호 입지(분위기) — 재미용 소프트 가점. 단일 선택, 기본 "상관없음". ──
 // 분위기(소프트 가점)는 지역과 안 겹치는 '느낌'만 — 한강변·조용함.

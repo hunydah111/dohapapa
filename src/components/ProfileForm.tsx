@@ -290,7 +290,7 @@ function WorkplaceInput({
             value={maxCommuteValue}
             onChange={onMaxCommuteChange}
             type="number"
-            placeholder="50"
+            placeholder="60"
             suffix="분"
           />
         </div>
