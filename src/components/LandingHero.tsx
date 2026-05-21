@@ -35,7 +35,7 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
         className="font-jua mt-2 text-[2.1rem] leading-[1.2] tracking-tight sm:text-[2.9rem]"
         style={{ color: "#3a2c1d" }}
       >
-        묻고, 따지고, <span className="text-coral-600">비집고</span>
+        묻고 따지고 <span className="text-coral-600">비집고</span>
       </h1>
 
       {/* 서브 캐치프레이즈 — 무엇을 하는 서비스인지 */}
