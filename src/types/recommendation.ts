@@ -119,7 +119,7 @@ export const CANDIDATE_SIGNAL_LABELS: Record<CandidateSignalKey, string> = {
   budgetFit: "예산 적합도",
   school: "학군·자녀",
   buildingAge: "단지 연식",
-  largeComplex: "거래량",
+  largeComplex: "단지 활발도",
 };
 
 export type CandidateTier = "안정형" | "균형형" | "도전형";

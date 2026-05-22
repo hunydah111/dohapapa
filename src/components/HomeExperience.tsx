@@ -17,13 +17,14 @@ import { LandingHero } from "./LandingHero";
 import { Homi } from "./Homi";
 import { RequiredRegionPicker } from "./RequiredRegionPicker";
 import { getHomeType } from "@/lib/homeType";
+import { budgetTopPercent } from "@/lib/budgetPercentile";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { Card } from "@/components/ui/Card";
 import { formatKrwHuman } from "@/lib/format";
 import { SHARE_PARAM, encodeProfile, decodeProfile } from "@/lib/shareLink";
 import { MiniMap, KAKAO_JS_ENABLED } from "./MiniMap";
-import { NeighborhoodSection } from "./NeighborhoodSection";
+import { useNeighborhood } from "./NeighborhoodSection";
 
 type ResultState = {
   result: RecommendationResult;
@@ -542,6 +543,36 @@ export function HomeExperience() {
     }
   }
 
+  // 유형 분포(줄세우기) — 전역 집계 1회 fetch. 표본 충분할 때만 희귀도 표시.
+  const [typeStats, setTypeStats] = useState<{
+    counts: Record<string, number>;
+    total: number;
+  } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/type-stats")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (!cancelled && j) setTypeStats(j);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // 동네 분석 — 표시 후보 반경 1km 시설(배치 fetch). 카드에 인라인 주입.
+  // 훅이라 early-return 앞에서 무조건 호출(후보 없으면 빈 입력 → no-op).
+  const neighborhood = useNeighborhood(
+    (state?.result.candidates ?? []).map((c) => ({
+      id: c.complexId,
+      name: c.complexName,
+      lat: c.latitude,
+      lng: c.longitude,
+      transactionCount: c.transactionCount,
+    })),
+  );
+
   // ── 입력 화면 ──────────────────────────────────────────────
   if (state === null) {
     if (autoLoading) {
@@ -630,6 +661,17 @@ export function HomeExperience() {
           candidate={result.candidates[0]}
           homeType={getHomeType(state.profile)}
           onShare={handleShare}
+          budgetTopPercent={budgetTopPercent(result.budget.netPurchasePowerKrw)}
+          budgetNetKrw={result.budget.netPurchasePowerKrw}
+          typeRarityPercent={
+            typeStats && typeStats.total >= 40
+              ? Math.round(
+                  ((typeStats.counts[getHomeType(state.profile).slug] ?? 0) /
+                    typeStats.total) *
+                    100,
+                )
+              : null
+          }
         />
       )}
 
@@ -685,7 +727,11 @@ export function HomeExperience() {
           <ul className="flex flex-col gap-6">
             {result.candidates.map((candidate, i) => (
               <li key={candidate.complexId}>
-                <CandidateCard candidate={candidate} rank={i + 1} />
+                <CandidateCard
+                  candidate={candidate}
+                  rank={i + 1}
+                  neighborhood={neighborhood[candidate.complexId]}
+                />
               </li>
             ))}
           </ul>
@@ -795,18 +841,7 @@ export function HomeExperience() {
         </Card>
       )}
 
-      {/* 동네 분석 — 표시 단지 반경 1km 시설 사실 + 5축 레이더 (카카오 REST 키 있을 때만) */}
-      {result.candidates.length > 0 && (
-        <NeighborhoodSection
-          items={result.candidates.map((c) => ({
-            id: c.complexId,
-            name: c.complexName,
-            lat: c.latitude,
-            lng: c.longitude,
-            transactionCount: c.transactionCount,
-          }))}
-        />
-      )}
+      {/* 동네 분석은 각 단지 카드 안에 인라인으로 들어간다(useNeighborhood → CandidateCard). */}
 
       {/* 결과 위치 미니맵 — 조건에 맞는 단지 N곳 + 직장 위치 (카카오 JS 키 있을 때만) */}
       {KAKAO_JS_ENABLED && result.candidates.length > 0 && (

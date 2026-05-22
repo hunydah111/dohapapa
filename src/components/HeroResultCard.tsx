@@ -35,10 +35,19 @@ export function HeroResultCard({
   candidate,
   homeType,
   onShare,
+  budgetTopPercent,
+  budgetNetKrw,
+  typeRarityPercent,
 }: {
   candidate: ComplexCandidate;
   homeType: HomeType;
   onShare: (url?: string) => void;
+  /** 추정 구매력이 닿는 상위 % (작을수록 강함). 유리할 때(≤50)만 표시. null = 숨김. */
+  budgetTopPercent?: number | null;
+  /** 추정 구매력(원) — 백분위 밴드 숫자 표시용. */
+  budgetNetKrw?: number;
+  /** 이 유형이 전체 방문자 중 차지하는 % (표본 충분할 때만). null = 숨김. */
+  typeRarityPercent?: number | null;
 }) {
   // 유형 카드 공유 링크 — 프로필 없이 유형만(바이럴 안전). /s/{slug} 에 동적 OG 카드.
   const typeShareUrl = `${SITE_URL}/s/${homeType.slug}`;
@@ -96,6 +105,34 @@ export function HeroResultCard({
       <p className="mx-auto mt-2 max-w-xs text-center text-[15px] leading-relaxed text-white/90">
         {homeType.tagline}
       </p>
+
+      {/* 유형 희귀도 — 방문자 분포(집계). 표본 충분할 때만(꾸며낸 % 없음). 유형만 줄세움. */}
+      {typeRarityPercent != null && (
+        <p className="mx-auto mt-2 text-center text-[13px] font-semibold text-white/85">
+          🦫 비집고 방문자의 {typeRarityPercent}%가 이 유형
+          {typeRarityPercent <= 15 ? " — 희귀해요!" : ""}
+        </p>
+      )}
+
+      {/* ── 구매력 줄세우기 밴드 — 유리할 때(상위 50% 이내)만. 사용자 예산을 실거래가 분포에
+          줄 세움(특정 단지/동네 아님). 미래예측 아님·추정 표기로 컴플라이언스 안전. ── */}
+      {budgetTopPercent != null && budgetTopPercent <= 50 && (
+        <div className="mx-auto mt-5 max-w-sm rounded-2xl bg-white/15 px-4 py-3 text-center backdrop-blur-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-white/75">
+            내 추정 구매력
+          </p>
+          <p className="mt-1 text-[17px] font-extrabold leading-snug text-amber-100">
+            💪{" "}
+            {budgetNetKrw != null && budgetNetKrw > 0 && (
+              <>{formatKrwHuman(budgetNetKrw)} · </>
+            )}
+            최근 수도권 실거래 상위 {budgetTopPercent}% 가격대까지 닿아요
+          </p>
+          <p className="mt-1 text-[11px] leading-relaxed text-white/60">
+            국토교통부 실거래가 기반 추정 · 미래가치 예측이 아닙니다
+          </p>
+        </div>
+      )}
 
       {/* 구분선 */}
       <div className="my-6 h-px w-full bg-white/20" />

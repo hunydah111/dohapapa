@@ -63,3 +63,12 @@ model CommuteCache {
   @@unique([originKey, complexId, mode])
   @@index([originKey])
 }
+
+// 집계 카운터 — 줄세우기(집 찾기 유형 분포 등)용 비-PII 누적 카운트.
+// 컴플라이언스: 프로필·개인정보 없음. "type:commute" 같은 범주 키의 증가값만 저장한다.
+// (사용자를 식별하지 않으며, No-PII 원칙을 깨지 않는다.)
+model AggCounter {
+  key       String   @id // 예: "type:commute"
+  count     Int      @default(0)
+  updatedAt DateTime @updatedAt
+}

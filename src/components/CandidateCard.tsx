@@ -4,8 +4,10 @@ import type {
   CandidateTier,
 } from "@/types/recommendation";
 import { CANDIDATE_SIGNAL_LABELS } from "@/types/recommendation";
+import type { NeighborhoodData } from "@/lib/neighborhood";
 import { Card } from "@/components/ui/Card";
 import { CommuteDiagram } from "./CommuteDiagram";
+import { NeighborhoodInline } from "./NeighborhoodSection";
 import { formatKrwHuman, formatEok } from "@/lib/format";
 
 const SIGNAL_ORDER: CandidateSignalKey[] = [
@@ -49,9 +51,11 @@ const RANK_LABELS: Record<number, string> = {
 export function CandidateCard({
   candidate,
   rank,
+  neighborhood,
 }: {
   candidate: ComplexCandidate;
   rank: number;
+  neighborhood?: NeighborhoodData | null;
 }) {
   const tier = TIER_CONFIG[candidate.tier];
 
@@ -103,10 +107,10 @@ export function CandidateCard({
         )}
         {candidate.pricierThanPeers && (
           <span
-            className="inline-flex items-center rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700 ring-1 ring-rose-200"
-            title="같은 동·비슷한 연식 단지보다 ㎡당 단가가 높아요 (시장 평가가 높은 단지)"
+            className="inline-flex items-center rounded-full bg-fuchsia-50 px-3 py-1 text-xs font-bold text-fuchsia-700 ring-1 ring-fuchsia-200"
+            title="같은 동·비슷한 연식 단지보다 ㎡당 단가가 높아요 — 시장이 더 높게 평가한 단지예요"
           >
-            🔥 동네 또래보다 비싸요
+            ✨ 동네에서 인정받는 단지
           </span>
         )}
         {candidate.priceEstimated ? (
@@ -126,7 +130,7 @@ export function CandidateCard({
         ) : (
           candidate.lowDataConfidence && (
             <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 ring-1 ring-amber-200">
-              거래 적음 · 참고용
+              실거래 데이터 적음
             </span>
           )
         )}
@@ -284,6 +288,13 @@ export function CandidateCard({
           );
         })}
       </div>
+
+      {/* 동네 (반경 1km) — 시설 사실 + 5축 레이더. fetch 후 fade-in, 데이터 없으면 숨김. */}
+      {neighborhood && (
+        <div className="fade-in-up">
+          <NeighborhoodInline data={neighborhood} />
+        </div>
+      )}
 
       {/* 네이버 부동산 매물 링크 CTA */}
       <a

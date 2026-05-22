@@ -2,6 +2,8 @@ import { z } from "zod";
 import { recommendComplexes } from "@/lib/recommend";
 import type { RecommendOptions } from "@/lib/recommend";
 import type { CoupleProfile } from "@/types/profile";
+import { getHomeType } from "@/lib/homeType";
+import { incrementTypeCount } from "@/lib/typeStats";
 
 export const runtime = "nodejs";
 
@@ -183,6 +185,12 @@ export async function POST(req: Request): Promise<Response> {
     const opts: RecommendOptions = optsParsed.success ? optsParsed.data : {};
 
     const result = await recommendComplexes(profile, opts);
+
+    // 유형 분포 집계 — pass-1(최초 검색)에서만. 2-pass 대중교통 재랭킹(restrictToComplexIds)은
+    // 같은 세션의 재계산이라 중복 카운트 방지로 건너뛴다. 비-PII(유형 슬러그 카운트만).
+    if (!opts.restrictToComplexIds) {
+      await incrementTypeCount(getHomeType(profile).slug);
+    }
 
     return Response.json(result);
   } catch (err: unknown) {

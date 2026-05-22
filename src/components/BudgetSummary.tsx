@@ -158,12 +158,27 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
         <p className="text-xs font-medium mb-1" style={{ color: "#6b6157" }}>
           실 매입가능 상한 (추정치)
         </p>
-        <p
-          className="text-4xl font-extrabold tabular-nums tracking-tight"
-          style={{ color: "#3a322c" }}
-        >
-          {formatKrwHuman(budget.netPurchasePowerKrw)}
-        </p>
+        {budget.netPurchasePowerKrw > 0 ? (
+          <p
+            className="text-4xl font-extrabold tabular-nums tracking-tight"
+            style={{ color: "#3a322c" }}
+          >
+            {formatKrwHuman(budget.netPurchasePowerKrw)}
+          </p>
+        ) : (
+          <>
+            <p
+              className="text-xl font-extrabold tracking-tight"
+              style={{ color: "#3a322c" }}
+            >
+              지금 조건으론 자금이 조금 더 필요해요
+            </p>
+            <p className="mt-1.5 text-sm leading-relaxed" style={{ color: "#6b6157" }}>
+              정책대출 자격이나 보유·동원 자금을 더하면 가능성이 열려요 👇 아래
+              정책대출 안내를 보거나, 조건을 살짝 바꿔 다시 볼 수 있어요.
+            </p>
+          </>
+        )}
       </div>
 
       {/* 월 상환액 */}
@@ -212,7 +227,7 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
                 className="text-xs font-semibold"
                 style={{ color: "#9a8f82" }}
               >
-                미해당 상품
+                지금 조건에선 어려운 상품
               </p>
               {ineligibleLoans.map((loan) => (
                 <PolicyLoanCard
@@ -387,7 +402,7 @@ function PolicyLoanCard({
           </p>
         </div>
         <span className="flex-shrink-0 rounded-full border border-black/[0.08] bg-white px-2.5 py-0.5 text-[11px] font-medium" style={{ color: "#9a8f82" }}>
-          미해당
+          조건 확인 필요
         </span>
       </div>
     </div>

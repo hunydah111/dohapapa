@@ -103,8 +103,11 @@ body {
 .biji-tail    { animation: biji-tail 2.8s ease-in-out infinite; transform-origin: 34px 84px; }
 .biji-hop     { animation: biji-hop 1.05s ease-in-out infinite; transform-origin: 50% 100%; }
 .biji-pop-in  { animation: biji-popin 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both; transform-origin: 50% 100%; }
+/* 콘텐츠 비동기 등장 — 카드 안 동네 분석이 fetch 후 부드럽게 들어옴 */
+@keyframes fade-in-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.fade-in-up { animation: fade-in-up 0.4s ease both; }
 @media (prefers-reduced-motion: reduce) {
-  .biji-breathe, .biji-blink, .biji-compass, .biji-tail, .biji-hop, .biji-pop-in { animation: none; }
+  .biji-breathe, .biji-blink, .biji-compass, .biji-tail, .biji-hop, .biji-pop-in, .fade-in-up { animation: none; }
 }
 
 /* ── (구) 마스코트 호미 모션 ── */

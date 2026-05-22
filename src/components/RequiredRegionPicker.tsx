@@ -69,7 +69,7 @@ export function RequiredRegionPicker({
           ))}
         </div>
       )}
-      <div className="mb-2 flex gap-2">
+      <div className="mb-2 flex items-center gap-2">
         {(["서울", "경기"] as const).map((t) => (
           <button
             key={t}
@@ -84,6 +84,31 @@ export function RequiredRegionPicker({
             {t}
           </button>
         ))}
+        {/* 현재 탭(서울/경기) 전체 한 번에 선택·해제 */}
+        {(() => {
+          const tabRegions = REGION_GROUPS.find((g) => g.label === regionTab)!
+            .regions;
+          const allOn = tabRegions.every((r) => value.includes(r));
+          return (
+            <button
+              type="button"
+              onClick={() =>
+                onChange(
+                  allOn
+                    ? value.filter((r) => !tabRegions.includes(r))
+                    : [...new Set([...value, ...tabRegions])],
+                )
+              }
+              className={`ml-auto rounded-full border px-3 py-1.5 text-xs font-semibold ${
+                allOn
+                  ? "border-coral-500 bg-coral-600 text-white"
+                  : "border-coral-300 bg-coral-50 text-coral-700 hover:bg-coral-100"
+              }`}
+            >
+              {regionTab} 전체 {allOn ? "해제" : "선택"}
+            </button>
+          );
+        })()}
       </div>
       <input
         type="text"
