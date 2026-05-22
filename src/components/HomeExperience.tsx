@@ -150,15 +150,18 @@ export function HomeExperience() {
       // URL 에 프로필 인코딩 — 부부가 같은 결과 링크로 공유 가능.
       // 프로필(소득·자산·직장)을 쿼리(?p=) 대신 해시(#p=)에 둔다 — 해시는 서버 로그·
       // Referer·외부 스크립트(GA/광고/ODsay 등)로 전송되지 않아 민감정보 유출을 막는다.
-      try {
-        const slug = encodeProfile(profile);
-        const url = new URL(window.location.href);
-        url.searchParams.delete(SHARE_PARAM); // 레거시 ?p= 제거
-        url.hash = `${SHARE_PARAM}=${slug}`;
-        window.history.replaceState(null, "", url.toString());
-      } catch {
-        // 인코딩 실패해도 결과는 정상 노출 — URL 만 갱신 안 됨
-      }
+      // 인코딩은 압축(async) — URL 갱신은 비핵심이라 fire-and-forget.
+      void (async () => {
+        try {
+          const slug = await encodeProfile(profile);
+          const url = new URL(window.location.href);
+          url.searchParams.delete(SHARE_PARAM); // 레거시 ?p= 제거
+          url.hash = `${SHARE_PARAM}=${slug}`;
+          window.history.replaceState(null, "", url.toString());
+        } catch {
+          // 인코딩 실패해도 결과는 정상 노출 — URL 만 갱신 안 됨
+        }
+      })();
 
       // 결과 화면은 항상 맨 위부터 — 폼 하단(분석 시작)에서 스크롤된 위치를 초기화.
       window.scrollTo({ top: 0 });
@@ -174,26 +177,32 @@ export function HomeExperience() {
     const queryParams = new URLSearchParams(window.location.search);
     const slug = hashParams.get(SHARE_PARAM) ?? queryParams.get(SHARE_PARAM);
     if (!slug) return;
-    const profile = decodeProfile(slug);
-    if (!profile) return;
 
-    // 마운트 시 공유링크(?p=) 자동 분석을 위한 의도적 fetch 트리거 — 외부 시스템 동기화
+    let cancelled = false;
+    // 마운트 시 공유링크(#p=) 자동 분석을 위한 의도적 fetch 트리거 — 외부 시스템 동기화
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setAutoLoading(true);
-    fetch("/api/recommend", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(profile),
-    })
-      .then(async (res) => {
+    void (async () => {
+      try {
+        const profile = await decodeProfile(slug); // 압축 해제(async)
+        if (!profile) return; // 깨진/만료 링크 → 폼 화면 유지
+        const res = await fetch("/api/recommend", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(profile),
+        });
         if (!res.ok) throw new Error("auto-load failed");
         const result = (await res.json()) as RecommendationResult;
-        handleResult(result, profile);
-      })
-      .catch(() => {
+        if (!cancelled) handleResult(result, profile);
+      } catch {
         // 공유 링크가 깨졌거나 만료된 경우 → 폼 화면 유지
-      })
-      .finally(() => setAutoLoading(false));
+      } finally {
+        if (!cancelled) setAutoLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
     // handleResult 는 안정적 — 의존성 OK
   }, [handleResult]);
 
@@ -474,7 +483,13 @@ export function HomeExperience() {
     const p = state.profile;
     let merged: CoupleProfile = { ...p };
     if (action.kind === "budget") {
-      merged = { ...p, seedMoneyKrw: p.seedMoneyKrw + action.addKrw };
+      // 간단(simple) 모드는 예산이 availableBudgetKrw 로만 결정되고 seedMoneyKrw 는
+      // 무시된다(budget.ts estimateSimpleBudget). 서버의 완화 카운트도 그 값 기준이므로
+      // 같은 필드에 더해야 "N곳" 약속과 재검색 결과가 일치한다.
+      merged =
+        p.budgetMode === "simple"
+          ? { ...p, availableBudgetKrw: (p.availableBudgetKrw ?? 0) + action.addKrw }
+          : { ...p, seedMoneyKrw: p.seedMoneyKrw + action.addKrw };
     } else if (action.kind === "area") {
       merged = { ...p, preferredAreaRange: action.areaRange };
     } else if (action.kind === "commute" && action.workplace === "A" && p.workplaceA) {

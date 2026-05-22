@@ -335,8 +335,12 @@ interface ScoredComplex {
 // ── 하드 필터 통과 건수 계산 (relaxation 시뮬레이션용) ──────────────────────
 
 /**
- * 통근 leg 들이 (허용시간 + extraMinutes) × COMMUTE_HARD_FACTOR 를 초과하는지.
- * scoring.ts 와 동일한 COMMUTE_HARD_FACTOR 를 사용한다. (A→직장0, B→직장1)
+ * 통근 leg 들이 (허용시간 + extraMinutes) × factor 를 초과하는지. (A→직장0, B→직장1)
+ *
+ * factor 기본값은 하드필터 배수(COMMUTE_HARD_FACTOR=1.3)다. 완화 제안 카운트는
+ * 1.0(=사용자가 정한 한도 이내, withinLimit)을 넘겨야 한다 — 메인 3티어 후보는
+ * withinLimit(×1.0) 단지에서만 뽑히므로, ×1.3 으로 세면 "N곳" 약속이 실제론
+ * 통근 한도를 살짝 넘는(overLimit) 단지로 빠져 헤드라인이 0건이 되는 어긋남이 난다.
  */
 // extraMinutes 는 직장별로 다르게 줄 수 있다(예: 본인 직장만 +20분 완화).
 type CommuteExtra = { A: number; B: number };
@@ -345,18 +349,20 @@ function commuteExceedsLimit(
   legs: CommuteLeg[],
   workplaces: Workplace[],
   extra: CommuteExtra,
+  factor: number = COMMUTE_HARD_FACTOR,
 ): boolean {
   return legs.some((leg) => {
     const wp = leg.workplace === "A" ? workplaces[0] : workplaces[1];
     const add = leg.workplace === "A" ? extra.A : extra.B;
     const limit = (wp?.maxCommuteMinutes ?? 50) + add;
-    return leg.minutes > limit * COMMUTE_HARD_FACTOR;
+    return leg.minutes > limit * factor;
   });
 }
 
 /**
- * 평가된 단지 목록을 받아 변경된 구매력·통근 한도로 하드필터 통과 건수를 반환한다.
- * 이미 평가된 결과(medianKrw, commuteLegs)를 재사용하므로 추가 DB/API 호출 없음.
+ * 변경된 구매력·통근 한도로 "메인 후보가 될 수 있는" 단지 수를 반환한다.
+ * 통근은 사용자가 정한 한도 이내(×1.0, withinLimit)만 — 완화 제안 "N곳"이 클릭 후
+ * 성공 헤드라인(candidates>0)과 일치하도록. 추가 DB/API 호출 없음(재사용).
  */
 function countPassingHardFilter(
   evaluated: ScoredComplex[],
@@ -369,7 +375,7 @@ function countPassingHardFilter(
   return evaluated.filter(
     (e) =>
       priceInBudgetBand(e.medianKrw, netPurchasePowerKrw, dropLowerBound, flex) &&
-      !commuteExceedsLimit(e.candidate.commuteLegs, workplaces, commuteExtra),
+      !commuteExceedsLimit(e.candidate.commuteLegs, workplaces, commuteExtra, 1),
   ).length;
 }
 
@@ -387,7 +393,8 @@ function minExtraBudgetForMoreKrw(
   const upper = bandBounds(netPurchasePowerKrw, false, flex).upper;
   let minAbove = Number.POSITIVE_INFINITY;
   for (const e of evaluated) {
-    if (commuteExceedsLimit(e.candidate.commuteLegs, workplaces, commuteExtra)) {
+    // 통근 한도 이내(×1.0)인 단지만 — 예산만 풀면 메인 후보가 될 단지를 겨냥.
+    if (commuteExceedsLimit(e.candidate.commuteLegs, workplaces, commuteExtra, 1)) {
       continue;
     }
     if (e.medianKrw > upper && e.medianKrw < minAbove) minAbove = e.medianKrw;
@@ -908,6 +915,11 @@ export async function recommendComplexes(
       const nextRange = AREA_RANGES[nextAreaKey];
       const nextMin = nextRange.minM2;
       const nextMax = nextRange.maxM2 ?? Number.POSITIVE_INFINITY;
+      // 통근은 평수와 무관하므로 phase1 에서 이미 계산된 leg 를 재사용한다. 통근 필터를
+      // 빼고 세면 "평수 넓히면 N곳" 약속이 통근 때문에 0건으로 빗나간다(과대약속 방지).
+      const legsById = new Map(
+        phase1Valid.map((e) => [e.candidate.complexId, e.candidate.commuteLegs]),
+      );
       let countAreaRelax = 0;
       for (const c of geoSurvivors) {
         const medians = mediansMap.get(c.id) ?? [];
@@ -924,6 +936,12 @@ export async function recommendComplexes(
           )
         )
           continue;
+        // 직장이 있으면 통근 한도 이내(×1.0)여야 카운트 — 메인 후보 기준과 일치.
+        // 통근 정보가 없는 단지(원 평수대에서 미평가)는 검증 불가 → 보수적으로 제외.
+        if (workplaces.length > 0) {
+          const legs = legsById.get(c.id);
+          if (!legs || commuteExceedsLimit(legs, workplaces, NO_EXTRA, 1)) continue;
+        }
         countAreaRelax++;
       }
       if (countAreaRelax > 0) {
@@ -936,7 +954,16 @@ export async function recommendComplexes(
     }
   } else if (survivors.length > 0 && phase1Valid.length > 0) {
     // 결과가 있을 때 — "더 넓게 보기": 조건을 풀면 몇 곳이 "더" 나오는지(델타).
-    const currentPassing = consideredComplexCount;
+    // 베이스라인은 현재 설정의 "메인 후보가 될 수 있는 수"(통근 ×1.0)로 — relaxedCount 와
+    // 같은 기준이라야 델타가 맞는다. (consideredComplexCount 는 ×1.3 broad 라 섞으면 어긋남)
+    const currentPassing = countPassingHardFilter(
+      phase1Valid,
+      netPurchasePowerKrw,
+      NO_EXTRA,
+      workplaces,
+      dropLowerBand,
+      budgetFlex,
+    );
 
     // (a) 예산 — 다음 단지를 잡는 데 필요한 최소 추가 예산
     const extra = minExtraBudgetForMoreKrw(
@@ -1093,17 +1120,105 @@ export async function recommendComplexes(
     .slice(0, 5)
     .map(toMore);
 
-  // 안전망 — 위 어떤 섹션에도 단지가 없으면(완전 0건), 지역·평수에 맞는(예산·통근은
+  // 안전망 1단계 — 위 어떤 섹션에도 단지가 없으면(완전 0건), 지역·평수에 맞는(예산·통근은
   // 차이날 수 있는) 가장 점수 높은 단지를 보여준다. "아무것도 안 뜸"으로 신뢰를 잃지 않게.
-  const closestCandidates: MoreCandidate[] =
+  const sectionsAllEmpty =
     candidates.length === 0 &&
     overBudgetCandidates.length === 0 &&
-    overLimitCandidates.length === 0
-      ? [...phase1Valid]
-          .sort((a, b) => b.candidate.totalScore - a.candidate.totalScore)
-          .slice(0, 5)
-          .map(toMore)
-      : [];
+    overLimitCandidates.length === 0;
+  let closestCandidates: MoreCandidate[] = sectionsAllEmpty
+    ? [...phase1Valid]
+        .sort((a, b) => b.candidate.totalScore - a.candidate.totalScore)
+        .slice(0, 5)
+        .map(toMore)
+    : [];
+
+  // 안전망 2단계 — 1단계도 비었을 때(=phase1Valid 자체가 빔). 두 원인을 모두 구제한다:
+  //   ① 필수지역이 통근 사전필터로 통째 잘림(예: 동탄을 골랐는데 직장이 강남·30분).
+  //   ② 거래 희박 지역이라 MIN_TRANSACTIONS(8) 게이트에 전부 걸림(예: 과천·가평).
+  // 지역 풀(allComplexes, pre-geo)에서 통근·MIN_TX 를 풀고 대표평형 가격만 잡아
+  // "그래도 가장 가까운 후보"를 만든다 → 어떤 조건에서도 빈 화면이 되지 않게.
+  // 필수지역이 있을 때만(allComplexes 가 지역으로 한정돼 가벼움) 동작한다.
+  if (
+    sectionsAllEmpty &&
+    closestCandidates.length === 0 &&
+    requiredRegions.length > 0 &&
+    allComplexes.length > 0
+  ) {
+    // medians 확보 — phase1 은 geoSurvivors 분만 받았으므로 나머지를 조회.
+    const needIds = allComplexes
+      .filter((c) => c.latitude != null && c.longitude != null && !mediansMap.has(c.id))
+      .map((c) => c.id);
+    if (needIds.length > 0) {
+      const sigById = new Map(allComplexes.map((c) => [c.id, c.sigungu]));
+      const extra = await getAreaMediansForMany(needIds, sigById);
+      for (const [k, v] of extra) mediansMap.set(k, v);
+    }
+
+    // anyArea=false: 선호 평수대 우선. 그것도 0이면 anyArea=true 로 평수 제약까지 풀어
+    // 지역에 거래가 있는 한 무조건 뭔가 나오게 한다(예: 가평엔 18평 이하가 아예 없음).
+    const collect = async (anyArea: boolean) => {
+      const lo = anyArea ? 0 : minArea;
+      const hi = anyArea ? Number.POSITIVE_INFINITY : maxArea;
+      const rows = await Promise.all(
+        allComplexes
+          .filter((c) => c.latitude != null && c.longitude != null)
+          .map(async (c) => {
+            // MIN_TX 무시(minCount=1), 추정 없이 직접 대표평형만.
+            const rep = pickRepresentative(mediansMap.get(c.id) ?? [], lo, hi, 1);
+            if (rep === null) return null;
+            const coord: LatLng = {
+              lat: c.latitude as number,
+              lng: c.longitude as number,
+            };
+            const legs: CommuteLeg[] = await Promise.all(
+              workplaces.map(async (wp, idx) => {
+                const minutes = await getCommuteMinutes(
+                  wp,
+                  c.id,
+                  coord,
+                  wp.commuteMode,
+                  mockProvider,
+                );
+                const lbl: "A" | "B" = idx === 0 ? "A" : "B";
+                return {
+                  workplace: lbl,
+                  workplaceLabel: wp.label,
+                  workplaceLat: wp.lat,
+                  workplaceLng: wp.lng,
+                  minutes,
+                  distanceKm: Math.round(haversineKm(wp, coord) * 10) / 10,
+                  mode: wp.commuteMode,
+                  maxCommuteMinutes: wp.maxCommuteMinutes,
+                  withinLimit: minutes <= wp.maxCommuteMinutes,
+                };
+              }),
+            );
+            return { c, rep, legs, gap: Math.abs(rep.medianKrw - netPurchasePowerKrw) };
+          }),
+      );
+      return rows.filter((x): x is NonNullable<typeof x> => x !== null);
+    };
+
+    let built = await collect(false);
+    if (built.length === 0) built = await collect(true);
+
+    closestCandidates = built
+      .sort((a, b) => a.gap - b.gap) // 예산 근접 순
+      .slice(0, 5)
+      .map(({ c, rep, legs }) => ({
+        complexId: c.id,
+        complexName: c.name,
+        sigungu: c.sigungu,
+        dongName: c.dongName,
+        latitude: c.latitude as number,
+        longitude: c.longitude as number,
+        representativeArea: rep.area,
+        medianPriceKrw: rep.medianKrw,
+        totalScore: 0,
+        commuteSummary: buildCommuteSummary(legs),
+      }));
+  }
 
   // ── 입지 미스 안내(C) — 점지 입지(quiet 제외)를 골랐는데 결과에 안 잡혔을 때 ──
   // 강도 가장 센 입지 1개 기준. 표시 단지(top3) 중 매칭이 없으면 가장 가까운 후보를 솔직히 안내.
