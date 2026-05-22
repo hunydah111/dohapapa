@@ -617,7 +617,12 @@ export function HomeExperience() {
         />
       );
     }
-    return <ProfileForm onResult={handleResult} />;
+    return (
+      <ProfileForm
+        onResult={handleResult}
+        onExit={() => setStarted(false)}
+      />
+    );
   }
 
   const { result } = state;

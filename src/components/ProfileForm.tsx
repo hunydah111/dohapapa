@@ -303,8 +303,11 @@ function WorkplaceInput({
 
 export function ProfileForm({
   onResult,
+  onExit,
 }: {
   onResult: (result: RecommendationResult, profile: CoupleProfile) => void;
+  /** step 1에서 뒤로 가면 호출 — 상위(랜딩)로 복귀. */
+  onExit?: () => void;
 }) {
   // retired 는 직장 단계 없으므로 시각적으로 4단계, 나머지 5단계
   const [step, setStep] = useState<Step>(1);
@@ -533,6 +536,34 @@ export function ProfileForm({
     else if (step === 5) setStep(4);
   }
 
+  // ── 뒤로가기 가드 ──────────────────────────────────────────────
+  // SPA라 브라우저/폰 뒤로가기가 단계 대신 사이트를 이탈시키던 문제 수정.
+  // 단일 sentinel 패턴: 마운트 시 history 항목 1개를 심고, 뒤로가기(popstate)마다
+  // 한 단계 되돌린 뒤 다시 심는다. step 1에서 뒤로가면 onExit(랜딩 복귀)로 빠진다.
+  // 모든 '이전' 버튼은 history.back()을 호출해 같은 경로로 통일한다.
+  const stepRef = useRef(step);
+  const goPrevRef = useRef(goPrev);
+  const onExitRef = useRef(onExit);
+  // 최신값을 ref에 반영 — 렌더가 아니라 effect에서(렌더 중 ref 쓰기 금지 규칙 준수).
+  useEffect(() => {
+    stepRef.current = step;
+    goPrevRef.current = goPrev;
+    onExitRef.current = onExit;
+  });
+  useEffect(() => {
+    window.history.pushState(null, ""); // sentinel 심기
+    const onPop = () => {
+      if (stepRef.current > 1) {
+        goPrevRef.current(); // 한 단계 뒤로
+        window.history.pushState(null, ""); // 다시 심기
+      } else {
+        onExitRef.current?.(); // step 1 → 랜딩 복귀(이탈 방지)
+      }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
   // ── 시각적 스텝 (retired: 4단계, 나머지: 5단계) ──────────────
   const isRetired = householdType === "retired";
   const visualTotal = isRetired ? 4 : 5;
@@ -707,8 +738,16 @@ export function ProfileForm({
 
   return (
     <div className="w-full max-w-lg mx-auto flex flex-col gap-6">
-      {/* 진행 표시 */}
-      <div className="flex flex-col items-center gap-2 pt-2">
+      {/* 진행 표시 + 좌상단 이전 단계 */}
+      <div className="relative flex flex-col items-center gap-2 pt-2">
+        <button
+          type="button"
+          onClick={() => window.history.back()}
+          aria-label="이전 단계"
+          className="absolute left-0 top-1 inline-flex items-center gap-0.5 rounded-full px-2 py-1 text-[13px] font-semibold text-[#6b6157] transition-colors hover:text-coral-700 focus:outline-none focus:ring-2 focus:ring-coral-500"
+        >
+          <span aria-hidden="true">←</span> 이전
+        </button>
         <StepDots current={visualStep} total={visualTotal} />
         <p className="text-[13px] text-[#9a8f82]">
           {visualStep + 1}단계 / {visualTotal}
@@ -951,7 +990,7 @@ export function ProfileForm({
           </p>
 
           <div className="flex gap-3">
-            <Button variant="secondary" onClick={goPrev}>
+            <Button variant="secondary" onClick={() => window.history.back()}>
               이전
             </Button>
             <Button fullWidth disabled={!step2CanProceed()} onClick={goNext}>
@@ -1129,7 +1168,7 @@ export function ProfileForm({
           </div>
 
           <div className="flex gap-3">
-            <Button variant="secondary" onClick={goPrev}>
+            <Button variant="secondary" onClick={() => window.history.back()}>
               이전
             </Button>
             <Button fullWidth onClick={goNext}>
@@ -1172,7 +1211,7 @@ export function ProfileForm({
               </span>
             </span>
             <span className="ml-3 flex shrink-0 items-center gap-1 text-[13px] font-bold text-coral-600">
-              {detailedBudget ? "접기" : "펼치기"}
+              {detailedBudget ? "간단히 · 예산만" : "대출 계산하기"}
               <svg
                 className={`h-4 w-4 transition-transform duration-200 ${detailedBudget ? "rotate-180" : ""}`}
                 fill="none"
@@ -1469,7 +1508,7 @@ export function ProfileForm({
           )}
 
           <div className="flex gap-3">
-            <Button variant="secondary" onClick={goPrev}>
+            <Button variant="secondary" onClick={() => window.history.back()}>
               이전
             </Button>
             <Button fullWidth onClick={goNext}>
@@ -1564,7 +1603,7 @@ export function ProfileForm({
           )}
 
           <div className="flex gap-3">
-            <Button variant="secondary" onClick={goPrev} disabled={submitting}>
+            <Button variant="secondary" onClick={() => window.history.back()} disabled={submitting}>
               이전
             </Button>
             <Button
