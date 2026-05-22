@@ -1,5 +1,13 @@
-import { Homi } from "./Homi";
 import { Button } from "@/components/ui/Button";
+import dataMeta from "@/data/dataMeta.json";
+
+// 최근 실거래 반영일 — "2026-05-20" → "2026.5.20". 매일 크론이 dataMeta.json 을 갱신.
+const FRESH_DATE: string | null = (() => {
+  const d = dataMeta.latestDealDate;
+  if (!d) return null;
+  const [y, m, day] = d.split("-");
+  return `${y}.${Number(m)}.${Number(day)}`;
+})();
 
 // 첫 화면(랜딩) — 가치 제안 헤드라인 + 작은 비버 + "예시 결과" 미니카드 + 단일 CTA.
 // 폼(가구유형 등)은 CTA 를 누른 뒤에 노출된다(폼 벽 제거).
@@ -25,9 +33,17 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
         }}
       />
 
-      {/* 마스코트 비지 — 통장 들고 고민(헤드라인 "내 월급으로?"와 호응) + 등장 모션 */}
+      {/* 비집고 로고 비지 — 아파트 사이를 비집고 들어가는 비버 + 등장 모션 */}
       <div className="biji-pop-in flex justify-center">
-        <Homi mood="think" size={120} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/biji/biji-hero.png?v=1"
+          alt="비집고 비지 — 아파트 사이를 비집고"
+          width={132}
+          height={132}
+          className="h-32 w-32 rounded-3xl drop-shadow-md"
+          draggable={false}
+        />
       </div>
 
       {/* 메인 캐치프레이즈 — 슬로건 */}
@@ -87,8 +103,13 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
           내 집 찾기 시작 →
         </Button>
         <p className="mt-3 text-[12px]" style={{ color: "#9a8f82" }}>
-          국토교통부 공개 실거래가 기반 · 회원가입 없이 무료
+          국토교통부 공개 실거래가 기반 · 매일 자동 갱신 · 무료
         </p>
+        {FRESH_DATE && (
+          <p className="mt-1 text-[11px]" style={{ color: "#9a8f82" }}>
+            📅 최근 실거래 {FRESH_DATE}까지 반영
+          </p>
+        )}
       </div>
     </section>
   );

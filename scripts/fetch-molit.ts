@@ -28,14 +28,25 @@ if (!process.env.MOLIT_API_KEY) {
 const DEFAULT_GU = ["강남구", "서초구", "송파구"];
 const DEFAULT_MONTHS = 3;
 
-function parseArgs(): { months: number; guList: string[] } {
+function parseArgs(): {
+  months: number;
+  guList: string[];
+  refreshRecent: number | null;
+} {
   let months = DEFAULT_MONTHS;
   let guList: string[] = DEFAULT_GU;
+  let refreshRecent: number | null = null;
 
   for (const arg of process.argv.slice(2)) {
     const monthsMatch = arg.match(/^--months=(\d+)$/);
     if (monthsMatch) {
       months = parseInt(monthsMatch[1], 10);
+      continue;
+    }
+    // 증분(멱등) 모드 — 최근 N개월만 시군구별로 원자적 교체. 매일 크론용.
+    const rrMatch = arg.match(/^--refresh-recent=(\d+)$/);
+    if (rrMatch) {
+      refreshRecent = Math.max(1, parseInt(rrMatch[1], 10));
       continue;
     }
     const guMatch = arg.match(/^--gu=(.+)$/);
@@ -50,7 +61,7 @@ function parseArgs(): { months: number; guList: string[] } {
     console.warn(`알 수 없는 인수 무시됨: ${arg}`);
   }
 
-  return { months, guList };
+  return { months, guList, refreshRecent };
 }
 
 function monthsAgoYYYYMM(n: number): string {
@@ -149,13 +160,107 @@ async function ingestGu(
   return { complexes: complexMap.size, transactions: txData.length };
 }
 
+/**
+ * 증분(멱등) 적재 — 한 시군구의 최근 창(fromDate 이후) MOLIT 매매를 원자적으로 교체한다.
+ * 단지는 find-or-create(중복 생성 방지), 거래는 "그 시군구·fromDate 이후 삭제 → 재삽입"을
+ * 한 트랜잭션으로 처리해 빈 구간 없이 멱등하게 만든다.
+ * (TZ 주의: 워크플로에서 TZ=Asia/Seoul 로 실행해야 기존 KST 적재분과 dealDate 가 일치한다.)
+ */
+async function ingestGuIncremental(
+  gu: string,
+  deals: MolitDeal[],
+  fromDate: Date,
+): Promise<{ complexes: number; transactions: number }> {
+  // 1. 단지 find-or-create (unique [sigungu,dongName,name] → skipDuplicates).
+  const complexMap = new Map<
+    string,
+    { dongName: string; name: string; buildYear: number | null }
+  >();
+  for (const d of deals) {
+    const key = `${d.dongName}|${d.apartmentName}`;
+    const existing = complexMap.get(key);
+    if (!existing) {
+      complexMap.set(key, {
+        dongName: d.dongName,
+        name: d.apartmentName,
+        buildYear: d.buildYear,
+      });
+    } else if (existing.buildYear === null && d.buildYear !== null) {
+      existing.buildYear = d.buildYear;
+    }
+  }
+  if (complexMap.size > 0) {
+    await prisma.complex.createMany({
+      data: [...complexMap.values()].map((c) => ({
+        sigungu: gu,
+        dongName: c.dongName,
+        name: c.name,
+        buildYear: c.buildYear,
+      })),
+      skipDuplicates: true,
+    });
+  }
+
+  const rows = await prisma.complex.findMany({
+    where: { sigungu: gu },
+    select: { id: true, dongName: true, name: true },
+  });
+  const idMap = new Map<string, string>();
+  for (const r of rows) idMap.set(`${r.dongName}|${r.name}`, r.id);
+
+  const txData = deals
+    .map((d) => {
+      const complexId = idMap.get(`${d.dongName}|${d.apartmentName}`);
+      if (!complexId) return null;
+      return {
+        complexId,
+        dealDate: d.dealDate,
+        priceKrw: d.priceKrw,
+        area: d.area,
+        floor: d.floor ?? null,
+        source: "MOLIT",
+      };
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null);
+
+  // 2. 원자적 교체: 이 시군구의 fromDate 이후 매매 삭제 → 재삽입.
+  const CHUNK = 1000;
+  const ops = [
+    prisma.transaction.deleteMany({
+      where: {
+        source: "MOLIT",
+        dealDate: { gte: fromDate },
+        complex: { sigungu: gu },
+      },
+    }),
+    ...Array.from({ length: Math.ceil(txData.length / CHUNK) }, (_, k) =>
+      prisma.transaction.createMany({
+        data: txData.slice(k * CHUNK, (k + 1) * CHUNK),
+      }),
+    ),
+  ];
+  await prisma.$transaction(ops);
+
+  return { complexes: complexMap.size, transactions: txData.length };
+}
+
 async function main(): Promise<void> {
-  const { months, guList } = parseArgs();
-  const fromYearMonth = monthsAgoYYYYMM(months);
+  const { months, guList, refreshRecent } = parseArgs();
+  const incremental = refreshRecent !== null;
+  // 증분이면 최근 refreshRecent 개월(당월 포함), 아니면 기존 full 모드.
+  const fromYearMonth = incremental
+    ? monthsAgoYYYYMM(refreshRecent! - 1)
+    : monthsAgoYYYYMM(months);
   const toYearMonth = currentYYYYMM();
+  // 삭제 하한 — fromYearMonth 1일 0시(로컬=KST). 이후 거래만 교체 대상.
+  const fromDate = new Date(
+    Number(fromYearMonth.slice(0, 4)),
+    Number(fromYearMonth.slice(4, 6)) - 1,
+    1,
+  );
 
   console.log(
-    `MOLIT 실거래가 수집: ${fromYearMonth}~${toYearMonth}, 대상 ${guList.length}개 시군구`,
+    `MOLIT 실거래가 수집[${incremental ? "증분" : "전체"}]: ${fromYearMonth}~${toYearMonth}, 대상 ${guList.length}개 시군구`,
   );
 
   let totalComplexes = 0;
@@ -183,7 +288,9 @@ async function main(): Promise<void> {
       continue;
     }
 
-    const { complexes, transactions } = await ingestGu(gu, deals);
+    const { complexes, transactions } = incremental
+      ? await ingestGuIncremental(gu, deals, fromDate)
+      : await ingestGu(gu, deals);
     totalComplexes += complexes;
     totalTransactions += transactions;
     console.log(
