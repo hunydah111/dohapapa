@@ -31,7 +31,7 @@ export type HomiMood =
 const BIJI_ASPECT = 0.9; // 레이아웃 시프트 방지용 힌트(실제 렌더는 width:auto)
 
 // ?v= 캐시버스트 — 새 표정 이미지 반영.
-const V = "?v=9";
+const V = "?v=10";
 const SRC: Record<HomiMood, string> = {
   smile: `/biji/biji-smile.png${V}`,
   flustered: `/biji/biji-flustered.png${V}`,

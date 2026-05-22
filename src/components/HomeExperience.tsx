@@ -22,6 +22,7 @@ import { TextField } from "@/components/ui/TextField";
 import { Card } from "@/components/ui/Card";
 import { formatKrwHuman } from "@/lib/format";
 import { SHARE_PARAM, encodeProfile, decodeProfile } from "@/lib/shareLink";
+import { MiniMap, KAKAO_JS_ENABLED } from "./MiniMap";
 
 type ResultState = {
   result: RecommendationResult;
@@ -783,6 +784,31 @@ export function HomeExperience() {
             </Button>
           </div>
         </Card>
+      )}
+
+      {/* 결과 위치 미니맵 — 조건에 맞는 단지 N곳 + 직장 위치 (카카오 JS 키 있을 때만) */}
+      {KAKAO_JS_ENABLED && result.candidates.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <div>
+            <h2 className="text-lg font-bold" style={{ color: "#3a322c" }}>
+              위치 한눈에 보기
+            </h2>
+            <p className="mt-0.5 text-sm" style={{ color: "#6b6157" }}>
+              조건에 맞는 단지 {result.candidates.length}곳과 직장 위치예요
+            </p>
+          </div>
+          <MiniMap
+            pins={result.candidates.map((c, i) => ({
+              lat: c.latitude,
+              lng: c.longitude,
+              label: c.complexName,
+              rank: i + 1,
+            }))}
+            workplaces={[state.profile.workplaceA, state.profile.workplaceB]
+              .filter((w): w is NonNullable<typeof w> => !!w)
+              .map((w) => ({ lat: w.lat, lng: w.lng, label: w.label }))}
+          />
+        </section>
       )}
 
       {/* P1 "그 밖의 후보" — 시각 위계 강화 */}

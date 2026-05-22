@@ -450,10 +450,12 @@ export async function recommendComplexes(
   const budgetFlex: BudgetFlex = profile.budgetFlex ?? "relaxed";
   // 재랭킹(2-pass) 시엔 클라가 실측을 모은 풀로 한정 — 그 안에서만 점수·티어 재계산.
   const restrictIds = opts.restrictToComplexIds;
+  // 좌표 sanity — 수도권 경위도 박스 안만. 오지오코딩된 단지(예: 마포구인데 충청 좌표)를
+  // 전역 제외해 미니맵·안전망에 엉뚱한 핀이 뜨는 걸 막는다. (gte/lte 는 null 도 자동 제외)
   const allComplexes = await db.complex.findMany({
     where: {
-      latitude: { not: null },
-      longitude: { not: null },
+      latitude: { gte: 36.8, lte: 38.5 },
+      longitude: { gte: 126.2, lte: 127.95 },
       ...(restrictIds && restrictIds.length > 0
         ? { id: { in: restrictIds } }
         : requiredRegions.length > 0

@@ -6,12 +6,15 @@ export interface HomeType {
   emoji: string;
   name: string;
   tagline: string;
+  /** 유형 캐릭터 비지 이미지 경로(public). */
+  image: string;
 }
 
 const BALANCED: HomeType = {
   emoji: "⚖️",
   name: "균형 추구형",
   tagline: "어느 하나도 포기 못 하는 밸런스파",
+  image: "/biji/biji-type-balanced.png",
 };
 
 const TYPE_BY_KEY: Record<"commute" | "school" | "buildingAge", HomeType> = {
@@ -19,16 +22,19 @@ const TYPE_BY_KEY: Record<"commute" | "school" | "buildingAge", HomeType> = {
     emoji: "🚗",
     name: "통근 사수형",
     tagline: "출퇴근 시간을 1순위로 두는 현실파",
+    image: "/biji/biji-type-commute.png",
   },
   school: {
     emoji: "🏫",
     name: "학군 올인형",
     tagline: "아이 교육 환경이 무엇보다 우선",
+    image: "/biji/biji-type-school.png",
   },
   buildingAge: {
     emoji: "✨",
     name: "신축 선호형",
     tagline: "새 아파트의 쾌적함을 중시하는 타입",
+    image: "/biji/biji-type-newbuild.png",
   },
 };
 

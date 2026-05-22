@@ -5,13 +5,31 @@ import { formatKrwHuman } from "@/lib/format";
 
 function Badge({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-sm font-semibold text-white">
+    <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-sm font-semibold text-white backdrop-blur-sm">
       {children}
     </span>
   );
 }
 
-// 결과 공개 히어로 카드 — "집 찾기 유형" + 1순위 단지를 MBTI 결과 카드 톤으로.
+// 발견의 의외성 카피 — "이 조건에 이 동네가?" (회의: 재미=발견). 컴플라이언스: 투자권유 아님, 가벼운 톤.
+function discoveryLine(c: ComplexCandidate): string {
+  const popular = [
+    "강남구",
+    "서초구",
+    "송파구",
+    "용산구",
+    "성동구",
+    "마포구",
+    "성남시 분당구",
+    "과천시",
+  ];
+  const commute = c.commuteLegs.reduce((s, l) => s + l.minutes, 0);
+  if (popular.includes(c.sigungu)) return `🤯 ${c.sigungu}가 내 조건에 잡혔어요!`;
+  if (commute > 0 && commute <= 35) return `🚀 통근 ${commute}분, 생각보다 가깝죠?`;
+  return `🔍 ${c.sigungu} ${c.dongName}, 이런 단지 있는 거 아셨어요?`;
+}
+
+// 결과 공개 히어로 카드 — "집 찾기 유형"(유형 비지 캐릭터) + 1순위 단지를 MBTI 결과 카드 톤으로.
 export function HeroResultCard({
   candidate,
   homeType,
@@ -27,9 +45,7 @@ export function HeroResultCard({
   );
   const hasCar = candidate.commuteLegs.some((l) => l.mode === "car");
   const hasTransit = candidate.commuteLegs.some((l) => l.mode === "transit");
-  const commuteIcon =
-    hasCar && hasTransit ? "🚗🚌" : hasTransit ? "🚌" : "🚗";
-  // 대중교통 실측(ODsay) 대기 중이면 합계가 mock→실측으로 점프하므로 숫자 대신 "계산 중".
+  const commuteIcon = hasCar && hasTransit ? "🚗🚌" : hasTransit ? "🚌" : "🚗";
   const transitPending = candidate.commuteLegs.some(
     (l) => l.mode === "transit" && l.realTransit === undefined,
   );
@@ -43,26 +59,55 @@ export function HeroResultCard({
       className="relative overflow-hidden rounded-3xl px-6 py-8 text-white"
       style={{ background: "linear-gradient(135deg, #ff7a59 0%, #7c3aed 100%)" }}
     >
-      {/* 유형 공개 */}
-      <p className="text-xs font-semibold uppercase tracking-wider text-white/70">
+      {/* 장식 글로우 */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full"
+        style={{ background: "radial-gradient(circle, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 70%)" }}
+      />
+
+      {/* ── 유형 공개 (MBTI 카드 톤) ── */}
+      <p className="text-center text-xs font-semibold uppercase tracking-wider text-white/75">
         당신의 집 찾기 유형
       </p>
-      <div className="mt-1.5 flex items-center gap-2.5 text-4xl font-extrabold tracking-tight">
+
+      {/* 유형 비지 캐릭터 — 흰 원 배경 위에 pop-in */}
+      <div className="biji-pop-in mt-3 flex justify-center">
+        <div className="flex h-32 w-32 items-center justify-center rounded-full bg-white/18 shadow-inner ring-1 ring-white/25">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`${homeType.image}?v=1`}
+            alt={`${homeType.name} 비지`}
+            width={112}
+            height={112}
+            className="h-28 w-auto drop-shadow-md"
+            draggable={false}
+          />
+        </div>
+      </div>
+
+      <div className="mt-3 flex items-center justify-center gap-2 text-center text-[2rem] font-extrabold leading-tight tracking-tight sm:text-4xl">
         <span aria-hidden="true">{homeType.emoji}</span>
         <span>{homeType.name}</span>
       </div>
-      <p className="mt-2 text-[15px] leading-relaxed text-white/90">
+      <p className="mx-auto mt-2 max-w-xs text-center text-[15px] leading-relaxed text-white/90">
         {homeType.tagline}
       </p>
 
       {/* 구분선 */}
       <div className="my-6 h-px w-full bg-white/20" />
 
-      {/* 1순위 매칭 단지 */}
-      <p className="text-xs font-semibold uppercase tracking-wider text-white/70">
+      {/* ── 1순위 매칭 단지 ── */}
+      <p className="text-xs font-semibold uppercase tracking-wider text-white/75">
         이 유형에 맞는 1순위 내 집
       </p>
-      <div className="mt-1 flex flex-wrap items-center gap-2.5">
+
+      {/* 의외성 카피 — 발견의 재미 */}
+      <p className="mt-1.5 text-[17px] font-extrabold leading-snug text-amber-100">
+        {discoveryLine(candidate)}
+      </p>
+
+      <div className="mt-2 flex flex-wrap items-center gap-2.5">
         <h2 className="text-3xl font-extrabold leading-tight tracking-tight">
           {candidate.complexName}
         </h2>
@@ -110,9 +155,9 @@ export function HeroResultCard({
       <button
         type="button"
         onClick={onShare}
-        className="mt-7 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-coral-700 transition-transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-white/70"
+        className="mt-7 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-coral-700 shadow-lg transition-transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-white/70"
       >
-        결과 공유하기
+        내 유형 카드 공유하기
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"
