@@ -131,6 +131,11 @@ function calcCutoffKm(wp: Workplace): number {
 const REGION_LOWER_FACTOR = 0.75;
 // 예산을 조금 넘는(상한 초과) 후보를 별도 섹션에 노출할 때의 상한 — 예산의 1.4배까지.
 const OVER_BUDGET_FACTOR = 1.4;
+// 하한 절대 캡 — 초고예산이면 비율 하한(예 0.75×80억=60억)이 시장 상단마저 넘어서
+// 매물이 전부 "예산 대비 너무 쌈"으로 잘려 메인 0건이 된다(초고예산 빈 화면). 수도권 실거래
+// 상위 ~3%(약 20억) 이상은 하한으로 막지 않아, 고예산도 시장 최상단 매물을 메인에서 본다.
+// 일반 예산(비율 하한 < 20억, 대략 21~27억 미만)엔 영향 없음.
+const LOWER_BOUND_CAP = 2_000_000_000; // 20억
 function bandBounds(
   netPurchasePowerKrw: number,
   dropLowerBound: boolean,
@@ -152,6 +157,8 @@ function bandBounds(
   }
   // 지역 선택 시 하한 완화 — 단, 0이 아니라 예산의 0.75배까지만(예산 동떨어진 추천 방지).
   if (dropLowerBound) lower = Math.min(lower, netPurchasePowerKrw * REGION_LOWER_FACTOR);
+  // 초고예산 빈 화면 방지 — 하한이 시장 상단을 넘지 않도록 절대 캡.
+  lower = Math.min(lower, LOWER_BOUND_CAP);
   return { lower, upper };
 }
 
