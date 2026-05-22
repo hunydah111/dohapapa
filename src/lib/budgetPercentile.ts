@@ -54,20 +54,14 @@ export interface BudgetTier {
 
 export function budgetTier(topPercent: number): BudgetTier {
   if (topPercent <= 1)
-    return { emoji: "🤵", label: "집사 둔 비버", drip: "집이 몇 채인지 집사한테 물어봄", isFlex: true };
-  if (topPercent <= 3)
-    return { emoji: "🧠", label: "똘똘한 비버", drip: "여러 채 다 팔고 똘똘한 한 채로 갈아탐", isFlex: true };
-  if (topPercent <= 5)
-    return { emoji: "🏭", label: "반도체 산 비버", drip: "집 살 돈으로 반도체를 삼", isFlex: true };
+    return { emoji: "🔥", label: "피버", drip: "비버계 끝판왕 — 지금이 부동산 피버타임", isFlex: true };
   if (topPercent <= 10)
-    return { emoji: "🏠", label: "콘크리트 집 비버", drip: "늑대가 보더니 한숨 쉬고 돌아감", isFlex: true };
-  if (topPercent <= 20)
-    return { emoji: "🧱", label: "벽돌집 비버", drip: "늑대가 후—후— 불어도 끄떡없음", isFlex: true };
-  if (topPercent <= 35)
-    return { emoji: "🪵", label: "나무집 비버", drip: "아기돼지였음 둘째 집, 비지라 더 야무지게", isFlex: true };
+    return { emoji: "🏆", label: "탑비버", drip: "비버 중의 TOP, 어디든 골라 지음", isFlex: true };
+  if (topPercent <= 30)
+    return { emoji: "😎", label: "난비버", drip: "난다긴다하는 비버, 상급지도 넘봄", isFlex: true };
   if (topPercent <= 50)
-    return { emoji: "🚧", label: "터 닦는 비버", drip: "터부터 반반하게 다지는 중, 집은 곧 올림", isFlex: true };
+    return { emoji: "🦫", label: "비버", drip: "단단한 국민 비버, 알짜만 콕", isFlex: true };
   if (topPercent <= 70)
-    return { emoji: "🌱", label: "청년 비버", drip: "사회 초년 비버, 종잣돈부터 차곡차곡", isFlex: false };
-  return { emoji: "🐣", label: "아기 비버", drip: "이제 막 강에 도착! 비지가 헤엄부터 가르쳐줌", isFlex: false };
+    return { emoji: "🐣", label: "애기비버", drip: "이제 막 댐 배우는 중 — 비지가 옆에서 응원", isFlex: false };
+  return { emoji: "🎤", label: "저스틴비버", drip: "세상에서 제일 유명한 비버 ㅋㅋ 시작은 미약해도", isFlex: false };
 }
