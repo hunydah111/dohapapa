@@ -6,7 +6,7 @@ function makeProfile(overrides: Partial<CoupleProfile> = {}): CoupleProfile {
   return {
     householdType: "dualIncome",
     priorities: { commute: 3, school: 3, buildingAge: 3, largeComplex: 2 },
-    preferredAreaRange: "p32_35",
+    preferredAreaRanges: ["p32_35"],
     workplaceA: {
       label: "회사A",
       lat: 37.5,

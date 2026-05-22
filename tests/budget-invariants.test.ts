@@ -37,7 +37,7 @@ const priorities = fc.record({
 const profileArb = fc.record({
   householdType: household,
   priorities,
-  preferredAreaRange: area,
+  preferredAreaRanges: fc.array(area, { minLength: 1, maxLength: 3 }),
   hasSchoolAgedChild: fc.boolean(),
   hasInfant: fc.boolean(),
   hasTwoOrMoreChildren: fc.boolean(),

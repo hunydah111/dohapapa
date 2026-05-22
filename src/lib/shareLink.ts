@@ -12,7 +12,7 @@
 // 링크와 구분한다. CompressionStream 미지원/실패 시 비압축(레거시 호환) 폴백.
 // 디코드는 두 포맷을 모두 처리하고, 빠진 필수 필드는 기본값으로 병합 복원한다.
 
-import type { CoupleProfile, PriorityKey } from "@/types/profile";
+import type { CoupleProfile, PriorityKey, AreaRangeKey } from "@/types/profile";
 import { DEFAULT_PRIORITIES, DEFAULT_AREA_RANGE } from "@/types/profile";
 
 export const SHARE_PARAM = "p";
@@ -40,7 +40,6 @@ const DEFAULTS = {
   isExpectingChild: false,
   hasOwnedHomeBefore: false,
   isNewlywed: false,
-  preferredAreaRange: DEFAULT_AREA_RANGE,
 } as const;
 
 // ── base64url ↔ bytes ────────────────────────────────────────────────────────
@@ -116,9 +115,19 @@ function buildCompact(profile: CoupleProfile): Record<string, unknown> {
 }
 
 function mergeDefaults(parsed: Partial<CoupleProfile>): CoupleProfile {
+  // 레거시 링크는 단일 preferredAreaRange 를 담았다 → 배열로 승격(경계 호환).
+  const legacyArea = (parsed as { preferredAreaRange?: AreaRangeKey })
+    .preferredAreaRange;
+  const preferredAreaRanges =
+    parsed.preferredAreaRanges && parsed.preferredAreaRanges.length > 0
+      ? parsed.preferredAreaRanges
+      : legacyArea
+        ? [legacyArea]
+        : [DEFAULT_AREA_RANGE];
   return {
     ...DEFAULTS,
     ...parsed,
+    preferredAreaRanges,
     priorities: { ...DEFAULT_PRIORITIES, ...(parsed.priorities ?? {}) },
   } as CoupleProfile;
 }

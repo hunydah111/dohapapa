@@ -1,4 +1,4 @@
-import type { CommuteLeg } from "@/types/recommendation";
+import type { CommuteLeg, CommuteMode } from "@/types/recommendation";
 import { Homi } from "./Homi";
 
 interface ComplexInfo {
@@ -10,19 +10,21 @@ interface ComplexInfo {
 /**
  * 카카오맵 길찾기 deep-link (출발지·도착지 좌표 지정).
  *
- * 공식 /link 스킴: `/link/from/{이름},{위도},{경도}/to/{이름},{위도},{경도}`.
- * 출발지·도착지를 좌표째 넘겨 재입력 없이 바로 경로가 뜬다.
- * (이전 비공식 sX/sY 쿼리는 WGS84 좌표를 카카오가 다른 좌표계로 해석해
- *  출발지가 엉뚱한 곳에 찍히고 "출발지 근처에 길이 없어요"가 떴다.)
- * 좌표 순서 주의: /link 스킴은 위도(lat),경도(lng) 순. 이름의 쉼표는 인코딩.
+ * 공식 스킴은 모바일웹 route 스킴 하나뿐:
+ *   `m.map.kakao.com/scheme/route?sp={위도},{경도}&ep={위도},{경도}&by={수단}`
+ * (이름은 안 받고 좌표만. by 는 car/publictransit/foot/bicycle.)
+ * 이전 `/link/from/.../to/...` 는 실존하지 않는 스킴이라 카카오가 무시하고
+ * 기본 지도만 떠서 출발지·도착지가 안 찍혔다. `map.kakao.com/?sX=...` 비공식
+ * 쿼리도 좌표계 오해석으로 출발지가 엉뚱하게 찍혀 폐기.
+ * 좌표 순서 주의: 위도(lat),경도(lng) 순.
  */
 function kakaoDirectionsUrl(
-  origin: { name: string; lat: number; lng: number },
-  dest: { name: string; lat: number; lng: number },
+  origin: { lat: number; lng: number },
+  dest: { lat: number; lng: number },
+  mode: CommuteMode,
 ): string {
-  const seg = (p: { name: string; lat: number; lng: number }) =>
-    `${encodeURIComponent(p.name)},${p.lat},${p.lng}`;
-  return `https://map.kakao.com/link/from/${seg(origin)}/to/${seg(dest)}`;
+  const by = mode === "transit" ? "publictransit" : "car";
+  return `https://m.map.kakao.com/scheme/route?sp=${origin.lat},${origin.lng}&ep=${dest.lat},${dest.lng}&by=${by}`;
 }
 
 export function CommuteDiagram({
@@ -86,12 +88,9 @@ export function CommuteDiagram({
 
           const directionsUrl = complex
             ? kakaoDirectionsUrl(
-                {
-                  name: workplaceName,
-                  lat: leg.workplaceLat,
-                  lng: leg.workplaceLng,
-                },
-                { name: complex.name, lat: complex.lat, lng: complex.lng },
+                { lat: leg.workplaceLat, lng: leg.workplaceLng },
+                { lat: complex.lat, lng: complex.lng },
+                leg.mode,
               )
             : null;
 
@@ -116,7 +115,7 @@ export function CommuteDiagram({
                   </span>
                 </div>
 
-                {/* 연결선 + 거리 */}
+                {/* 연결선 + 거리 — 자차 실측이면 운전거리, 아니면 직선거리 */}
                 <div className="flex flex-1 flex-col items-center gap-1">
                   <span
                     className={`h-0.5 w-full rounded-full ${lineColor}`}
@@ -125,7 +124,9 @@ export function CommuteDiagram({
                     className="text-[10px]"
                     style={{ color: "#9a8f82" }}
                   >
-                    직선 {leg.distanceKm.toFixed(1)}km
+                    {leg.roadDistanceKm != null
+                      ? `운전 ${leg.roadDistanceKm.toFixed(1)}km`
+                      : `직선 ${leg.distanceKm.toFixed(1)}km`}
                   </span>
                 </div>
 

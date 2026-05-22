@@ -21,7 +21,7 @@ function base(): CoupleProfile {
   return {
     householdType: "dualIncome",
     priorities: { commute: 3, school: 3, buildingAge: 3, largeComplex: 2 },
-    preferredAreaRange: "p32_35",
+    preferredAreaRanges: ["p32_35"],
     hasSchoolAgedChild: false, hasInfant: false, hasTwoOrMoreChildren: false,
     hasThreeOrMoreChildren: false, isExpectingChild: false,
     householdIncomeKrwYear: 0, seedMoneyKrw: 0, netAssetsKrw: 0,
@@ -43,7 +43,7 @@ function personas(): { name: string; p: CoupleProfile }[] {
     const area = areas[i % areas.length];
     const av = duoBudgets[i % duoBudgets.length];
     add(`duo/지하철30/${reg?.join("+") ?? "전국"}/${area}/${av / 1e8}억(simple)`, {
-      ...base(), householdType: "dualIncome", preferredAreaRange: area, requiredRegions: reg,
+      ...base(), householdType: "dualIncome", preferredAreaRanges: [area], requiredRegions: reg,
       budgetMode: "simple", availableBudgetKrw: av, budgetFlex: i % 2 ? "tight" : "normal",
       workplaceA: wp("강남역", "transit", 30), workplaceB: wp("성수역", "transit", 30),
       hasSchoolAgedChild: i % 2 === 0,
@@ -55,7 +55,7 @@ function personas(): { name: string; p: CoupleProfile }[] {
   const seeds = [3e7, 1e8, 3e8, 6e8];
   for (let j = 0; j < 8; j++) {
     add(`duo/자차50/detailed/소득${incomes[j % 4] / 1e4}만/현금${seeds[j % 4] / 1e4}만`, {
-      ...base(), householdType: "dualIncome", preferredAreaRange: areas[j % areas.length],
+      ...base(), householdType: "dualIncome", preferredAreaRanges: [areas[j % areas.length]],
       requiredRegions: j % 3 === 0 ? ["송파구"] : undefined, budgetFlex: "relaxed",
       householdIncomeKrwYear: incomes[j % 4], seedMoneyKrw: seeds[j % 4], netAssetsKrw: seeds[j % 4] * 2,
       existingLoanMonthlyKrw: j % 2 ? 500000 : 0, ownedHomeCount: j % 4 === 3 ? 1 : 0,
@@ -66,7 +66,7 @@ function personas(): { name: string; p: CoupleProfile }[] {
   // 3) 1인 가구 (single) — 직장 1, 자차/지하철 혼합
   for (let j = 0; j < 8; j++) {
     add(`single/${j % 2 ? "지하철" : "자차"}${20 + (j % 4) * 15}분/${areas[j % areas.length]}`, {
-      ...base(), householdType: "single", preferredAreaRange: areas[j % areas.length],
+      ...base(), householdType: "single", preferredAreaRanges: [areas[j % areas.length]],
       budgetMode: j % 2 ? "simple" : "detailed",
       availableBudgetKrw: j % 2 ? [4e8, 6e8, 9e8, 15e8][j % 4] : undefined,
       householdIncomeKrwYear: j % 2 ? 0 : 6e7, seedMoneyKrw: j % 2 ? 0 : 1.5e8, netAssetsKrw: j % 2 ? 0 : 3e8,
@@ -77,7 +77,7 @@ function personas(): { name: string; p: CoupleProfile }[] {
   // 4) 외벌이 (singleIncome) — 직장 1
   for (let j = 0; j < 6; j++) {
     add(`singleIncome/자차${30 + j * 10}/${areas[j % areas.length]}`, {
-      ...base(), householdType: "singleIncome", preferredAreaRange: areas[j % areas.length],
+      ...base(), householdType: "singleIncome", preferredAreaRanges: [areas[j % areas.length]],
       householdIncomeKrwYear: [6e7, 9e7, 1.3e8][j % 3], seedMoneyKrw: [5e7, 2e8, 5e8][j % 3], netAssetsKrw: [1e8, 4e8, 8e8][j % 3],
       isNewlywed: j % 2 === 0, hasSchoolAgedChild: j % 2 === 1,
       workplaceA: wp("강남역", "car", 30 + j * 10),
@@ -87,7 +87,7 @@ function personas(): { name: string; p: CoupleProfile }[] {
   for (let j = 0; j < 6; j++) {
     add(`retired/${["강남구", "송파구", "분당구나우", "가평군", "은평구", "노원구"][j]}/${areas[j % areas.length]}`, {
       ...base(), householdType: "retired", priorities: { commute: 0, school: 2, buildingAge: 3, largeComplex: 3 },
-      preferredAreaRange: areas[j % areas.length],
+      preferredAreaRanges: [areas[j % areas.length]],
       requiredRegions: [["강남구"], ["송파구"], ["성남시 분당구"], ["가평군"], ["은평구"], ["노원구"]][j],
       budgetMode: "simple", availableBudgetKrw: [30e8, 15e8, 9e8, 6e8, 8e8, 5e8][j],
     });
@@ -104,7 +104,7 @@ function personas(): { name: string; p: CoupleProfile }[] {
 // 클라이언트(수정본) 완화 적용 로직 — broken-promise 검증용
 function applyRelax(p: CoupleProfile, a: RelaxationAction): CoupleProfile {
   if (a.kind === "budget") return p.budgetMode === "simple" ? { ...p, availableBudgetKrw: (p.availableBudgetKrw ?? 0) + a.addKrw } : { ...p, seedMoneyKrw: p.seedMoneyKrw + a.addKrw };
-  if (a.kind === "area") return { ...p, preferredAreaRange: a.areaRange };
+  if (a.kind === "area") return p.preferredAreaRanges.includes(a.areaRange) ? p : { ...p, preferredAreaRanges: [...p.preferredAreaRanges, a.areaRange] };
   if (a.kind === "commute" && a.workplace === "A" && p.workplaceA) return { ...p, workplaceA: { ...p.workplaceA, maxCommuteMinutes: p.workplaceA.maxCommuteMinutes + a.addMinutes } };
   if (a.kind === "commute" && a.workplace === "B" && p.workplaceB) return { ...p, workplaceB: { ...p.workplaceB, maxCommuteMinutes: p.workplaceB.maxCommuteMinutes + a.addMinutes } };
   return p;

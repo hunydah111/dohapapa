@@ -5,7 +5,7 @@ import type { LatLng } from "@/types/profile";
 describe("mockProvider.travelMinutes", () => {
   it("identical origin and dest → returns minimum (5) — only car overhead", async () => {
     const point: LatLng = { lat: 37.5665, lng: 126.978 };
-    const carMinutes = await mockProvider.travelMinutes(point, point, "car");
+    const { minutes: carMinutes } = await mockProvider.travelMinutes(point, point, "car");
     // distance = 0 → car: round(0) + 5 = 5 → max(5, 5) = 5
     expect(carMinutes).toBe(5);
   });
@@ -14,10 +14,17 @@ describe("mockProvider.travelMinutes", () => {
     const gangnam: LatLng = { lat: 37.4979, lng: 127.0276 };
     const yeouido: LatLng = { lat: 37.5219, lng: 126.9245 };
 
-    const carMinutes = await mockProvider.travelMinutes(gangnam, yeouido, "car");
+    const { minutes: carMinutes } = await mockProvider.travelMinutes(gangnam, yeouido, "car");
 
     expect(carMinutes).toBeGreaterThan(0);
     expect(Number.isInteger(carMinutes)).toBe(true);
+  });
+
+  it("mock has no road distance — UI falls back to straight-line", async () => {
+    const gangnam: LatLng = { lat: 37.4979, lng: 127.0276 };
+    const yeouido: LatLng = { lat: 37.5219, lng: 126.9245 };
+    const result = await mockProvider.travelMinutes(gangnam, yeouido, "car");
+    expect(result.roadDistanceKm).toBeUndefined();
   });
 
   it("result is always an integer >= 5 for various inputs", async () => {
@@ -28,7 +35,7 @@ describe("mockProvider.travelMinutes", () => {
     ];
 
     for (const [origin, dest] of cases) {
-      const minutes = await mockProvider.travelMinutes(origin, dest, "car");
+      const { minutes } = await mockProvider.travelMinutes(origin, dest, "car");
       expect(Number.isInteger(minutes)).toBe(true);
       expect(minutes).toBeGreaterThanOrEqual(5);
     }

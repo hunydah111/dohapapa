@@ -49,15 +49,20 @@ const coupleProfileSchema = z
       buildingAge: z.number().min(0).max(5),
       largeComplex: z.number().min(0).max(5).optional(),
     }),
-    preferredAreaRange: z.enum([
-      "under18",
-      "p19_25",
-      "p26_31",
-      "p32_35",
-      "p36_40",
-      "p41_45",
-      "over45",
-    ]),
+    preferredAreaRanges: z
+      .array(
+        z.enum([
+          "under18",
+          "p19_25",
+          "p26_31",
+          "p32_35",
+          "p36_40",
+          "p41_45",
+          "over45",
+        ]),
+      )
+      .min(1)
+      .max(7),
     locationVibes: z
       .object({
         riverside: z.number().int().min(1).max(3).optional(),

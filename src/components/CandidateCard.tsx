@@ -85,6 +85,30 @@ export function CandidateCard({
     `${candidate.complexName} ${candidate.dongName}`,
   )}`;
 
+  // 선택 이유 — 줄줄이 한 문장 대신 "라벨 : 값" 행으로 정돈. 정보 없는 신호는 숨김.
+  // (연식은 price-first 철학상 중립화돼 선정 사유가 아니므로 헤더 'N년식'으로만 노출.)
+  const reasonRows: { label: string; value: string }[] = [
+    { label: "평수", value: `전용 ${candidate.representativeArea}㎡` },
+  ];
+  if (candidate.commuteLegs.length > 0) {
+    reasonRows.push({ label: "통근", value: candidate.reasoning.commute });
+  }
+  if (
+    candidate.reasoning.budgetFit &&
+    candidate.reasoning.budgetFit !== "구매력 정보 없음"
+  ) {
+    reasonRows.push({ label: "예산", value: candidate.reasoning.budgetFit });
+  }
+  if (
+    candidate.reasoning.school &&
+    candidate.reasoning.school !== "초등학교 거리 정보 없음"
+  ) {
+    reasonRows.push({ label: "초등학교", value: candidate.reasoning.school });
+  }
+  if (candidate.reasoning.largeComplex) {
+    reasonRows.push({ label: "단지", value: candidate.reasoning.largeComplex });
+  }
+
   return (
     <Card className="flex flex-col gap-5">
       {/* 상단 행: 티어 배지 + 순위 + 초품아 + 종합점수 */}
@@ -252,14 +276,26 @@ export function CandidateCard({
         }}
       >
         <p
-          className="text-xs font-semibold mb-1.5"
+          className="text-xs font-semibold mb-3"
           style={{ color: "#f2603c" }}
         >
           선택 이유
         </p>
-        <p className="text-sm leading-relaxed" style={{ color: "#3a322c" }}>
-          {candidate.report}
-        </p>
+        <dl className="flex flex-col gap-2.5">
+          {reasonRows.map((r) => (
+            <div key={r.label} className="flex gap-2.5 text-sm leading-relaxed">
+              <dt
+                className="w-16 flex-shrink-0 font-semibold"
+                style={{ color: "#9a8f82" }}
+              >
+                {r.label}
+              </dt>
+              <dd className="flex-1" style={{ color: "#3a322c" }}>
+                {r.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
       </div>
 
       {/* 통근 도식 */}

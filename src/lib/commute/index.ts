@@ -1,11 +1,11 @@
 import type { LatLng } from "@/types/profile";
 import type { CommuteMode } from "@/types/recommendation";
-import type { CommuteProvider } from "./types";
+import type { CommuteProvider, CommuteResult } from "./types";
 import { mockProvider } from "./mockProvider";
 import { kakaoProvider } from "./kakaoProvider";
 import { db } from "@/lib/db";
 
-export type { CommuteProvider };
+export type { CommuteProvider, CommuteResult };
 export { mockProvider };
 
 export function getCommuteProvider(): CommuteProvider {
@@ -22,7 +22,7 @@ export async function getCommuteMinutes(
   complexCoord: LatLng,
   mode: CommuteMode,
   provider: CommuteProvider = getCommuteProvider(),
-): Promise<number> {
+): Promise<CommuteResult> {
   // 대중교통(ODsay)은 URI(웹) 키라 브라우저에서만 호출 가능 — 서버에선 못 부른다.
   // 따라서 서버 랭킹용 대중교통 시간은 mock(직선거리)로 잡고, 실측은 결과 화면에서
   // 클라이언트가 ODsay 로 채운다. mock 값은 캐시하지 않는다(실측이 아니므로).
@@ -44,25 +44,35 @@ export async function getCommuteMinutes(
   });
 
   if (cached !== null) {
-    return cached.minutes;
+    // 운전 거리는 캐시에 같이 저장(distanceMeters) — 없으면(구 캐시 레코드) 생략.
+    return {
+      minutes: cached.minutes,
+      roadDistanceKm:
+        cached.distanceMeters != null
+          ? Math.round((cached.distanceMeters / 1000) * 10) / 10
+          : undefined,
+    };
   }
 
-  let minutes: number;
+  let result: CommuteResult;
   try {
-    minutes = await provider.travelMinutes(origin, complexCoord, mode);
+    result = await provider.travelMinutes(origin, complexCoord, mode);
   } catch {
     // 실 길찾기 실패(쿼터 소진·네트워크·rate limit) — 거리 기반 추정으로 폴백한다.
     // 일시적 실패가 캐시에 영구히 박히지 않도록 폴백값은 캐시하지 않는다.
     return mockProvider.travelMinutes(origin, complexCoord, mode);
   }
 
+  const distanceMeters =
+    result.roadDistanceKm != null ? Math.round(result.roadDistanceKm * 1000) : null;
+
   await db.commuteCache.upsert({
     where: {
       originKey_complexId_mode: { originKey, complexId, mode },
     },
-    update: { minutes },
-    create: { originKey, complexId, mode, minutes },
+    update: { minutes: result.minutes, distanceMeters },
+    create: { originKey, complexId, mode, minutes: result.minutes, distanceMeters },
   });
 
-  return minutes;
+  return result;
 }

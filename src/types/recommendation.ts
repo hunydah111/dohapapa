@@ -80,6 +80,11 @@ export interface CommuteLeg {
   minutes: number;
   /** 직장↔단지 직선거리 (km). 추정 시간의 근거. */
   distanceKm: number;
+  /**
+   * 실제 도로 기준 운전 거리 (km). 카카오 길찾기(자차 실측)가 있을 때만 채워진다.
+   * 있으면 UI 가 "운전 N km", 없으면 distanceKm 로 "직선 N km" 표시.
+   */
+  roadDistanceKm?: number;
   /** 시간 추정에 쓴 교통수단. */
   mode: CommuteMode;
   /** 이 직장의 허용 통근시간(분) — 클라이언트가 실측 반영 후 withinLimit 재계산에 사용. */
@@ -119,7 +124,7 @@ export const CANDIDATE_SIGNAL_LABELS: Record<CandidateSignalKey, string> = {
   budgetFit: "예산 적합도",
   school: "학군·자녀",
   buildingAge: "단지 연식",
-  largeComplex: "단지 활발도",
+  largeComplex: "거래량",
 };
 
 export type CandidateTier = "안정형" | "균형형" | "도전형";

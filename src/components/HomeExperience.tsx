@@ -125,13 +125,25 @@ export function HomeExperience() {
   const [panelOpen, setPanelOpen] = useState(false);
   // 만원 단위 문자열로 관리 (P1 단위 통일)
   const [editSeedMoneyMan, setEditSeedMoneyMan] = useState("");
-  const [editAreaRange, setEditAreaRange] = useState<AreaRangeKey | "">("");
+  const [editAreaRanges, setEditAreaRanges] = useState<AreaRangeKey[]>([]);
   // 분 단위 문자열 — 직장 A·B 따로. (빈 값이면 기존 profile 값 유지 — NaN 버그 방지)
   const [editMaxCommuteA, setEditMaxCommuteA] = useState("");
   const [editMaxCommuteB, setEditMaxCommuteB] = useState("");
   const [editRequiredRegions, setEditRequiredRegions] = useState<string[]>([]);
   const [reanalyzing, setReanalyzing] = useState(false);
   const [reanalyzeError, setReanalyzeError] = useState<string | null>(null);
+  const editPanelRef = useRef<HTMLElement>(null);
+
+  // 조건 수정 패널 열고 스르르 스크롤
+  const openEditPanel = useCallback(() => {
+    setPanelOpen(true);
+    requestAnimationFrame(() => {
+      editPanelRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }, []);
 
   const handleResult = useCallback(
     (result: RecommendationResult, profile: CoupleProfile) => {
@@ -140,7 +152,7 @@ export function HomeExperience() {
       // 조건 수정 패널 기본값을 현재 프로필로 초기화 (만원 단위)
       const seedManwon = Math.round(profile.seedMoneyKrw / 10_000);
       setEditSeedMoneyMan(String(seedManwon));
-      setEditAreaRange(profile.preferredAreaRange);
+      setEditAreaRanges(profile.preferredAreaRanges);
       setEditMaxCommuteA(
         profile.workplaceA ? String(profile.workplaceA.maxCommuteMinutes) : "",
       );
@@ -419,8 +431,10 @@ export function HomeExperience() {
         ? Math.round(parseFloat(editSeedMoneyMan)) * 10_000
         : state.profile.seedMoneyKrw;
 
-    const areaRange: AreaRangeKey =
-      editAreaRange !== "" ? editAreaRange : state.profile.preferredAreaRange;
+    const areaRanges: AreaRangeKey[] =
+      editAreaRanges.length > 0
+        ? editAreaRanges
+        : state.profile.preferredAreaRanges;
 
     // 직장별로 따로 적용. 빈 값/NaN 이면 기존 profile 값 유지.
     const parsedA =
@@ -438,7 +452,7 @@ export function HomeExperience() {
     const merged: CoupleProfile = {
       ...state.profile,
       seedMoneyKrw: seedKrw,
-      preferredAreaRange: areaRange,
+      preferredAreaRanges: areaRanges,
       requiredRegions:
         editRequiredRegions.length > 0 ? editRequiredRegions : undefined,
       ...(state.profile.workplaceA
@@ -502,7 +516,10 @@ export function HomeExperience() {
           ? { ...p, availableBudgetKrw: (p.availableBudgetKrw ?? 0) + action.addKrw }
           : { ...p, seedMoneyKrw: p.seedMoneyKrw + action.addKrw };
     } else if (action.kind === "area") {
-      merged = { ...p, preferredAreaRange: action.areaRange };
+      // 평수 넓히기 — 기존 선택은 유지하고 다음 평수대를 추가(복수선택).
+      merged = p.preferredAreaRanges.includes(action.areaRange)
+        ? p
+        : { ...p, preferredAreaRanges: [...p.preferredAreaRanges, action.areaRange] };
     } else if (action.kind === "commute" && action.workplace === "A" && p.workplaceA) {
       merged = {
         ...p,
@@ -816,26 +833,35 @@ export function HomeExperience() {
                   type="button"
                   onClick={() => handleApplyRelaxation(s.action)}
                   disabled={reanalyzing}
-                  className={`group flex items-center justify-between rounded-2xl border px-5 py-4 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-coral-500 disabled:opacity-50 ${
+                  className={`group flex flex-col gap-2 rounded-2xl border px-5 py-4 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-coral-500 disabled:opacity-50 ${
                     i === 0
                       ? "border-coral-300 bg-coral-50 hover:bg-white"
                       : "border-black/[0.08] bg-[#f3ece4] hover:bg-white hover:border-coral-300"
                   }`}
                 >
+                  <div className="flex items-center justify-between gap-3">
+                    <span
+                      className="text-sm font-medium leading-relaxed"
+                      style={{ color: "#3a322c" }}
+                    >
+                      {s.message}
+                    </span>
+                    <span
+                      className={`flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
+                        i === 0
+                          ? "bg-coral-600 text-white"
+                          : "bg-coral-100 text-coral-700"
+                      }`}
+                    >
+                      {s.resultCount}곳
+                    </span>
+                  </div>
                   <span
-                    className="text-sm font-medium leading-relaxed"
-                    style={{ color: "#3a322c" }}
+                    className="inline-flex items-center gap-1 text-[12px] font-semibold text-coral-600"
                   >
-                    {s.message}
-                  </span>
-                  <span
-                    className={`ml-4 flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
-                      i === 0
-                        ? "bg-coral-600 text-white"
-                        : "bg-coral-100 text-coral-700"
-                    }`}
-                  >
-                    {s.resultCount}곳
+                    {reanalyzing
+                      ? "다시 찾는 중…"
+                      : `👆 눌러서 이 조건으로 단지 ${s.resultCount}곳 보기 →`}
                   </span>
                 </button>
               ))}
@@ -872,7 +898,7 @@ export function HomeExperience() {
             <Button
               variant="secondary"
               size="md"
-              onClick={() => setPanelOpen(true)}
+              onClick={openEditPanel}
               fullWidth
             >
               조건 수정하기
@@ -1162,7 +1188,7 @@ export function HomeExperience() {
         )}
 
       {/* 조건 빠른 수정 패널 (접이식) */}
-      <section>
+      <section ref={editPanelRef} style={{ scrollMarginTop: "1rem" }}>
         <button
           type="button"
           onClick={() => setPanelOpen((v) => !v)}
@@ -1193,7 +1219,7 @@ export function HomeExperience() {
               자주 바꾸는 조건만 수정하고 다시 분석할 수 있습니다.
             </p>
 
-            {/* P1 단위 통일: 만원 단위 */}
+            {/* P1 단위 통일: 만원 단위 — 입력 시 처음 폼처럼 억 환산을 아래에 표시 */}
             <TextField
               label="보유 현금"
               type="number"
@@ -1201,32 +1227,51 @@ export function HomeExperience() {
               onChange={setEditSeedMoneyMan}
               suffix="만원"
               placeholder="예: 30000"
-              hint="보유 현금 기준 (갈아타기 매도액 별도). 만원 단위로 입력."
+              hint={
+                editSeedMoneyMan.trim() && parseFloat(editSeedMoneyMan) > 0
+                  ? `= ${formatKrwHuman(parseFloat(editSeedMoneyMan) * 10_000)} · 갈아타기 매도액 별도`
+                  : "보유 현금 기준 (갈아타기 매도액 별도). 만원 단위로 입력."
+              }
             />
 
-            {/* 선호 평수 선택 */}
+            {/* 선호 평수 선택 — 복수 선택 가능 */}
             <div className="flex flex-col gap-2">
               <p
                 className="text-sm font-semibold"
                 style={{ color: "#3a322c" }}
               >
-                선호 평수대
+                선호 평수대{" "}
+                <span className="font-medium" style={{ color: "#9a8f82" }}>
+                  (여러 개 선택 가능)
+                </span>
               </p>
               <div className="flex flex-wrap gap-2">
-                {AREA_RANGE_ORDER.map((key) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setEditAreaRange(key)}
-                    className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-coral-500 ${
-                      editAreaRange === key
-                        ? "border-coral-500 bg-coral-600 text-white"
-                        : "border-black/[0.10] bg-white text-[#6b6157] hover:border-coral-300"
-                    }`}
-                  >
-                    {AREA_RANGES[key].label}
-                  </button>
-                ))}
+                {AREA_RANGE_ORDER.map((key) => {
+                  const selected = editAreaRanges.includes(key);
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() =>
+                        setEditAreaRanges((prev) =>
+                          prev.includes(key)
+                            ? prev.length > 1
+                              ? prev.filter((k) => k !== key)
+                              : prev
+                            : [...prev, key],
+                        )
+                      }
+                      className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-coral-500 ${
+                        selected
+                          ? "border-coral-500 bg-coral-600 text-white"
+                          : "border-black/[0.10] bg-white text-[#6b6157] hover:border-coral-300"
+                      }`}
+                    >
+                      {AREA_RANGES[key].label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 

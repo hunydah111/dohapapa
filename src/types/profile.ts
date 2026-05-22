@@ -194,8 +194,8 @@ export interface CoupleProfile {
   householdType: HouseholdType;
   /** 3개 조건별 중요도(1~5). 추천 가중치로 정규화되어 쓰인다. */
   priorities: Record<PriorityKey, number>;
-  /** 선호 평수대 — 대표 평형 필터. */
-  preferredAreaRange: AreaRangeKey;
+  /** 선호 평수대(복수) — 대표 평형 필터. 선택한 밴드 중 하나에 속하면 후보. 최소 1개. */
+  preferredAreaRanges: AreaRangeKey[];
   /** 선호 입지(분위기) — 재미용 소프트 가점. 키별 강도(1~3)·복수선택. 없으면 영향 없음. */
   locationVibes?: LocationVibes;
   /** 필수 지역(시군구) — 하드 필터. 비었으면 전체. OR 로직. */

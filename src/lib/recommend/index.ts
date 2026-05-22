@@ -4,7 +4,7 @@ import {
   getCommuteProvider,
   mockProvider,
 } from "@/lib/commute";
-import type { CommuteProvider } from "@/lib/commute";
+import type { CommuteProvider, CommuteResult } from "@/lib/commute";
 import { db } from "@/lib/db";
 import { haversineKm } from "@/lib/geo";
 import {
@@ -497,9 +497,20 @@ export async function recommendComplexes(
     sigunguById,
   );
 
-  const areaRange = AREA_RANGES[profile.preferredAreaRange];
-  const minArea = areaRange.minM2;
-  const maxArea = areaRange.maxM2 ?? Number.POSITIVE_INFINITY;
+  // 선호 평수대(복수). 선택한 밴드 중 하나에 속하는 평형만 대표 평형 후보로 본다.
+  const selectedRanges = profile.preferredAreaRanges.map((k) => AREA_RANGES[k]);
+  const inSelectedArea = (area: number) =>
+    selectedRanges.some(
+      (r) => area >= r.minM2 && area < (r.maxM2 ?? Number.POSITIVE_INFINITY),
+    );
+  /** 선택 평수대(복수)에 속한 평형 중 대표 평형. 비선택 평형은 제외 후 최다거래 선정. */
+  const pickRepInSelected = (ms: AreaMedian[], minCount = 3) =>
+    pickRepresentative(
+      ms.filter((m) => inSelectedArea(m.area)),
+      0,
+      Number.POSITIVE_INFINITY,
+      minCount,
+    );
 
   // 소규모 건물 배제 — 6개월 거래 건수를 대단지 프록시로 사용
   const MIN_TRANSACTIONS = 8;
@@ -525,7 +536,7 @@ export async function recommendComplexes(
     if (c.buildYear == null || !c.dongName) continue;
     const ms = mediansMap.get(c.id);
     if (!ms) continue;
-    const r = pickRepresentative(ms, minArea, maxArea);
+    const r = pickRepInSelected(ms);
     if (!r || r.area <= 0) continue;
     const perM2 = r.medianKrw / r.area;
     const k = peerKey(c.dongName, c.buildYear);
@@ -564,8 +575,8 @@ export async function recommendComplexes(
 
       const totalTransactions = medians.reduce((s, m) => s + m.count, 0);
 
-      // pickRepresentative 의 minCount 기본값(3) 그대로 사용
-      let rep = pickRepresentative(medians, minArea, maxArea);
+      // pickRepresentative 의 minCount 기본값(3) 그대로 사용 — 선택 평수대(복수) 한정
+      let rep = pickRepInSelected(medians);
       if (rep !== null) {
         // 직접 실거래 대표 — 소규모 건물 배제(대단지 프록시) 적용.
         if (totalTransactions < MIN_TRANSACTIONS) return null;
@@ -615,9 +626,9 @@ export async function recommendComplexes(
         const wpLabel: "A" | "B" = idx === 0 ? "A" : "B";
         const override =
           wp.commuteMode === "transit" ? overrideForComplex?.[wpLabel] : undefined;
-        const minutesP =
+        const resultP: Promise<CommuteResult> =
           typeof override === "number"
-            ? Promise.resolve(override)
+            ? Promise.resolve({ minutes: override })
             : getCommuteMinutes(
                 wp,
                 complex.id,
@@ -625,14 +636,15 @@ export async function recommendComplexes(
                 wp.commuteMode,
                 commuteProvider,
               );
-        return minutesP.then(
-          (minutes): CommuteLeg => ({
+        return resultP.then(
+          ({ minutes, roadDistanceKm }): CommuteLeg => ({
             workplace: wpLabel,
             workplaceLabel: wp.label,
             workplaceLat: wp.lat,
             workplaceLng: wp.lng,
             minutes,
             distanceKm: Math.round(haversineKm(wp, complexCoord) * 10) / 10,
+            roadDistanceKm,
             mode: wp.commuteMode,
             maxCommuteMinutes: wp.maxCommuteMinutes,
             withinLimit: minutes <= wp.maxCommuteMinutes,
@@ -914,8 +926,10 @@ export async function recommendComplexes(
       }
     }
 
-    // (c) 선호 평수대를 한 단계 넓힘 — 다음 단계(더 큰 평형) 시도
-    const currentIdx = AREA_RANGE_ORDER.indexOf(profile.preferredAreaRange);
+    // (c) 선호 평수대를 한 단계 넓힘 — 선택한 것 중 가장 큰 밴드의 다음 단계 시도
+    const currentIdx = Math.max(
+      ...profile.preferredAreaRanges.map((k) => AREA_RANGE_ORDER.indexOf(k)),
+    );
     const nextAreaKey: AreaRangeKey | undefined =
       currentIdx < AREA_RANGE_ORDER.length - 1
         ? AREA_RANGE_ORDER[currentIdx + 1]
@@ -1167,14 +1181,16 @@ export async function recommendComplexes(
     // anyArea=false: 선호 평수대 우선. 그것도 0이면 anyArea=true 로 평수 제약까지 풀어
     // 지역에 거래가 있는 한 무조건 뭔가 나오게 한다(예: 가평엔 18평 이하가 아예 없음).
     const collect = async (anyArea: boolean) => {
-      const lo = anyArea ? 0 : minArea;
-      const hi = anyArea ? Number.POSITIVE_INFINITY : maxArea;
       const rows = await Promise.all(
         allComplexes
           .filter((c) => c.latitude != null && c.longitude != null)
           .map(async (c) => {
             // MIN_TX 무시(minCount=1), 추정 없이 직접 대표평형만.
-            const rep = pickRepresentative(mediansMap.get(c.id) ?? [], lo, hi, 1);
+            // anyArea=true 면 평수 제약까지 풀고, 아니면 선택 평수대(복수) 한정.
+            const ms = mediansMap.get(c.id) ?? [];
+            const rep = anyArea
+              ? pickRepresentative(ms, 0, Number.POSITIVE_INFINITY, 1)
+              : pickRepInSelected(ms, 1);
             if (rep === null) return null;
             const coord: LatLng = {
               lat: c.latitude as number,
@@ -1182,7 +1198,8 @@ export async function recommendComplexes(
             };
             const legs: CommuteLeg[] = await Promise.all(
               workplaces.map(async (wp, idx) => {
-                const minutes = await getCommuteMinutes(
+                // 안전망은 mock 으로만 평가 — 도로거리 없음(직선거리로 표시).
+                const { minutes } = await getCommuteMinutes(
                   wp,
                   c.id,
                   coord,

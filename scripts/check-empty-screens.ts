@@ -27,7 +27,7 @@ function base(): CoupleProfile {
   return {
     householdType: "dualIncome",
     priorities: { commute: 5, school: 5, buildingAge: 5, largeComplex: 5 },
-    preferredAreaRange: "p32_35",
+    preferredAreaRanges: ["p32_35"],
     hasSchoolAgedChild: false, hasInfant: false, hasTwoOrMoreChildren: false,
     hasThreeOrMoreChildren: false, isExpectingChild: false,
     householdIncomeKrwYear: 0, seedMoneyKrw: 0, netAssetsKrw: 0,
@@ -56,14 +56,14 @@ function profiles(): { name: string; p: CoupleProfile }[] {
       for (const av of avails)
         out.push({
           name: `simple/${reg}/${a}/${av / 1e8}억/지하철30`,
-          p: { ...base(), preferredAreaRange: a, requiredRegions: [reg], budgetMode: "simple", availableBudgetKrw: av, budgetFlex: "normal", workplaceA: wp("강남역", "transit", 30), workplaceB: wp("성수역", "transit", 30) },
+          p: { ...base(), preferredAreaRanges: [a], requiredRegions: [reg], budgetMode: "simple", availableBudgetKrw: av, budgetFlex: "normal", workplaceA: wp("강남역", "transit", 30), workplaceB: wp("성수역", "transit", 30) },
         });
   // 은퇴(직장 0) + 희박 지역
   for (const reg of ["가평군", "연천군", "강남구"])
     for (const a of ["under18", "over45"] as AreaRangeKey[])
       out.push({
         name: `retired/${reg}/${a}/8억`,
-        p: { ...base(), householdType: "retired" as HouseholdType, priorities: { commute: 0, school: 3, buildingAge: 3, largeComplex: 3 }, preferredAreaRange: a, requiredRegions: [reg], budgetMode: "simple", availableBudgetKrw: 8e8 },
+        p: { ...base(), householdType: "retired" as HouseholdType, priorities: { commute: 0, school: 3, buildingAge: 3, largeComplex: 3 }, preferredAreaRanges: [a], requiredRegions: [reg], budgetMode: "simple", availableBudgetKrw: 8e8 },
       });
   return out;
 }

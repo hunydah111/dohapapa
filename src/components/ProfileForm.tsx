@@ -314,8 +314,18 @@ export function ProfileForm({
 
   // ── Step 1: 가구 유형 & 평수 ────────────────────────────────
   const [householdType, setHouseholdType] = useState<HouseholdType | "">("");
-  const [preferredAreaRange, setPreferredAreaRange] =
-    useState<AreaRangeKey>(DEFAULT_AREA_RANGE);
+  const [preferredAreaRanges, setPreferredAreaRanges] = useState<AreaRangeKey[]>(
+    [DEFAULT_AREA_RANGE],
+  );
+  // 평수 칩 토글 — 마지막 1개는 못 끄게(최소 1개 유지).
+  const toggleAreaRange = (key: AreaRangeKey) =>
+    setPreferredAreaRanges((prev) =>
+      prev.includes(key)
+        ? prev.length > 1
+          ? prev.filter((k) => k !== key)
+          : prev
+        : [...prev, key],
+    );
   const [locationVibes, setLocationVibes] = useState<LocationVibes>({});
   // 추가 조건 (접이식)
   const [extraOpen, setExtraOpen] = useState(false);
@@ -608,7 +618,7 @@ export function ProfileForm({
     return {
       householdType: householdType as HouseholdType,
       priorities,
-      preferredAreaRange,
+      preferredAreaRanges,
       locationVibes,
       requiredRegions: requiredRegions.length > 0 ? requiredRegions : undefined,
       budgetFlex,
@@ -639,7 +649,7 @@ export function ProfileForm({
   }, [
     householdType,
     priorities,
-    preferredAreaRange,
+    preferredAreaRanges,
     locationVibes,
     requiredRegions,
     budgetFlex,
@@ -806,20 +816,34 @@ export function ProfileForm({
             )}
           </div>
 
-          {/* 선호 평수 */}
+          {/* 선호 평수 — 복수 선택 가능 */}
           <div>
-            <p className="text-[15px] font-semibold text-[#3a322c] mb-3">
+            <p className="text-[15px] font-semibold text-[#3a322c] mb-1">
               선호 평수
             </p>
-            <Segmented
-              options={AREA_RANGE_ORDER.map((key) => ({
-                value: key,
-                label: AREA_RANGES[key].label,
-              }))}
-              value={preferredAreaRange}
-              onChange={(v) => setPreferredAreaRange(v as AreaRangeKey)}
-              columns={3}
-            />
+            <p className="text-[12px] text-[#9a8f82] mb-3">
+              여러 개 골라도 돼요 (선택한 평수대만 보여드려요)
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {AREA_RANGE_ORDER.map((key) => {
+                const selected = preferredAreaRanges.includes(key);
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => toggleAreaRange(key)}
+                    className={`rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-coral-500 ${
+                      selected
+                        ? "border-coral-500 bg-coral-600 text-white"
+                        : "border-black/[0.10] bg-white text-[#6b6157] hover:border-coral-300"
+                    }`}
+                  >
+                    {AREA_RANGES[key].label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* 추가 조건 (선택) — 평소 접힘 */}

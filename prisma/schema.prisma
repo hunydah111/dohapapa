@@ -58,6 +58,9 @@ model CommuteCache {
   complexId  String
   mode       String   // "transit" | "car"
   minutes    Int
+  // 도로 기준 운전 거리(미터). 카카오 길찾기 응답에 함께 와서 추가 호출 없이 저장.
+  // null = 구 레코드/대중교통 등 거리 미상 → UI 는 직선거리로 폴백.
+  distanceMeters Int?
   computedAt DateTime @default(now())
 
   @@unique([originKey, complexId, mode])

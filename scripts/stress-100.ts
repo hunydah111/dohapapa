@@ -56,7 +56,7 @@ function base(): CoupleProfile {
   return {
     householdType: "dualIncome",
     priorities: { commute: 3, school: 3, buildingAge: 3, largeComplex: 2 },
-    preferredAreaRange: "p32_35",
+    preferredAreaRanges: ["p32_35"],
     hasSchoolAgedChild: false, hasInfant: false, hasTwoOrMoreChildren: false,
     hasThreeOrMoreChildren: false, isExpectingChild: false,
     householdIncomeKrwYear: 0, seedMoneyKrw: 0, netAssetsKrw: 0,
@@ -74,7 +74,7 @@ function personas(): { name: string; p: CoupleProfile }[] {
     add(`duo-simple/${reg ? (reg.length > 5 ? "서울전체" : reg.join("+")) : "전국"}/${AREAS[i % AREAS.length]}/${SIMPLE_BUD[i % SIMPLE_BUD.length] / 1e8}억`, {
       ...base(), householdType: "dualIncome",
       priorities: PRIOS[i % PRIOS.length],
-      preferredAreaRange: AREAS[i % AREAS.length],
+      preferredAreaRanges: [AREAS[i % AREAS.length]],
       requiredRegions: reg,
       budgetMode: "simple", availableBudgetKrw: SIMPLE_BUD[i % SIMPLE_BUD.length],
       budgetFlex: (["tight", "normal", "relaxed"] as const)[i % 3],
@@ -90,7 +90,7 @@ function personas(): { name: string; p: CoupleProfile }[] {
   for (let j = 0; j < 16; j++) {
     add(`duo-detail/소득${inc[j % 6] / 1e4}만/현금${seed[j % 6] / 1e4}만/${AREAS[j % AREAS.length]}`, {
       ...base(), householdType: "dualIncome",
-      priorities: PRIOS[j % PRIOS.length], preferredAreaRange: AREAS[j % AREAS.length],
+      priorities: PRIOS[j % PRIOS.length], preferredAreaRanges: [AREAS[j % AREAS.length]],
       requiredRegions: REGIONS[(j + 3) % REGIONS.length],
       householdIncomeKrwYear: inc[j % 6], seedMoneyKrw: seed[j % 6], netAssetsKrw: seed[j % 6] * 2,
       existingLoanMonthlyKrw: j % 3 ? 400000 : 0, ownedHomeCount: j % 5 === 4 ? 1 : 0,
@@ -104,7 +104,7 @@ function personas(): { name: string; p: CoupleProfile }[] {
     const simple = j % 2 === 0;
     add(`single/${simple ? "simple" : "detail"}/${AREAS[j % AREAS.length]}/${REGIONS[(j + 1) % REGIONS.length]?.[0] ?? "전국"}`, {
       ...base(), householdType: "single",
-      priorities: PRIOS[j % PRIOS.length], preferredAreaRange: AREAS[j % AREAS.length],
+      priorities: PRIOS[j % PRIOS.length], preferredAreaRanges: [AREAS[j % AREAS.length]],
       requiredRegions: REGIONS[(j + 1) % REGIONS.length],
       budgetMode: simple ? "simple" : "detailed",
       availableBudgetKrw: simple ? [3e8, 5e8, 8e8, 13e8][j % 4] : undefined,
@@ -117,7 +117,7 @@ function personas(): { name: string; p: CoupleProfile }[] {
   for (let j = 0; j < 12; j++) {
     add(`singleIncome/소득${inc[j % 6] / 1e4}만/${AREAS[j % AREAS.length]}`, {
       ...base(), householdType: "singleIncome",
-      priorities: PRIOS[(j + 1) % PRIOS.length], preferredAreaRange: AREAS[j % AREAS.length],
+      priorities: PRIOS[(j + 1) % PRIOS.length], preferredAreaRanges: [AREAS[j % AREAS.length]],
       requiredRegions: REGIONS[(j + 5) % REGIONS.length],
       householdIncomeKrwYear: inc[j % 6], seedMoneyKrw: seed[j % 6], netAssetsKrw: seed[j % 6] * 2,
       isNewlywed: j % 2 === 0, hasSchoolAgedChild: j % 2 === 1, hasTwoOrMoreChildren: j % 4 === 0,
@@ -129,7 +129,7 @@ function personas(): { name: string; p: CoupleProfile }[] {
     add(`retired/${REGIONS[(j + 8) % REGIONS.length]?.[0] ?? "전국"}/${AREAS[j % AREAS.length]}/${SIMPLE_BUD[j % SIMPLE_BUD.length] / 1e8}억`, {
       ...base(), householdType: "retired",
       priorities: { commute: 0, school: 2, buildingAge: 3, largeComplex: 3 },
-      preferredAreaRange: AREAS[j % AREAS.length],
+      preferredAreaRanges: [AREAS[j % AREAS.length]],
       requiredRegions: REGIONS[(j + 8) % REGIONS.length],
       budgetMode: "simple", availableBudgetKrw: SIMPLE_BUD[j % SIMPLE_BUD.length],
       locationVibes: VIBES[j % VIBES.length],
@@ -142,15 +142,15 @@ function personas(): { name: string; p: CoupleProfile }[] {
   add(`edge/초고예산 80억 강남`, { ...base(), householdType: "dualIncome", budgetMode: "simple", availableBudgetKrw: 80e8, requiredRegions: ["강남구"], workplaceA: wp("강남역", "car", 40), workplaceB: wp("성수역", "car", 40) });
   add(`edge/소득0 현금0 detailed`, { ...base(), householdType: "single", householdIncomeKrwYear: 0, seedMoneyKrw: 0, netAssetsKrw: 0, workplaceA: wp("여의도", "car", 30) });
   add(`edge/통근10분 초빡빡`, { ...base(), householdType: "dualIncome", budgetMode: "simple", availableBudgetKrw: 10e8, workplaceA: wp("강남역", "car", 10), workplaceB: wp("판교역", "car", 10) });
-  add(`edge/초소형 under18 강남`, { ...base(), householdType: "single", preferredAreaRange: "under18", budgetMode: "simple", availableBudgetKrw: 6e8, requiredRegions: ["강남구"], workplaceA: wp("강남역", "transit", 30) });
-  add(`edge/대형 over45 가평`, { ...base(), householdType: "retired", priorities: { commute: 0, school: 1, buildingAge: 2, largeComplex: 4 }, preferredAreaRange: "over45", budgetMode: "simple", availableBudgetKrw: 5e8, requiredRegions: ["가평군"] });
+  add(`edge/초소형 under18 강남`, { ...base(), householdType: "single", preferredAreaRanges: ["under18"], budgetMode: "simple", availableBudgetKrw: 6e8, requiredRegions: ["강남구"], workplaceA: wp("강남역", "transit", 30) });
+  add(`edge/대형 over45 가평`, { ...base(), householdType: "retired", priorities: { commute: 0, school: 1, buildingAge: 2, largeComplex: 4 }, preferredAreaRanges: ["over45"], budgetMode: "simple", availableBudgetKrw: 5e8, requiredRegions: ["가평군"] });
   add(`edge/연천 저예산`, { ...base(), householdType: "singleIncome", budgetMode: "simple", availableBudgetKrw: 3e8, requiredRegions: ["연천군"], householdIncomeKrwYear: 5e7, seedMoneyKrw: 1e8, netAssetsKrw: 2e8, workplaceA: wp("광화문", "car", 90) });
   add(`edge/다주택 LTV0`, { ...base(), householdType: "dualIncome", householdIncomeKrwYear: 1.5e8, seedMoneyKrw: 5e8, netAssetsKrw: 15e8, ownedHomeCount: 2, hasOwnedHomeBefore: true, requiredRegions: ["송파구"], workplaceA: wp("강남역", "car", 40), workplaceB: wp("성수역", "car", 40) });
   add(`edge/기존대출 과다`, { ...base(), householdType: "singleIncome", householdIncomeKrwYear: 6e7, seedMoneyKrw: 1e8, netAssetsKrw: 2e8, existingLoanMonthlyKrw: 2500000, workplaceA: wp("강남역", "car", 50) });
   add(`edge/한강변 듬뿍 저예산`, { ...base(), householdType: "single", budgetMode: "simple", availableBudgetKrw: 4e8, locationVibes: { riverside: 3 }, workplaceA: wp("여의도", "transit", 40) });
   add(`edge/all-low priority`, { ...base(), householdType: "dualIncome", priorities: { commute: 1, school: 1, buildingAge: 1, largeComplex: 1 }, budgetMode: "simple", availableBudgetKrw: 9e8, workplaceA: wp("강남역", "car", 60), workplaceB: wp("판교역", "car", 60) });
   add(`edge/신생아 특례 후보`, { ...base(), householdType: "dualIncome", householdIncomeKrwYear: 1.1e8, seedMoneyKrw: 1.5e8, netAssetsKrw: 3e8, hasInfant: true, isNewlywed: true, workplaceA: wp("강남역", "car", 45), workplaceB: wp("판교역", "car", 45) });
-  add(`edge/3자녀 다자녀`, { ...base(), householdType: "singleIncome", householdIncomeKrwYear: 8e7, seedMoneyKrw: 2e8, netAssetsKrw: 4e8, hasThreeOrMoreChildren: true, hasSchoolAgedChild: true, preferredAreaRange: "p41_45", workplaceA: wp("광화문", "car", 50) });
+  add(`edge/3자녀 다자녀`, { ...base(), householdType: "singleIncome", householdIncomeKrwYear: 8e7, seedMoneyKrw: 2e8, netAssetsKrw: 4e8, hasThreeOrMoreChildren: true, hasSchoolAgedChild: true, preferredAreaRanges: ["p41_45"], workplaceA: wp("광화문", "car", 50) });
   add(`edge/임신중 + 갈아타기`, { ...base(), householdType: "dualIncome", isExpectingChild: true, householdIncomeKrwYear: 1.3e8, seedMoneyKrw: 3e8, netAssetsKrw: 6e8, existingHome: { expectedSalePriceKrw: 9e8, remainingLoanKrw: 3e8, qualifiesForTaxExemption: true }, workplaceA: wp("강남역", "car", 40), workplaceB: wp("여의도", "car", 40) });
 
   return out;
