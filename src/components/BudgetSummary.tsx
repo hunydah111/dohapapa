@@ -10,11 +10,19 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
   const eligibleLoans = budget.policyLoanMatches.filter((m) => m.eligible);
   const ineligibleLoans = budget.policyLoanMatches.filter((m) => !m.eligible);
 
+  // 예산 상황별 비지 — 빠듯/음수면 빈 지갑, 아니면 계산기(분석).
+  const budgetMood =
+    budget.netPurchasePowerKrw <= 0 ||
+    budget.totalEquityKrw < 0 ||
+    homeSaleNegative
+      ? "walletEmpty"
+      : "calc";
+
   return (
     <Card>
-      {/* 섹션 제목 — 비지가 통장 보며 고민 */}
+      {/* 섹션 제목 — 비지가 예산 분석 */}
       <div className="mb-6 flex items-center gap-3">
-        <Homi mood="think" size={46} className="shrink-0" />
+        <Homi mood={budgetMood} size={46} className="shrink-0" />
         <div>
           <h2 className="text-lg font-bold" style={{ color: "#3a322c" }}>
             예산 분석

@@ -566,9 +566,12 @@ export function HomeExperience() {
     <div className="flex flex-col gap-8">
       {/* 상단 바: 검토 단지 수 + 공유 + 처음부터 */}
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-semibold" style={{ color: "#6b6157" }}>
-          검토 {result.consideredComplexCount.toLocaleString()}개 단지 분석 완료
-        </p>
+        <div className="flex items-center gap-1.5">
+          <Homi mood="search" size={26} className="shrink-0" />
+          <p className="text-sm font-semibold" style={{ color: "#6b6157" }}>
+            검토 {result.consideredComplexCount.toLocaleString()}개 단지 분석 완료
+          </p>
+        </div>
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="md" onClick={handleShare}>
             <span className="inline-flex items-center gap-1.5">
@@ -952,14 +955,17 @@ export function HomeExperience() {
       {/* 안전망 — 모든 섹션이 0건일 때만: 조건과 가장 가까운 후보(빈 화면 방지) */}
       {result.closestCandidates.length > 0 && (
         <section className="flex flex-col gap-4">
-          <div>
-            <h2 className="text-lg font-bold" style={{ color: "#3a322c" }}>
-              조건과 가장 가까운 후보
-            </h2>
-            <p className="mt-0.5 text-sm" style={{ color: "#6b6157" }}>
-              딱 맞는 곳은 없었지만, 예산·통근과 차이가 있더라도 가장 가까운{" "}
-              {result.closestCandidates.length}곳이에요
-            </p>
+          <div className="flex items-center gap-3">
+            <Homi mood="map" size={44} className="shrink-0" />
+            <div>
+              <h2 className="text-lg font-bold" style={{ color: "#3a322c" }}>
+                조건과 가장 가까운 후보
+              </h2>
+              <p className="mt-0.5 text-sm" style={{ color: "#6b6157" }}>
+                딱 맞는 곳은 없었지만, 예산·통근과 차이가 있더라도 가장 가까운{" "}
+                {result.closestCandidates.length}곳이에요
+              </p>
+            </div>
           </div>
           <div className="overflow-hidden rounded-3xl border border-[#e5e0d6] bg-[#f3ece4]/50">
             <ul className="divide-y divide-[#e5e0d6]">

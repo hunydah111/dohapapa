@@ -347,7 +347,7 @@ export function ProfileForm({
 
   // ── Step 4: 예산 / 대출 ─────────────────────────────────────
   // 모든 금액 입력: 만원 단위
-  const [detailedBudget, setDetailedBudget] = useState(false); // false=간단, true=자세히
+  const [detailedBudget, setDetailedBudget] = useState(true); // 기본 펼침: 대출까지 계산. false=간단(예산 한 칸)
   const [availableBudget, setAvailableBudget] = useState(""); // 간단: 가용 예산 (만원)
   const [additionalFunds, setAdditionalFunds] = useState(""); // 추가 동원자금 (만원)
   const [seedMoney, setSeedMoney] = useState("");          // 보유 현금 (만원)
@@ -1147,11 +1147,45 @@ export function ProfileForm({
               예산을 알려주세요
             </h2>
             <p className="mt-1 text-[15px] text-[#6b6157]">
-              간단히 가용 예산만 넣어도 되고, 펼쳐서 대출까지 계산받아도 돼요
+              대출까지 계산해 얼마까지 살 수 있는지 알려드려요. 귀찮으면 접어서 예산만 넣어도 돼요
             </p>
           </div>
 
-          {/* 간단 모드 — 가용 예산 한 칸 */}
+          {/* 예산 입력 방식 — 기본 펼침(대출까지 계산), 접으면 간단(예산 한 칸). 접기 버튼을 크게 노출. */}
+          <button
+            type="button"
+            onClick={() => setDetailedBudget((v) => !v)}
+            aria-expanded={detailedBudget}
+            className="flex w-full items-center justify-between rounded-3xl border-2 border-coral-300 bg-coral-50 px-5 py-4 text-left transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-coral-500"
+          >
+            <span className="flex items-center gap-3">
+              <Homi mood="calc" size={40} className="shrink-0" />
+              <span className="flex flex-col">
+                <span className="text-[15px] font-bold text-coral-800">
+                  {detailedBudget ? "대출까지 계산받기" : "간단 입력 (예산만)"}
+                </span>
+                <span className="text-[12px] font-medium text-coral-500">
+                  {detailedBudget
+                    ? "소득·대출·정책 자격까지 정확히"
+                    : "가용 예산 한 칸만 넣기"}
+                </span>
+              </span>
+            </span>
+            <span className="ml-3 flex shrink-0 items-center gap-1 text-[13px] font-bold text-coral-600">
+              {detailedBudget ? "접기" : "펼치기"}
+              <svg
+                className={`h-4 w-4 transition-transform duration-200 ${detailedBudget ? "rotate-180" : ""}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </span>
+          </button>
+
+          {/* 간단 모드 — 접었을 때만: 가용 예산 한 칸 */}
           {!detailedBudget && (
             <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm">
               <TextField
@@ -1169,22 +1203,6 @@ export function ProfileForm({
               />
             </div>
           )}
-
-          {/* 간단 ↔ 자세히 전환 */}
-          <button
-            type="button"
-            onClick={() => setDetailedBudget((v) => !v)}
-            className="flex w-full items-center justify-between rounded-2xl border border-coral-200 bg-coral-50 px-5 py-4 text-left transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-coral-500"
-          >
-            <span className="text-sm font-semibold text-coral-700">
-              {detailedBudget
-                ? "← 간단 입력으로 (예산만 직접)"
-                : "💡 대출까지 포함해 얼마까지 살 수 있는지 계산받기"}
-            </span>
-            <span className="ml-3 flex-shrink-0 text-xs text-coral-500">
-              {detailedBudget ? "접기" : "소득·대출·정책"}
-            </span>
-          </button>
 
           {/* 예산 근접도 — 항상 표시 (결과 가격대 폭) */}
           <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm">

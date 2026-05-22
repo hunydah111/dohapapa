@@ -1,4 +1,5 @@
 import type { CommuteLeg } from "@/types/recommendation";
+import { Homi } from "./Homi";
 
 interface ComplexInfo {
   name: string;
@@ -156,6 +157,12 @@ export function CommuteDiagram({
                 className="flex items-center justify-center gap-2"
                 aria-live="polite"
               >
+                {/* 통근 수단 비지 — 자차/대중교통 */}
+                <Homi
+                  mood={isTransit ? "transit" : "car"}
+                  size={40}
+                  className="shrink-0"
+                />
                 {pending ? (
                   <span
                     className="text-[13px] font-semibold"

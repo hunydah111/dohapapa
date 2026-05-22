@@ -11,12 +11,27 @@ export type HomiMood =
   | "think" // 통장 보며 고민 — 예산·"내 통장"
   | "cheer" // 만세 — 결과 좋음·히어로
   | "thumbsup" // 따봉 — 성공 마이크로
-  | "face"; // 얼굴만 — 소형 인라인
+  | "face" // 얼굴만 — 소형 인라인
+  // ── 신규 14종 ──
+  | "car" // 운전 — 자차 통근
+  | "transit" // 버스 탑승(씬배경) — 대중교통 통근
+  | "clock" // 시계 — 통근 시간
+  | "money" // 지폐 — 예산 충분·구매력
+  | "calc" // 계산기·영수증 — 예산 계산
+  | "walletEmpty" // 빈 지갑 — 예산 빠듯
+  | "map" // 지도 — 안전망·가장 가까운 후보
+  | "search" // 돋보기 — 검토·탐색
+  | "shrug" // 어깨 으쓱 — 완화 제안
+  | "share" // 휴대폰 — 공유
+  | "river" // 한강변(씬배경) — 한강변 입지
+  | "tree" // 나무옆(씬배경) — 조용한 동네
+  | "wave" // 손 흔들며 인사 — 랜딩 환영
+  | "key"; // 집 열쇠 — 단지·가능성
 
 const BIJI_ASPECT = 0.9; // 레이아웃 시프트 방지용 힌트(실제 렌더는 width:auto)
 
 // ?v= 캐시버스트 — 새 표정 이미지 반영.
-const V = "?v=8";
+const V = "?v=9";
 const SRC: Record<HomiMood, string> = {
   smile: `/biji/biji-smile.png${V}`,
   flustered: `/biji/biji-flustered.png${V}`,
@@ -27,6 +42,20 @@ const SRC: Record<HomiMood, string> = {
   cheer: `/biji/biji-cheer.png${V}`,
   thumbsup: `/biji/biji-thumbsup.png${V}`,
   face: `/biji/biji-face.png${V}`,
+  car: `/biji/biji-car.png${V}`,
+  transit: `/biji/biji-transit.png${V}`,
+  clock: `/biji/biji-clock.png${V}`,
+  money: `/biji/biji-money.png${V}`,
+  calc: `/biji/biji-calc.png${V}`,
+  walletEmpty: `/biji/biji-wallet-empty.png${V}`,
+  map: `/biji/biji-map.png${V}`,
+  search: `/biji/biji-search.png${V}`,
+  shrug: `/biji/biji-shrug.png${V}`,
+  share: `/biji/biji-share.png${V}`,
+  river: `/biji/biji-river.png${V}`,
+  tree: `/biji/biji-tree.png${V}`,
+  wave: `/biji/biji-wave.png${V}`,
+  key: `/biji/biji-key.png${V}`,
 };
 
 export function Homi({
