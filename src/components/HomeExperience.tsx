@@ -561,6 +561,26 @@ export function HomeExperience() {
     };
   }, []);
 
+  // 진지 모드 — 계급도·캐릭터·레이더를 끄고 표·숫자 위주로(40~50대 신뢰형). localStorage 유지.
+  // 결과 화면은 폼 제출 후에만 떠서 lazy init이 하이드레이션 미스매치를 만들지 않는다.
+  const [serious, setSerious] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return localStorage.getItem("biji-serious") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const toggleSerious = () => {
+    const next = !serious;
+    setSerious(next);
+    try {
+      localStorage.setItem("biji-serious", next ? "1" : "0");
+    } catch {
+      /* 무시 */
+    }
+  };
+
   // 동네 분석 — 표시 후보 반경 1km 시설(배치 fetch). 카드에 인라인 주입.
   // 훅이라 early-return 앞에서 무조건 호출(후보 없으면 빈 입력 → no-op).
   const neighborhood = useNeighborhood(
@@ -614,6 +634,9 @@ export function HomeExperience() {
           </p>
         </div>
         <div className="flex items-center gap-1">
+          <Button variant="ghost" size="md" onClick={toggleSerious}>
+            {serious ? "🦫 재미 모드" : "🎩 진지 모드"}
+          </Button>
           <Button variant="ghost" size="md" onClick={() => handleShare()}>
             <span className="inline-flex items-center gap-1.5">
               <svg
@@ -683,6 +706,7 @@ export function HomeExperience() {
             })(),
           ]}
           neighborhood={neighborhood[result.candidates[0].complexId]}
+          serious={serious}
         />
       )}
 

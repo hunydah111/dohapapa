@@ -86,6 +86,7 @@ export function HeroResultCard({
   typeRarityPercent,
   profileRadar,
   neighborhood,
+  serious = false,
 }: {
   candidate: ComplexCandidate;
   homeType: HomeType;
@@ -100,6 +101,8 @@ export function HeroResultCard({
   profileRadar?: number[];
   /** 1순위 단지 동네 데이터 — 아파트 옆 5각형(아래 카드와 동일). */
   neighborhood?: NeighborhoodData | null;
+  /** 진지 모드 — 캐릭터·레이더·계급 드립을 끄고 표·숫자 위주로(40~50대 신뢰형). */
+  serious?: boolean;
 }) {
   // 유형 카드 공유 링크 — 프로필 없이 유형만(바이럴 안전). /s/{slug} 에 동적 OG 카드.
   const typeShareUrl = `${SITE_URL}/s/${homeType.slug}`;
@@ -135,39 +138,41 @@ export function HeroResultCard({
         당신의 집 찾기 유형
       </p>
 
-      {/* 유형 비지 캐릭터 — 흰 원 배경 위에 pop-in */}
-      <div className="biji-pop-in mt-3 flex justify-center">
-        <div className="flex h-32 w-32 items-center justify-center rounded-full bg-white/18 shadow-inner ring-1 ring-white/25">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={`${homeType.image}?v=1`}
-            alt={`${homeType.name} 비지`}
-            width={112}
-            height={112}
-            className="h-28 w-auto drop-shadow-md"
-            draggable={false}
-          />
+      {/* 유형 비지 캐릭터 — 흰 원 배경 위에 pop-in. 진지 모드에선 숨김. */}
+      {!serious && (
+        <div className="biji-pop-in mt-3 flex justify-center">
+          <div className="flex h-32 w-32 items-center justify-center rounded-full bg-white/18 shadow-inner ring-1 ring-white/25">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`${homeType.image}?v=1`}
+              alt={`${homeType.name} 비지`}
+              width={112}
+              height={112}
+              className="h-28 w-auto drop-shadow-md"
+              draggable={false}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="mt-3 flex items-center justify-center gap-2 text-center text-[2rem] font-extrabold leading-tight tracking-tight sm:text-4xl">
-        <span aria-hidden="true">{homeType.emoji}</span>
+        {!serious && <span aria-hidden="true">{homeType.emoji}</span>}
         <span>{homeType.name}</span>
       </div>
       <p className="mx-auto mt-2 max-w-xs text-center text-[15px] leading-relaxed text-white/90">
         {homeType.tagline}
       </p>
 
-      {/* 유형 희귀도 — 방문자 분포(집계). 표본 충분할 때만(꾸며낸 % 없음). 유형만 줄세움. */}
-      {typeRarityPercent != null && (
+      {/* 유형 희귀도 — 방문자 분포(집계). 표본 충분할 때만. 진지 모드 숨김. */}
+      {!serious && typeRarityPercent != null && (
         <p className="mx-auto mt-2 text-center text-[13px] font-semibold text-white/85">
           🦫 비집고 방문자의 {typeRarityPercent}%가 이 유형
           {typeRarityPercent <= 15 ? " — 희귀해요!" : ""}
         </p>
       )}
 
-      {/* 유형 레이더 — 내 우선순위 5각형(왜 이 유형인지 시각화). 동네 5각형과 별개. */}
-      {profileRadar && (
+      {/* 유형 레이더 — 내 우선순위 5각형. 진지 모드 숨김. */}
+      {!serious && profileRadar && (
         <div className="mt-4 flex flex-col items-center">
           <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-white/70">
             내 집 찾기 프로필
@@ -178,7 +183,28 @@ export function HeroResultCard({
 
       {/* ── 구매력 계급 밴드 — 전 구간 노출. 사용자 예산을 실거래가 분포에 줄 세움(특정 단지 아님).
           최하위(isFlex=false)는 숫자 숨기고 응원 라벨만. 미래예측 아님·추정 표기로 컴플라이언스 안전. ── */}
+      {budgetTopPercent != null && serious && (
+        <div className="mx-auto mt-5 max-w-sm rounded-2xl bg-white/15 px-4 py-3 text-center backdrop-blur-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-white/75">
+            추정 구매력
+          </p>
+          <p className="mt-1 text-xl font-extrabold leading-tight">
+            {budgetNetKrw != null && budgetNetKrw > 0
+              ? formatKrwHuman(budgetNetKrw)
+              : "—"}
+            {budgetTopPercent <= 50 && (
+              <span className="text-[13px] font-semibold text-white/85">
+                {" "}· 수도권 실거래 상위 {budgetTopPercent}%
+              </span>
+            )}
+          </p>
+          <p className="mt-1 text-[11px] leading-relaxed text-white/55">
+            국토교통부 실거래가 기반 추정 · 미래가치 예측이 아닙니다
+          </p>
+        </div>
+      )}
       {budgetTopPercent != null &&
+        !serious &&
         (() => {
           const t = budgetTier(budgetTopPercent);
           return (

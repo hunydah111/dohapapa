@@ -74,6 +74,11 @@ export function CandidateCard({
     `${candidate.complexName} ${candidate.sigungu} ${candidate.dongName}`
   )}`;
 
+  // 단지 매물이 0건일 때 폴백 — 동네(동/구) 전체 매매 매물로 넓혀 검색.
+  const naverAreaUrl = `https://search.naver.com/search.naver?query=${encodeURIComponent(
+    `${candidate.sigungu} ${candidate.dongName} 아파트 매매`
+  )}`;
+
   // 카카오맵 — 단지명+동으로 검색해 해당 단지 위치를 띄운다.
   // (link/map/이름,위도,경도 형식은 레거시 좌표 URL로 리다이렉트돼 기본 화면이 떠서 사용 안 함)
   const kakaoMapUrl = `https://map.kakao.com/?q=${encodeURIComponent(
@@ -212,6 +217,18 @@ export function CandidateCard({
               ? `추정 ${formatEok(candidate.priceLowKrw!)}~${formatEok(candidate.priceHighKrw!)}`
               : `실거래 중위가 ${formatKrwHuman(candidate.medianPriceKrw)}`}
           </span>
+          {/* 근거 배지 — 추정가가 무엇에 근거하는지 스캔 가능하게(거래건수·기간). */}
+          <span
+            className="inline-flex items-center rounded-full bg-[#f3ece4] px-2 py-0.5 text-[11px] font-semibold"
+            style={{ color: "#9a8f82" }}
+            title="추정가 산정 근거 — 국토교통부 공개 실거래 기준"
+          >
+            {candidate.priceEstimated
+              ? "📊 주변시세 환산"
+              : candidate.priceFromPresale
+                ? `📊 분양권 ${candidate.transactionCount}건`
+                : `📊 실거래 ${candidate.transactionCount}건·${candidate.lowDataConfidence ? "최근1년" : "최근6개월"}`}
+          </span>
         </div>
         <p className="mt-1.5 text-xs" style={{ color: "#9a8f82" }}>
           {candidate.priceEstimated
@@ -322,6 +339,17 @@ export function CandidateCard({
             clipRule="evenodd"
           />
         </svg>
+      </a>
+
+      {/* 매물 0건 폴백 — 단지에 매물이 없을 때 동네 전체로 넓혀 보기. */}
+      <a
+        href={naverAreaUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="-mt-1.5 block text-center text-xs font-medium underline decoration-dotted underline-offset-2 transition-colors hover:text-coral-700"
+        style={{ color: "#9a8f82" }}
+      >
+        매물이 안 보이면 → {candidate.dongName} 동네 매물 둘러보기
       </a>
     </Card>
   );
