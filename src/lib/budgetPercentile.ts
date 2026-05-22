@@ -54,14 +54,14 @@ export interface BudgetTier {
 
 export function budgetTier(topPercent: number): BudgetTier {
   if (topPercent <= 1)
-    return { emoji: "🔥", label: "피버", drip: "비버계 끝판왕 — 지금이 부동산 피버타임", isFlex: true };
+    return { emoji: "🕺", label: "저스틴비버", drip: "비버계 월드스타 — 못 사는 집이 없음", isFlex: true };
   if (topPercent <= 10)
-    return { emoji: "🏆", label: "탑비버", drip: "비버 중의 TOP, 어디든 골라 지음", isFlex: true };
+    return { emoji: "🔥", label: "피버", drip: "지금이 부동산 피버타임, 어디든 골라 지음", isFlex: true };
   if (topPercent <= 30)
-    return { emoji: "😎", label: "난비버", drip: "난다긴다하는 비버, 상급지도 넘봄", isFlex: true };
+    return { emoji: "🏆", label: "탑비버", drip: "비버 중의 TOP, 상급지도 넘봄", isFlex: true };
   if (topPercent <= 50)
-    return { emoji: "🦫", label: "비버", drip: "단단한 국민 비버, 알짜만 콕", isFlex: true };
+    return { emoji: "😎", label: "난비버", drip: "난다긴다하는 비버, 알짜만 콕", isFlex: true };
   if (topPercent <= 70)
-    return { emoji: "🐣", label: "애기비버", drip: "이제 막 댐 배우는 중 — 비지가 옆에서 응원", isFlex: false };
-  return { emoji: "🎤", label: "저스틴비버", drip: "세상에서 제일 유명한 비버 ㅋㅋ 시작은 미약해도", isFlex: false };
+    return { emoji: "🦫", label: "비버", drip: "단단한 국민 비버, 차곡차곡", isFlex: false };
+  return { emoji: "🐣", label: "아기비버", drip: "이제 막 댐 배우는 중 — 비지가 옆에서 응원", isFlex: false };
 }
