@@ -10,25 +10,19 @@ interface ComplexInfo {
 /**
  * 카카오맵 길찾기 deep-link (출발지·도착지 좌표 지정).
  *
- * WHY 비공식 URL: 카카오 공식 웹 URL scheme(/link/to/)은 도착지만 지원해
- * "직장→단지" 경로를 보여줄 수 없다. sX/sY/eX/eY 쿼리 파라미터 방식은
- * 비공식이라 예고 없이 깨질 수 있으나, 출발지+도착지를 모두 넘기는 유일한
- * 웹 호환 방법이라 채택했다. 깨질 경우 이 함수 한 곳만 고치면 된다.
- * 좌표는 WGS84 경위도 — X=경도, Y=위도.
+ * 공식 /link 스킴: `/link/from/{이름},{위도},{경도}/to/{이름},{위도},{경도}`.
+ * 출발지·도착지를 좌표째 넘겨 재입력 없이 바로 경로가 뜬다.
+ * (이전 비공식 sX/sY 쿼리는 WGS84 좌표를 카카오가 다른 좌표계로 해석해
+ *  출발지가 엉뚱한 곳에 찍히고 "출발지 근처에 길이 없어요"가 떴다.)
+ * 좌표 순서 주의: /link 스킴은 위도(lat),경도(lng) 순. 이름의 쉼표는 인코딩.
  */
 function kakaoDirectionsUrl(
   origin: { name: string; lat: number; lng: number },
   dest: { name: string; lat: number; lng: number },
 ): string {
-  const params = new URLSearchParams({
-    sX: String(origin.lng),
-    sY: String(origin.lat),
-    sName: origin.name,
-    eX: String(dest.lng),
-    eY: String(dest.lat),
-    eName: dest.name,
-  });
-  return `https://map.kakao.com/?${params.toString()}`;
+  const seg = (p: { name: string; lat: number; lng: number }) =>
+    `${encodeURIComponent(p.name)},${p.lat},${p.lng}`;
+  return `https://map.kakao.com/link/from/${seg(origin)}/to/${seg(dest)}`;
 }
 
 export function CommuteDiagram({
