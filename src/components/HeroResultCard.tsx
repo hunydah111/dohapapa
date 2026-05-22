@@ -144,7 +144,7 @@ export function HeroResultCard({
           <div className="flex h-32 w-32 items-center justify-center rounded-full bg-white/18 shadow-inner ring-1 ring-white/25">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={`${homeType.image}?v=1`}
+              src={`${homeType.image}?v=2`}
               alt={`${homeType.name} 비지`}
               width={112}
               height={112}

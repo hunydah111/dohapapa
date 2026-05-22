@@ -659,15 +659,20 @@ export function HomeExperience() {
   // ── 결과 화면 ──────────────────────────────────────────────
   return (
     <div className="flex flex-col gap-8">
-      {/* 상단 바: 검토 단지 수 + 공유 + 처음부터 */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5">
+      {/* 상단 바: 검토 단지 수 + 공유 + 처음부터.
+          모바일에선 버튼군이 좁아 왼쪽 텍스트를 글자단위로 짓눌렀다 → flex-wrap 으로
+          버튼을 아랫줄로 내리고, 텍스트는 nowrap, 버튼군은 shrink-0 으로 보존. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-2">
+        <div className="flex items-center gap-1.5 min-w-0">
           <Homi mood="search" size={26} className="shrink-0" />
-          <p className="text-sm font-semibold" style={{ color: "#6b6157" }}>
+          <p
+            className="text-sm font-semibold whitespace-nowrap"
+            style={{ color: "#6b6157" }}
+          >
             검토 {result.consideredComplexCount.toLocaleString()}개 단지 분석 완료
           </p>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           <Button variant="ghost" size="md" onClick={toggleSerious}>
             {serious ? "🦫 재미 모드" : "🎩 진지 모드"}
           </Button>

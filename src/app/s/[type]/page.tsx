@@ -40,7 +40,7 @@ export default async function Page({
         style={{ background: "radial-gradient(circle, rgba(224,162,58,0.18) 0%, rgba(245,236,217,0) 70%)" }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={`${ht.image}?v=1`} alt={`${ht.name} 비지`} className="h-36 w-auto" />
+        <img src={`${ht.image}?v=2`} alt={`${ht.name} 비지`} className="h-36 w-auto" />
       </div>
 
       <p className="text-sm font-semibold tracking-wide" style={{ color: "#9a8f82" }}>
