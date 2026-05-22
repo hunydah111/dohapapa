@@ -6,7 +6,7 @@ delete process.env.KAKAO_REST_KEY;
 import { recommendComplexes } from "@/lib/recommend";
 import { db } from "@/lib/db";
 import type { RecommendationResult, MoreCandidate, RelaxationAction } from "@/types/recommendation";
-import type { CoupleProfile, Workplace, AreaRangeKey, HouseholdType, CommuteMode } from "@/types/profile";
+import type { CoupleProfile, Workplace, AreaRangeKey, CommuteMode } from "@/types/profile";
 
 const WP: Record<string, { lat: number; lng: number }> = {
   강남역: { lat: 37.498086, lng: 127.028001 },

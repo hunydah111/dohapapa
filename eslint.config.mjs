@@ -22,6 +22,13 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  {
+    // 일회성 CommonJS 자산 스크립트 — require() 정상
+    files: ["**/*.cjs"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;
