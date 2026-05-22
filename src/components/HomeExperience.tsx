@@ -672,6 +672,17 @@ export function HomeExperience() {
                 )
               : null
           }
+          profileRadar={[
+            state.profile.priorities.commute ?? 0,
+            state.profile.priorities.school ?? 0,
+            state.profile.priorities.buildingAge ?? 0,
+            state.profile.priorities.largeComplex ?? 0,
+            (() => {
+              const bp = budgetTopPercent(result.budget.netPurchasePowerKrw);
+              return bp != null ? ((100 - bp) / 100) * 5 : 2.5;
+            })(),
+          ]}
+          neighborhood={neighborhood[result.candidates[0].complexId]}
         />
       )}
 

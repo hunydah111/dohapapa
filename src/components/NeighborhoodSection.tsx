@@ -24,7 +24,7 @@ const AXES: { key: keyof NeighborhoodData["scores"]; label: string }[] = [
   { key: "liquidity", label: "환금" },
 ];
 
-function Radar({ scores }: { scores: NeighborhoodData["scores"] }) {
+export function NeighborhoodRadar({ scores }: { scores: NeighborhoodData["scores"] }) {
   const size = 168;
   const cx = size / 2;
   const cy = size / 2;
@@ -145,7 +145,7 @@ export function NeighborhoodInline({ data }: { data: NeighborhoodData }) {
         동네 · 반경 1km 시설 수 기반 사실 정보예요 (추천·평가 아님)
       </p>
       <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center">
-        <Radar scores={data.scores} />
+        <NeighborhoodRadar scores={data.scores} />
         <div className="flex flex-1 flex-wrap gap-1.5">
           <Chip>
             🚇{" "}

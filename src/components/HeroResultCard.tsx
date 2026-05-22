@@ -1,14 +1,60 @@
 import type { ReactNode } from "react";
 import type { ComplexCandidate } from "@/types/recommendation";
 import type { HomeType } from "@/lib/homeType";
+import type { NeighborhoodData } from "@/lib/neighborhood";
 import { formatKrwHuman } from "@/lib/format";
+import { budgetTier } from "@/lib/budgetPercentile";
 import { SITE_URL } from "@/lib/site";
+import { NeighborhoodRadar } from "./NeighborhoodSection";
 
 function Badge({ children }: { children: ReactNode }) {
   return (
     <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-sm font-semibold text-white backdrop-blur-sm">
       {children}
     </span>
+  );
+}
+
+// 유형 프로필 레이더 — 사용자 우선순위(통근·학군·신축·대단지·예산) 5각형. 그라데이션 위라 흰 반투명.
+// 바닥 floor 0.32 — 0점 축도 중심까지 안 꺼지게(우리 '안 까는' 원칙).
+const PROFILE_AXES = ["통근", "학군", "신축", "대단지", "예산"];
+function ProfileRadar({ values }: { values: number[] }) {
+  const size = 152;
+  const cx = size / 2;
+  const cy = size / 2;
+  const maxR = 44;
+  const n = PROFILE_AXES.length;
+  const FLOOR = 0.32;
+  const pt = (i: number, r: number) => {
+    const a = -Math.PI / 2 + (i * 2 * Math.PI) / n;
+    return [cx + r * Math.cos(a), cy + r * Math.sin(a)] as const;
+  };
+  const ring = (f: number) =>
+    PROFILE_AXES.map((_, i) => pt(i, maxR * f).join(",")).join(" ");
+  const radius = (v: number) =>
+    maxR * (FLOOR + (1 - FLOOR) * (Math.max(0, Math.min(5, v)) / 5));
+  const dataPoly = PROFILE_AXES.map((_, i) =>
+    pt(i, radius(values[i] ?? 0)).join(","),
+  ).join(" ");
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
+      {[1, 0.66, 0.33].map((f) => (
+        <polygon key={f} points={ring(f)} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth={1} />
+      ))}
+      {PROFILE_AXES.map((_, i) => {
+        const [x, y] = pt(i, maxR);
+        return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(255,255,255,0.25)" strokeWidth={1} />;
+      })}
+      <polygon points={dataPoly} fill="rgba(255,224,130,0.45)" stroke="#ffe082" strokeWidth={2} />
+      {PROFILE_AXES.map((ax, i) => {
+        const [x, y] = pt(i, maxR + 11);
+        return (
+          <text key={ax} x={x} y={y} textAnchor="middle" dominantBaseline="middle" fontSize={11} fontWeight={700} fill="rgba(255,255,255,0.9)">
+            {ax}
+          </text>
+        );
+      })}
+    </svg>
   );
 }
 
@@ -38,6 +84,8 @@ export function HeroResultCard({
   budgetTopPercent,
   budgetNetKrw,
   typeRarityPercent,
+  profileRadar,
+  neighborhood,
 }: {
   candidate: ComplexCandidate;
   homeType: HomeType;
@@ -48,6 +96,10 @@ export function HeroResultCard({
   budgetNetKrw?: number;
   /** 이 유형이 전체 방문자 중 차지하는 % (표본 충분할 때만). null = 숨김. */
   typeRarityPercent?: number | null;
+  /** 유형 프로필 레이더 값 [통근,학군,신축,대단지,예산] 0~5. */
+  profileRadar?: number[];
+  /** 1순위 단지 동네 데이터 — 아파트 옆 5각형(아래 카드와 동일). */
+  neighborhood?: NeighborhoodData | null;
 }) {
   // 유형 카드 공유 링크 — 프로필 없이 유형만(바이럴 안전). /s/{slug} 에 동적 OG 카드.
   const typeShareUrl = `${SITE_URL}/s/${homeType.slug}`;
@@ -114,25 +166,46 @@ export function HeroResultCard({
         </p>
       )}
 
-      {/* ── 구매력 줄세우기 밴드 — 유리할 때(상위 50% 이내)만. 사용자 예산을 실거래가 분포에
-          줄 세움(특정 단지/동네 아님). 미래예측 아님·추정 표기로 컴플라이언스 안전. ── */}
-      {budgetTopPercent != null && budgetTopPercent <= 50 && (
-        <div className="mx-auto mt-5 max-w-sm rounded-2xl bg-white/15 px-4 py-3 text-center backdrop-blur-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-white/75">
-            내 추정 구매력
+      {/* 유형 레이더 — 내 우선순위 5각형(왜 이 유형인지 시각화). 동네 5각형과 별개. */}
+      {profileRadar && (
+        <div className="mt-4 flex flex-col items-center">
+          <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-white/70">
+            내 집 찾기 프로필
           </p>
-          <p className="mt-1 text-[17px] font-extrabold leading-snug text-amber-100">
-            💪{" "}
-            {budgetNetKrw != null && budgetNetKrw > 0 && (
-              <>{formatKrwHuman(budgetNetKrw)} · </>
-            )}
-            최근 수도권 실거래 상위 {budgetTopPercent}% 가격대까지 닿아요
-          </p>
-          <p className="mt-1 text-[11px] leading-relaxed text-white/60">
-            국토교통부 실거래가 기반 추정 · 미래가치 예측이 아닙니다
-          </p>
+          <ProfileRadar values={profileRadar} />
         </div>
       )}
+
+      {/* ── 구매력 계급 밴드 — 전 구간 노출. 사용자 예산을 실거래가 분포에 줄 세움(특정 단지 아님).
+          최하위(isFlex=false)는 숫자 숨기고 응원 라벨만. 미래예측 아님·추정 표기로 컴플라이언스 안전. ── */}
+      {budgetTopPercent != null &&
+        (() => {
+          const t = budgetTier(budgetTopPercent);
+          return (
+            <div className="mx-auto mt-5 max-w-sm rounded-2xl bg-white/15 px-4 py-3.5 text-center backdrop-blur-sm">
+              <p className="text-xs font-semibold uppercase tracking-wider text-white/75">
+                내 구매력 계급
+              </p>
+              <p className="mt-1.5 text-2xl font-extrabold leading-tight">
+                {t.emoji} {t.label}
+              </p>
+              <p className="mt-1 text-[13px] font-semibold text-amber-100">
+                {budgetNetKrw != null && budgetNetKrw > 0
+                  ? `${formatKrwHuman(budgetNetKrw)} · `
+                  : ""}
+                {t.isFlex
+                  ? `수도권 실거래 상위 ${budgetTopPercent}%`
+                  : "지금부터 차곡차곡"}
+              </p>
+              <p className="mt-1.5 text-[12px] leading-relaxed text-white/85">
+                &ldquo;{t.drip}&rdquo;
+              </p>
+              <p className="mt-2 text-[11px] leading-relaxed text-white/55">
+                국토교통부 실거래가 기반 추정 · 미래가치 예측이 아닙니다
+              </p>
+            </div>
+          );
+        })()}
 
       {/* 구분선 */}
       <div className="my-6 h-px w-full bg-white/20" />
@@ -190,6 +263,16 @@ export function HeroResultCard({
         {candidate.isChopumah && <Badge>🏫 초품아</Badge>}
         {candidate.vibeBadge && <Badge>{candidate.vibeBadge}</Badge>}
       </div>
+
+      {/* 동네 5각형 — 1순위 단지 반경 1km(아래 카드와 동일한 레이더). 흰 박스로 동일 스타일 유지. */}
+      {neighborhood && (
+        <div className="fade-in-up mt-5 flex flex-col items-center rounded-2xl bg-white p-3">
+          <p className="mb-1 self-start text-[11px] font-semibold" style={{ color: "#9a8f82" }}>
+            동네 · 반경 1km 시설 (사실, 추천·평가 아님)
+          </p>
+          <NeighborhoodRadar scores={neighborhood.scores} />
+        </div>
+      )}
 
       {/* 공유 */}
       <button

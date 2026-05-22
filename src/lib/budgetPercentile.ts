@@ -38,3 +38,34 @@ export function budgetTopPercent(budgetKrw: number): number | null {
   // 상위 X% = 100 - affordable%.
   return 100 - affordPct;
 }
+
+// ── 구매력 계급도 ("비버 빌드" 컨셉) ─────────────────────────────────────────
+// 상위 X% → 재미있는 등급. 위는 비현실 플렉스로 띄우고, 아래는 '짓는 중'으로 절대 안 깐다.
+// 컴플라이언스: '구매력=지을 수 있는 집 규모' 비유일 뿐, 자산가치·미래가치·투자권유 아님.
+// isFlex=false(그 이하)면 "상위 N%" 숫자를 숨겨 박탈감을 차단한다.
+export interface BudgetTier {
+  emoji: string;
+  label: string;
+  /** 결과 카드용 위트 한 줄. */
+  drip: string;
+  /** true면 "상위 N%" 노출, false(최하위)면 숫자 숨김. */
+  isFlex: boolean;
+}
+
+export function budgetTier(topPercent: number): BudgetTier {
+  if (topPercent <= 1)
+    return { emoji: "🤵", label: "집사 둔 비버", drip: "집이 몇 채인지 집사한테 물어봄", isFlex: true };
+  if (topPercent <= 3)
+    return { emoji: "🧠", label: "똘똘한 비버", drip: "여러 채 다 팔고 똘똘한 한 채로 갈아탐", isFlex: true };
+  if (topPercent <= 5)
+    return { emoji: "🏭", label: "반도체 산 비버", drip: "집 살 돈으로 반도체를 삼", isFlex: true };
+  if (topPercent <= 10)
+    return { emoji: "🏠", label: "콘크리트 집 비버", drip: "늑대가 보더니 한숨 쉬고 돌아감", isFlex: true };
+  if (topPercent <= 20)
+    return { emoji: "🧱", label: "벽돌집 비버", drip: "늑대가 후—후— 불어도 끄떡없음", isFlex: true };
+  if (topPercent <= 35)
+    return { emoji: "🪵", label: "나무집 비버", drip: "아기돼지였음 둘째 집, 비지라 더 야무지게", isFlex: true };
+  if (topPercent <= 50)
+    return { emoji: "🚧", label: "터 닦는 비버", drip: "터부터 반반하게 다지는 중, 집은 곧 올림", isFlex: true };
+  return { emoji: "🪓", label: "나무 찾는 비버", drip: "통나무부터 모으는 중 — 좋은 나무는 발품이 답", isFlex: false };
+}
