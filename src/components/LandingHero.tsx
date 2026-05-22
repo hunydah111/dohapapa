@@ -33,33 +33,37 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
         }}
       />
 
-      {/* 비집고 로고 비지 — 아파트 사이를 비집고 들어가는 비버 + 등장 모션 */}
+      {/* 비집고 로고 비지 — 아파트 사이를 비집고 들어가는 비버 + 등장 모션 (투명 배경, 건물·비버만) */}
       <div className="biji-pop-in flex justify-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/biji/biji-hero.png?v=1"
+          src="/biji/biji-hero.png?v=2"
           alt="비집고 비지 — 아파트 사이를 비집고"
           width={132}
           height={132}
-          className="h-32 w-32 rounded-3xl drop-shadow-md"
+          className="h-32 w-32 drop-shadow-md"
           draggable={false}
         />
       </div>
 
-      {/* 메인 캐치프레이즈 — 슬로건 */}
-      <h1
-        className="font-jua mt-2 text-[2.1rem] leading-[1.2] tracking-tight sm:text-[2.9rem]"
-        style={{ color: "#3a2c1d" }}
-      >
-        묻고 따지고 <span className="text-coral-600">비집고</span>
-      </h1>
-
-      {/* 서브 캐치프레이즈 — 무엇을 하는 서비스인지 */}
+      {/* 캐치프레이즈 — "내 통장으로 / 비집고 / 살 집 찾기" 순서 재배치 (각 줄 폰트·크기는 기존 그대로) */}
       <p
         className="font-jua mx-auto mt-2 text-[17px] sm:text-[19px]"
         style={{ color: "#6b6157" }}
       >
-        내 통장으로 살 집 찾기
+        내 통장으로
+      </p>
+      <h1
+        className="font-jua mt-1 text-[2.1rem] leading-[1.2] tracking-tight sm:text-[2.9rem]"
+        style={{ color: "#3a2c1d" }}
+      >
+        <span className="text-coral-600">비집고</span>
+      </h1>
+      <p
+        className="font-jua mx-auto mt-1 text-[17px] sm:text-[19px]"
+        style={{ color: "#6b6157" }}
+      >
+        살 집 찾기
       </p>
 
       {/* 예시 결과 미니카드 — 무엇을 받는지 미리 보여주기(가짜임을 명시) */}
