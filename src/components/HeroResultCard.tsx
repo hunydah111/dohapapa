@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { ComplexCandidate } from "@/types/recommendation";
 import type { HomeType } from "@/lib/homeType";
 import { formatKrwHuman } from "@/lib/format";
+import { SITE_URL } from "@/lib/site";
 
 function Badge({ children }: { children: ReactNode }) {
   return (
@@ -37,8 +38,10 @@ export function HeroResultCard({
 }: {
   candidate: ComplexCandidate;
   homeType: HomeType;
-  onShare: () => void;
+  onShare: (url?: string) => void;
 }) {
+  // 유형 카드 공유 링크 — 프로필 없이 유형만(바이럴 안전). /s/{slug} 에 동적 OG 카드.
+  const typeShareUrl = `${SITE_URL}/s/${homeType.slug}`;
   const totalCommute = candidate.commuteLegs.reduce(
     (sum, leg) => sum + leg.minutes,
     0,
@@ -154,7 +157,7 @@ export function HeroResultCard({
       {/* 공유 */}
       <button
         type="button"
-        onClick={onShare}
+        onClick={() => onShare(typeShareUrl)}
         className="mt-7 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-coral-700 shadow-lg transition-transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-white/70"
       >
         내 유형 카드 공유하기
@@ -169,7 +172,8 @@ export function HeroResultCard({
       </button>
 
       <p className="mt-3 text-[11px] leading-relaxed text-white/70">
-        ⚠️ 공유 링크엔 입력한 소득·자산·직장 정보가 담겨요. 믿는 사람에게만 보내세요.
+        🦫 유형 카드만 공유돼요 — 소득·자산·직장 정보는 안 담깁니다. (위 &lsquo;결과 공유&rsquo;는
+        부부끼리 같은 결과를 보는 링크예요)
       </p>
       <p className="mt-2 text-[11px] leading-relaxed text-white/60">
         실거래가 기반 추정 정보 · 부동산 중개·투자자문이 아닙니다

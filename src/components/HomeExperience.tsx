@@ -358,12 +358,16 @@ export function HomeExperience() {
     };
   }, [state?.result, state?.profile]);
 
-  async function handleShare() {
+  // shareUrl 미지정 = 전체 결과 링크(부부 공유, 프로필 해시 포함). 지정 시 유형 카드(/s/) 등.
+  async function handleShare(shareUrl?: string) {
     if (!state) return;
-    const url = window.location.href;
+    const url = shareUrl ?? window.location.href;
+    const isTypeCard = !!shareUrl && shareUrl.includes("/s/");
     const shareData = {
       title: "비집고",
-      text: "비버 비지가 찾아준 내 집 — 내 결과 보기",
+      text: isTypeCard
+        ? "내 집 찾기 유형 나왔다 — 너도 해봐! 🦫"
+        : "비버 비지가 찾아준 내 집 — 내 결과 보기",
       url,
     };
 
@@ -382,7 +386,11 @@ export function HomeExperience() {
     // 2. 폴백 — 링크 복사 (공유 API 미지원 브라우저)
     try {
       await navigator.clipboard.writeText(url);
-      setShareToast("링크 복사됨 ⚠️ 소득·자산·직장 정보가 담겨 있어요 — 믿는 사람에게만 보내세요.");
+      setShareToast(
+        isTypeCard
+          ? "유형 카드 링크 복사됨! 친구에게 보내보세요 🦫"
+          : "링크 복사됨 ⚠️ 소득·자산·직장 정보가 담겨 있어요 — 믿는 사람에게만 보내세요.",
+      );
     } catch {
       setShareToast("복사에 실패했어요. 주소창에서 직접 복사해주세요.");
     }
@@ -575,7 +583,7 @@ export function HomeExperience() {
           </p>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="md" onClick={handleShare}>
+          <Button variant="ghost" size="md" onClick={() => handleShare()}>
             <span className="inline-flex items-center gap-1.5">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
