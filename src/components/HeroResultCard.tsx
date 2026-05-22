@@ -191,11 +191,9 @@ export function HeroResultCard({
               </p>
               <p className="mt-1 text-[13px] font-semibold text-amber-100">
                 {budgetNetKrw != null && budgetNetKrw > 0
-                  ? `${formatKrwHuman(budgetNetKrw)} · `
+                  ? formatKrwHuman(budgetNetKrw)
                   : ""}
-                {t.isFlex
-                  ? `수도권 실거래 상위 ${budgetTopPercent}%`
-                  : "지금부터 차곡차곡"}
+                {t.isFlex ? ` · 수도권 실거래 상위 ${budgetTopPercent}%` : ""}
               </p>
               <p className="mt-1.5 text-[12px] leading-relaxed text-white/85">
                 &ldquo;{t.drip}&rdquo;

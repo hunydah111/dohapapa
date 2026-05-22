@@ -67,5 +67,7 @@ export function budgetTier(topPercent: number): BudgetTier {
     return { emoji: "🪵", label: "나무집 비버", drip: "아기돼지였음 둘째 집, 비지라 더 야무지게", isFlex: true };
   if (topPercent <= 50)
     return { emoji: "🚧", label: "터 닦는 비버", drip: "터부터 반반하게 다지는 중, 집은 곧 올림", isFlex: true };
-  return { emoji: "🪓", label: "나무 찾는 비버", drip: "통나무부터 모으는 중 — 좋은 나무는 발품이 답", isFlex: false };
+  if (topPercent <= 70)
+    return { emoji: "🌱", label: "청년 비버", drip: "사회 초년 비버, 종잣돈부터 차곡차곡", isFlex: false };
+  return { emoji: "🐣", label: "아기 비버", drip: "이제 막 강에 도착! 비지가 헤엄부터 가르쳐줌", isFlex: false };
 }
