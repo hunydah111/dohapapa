@@ -23,6 +23,7 @@ import { Card } from "@/components/ui/Card";
 import { formatKrwHuman } from "@/lib/format";
 import { SHARE_PARAM, encodeProfile, decodeProfile } from "@/lib/shareLink";
 import { MiniMap, KAKAO_JS_ENABLED } from "./MiniMap";
+import { NeighborhoodSection } from "./NeighborhoodSection";
 
 type ResultState = {
   result: RecommendationResult;
@@ -784,6 +785,19 @@ export function HomeExperience() {
             </Button>
           </div>
         </Card>
+      )}
+
+      {/* 동네 분석 — 표시 단지 반경 1km 시설 사실 + 5축 레이더 (카카오 REST 키 있을 때만) */}
+      {result.candidates.length > 0 && (
+        <NeighborhoodSection
+          items={result.candidates.map((c) => ({
+            id: c.complexId,
+            name: c.complexName,
+            lat: c.latitude,
+            lng: c.longitude,
+            transactionCount: c.transactionCount,
+          }))}
+        />
       )}
 
       {/* 결과 위치 미니맵 — 조건에 맞는 단지 N곳 + 직장 위치 (카카오 JS 키 있을 때만) */}
