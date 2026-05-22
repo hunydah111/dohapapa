@@ -56,7 +56,7 @@ export function CommuteDiagram({
         : "통근 시간은 카카오 길찾기 표준 트래픽 기준 추정이에요.";
 
   return (
-    <div className="flex flex-col gap-4 rounded-2xl bg-[#f3ece4] px-4 py-4">
+    <div className="flex flex-col gap-3 rounded-2xl bg-[#f3ece4] px-4 py-3">
       <p
         className="text-xs font-semibold tracking-wide uppercase"
         style={{ color: "#6b6157" }}
@@ -64,7 +64,7 @@ export function CommuteDiagram({
         통근 추정
       </p>
 
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-3">
         {legs.map((leg) => {
           const isTransit = leg.mode === "transit";
           // 대중교통 실측 대기 중(ODsay 호출 전)이면 mock 분·색을 보이지 않는다 — 숫자 점프 방지.
@@ -97,7 +97,7 @@ export function CommuteDiagram({
           return (
             <div
               key={leg.workplace}
-              className={`rounded-xl ${bgColor} px-3 py-3 flex flex-col gap-2`}
+              className={`rounded-xl ${bgColor} px-3 py-2.5 flex flex-col gap-1.5`}
             >
               {/* 도식: 직장 ●──거리──● 단지 */}
               <div className="flex items-center gap-2">

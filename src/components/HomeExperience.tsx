@@ -149,9 +149,14 @@ export function HomeExperience() {
     (result: RecommendationResult, profile: CoupleProfile) => {
       setState({ result, profile });
       setPanelOpen(false);
-      // 조건 수정 패널 기본값을 현재 프로필로 초기화 (만원 단위)
-      const seedManwon = Math.round(profile.seedMoneyKrw / 10_000);
-      setEditSeedMoneyMan(String(seedManwon));
+      // 조건 수정 패널 기본값을 현재 프로필로 초기화 (만원 단위).
+      // 간단(simple) 모드는 예산 드라이버가 availableBudgetKrw 이므로 그 값을 보여준다
+      // (seedMoneyKrw 는 simple 에서 무시되므로 보여주면 사용자가 혼동·미반영됨).
+      const cashKrw =
+        profile.budgetMode === "simple"
+          ? profile.availableBudgetKrw ?? 0
+          : profile.seedMoneyKrw;
+      setEditSeedMoneyMan(String(Math.round(cashKrw / 10_000)));
       setEditAreaRanges(profile.preferredAreaRanges);
       setEditMaxCommuteA(
         profile.workplaceA ? String(profile.workplaceA.maxCommuteMinutes) : "",
@@ -425,11 +430,14 @@ export function HomeExperience() {
     setReanalyzing(true);
     setReanalyzeError(null);
 
-    // 만원 단위 → 원 변환 (P1 단위 통일). 빈 값이면 기존 profile 값 유지.
-    const seedKrw =
+    // 만원 단위 → 원 변환 (P1 단위 통일). 빈 값이면 기존 값 유지(아래 머지에서 미적용).
+    // 간단(simple) 모드는 예산이 availableBudgetKrw 로만 결정되고 seedMoneyKrw 는
+    // 무시되므로(budget.ts), 현금 입력을 모드에 맞는 필드에 넣어야 반영된다.
+    const isSimpleBudget = state.profile.budgetMode === "simple";
+    const editedCashKrw =
       editSeedMoneyMan.trim() !== ""
         ? Math.round(parseFloat(editSeedMoneyMan)) * 10_000
-        : state.profile.seedMoneyKrw;
+        : null;
 
     const areaRanges: AreaRangeKey[] =
       editAreaRanges.length > 0
@@ -448,10 +456,14 @@ export function HomeExperience() {
       ? parsedB
       : state.profile.workplaceB?.maxCommuteMinutes ?? 50;
 
-    // 기존 프로필에 변경값 머지
+    // 기존 프로필에 변경값 머지 — 현금 입력은 예산모드에 맞는 필드로(반영 보장).
     const merged: CoupleProfile = {
       ...state.profile,
-      seedMoneyKrw: seedKrw,
+      ...(editedCashKrw != null
+        ? isSimpleBudget
+          ? { availableBudgetKrw: editedCashKrw }
+          : { seedMoneyKrw: editedCashKrw }
+        : {}),
       preferredAreaRanges: areaRanges,
       requiredRegions:
         editRequiredRegions.length > 0 ? editRequiredRegions : undefined,
@@ -1219,9 +1231,12 @@ export function HomeExperience() {
               자주 바꾸는 조건만 수정하고 다시 분석할 수 있습니다.
             </p>
 
-            {/* P1 단위 통일: 만원 단위 — 입력 시 처음 폼처럼 억 환산을 아래에 표시 */}
+            {/* 만원 단위 — 예산모드에 맞춰 라벨/대상 필드가 달라진다.
+                간단(simple): 가용 예산(availableBudgetKrw) / 상세(detailed): 보유 현금(seedMoneyKrw) */}
             <TextField
-              label="보유 현금"
+              label={
+                state.profile.budgetMode === "simple" ? "가용 예산" : "보유 현금"
+              }
               type="number"
               value={editSeedMoneyMan}
               onChange={setEditSeedMoneyMan}
@@ -1229,8 +1244,14 @@ export function HomeExperience() {
               placeholder="예: 30000"
               hint={
                 editSeedMoneyMan.trim() && parseFloat(editSeedMoneyMan) > 0
-                  ? `= ${formatKrwHuman(parseFloat(editSeedMoneyMan) * 10_000)} · 갈아타기 매도액 별도`
-                  : "보유 현금 기준 (갈아타기 매도액 별도). 만원 단위로 입력."
+                  ? `= ${formatKrwHuman(parseFloat(editSeedMoneyMan) * 10_000)}${
+                      state.profile.budgetMode === "simple"
+                        ? " · 이 예산으로 살 단지를 찾아요"
+                        : " · 갈아타기 매도액 별도"
+                    }`
+                  : state.profile.budgetMode === "simple"
+                    ? "이 금액으로 살 수 있는 단지를 찾아요. 만원 단위로 입력."
+                    : "보유 현금 기준 (갈아타기 매도액 별도). 만원 단위로 입력."
               }
             />
 

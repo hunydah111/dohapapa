@@ -110,7 +110,7 @@ export function CandidateCard({
   }
 
   return (
-    <Card className="flex flex-col gap-5">
+    <Card className="flex flex-col gap-4">
       {/* 상단 행: 티어 배지 + 순위 + 초품아 + 종합점수 */}
       <div className="flex items-center gap-2.5 flex-wrap">
         <span
@@ -270,18 +270,18 @@ export function CandidateCard({
 
       {/* 리포트 — 왜 뽑혔는지 */}
       <div
-        className="rounded-2xl px-4 py-4"
+        className="rounded-2xl px-4 py-3"
         style={{
           background: "linear-gradient(135deg, #eef2ff 0%, #f0fdf4 100%)",
         }}
       >
         <p
-          className="text-xs font-semibold mb-3"
+          className="text-xs font-semibold mb-2"
           style={{ color: "#f2603c" }}
         >
           선택 이유
         </p>
-        <dl className="flex flex-col gap-2.5">
+        <dl className="flex flex-col gap-2">
           {reasonRows.map((r) => (
             <div key={r.label} className="flex gap-2.5 text-sm leading-relaxed">
               <dt
@@ -309,14 +309,14 @@ export function CandidateCard({
       />
 
       {/* 신호 바 — 항목별 점수 */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
         <p className="text-xs font-semibold" style={{ color: "#9a8f82" }}>
           항목별 점수
         </p>
         {SIGNAL_ORDER.map((key) => {
           const score = candidate.scores[key];
           return (
-            <div key={key} className="flex flex-col gap-1.5">
+            <div key={key} className="flex flex-col gap-1">
               <div className="flex items-center justify-between">
                 <span
                   className="text-xs font-medium"
