@@ -1,17 +1,19 @@
-name: daily-data-refresh
+name: weekly-data-refresh
 
-# 매일 새벽 6시(KST) 실거래 증분 갱신 → JSON 커밋 → Vercel 자동 배포.
-# 06:00 KST = 21:00 UTC (전날). 수동 실행도 가능(workflow_dispatch).
+# 매주 일요일 새벽 6시(KST) 실거래 증분 갱신 → 스냅샷 등 JSON 커밋 → Vercel 자동 배포.
+# 일 06:00 KST = 토 21:00 UTC → cron "0 21 * * 6". 수동 실행도 가능(workflow_dispatch).
+# 주 1회인 이유: MOLIT 실거래는 월 단위로 변하고, 앱이 읽는 complexSnapshot.json 이 6.6MB라
+# 매일 커밋하면 깃 히스토리가 폭증한다. 주 1회면 신선도 충분 + 저장/배포 비용 절감.
 on:
   schedule:
-    - cron: "0 21 * * *"
+    - cron: "0 21 * * 6"
   workflow_dispatch: {}
 
 permissions:
   contents: write
 
 concurrency:
-  group: daily-data
+  group: weekly-data
   cancel-in-progress: false
 
 jobs:
@@ -41,17 +43,20 @@ jobs:
       # 3) 번들에 박히는 JSON 재생성(추세지수 + 첫화면 갱신일).
       - run: npx tsx scripts/build-trend-index.ts
       - run: npx tsx scripts/build-data-meta.ts
+      # 4) 앱이 런타임에 읽는 단지 스냅샷 재생성(Neon 에서 읽음, build-trend-index 다음).
+      #    ★ 이 단계가 빠지면 갱신분이 사이트에 반영되지 않는다 — 런타임은 DB 가 아니라 이 JSON 만 읽음.
+      - run: npx tsx scripts/build-snapshot.ts
 
-      # 4) 바뀐 데이터 JSON 만 커밋 → push 시 Vercel 자동 배포.
-      #    (분양권(fetch-presale)은 변동이 드물고 호출이 무거워 데일리에서 제외 — 필요 시 수동/주간.)
+      # 5) 바뀐 데이터 JSON 만 커밋 → push 시 Vercel 자동 배포.
+      #    (분양권(fetch-presale)은 변동이 드물고 호출이 무거워 제외 — 필요 시 수동.)
       - name: commit refreshed data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data/trendIndex.json src/data/dataMeta.json
+          git add src/data/trendIndex.json src/data/dataMeta.json src/data/complexSnapshot.json
           if git diff --staged --quiet; then
             echo "변경 없음 — 커밋 생략"
           else
-            git commit -m "chore(data): 일일 실거래 갱신 ($(date +%Y-%m-%d))"
+            git commit -m "chore(data): 주간 실거래 갱신 ($(date +%Y-%m-%d))"
             git push
           fi
