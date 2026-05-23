@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: `연락처 — ${SITE_NAME}`,
   description: `${SITE_NAME} 운영자 연락처 및 문의 안내`,
   robots: { index: true, follow: true },
+  alternates: { canonical: "/contact" },
 };
 
 export default function ContactPage() {

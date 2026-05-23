@@ -21,6 +21,7 @@ export async function generateMetadata({
   return {
     title: `나의 집 찾기 유형: ${ht.name} | 비집고`,
     description: `${ht.tagline} — 비집고에서 내 통장으로 살 수 있는 집을 찾아보세요.`,
+    alternates: { canonical: `/s/${type}` },
   };
 }
 

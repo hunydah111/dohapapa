@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: `이용약관 — ${SITE_NAME}`,
   description: `${SITE_NAME} 서비스 이용약관`,
   robots: { index: true, follow: true },
+  alternates: { canonical: "/terms" },
 };
 
 export default function TermsPage() {

@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import { HomeExperience } from "@/components/HomeExperience";
+
+// apex(homenasia.kr)·www 둘 다 200으로 서빙하므로, 검색엔진엔 www를 정본으로 알린다.
+// 상대경로는 layout의 metadataBase(https://www.homenasia.kr)로 합성됨.
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 export default function HomePage() {
   return (

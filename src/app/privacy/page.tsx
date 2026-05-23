@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: `개인정보처리방침 — ${SITE_NAME}`,
   description: `${SITE_NAME}의 개인정보 수집·이용에 관한 안내`,
   robots: { index: true, follow: true },
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {
