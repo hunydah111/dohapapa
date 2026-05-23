@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# og-check.mjs 가 저장하는 라이브 OG 이미지 미리보기(검증용, 버전관리 불필요)
+scripts/.og-preview/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
