@@ -809,6 +809,12 @@ export function HomeExperience() {
           <div className="flex items-center gap-3">
             <Homi mood="cheer" size={56} className="shrink-0" />
             <div>
+              <p
+                className="whitespace-nowrap text-[12px] font-bold"
+                style={{ color: "#e8662f" }}
+              >
+                피버 (골라짓는 비버)
+              </p>
               <h2 className="text-xl font-bold" style={{ color: "#3a322c" }}>
                 딱 맞는 집 찾았어요!
               </h2>

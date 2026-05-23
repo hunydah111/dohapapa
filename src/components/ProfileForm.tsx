@@ -789,30 +789,22 @@ export function ProfileForm({
               (type) => {
                 const meta: Record<
                   HouseholdType,
-                  { emoji: string; sub: string; circle: string; idle: string }
+                  { sub: string; idle: string }
                 > = {
                   single: {
-                    emoji: "🧍",
                     sub: "1인 통근 기준",
-                    circle: "bg-coral-200",
                     idle: "border-coral-200 bg-coral-50 hover:border-coral-400",
                   },
                   dualIncome: {
-                    emoji: "👫",
                     sub: "두 직장 고려",
-                    circle: "bg-amber-200",
                     idle: "border-amber-200 bg-amber-50 hover:border-amber-400",
                   },
                   singleIncome: {
-                    emoji: "👨‍👩‍👧",
                     sub: "한 직장 기준",
-                    circle: "bg-rose-200",
                     idle: "border-rose-200 bg-rose-50 hover:border-rose-400",
                   },
                   retired: {
-                    emoji: "🌿",
                     sub: "통근 조건 없음",
-                    circle: "bg-[#dccdb0]",
                     idle: "border-[#e0d3bf] bg-[#f5efe3] hover:border-[#cbb89a]",
                   },
                 };
@@ -824,7 +816,7 @@ export function ProfileForm({
                     type="button"
                     onClick={() => setHouseholdType(type)}
                     className={[
-                      "flex items-center gap-2.5 rounded-2xl border-2 px-3 py-3 text-left transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-coral-400",
+                      "rounded-2xl border-2 px-4 py-3.5 text-left transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-coral-400",
                       selected
                         ? "border-coral-600 bg-coral-50 shadow-md ring-2 ring-coral-200"
                         : m.idle,
@@ -832,25 +824,14 @@ export function ProfileForm({
                   >
                     <span
                       className={[
-                        "flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[22px]",
-                        m.circle,
+                        "block text-[15px] font-bold leading-tight",
+                        selected ? "text-coral-700" : "text-[#3a322c]",
                       ].join(" ")}
-                      aria-hidden
                     >
-                      {m.emoji}
+                      {HOUSEHOLD_TYPE_LABELS[type]}
                     </span>
-                    <span className="min-w-0">
-                      <span
-                        className={[
-                          "block text-[14px] font-bold leading-tight",
-                          selected ? "text-coral-700" : "text-[#3a322c]",
-                        ].join(" ")}
-                      >
-                        {HOUSEHOLD_TYPE_LABELS[type]}
-                      </span>
-                      <span className="mt-0.5 block text-[11px] text-[#9a8f82]">
-                        {m.sub}
-                      </span>
+                    <span className="mt-0.5 block text-[12px] text-[#9a8f82]">
+                      {m.sub}
                     </span>
                   </button>
                 );
