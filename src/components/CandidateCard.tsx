@@ -142,6 +142,22 @@ export function CandidateCard({
             ✨ 동네에서 인정받는 단지
           </span>
         )}
+        {candidate.overBudget && (
+          <span
+            className="inline-flex items-center rounded-full bg-coral-100 px-3 py-1 text-xs font-bold text-coral-800 ring-1 ring-coral-300"
+            title="딱 맞는 단지가 적어 예산을 조금 넘는 가까운 후보까지 보여드려요"
+          >
+            예산 초과
+          </span>
+        )}
+        {candidate.commuteLegs.some((l) => !l.withinLimit) && (
+          <span
+            className="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 ring-1 ring-amber-300"
+            title="설정한 통근 시간을 조금 넘는 후보예요"
+          >
+            통근 초과
+          </span>
+        )}
         {candidate.priceEstimated ? (
           <span
             className="inline-flex items-center rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700 ring-1 ring-orange-200"

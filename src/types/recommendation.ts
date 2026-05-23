@@ -171,6 +171,12 @@ export interface ComplexCandidate {
   isChopumah: boolean;
   /** 같은 동·비슷한 연식 단지보다 ㎡당 단가가 높음 — '동네 인기단지' 배지용. */
   pricierThanPeers?: boolean;
+  /**
+   * 가격 밴드 상한을 넘는데도(예산 초과) 메인 카드로 채워 넣은 후보.
+   * 엄격 조건 통과 단지가 3개 미만일 때 빈 화면 대신 가장 가까운 후보로 채우면서 표시.
+   * true 면 카드에 "예산 초과" 배지로 솔직히 알린다.
+   */
+  overBudget?: boolean;
   /** 선호 입지(분위기) 매칭 시 표시할 배지 라벨(예: "🌊 한강변"). 미매칭/미선택이면 없음. */
   vibeBadge?: string;
   commuteLegs: CommuteLeg[];

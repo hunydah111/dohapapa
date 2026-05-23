@@ -864,9 +864,12 @@ export async function recommendComplexes(
 
   // "검토한 단지 수" 는 넓은 1차(mock) 통과 수 — 화면 풀(refined)이 아니라
   // 사용자 조건에 맞는 단지가 몇 곳인지를 의미하기 때문.
-  const consideredComplexCount = phase1Valid.filter(
+  const passedHardFilterCount = phase1Valid.filter(
     (e) => e.passedHardFilter,
   ).length;
+  // 엄격 통과가 0이어도 빈 화면 대신 근접 후보로 메인 카드를 채우므로(아래 보충 로직),
+  // 헤더 "검토 N개 단지"가 0으로 보이지 않게 — 통과 0이면 통근권에서 분석한 전체 수로.
+  const consideredComplexCount = passedHardFilterCount || phase1Valid.length;
 
   // ── P0#2 — relaxationSuggestions ────────────────────────────────────────
   // 결과 0건일 때만 계산. 조건 완화 시나리오별로 몇 곳이 통과하는지 시뮬레이션.
@@ -1089,11 +1092,32 @@ export async function recommendComplexes(
   if (challengeCandidate)
     chosen.push({ entry: challengeCandidate, tier: "도전형" });
 
-  // 3개 미만이면 남은 survivors 로 보충
+  // 3개 미만이면 보충 — 빈 화면 방지(어떤 조건에서도 메인 카드 1·2·3이 뜨도록).
+  // 채우는 순서: withinLimit(밴드+통근 OK) → overLimit(가격 OK·통근 살짝 초과)
+  //  → overBudget(통근 OK·가격 ≤1.4배 초과) → 그 외 근접(예산 차이 최소).
+  // 보충된 후보는 실제 가격·통근을 그대로 들고 와 카드의 "예산 초과/통근 초과" 배지로 솔직히 표시.
   const tierOrder: CandidateTier[] = ["균형형", "안정형", "도전형"];
   if (chosen.length < 3) {
     const usedEntries = new Set(chosen.map((c) => c.entry));
-    for (const e of withinLimitSurvivors) {
+    const byScore = (a: ScoredComplex, b: ScoredComplex) =>
+      b.candidate.totalScore - a.candidate.totalScore;
+    const overBudgetPool = validEvaluated
+      .filter((e) => e.overBudgetOk)
+      .sort(byScore);
+    const restPool = validEvaluated
+      .filter((e) => !e.passedHardFilter && !e.overBudgetOk)
+      .sort(
+        (a, b) =>
+          Math.abs(a.medianKrw - netPurchasePowerKrw) -
+          Math.abs(b.medianKrw - netPurchasePowerKrw),
+      );
+    const fillPool = [
+      ...withinLimitSurvivors,
+      ...overLimitSurvivors,
+      ...overBudgetPool,
+      ...restPool,
+    ];
+    for (const e of fillPool) {
       if (chosen.length >= 3) break;
       if (!usedEntries.has(e)) {
         chosen.push({ entry: e, tier: tierOrder[chosen.length] });
@@ -1102,10 +1126,17 @@ export async function recommendComplexes(
     }
   }
 
+  // 보충 후보가 예산 밴드 상한을 넘는지 표시 — 카드에서 "예산 초과" 배지로 솔직히 알린다.
+  const { upper: heroBandUpper } = bandBounds(
+    netPurchasePowerKrw,
+    dropLowerBand,
+    budgetFlex,
+  );
   const candidates: ComplexCandidate[] = fillRankReasons(
     chosen.map(({ entry, tier }) => ({
       ...entry.candidate,
       tier,
+      overBudget: entry.medianKrw > heroBandUpper,
     })),
   );
 
