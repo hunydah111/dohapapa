@@ -166,20 +166,22 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
             >
               {formatKrwHuman(budget.netPurchasePowerKrw)}
             </p>
-            {/* 친절 안내 — 이 가격대 집이면 회원님 요건에 자기자본+추정대출이 얼마인지 */}
-            <p className="mt-2 text-[13px] leading-relaxed" style={{ color: "#6b6157" }}>
-              🏠 이 가격대 집이면 회원님 조건엔{" "}
-              <span className="font-bold" style={{ color: "#3a322c" }}>
-                {budget.appliedLoanType === "policy" && budget.appliedPolicyName
-                  ? budget.appliedPolicyName
-                  : "추정"}{" "}
-                대출 {formatKrwHuman(budget.loanEstimateKrw)}
-              </span>
-              까지 + 자기자본 {formatKrwHuman(budget.totalEquityKrw)}로 닿아요.
-              {budget.monthlyPaymentKrw > 0
-                ? ` 월 약 ${formatManwon(budget.monthlyPaymentKrw)} 상환 추정.`
-                : ""}
-            </p>
+            {/* 친절 안내 — 대출이 계산되는 상세 예산모드에서만(간단모드는 대출=0이라 생략). */}
+            {budget.loanEstimateKrw > 0 && (
+              <p className="mt-2 text-[13px] leading-relaxed" style={{ color: "#6b6157" }}>
+                🏠 이 가격대 집이면 회원님 조건엔{" "}
+                <span className="font-bold" style={{ color: "#3a322c" }}>
+                  {budget.appliedLoanType === "policy" && budget.appliedPolicyName
+                    ? budget.appliedPolicyName
+                    : "추정"}{" "}
+                  대출 {formatKrwHuman(budget.loanEstimateKrw)}
+                </span>
+                까지 + 자기자본 {formatKrwHuman(budget.totalEquityKrw)}로 닿아요.
+                {budget.monthlyPaymentKrw > 0
+                  ? ` 월 약 ${formatManwon(budget.monthlyPaymentKrw)} 상환 추정.`
+                  : ""}
+              </p>
+            )}
           </>
         ) : (
           <>
