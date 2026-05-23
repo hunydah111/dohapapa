@@ -789,12 +789,32 @@ export function ProfileForm({
               (type) => {
                 const meta: Record<
                   HouseholdType,
-                  { emoji: string; sub: string; tint: string }
+                  { emoji: string; sub: string; circle: string; idle: string }
                 > = {
-                  single: { emoji: "🧍", sub: "1인 통근 기준", tint: "bg-coral-100" },
-                  dualIncome: { emoji: "👫", sub: "두 직장 고려", tint: "bg-amber-100" },
-                  singleIncome: { emoji: "👨‍👩‍👧", sub: "한 직장 기준", tint: "bg-rose-100" },
-                  retired: { emoji: "🌿", sub: "통근 조건 없음", tint: "bg-[#e7ddcb]" },
+                  single: {
+                    emoji: "🧍",
+                    sub: "1인 통근 기준",
+                    circle: "bg-coral-200",
+                    idle: "border-coral-200 bg-coral-50 hover:border-coral-400",
+                  },
+                  dualIncome: {
+                    emoji: "👫",
+                    sub: "두 직장 고려",
+                    circle: "bg-amber-200",
+                    idle: "border-amber-200 bg-amber-50 hover:border-amber-400",
+                  },
+                  singleIncome: {
+                    emoji: "👨‍👩‍👧",
+                    sub: "한 직장 기준",
+                    circle: "bg-rose-200",
+                    idle: "border-rose-200 bg-rose-50 hover:border-rose-400",
+                  },
+                  retired: {
+                    emoji: "🌿",
+                    sub: "통근 조건 없음",
+                    circle: "bg-[#dccdb0]",
+                    idle: "border-[#e0d3bf] bg-[#f5efe3] hover:border-[#cbb89a]",
+                  },
                 };
                 const m = meta[type];
                 const selected = householdType === type;
@@ -806,14 +826,14 @@ export function ProfileForm({
                     className={[
                       "flex items-center gap-2.5 rounded-2xl border-2 px-3 py-3 text-left transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-coral-400",
                       selected
-                        ? "border-coral-600 bg-coral-50 shadow-sm"
-                        : "border-[#e5e5ea] bg-white hover:border-coral-300 hover:bg-coral-50/40",
+                        ? "border-coral-600 bg-coral-50 shadow-md ring-2 ring-coral-200"
+                        : m.idle,
                     ].join(" ")}
                   >
                     <span
                       className={[
-                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[20px]",
-                        m.tint,
+                        "flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[22px]",
+                        m.circle,
                       ].join(" ")}
                       aria-hidden
                     >

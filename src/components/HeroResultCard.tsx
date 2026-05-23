@@ -19,10 +19,10 @@ function Badge({ children }: { children: ReactNode }) {
 // 바닥 floor 0.32 — 0점 축도 중심까지 안 꺼지게(우리 '안 까는' 원칙).
 const PROFILE_AXES = ["통근", "학군", "신축", "대단지", "예산"];
 function ProfileRadar({ values }: { values: number[] }) {
-  const size = 152;
+  const size = 116;
   const cx = size / 2;
   const cy = size / 2;
-  const maxR = 44;
+  const maxR = 34;
   const n = PROFILE_AXES.length;
   const FLOOR = 0.32;
   const pt = (i: number, r: number) => {
@@ -47,9 +47,9 @@ function ProfileRadar({ values }: { values: number[] }) {
       })}
       <polygon points={dataPoly} fill="rgba(255,224,130,0.45)" stroke="#ffe082" strokeWidth={2} />
       {PROFILE_AXES.map((ax, i) => {
-        const [x, y] = pt(i, maxR + 11);
+        const [x, y] = pt(i, maxR + 9);
         return (
-          <text key={ax} x={x} y={y} textAnchor="middle" dominantBaseline="middle" fontSize={11} fontWeight={700} fill="rgba(255,255,255,0.9)">
+          <text key={ax} x={x} y={y} textAnchor="middle" dominantBaseline="middle" fontSize={10} fontWeight={700} fill="rgba(255,255,255,0.9)">
             {ax}
           </text>
         );
@@ -123,7 +123,7 @@ export function HeroResultCard({
 
   return (
     <section
-      className="relative overflow-hidden rounded-3xl px-6 py-8 text-white"
+      className="relative overflow-hidden rounded-3xl px-5 py-5 text-white"
       style={{ background: "linear-gradient(135deg, #fe7644 0%, #d24f24 100%)" }}
     >
       {/* 장식 글로우 */}
@@ -140,26 +140,26 @@ export function HeroResultCard({
 
       {/* 유형 비지 캐릭터 — 흰 원 배경 위에 pop-in. 진지 모드에선 숨김. */}
       {!serious && (
-        <div className="biji-pop-in mt-3 flex justify-center">
-          <div className="flex h-32 w-32 items-center justify-center rounded-full bg-white/18 shadow-inner ring-1 ring-white/25">
+        <div className="biji-pop-in mt-2 flex justify-center">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/18 shadow-inner ring-1 ring-white/25">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={`${homeType.image}?v=2`}
               alt={`${homeType.name} 비지`}
-              width={112}
-              height={112}
-              className="h-28 w-auto drop-shadow-md"
+              width={72}
+              height={72}
+              className="h-16 w-auto drop-shadow-md"
               draggable={false}
             />
           </div>
         </div>
       )}
 
-      <div className="mt-3 flex items-center justify-center gap-2 text-center text-[2rem] font-extrabold leading-tight tracking-tight sm:text-4xl">
+      <div className="mt-2 flex items-center justify-center gap-2 text-center text-[1.55rem] font-extrabold leading-tight tracking-tight sm:text-[1.9rem]">
         {!serious && <span aria-hidden="true">{homeType.emoji}</span>}
         <span>{homeType.name}</span>
       </div>
-      <p className="mx-auto mt-2 max-w-xs text-center text-[15px] leading-relaxed text-white/90">
+      <p className="mx-auto mt-1 max-w-xs text-center text-[13px] leading-relaxed text-white/90">
         {homeType.tagline}
       </p>
 
@@ -173,8 +173,8 @@ export function HeroResultCard({
 
       {/* 유형 레이더 — 내 우선순위 5각형. 진지 모드 숨김. */}
       {!serious && profileRadar && (
-        <div className="mt-4 flex flex-col items-center">
-          <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-white/70">
+        <div className="mt-2.5 flex flex-col items-center">
+          <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wider text-white/70">
             내 집 찾기 프로필
           </p>
           <ProfileRadar values={profileRadar} />
@@ -208,23 +208,23 @@ export function HeroResultCard({
         (() => {
           const t = budgetTier(budgetTopPercent);
           return (
-            <div className="mx-auto mt-5 max-w-sm rounded-2xl bg-white/15 px-4 py-3.5 text-center backdrop-blur-sm">
-              <p className="text-xs font-semibold uppercase tracking-wider text-white/75">
+            <div className="mx-auto mt-3.5 max-w-sm rounded-2xl bg-white/15 px-4 py-2.5 text-center backdrop-blur-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-white/75">
                 내 구매력 계급
               </p>
-              <p className="mt-1.5 text-2xl font-extrabold leading-tight">
+              <p className="mt-1 text-xl font-extrabold leading-tight">
                 {t.emoji} {t.label}
               </p>
-              <p className="mt-1 text-[13px] font-semibold text-amber-100">
+              <p className="mt-0.5 text-[13px] font-semibold text-amber-100">
                 {budgetNetKrw != null && budgetNetKrw > 0
                   ? formatKrwHuman(budgetNetKrw)
                   : ""}
                 {t.isFlex ? ` · 수도권 실거래 상위 ${budgetTopPercent}%` : ""}
               </p>
-              <p className="mt-1.5 text-[12px] leading-relaxed text-white/85">
+              <p className="mt-1 text-[12px] leading-relaxed text-white/85">
                 &ldquo;{t.drip}&rdquo;
               </p>
-              <p className="mt-2 text-[11px] leading-relaxed text-white/55">
+              <p className="mt-1.5 text-[11px] leading-relaxed text-white/55">
                 국토교통부 실거래가 기반 추정 · 미래가치 예측이 아닙니다
               </p>
             </div>
@@ -232,20 +232,20 @@ export function HeroResultCard({
         })()}
 
       {/* 구분선 */}
-      <div className="my-6 h-px w-full bg-white/20" />
+      <div className="my-4 h-px w-full bg-white/20" />
 
       {/* ── 1순위 매칭 단지 ── */}
-      <p className="text-xs font-semibold uppercase tracking-wider text-white/75">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-white/75">
         이 유형에 맞는 1순위 내 집
       </p>
 
       {/* 의외성 카피 — 발견의 재미 */}
-      <p className="mt-1.5 text-[17px] font-extrabold leading-snug text-amber-100">
+      <p className="mt-1 text-[15px] font-extrabold leading-snug text-amber-100">
         {discoveryLine(candidate)}
       </p>
 
-      <div className="mt-2 flex flex-wrap items-center gap-2.5">
-        <h2 className="text-3xl font-extrabold leading-tight tracking-tight">
+      <div className="mt-1.5 flex flex-wrap items-center gap-2.5">
+        <h2 className="text-2xl font-extrabold leading-tight tracking-tight">
           {candidate.complexName}
         </h2>
         <a
@@ -276,7 +276,7 @@ export function HeroResultCard({
       </p>
 
       {/* 핵심 스탯 뱃지 */}
-      <div className="mt-5 flex flex-wrap gap-2">
+      <div className="mt-3.5 flex flex-wrap gap-2">
         <Badge>💰 {formatKrwHuman(candidate.medianPriceKrw)}</Badge>
         {totalCommute > 0 && (
           <Badge>
@@ -290,7 +290,7 @@ export function HeroResultCard({
 
       {/* 동네 5각형 — 1순위 단지 반경 1km(아래 카드와 동일한 레이더). 흰 박스로 동일 스타일 유지. */}
       {neighborhood && (
-        <div className="fade-in-up mt-5 flex flex-col items-center rounded-2xl bg-white p-3">
+        <div className="fade-in-up mt-4 flex flex-col items-center rounded-2xl bg-white p-3">
           <p className="mb-1 self-start text-[11px] font-semibold" style={{ color: "#9a8f82" }}>
             동네 · 반경 1km 시설 (사실, 추천·평가 아님)
           </p>
@@ -302,7 +302,7 @@ export function HeroResultCard({
       <button
         type="button"
         onClick={() => onShare(typeShareUrl)}
-        className="mt-7 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-coral-700 shadow-lg transition-transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-white/70"
+        className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-coral-700 shadow-lg transition-transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-white/70"
       >
         내 유형 카드 공유하기
         <svg
@@ -315,11 +315,10 @@ export function HeroResultCard({
         </svg>
       </button>
 
-      <p className="mt-3 text-[11px] leading-relaxed text-white/70">
-        🦫 유형 카드만 공유돼요 — 소득·자산·직장 정보는 안 담깁니다. (위 &lsquo;결과 공유&rsquo;는
-        부부끼리 같은 결과를 보는 링크예요)
+      <p className="mt-2 text-[11px] leading-snug text-white/70">
+        🦫 유형 카드만 공유돼요 — 소득·자산·직장 정보는 안 담깁니다.
       </p>
-      <p className="mt-2 text-[11px] leading-relaxed text-white/60">
+      <p className="mt-1 text-[11px] leading-snug text-white/60">
         실거래가 기반 추정 정보 · 부동산 중개·투자자문이 아닙니다
       </p>
     </section>
