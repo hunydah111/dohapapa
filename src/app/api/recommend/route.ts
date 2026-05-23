@@ -4,6 +4,7 @@ import type { RecommendOptions } from "@/lib/recommend";
 import type { CoupleProfile } from "@/types/profile";
 import { getHomeType } from "@/lib/homeType";
 import { incrementTypeCount } from "@/lib/typeStats";
+import { recordNeighborhoods } from "@/lib/neighborhoodChart";
 
 export const runtime = "nodejs";
 
@@ -191,10 +192,16 @@ export async function POST(req: Request): Promise<Response> {
 
     const result = await recommendComplexes(profile, opts);
 
-    // 유형 분포 집계 — pass-1(최초 검색)에서만. 2-pass 대중교통 재랭킹(restrictToComplexIds)은
-    // 같은 세션의 재계산이라 중복 카운트 방지로 건너뛴다. 비-PII(유형 슬러그 카운트만).
+    // 집계 — pass-1(최초 검색)에서만. 2-pass 대중교통 재랭킹(restrictToComplexIds)은
+    // 같은 세션의 재계산이라 중복 카운트 방지로 건너뛴다. 모두 비-PII(슬러그·시군구만).
     if (!opts.restrictToComplexIds) {
       await incrementTypeCount(getHomeType(profile).slug);
+      // 주간 동네 인기차트 — 상위 후보의 시군구만 집계. 결과 0건이면 가장 가까운 후보로.
+      const src =
+        result.candidates.length > 0
+          ? result.candidates
+          : result.closestCandidates;
+      await recordNeighborhoods(src.map((c) => c.sigungu));
     }
 
     return Response.json(result);
