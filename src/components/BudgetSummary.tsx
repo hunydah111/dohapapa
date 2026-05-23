@@ -147,11 +147,11 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
         />
       </div>
 
-      {/* 실 매입가능 상한 — 하이라이트 블록 */}
+      {/* 실 매입가능 상한 — 하이라이트 블록 (따뜻한 코랄·골드 톤) */}
       <div
         className="rounded-2xl px-5 py-5 mb-5"
         style={{
-          background: "linear-gradient(135deg, #eef2ff 0%, #f0fdf4 100%)",
+          background: "linear-gradient(135deg, #fff4ef 0%, #f7ead0 100%)",
           boxShadow: "0 1px 3px rgba(242,96,60,0.08)",
         }}
       >
@@ -159,12 +159,28 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
           실 매입가능 상한 (추정치)
         </p>
         {budget.netPurchasePowerKrw > 0 ? (
-          <p
-            className="text-4xl font-extrabold tabular-nums tracking-tight"
-            style={{ color: "#3a322c" }}
-          >
-            {formatKrwHuman(budget.netPurchasePowerKrw)}
-          </p>
+          <>
+            <p
+              className="text-4xl font-extrabold tabular-nums tracking-tight"
+              style={{ color: "#3a322c" }}
+            >
+              {formatKrwHuman(budget.netPurchasePowerKrw)}
+            </p>
+            {/* 친절 안내 — 이 가격대 집이면 회원님 요건에 자기자본+추정대출이 얼마인지 */}
+            <p className="mt-2 text-[13px] leading-relaxed" style={{ color: "#6b6157" }}>
+              🏠 이 가격대 집이면 회원님 조건엔{" "}
+              <span className="font-bold" style={{ color: "#3a322c" }}>
+                {budget.appliedLoanType === "policy" && budget.appliedPolicyName
+                  ? budget.appliedPolicyName
+                  : "추정"}{" "}
+                대출 {formatKrwHuman(budget.loanEstimateKrw)}
+              </span>
+              까지 + 자기자본 {formatKrwHuman(budget.totalEquityKrw)}로 닿아요.
+              {budget.monthlyPaymentKrw > 0
+                ? ` 월 약 ${formatManwon(budget.monthlyPaymentKrw)} 상환 추정.`
+                : ""}
+            </p>
+          </>
         ) : (
           <>
             <p
