@@ -5,7 +5,7 @@ import {
   mockProvider,
 } from "@/lib/commute";
 import type { CommuteProvider, CommuteResult } from "@/lib/commute";
-import { db } from "@/lib/db";
+import { getSnapshotComplexes, getMediansForIds } from "./snapshot";
 import { haversineKm } from "@/lib/geo";
 import {
   AREA_RANGES,
@@ -32,7 +32,7 @@ import type {
   RelaxationSuggestion,
   RecommendationResult,
 } from "@/types/recommendation";
-import { getAreaMediansForMany, pickRepresentative } from "./complexMedian";
+import { pickRepresentative } from "./complexMedian";
 import type { AreaMedian } from "./complexMedian";
 import { estimateRepFromComps, riverDistanceKm } from "./estimateRep";
 import type { CompPoint } from "./estimateRep";
@@ -457,19 +457,15 @@ export async function recommendComplexes(
   const budgetFlex: BudgetFlex = profile.budgetFlex ?? "relaxed";
   // 재랭킹(2-pass) 시엔 클라가 실측을 모은 풀로 한정 — 그 안에서만 점수·티어 재계산.
   const restrictIds = opts.restrictToComplexIds;
-  // 좌표 sanity — 수도권 경위도 박스 안만. 오지오코딩된 단지(예: 마포구인데 충청 좌표)를
-  // 전역 제외해 미니맵·안전망에 엉뚱한 핀이 뜨는 걸 막는다. (gte/lte 는 null 도 자동 제외)
-  const allComplexes = await db.complex.findMany({
-    where: {
-      latitude: { gte: 36.8, lte: 38.5 },
-      longitude: { gte: 126.2, lte: 127.95 },
-      ...(restrictIds && restrictIds.length > 0
-        ? { id: { in: restrictIds } }
-        : requiredRegions.length > 0
-          ? { sigungu: { in: requiredRegions } }
-          : {}),
-    },
-  });
+  // 좌표 sanity 박스(수도권)는 스냅샷 생성 시 이미 적용됨. 여기선 restrictIds(2-pass 재랭킹
+  // 한정) > requiredRegions(필수지역) 우선순위로만 좁힌다. 요청당 DB 읽기 없음(스냅샷).
+  const allComplexes = getSnapshotComplexes(
+    restrictIds && restrictIds.length > 0
+      ? { ids: restrictIds }
+      : requiredRegions.length > 0
+        ? { sigungus: requiredRegions }
+        : undefined,
+  );
 
   // 4. 지리적 사전필터
   // 직장이 있으면 각 직장별 cutoffKm 을 그 직장의 commuteMode 로 계산.
@@ -490,12 +486,8 @@ export async function recommendComplexes(
           });
         });
 
-  // 5. 중위가 일괄 조회 — sigunguById 를 넘겨 (지역×가격대) 추세 시점 보정 적용.
-  const sigunguById = new Map(geoSurvivors.map((c) => [c.id, c.sigungu]));
-  const mediansMap = await getAreaMediansForMany(
-    geoSurvivors.map((c) => c.id),
-    sigunguById,
-  );
+  // 5. 중위가 일괄 조회 — 스냅샷에서 동기 룩업(시점 보정은 생성 시 이미 적용됨).
+  const mediansMap = getMediansForIds(geoSurvivors.map((c) => c.id));
 
   // 선호 평수대(복수). 선택한 밴드 중 하나에 속하는 평형만 대표 평형 후보로 본다.
   const selectedRanges = profile.preferredAreaRanges.map((k) => AREA_RANGES[k]);
@@ -1201,13 +1193,12 @@ export async function recommendComplexes(
     requiredRegions.length > 0 &&
     allComplexes.length > 0
   ) {
-    // medians 확보 — phase1 은 geoSurvivors 분만 받았으므로 나머지를 조회.
+    // medians 확보 — phase1 은 geoSurvivors 분만 받았으므로 나머지를 스냅샷에서 채운다.
     const needIds = allComplexes
-      .filter((c) => c.latitude != null && c.longitude != null && !mediansMap.has(c.id))
+      .filter((c) => !mediansMap.has(c.id))
       .map((c) => c.id);
     if (needIds.length > 0) {
-      const sigById = new Map(allComplexes.map((c) => [c.id, c.sigungu]));
-      const extra = await getAreaMediansForMany(needIds, sigById);
+      const extra = getMediansForIds(needIds);
       for (const [k, v] of extra) mediansMap.set(k, v);
     }
 

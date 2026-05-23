@@ -266,50 +266,64 @@ export function flagLowConfidence(medians: AreaMedian[]): void {
   }
 }
 
-/**
- * 여러 단지의 평형별 추정 현재가를 청크 단위 쿼리로 한 번에 집계한다.
- * 단지별로 N번 쿼리하면 동시 쿼리 폭주로 SQLite 가 막히므로 일괄 처리.
- */
-export async function getAreaMediansForMany(
-  complexIds: string[],
-  sigunguById?: Map<string, string>,
-): Promise<Map<string, AreaMedian[]>> {
-  // 12개월까지 가져와 두고, 단지별로 6개월이 충분하면 6개월만, 부족하면 12개월을 쓴다.
-  const since = new Date();
+/** 거래 원본 행 — DB(Prisma) 든 SQLite 든 같은 모양으로 normalize 해 넘긴다. */
+export interface RawTxRow {
+  complexId: string;
+  area: number;
+  priceKrw: number;
+  dealDate: Date;
+  source: string;
+}
+
+/** 추세 시점 보정 기준이 되는 12개월 전 컷오프. */
+export function medianSince(now: Date = new Date()): Date {
+  const since = new Date(now);
   since.setMonth(since.getMonth() - FALLBACK_WINDOW_MONTHS);
+  return since;
+}
+
+/**
+ * 거래 원본 행들을 단지→평형(1㎡ 버킷)→Tx[] 로 그룹핑한다(순수).
+ * DB 청크 조회(getAreaMediansForMany)와 스냅샷 생성기(build-snapshot)가 공유한다.
+ */
+export function groupTxRows(
+  rows: RawTxRow[],
+  now: number = Date.now(),
+): Map<string, Map<number, Tx[]>> {
+  const byComplex = new Map<string, Map<number, Tx[]>>();
+  for (const row of rows) {
+    let areaGroups = byComplex.get(row.complexId);
+    if (!areaGroups) {
+      areaGroups = new Map<number, Tx[]>();
+      byComplex.set(row.complexId, areaGroups);
+    }
+    // 평형 버킷은 1㎡ 단위 내림으로 묶는다 — 같은 타입(예: 전용 59.84·59.98㎡)이
+    // 0.1㎡ 차이로 쪼개지는 것을 막고, 전용면적 타입 표기(예: 84.6㎡ → "84㎡")와
+    // 평수대 필터(>= min && < max)에 모두 맞는다.
+    const key = Math.floor(row.area);
+    const list = areaGroups.get(key) ?? [];
+    list.push({
+      price: row.priceKrw,
+      daysAgo: (now - row.dealDate.getTime()) / 86_400_000,
+      source: row.source,
+    });
+    areaGroups.set(key, list);
+  }
+  return byComplex;
+}
+
+/**
+ * 그룹핑된 거래(단지→평형→Tx[])로부터 평형별 추정 현재가를 계산한다(순수, DB 불필요).
+ * 시점 보정은 sigunguById 가 주어지고 추세지수가 있을 때만 적용한다.
+ * 런타임(getAreaMediansForMany)과 스냅샷 생성기가 동일 로직을 쓰도록 분리.
+ */
+export function mediansFromGrouped(
+  byComplex: Map<string, Map<number, Tx[]>>,
+  sigunguById?: Map<string, string>,
+): Map<string, AreaMedian[]> {
   const now = Date.now();
   // 추세 시점 보정 도착 시점. sigunguById 가 주어지고 지수가 있을 때만 보정한다.
   const latestMonth = sigunguById ? trendLatestMonth() : "";
-
-  const CHUNK = 400;
-  // complexId → (area → Tx[])
-  const byComplex = new Map<string, Map<number, Tx[]>>();
-
-  for (let i = 0; i < complexIds.length; i += CHUNK) {
-    const ids = complexIds.slice(i, i + CHUNK);
-    const rows = await db.transaction.findMany({
-      where: { complexId: { in: ids }, dealDate: { gte: since } },
-      select: { complexId: true, area: true, priceKrw: true, dealDate: true, source: true },
-    });
-    for (const row of rows) {
-      let areaGroups = byComplex.get(row.complexId);
-      if (!areaGroups) {
-        areaGroups = new Map<number, Tx[]>();
-        byComplex.set(row.complexId, areaGroups);
-      }
-      // 평형 버킷은 1㎡ 단위 내림으로 묶는다 — 같은 타입(예: 전용 59.84·59.98㎡)이
-      // 0.1㎡ 차이로 쪼개지는 것을 막고, 전용면적 타입 표기(예: 84.6㎡ → "84㎡")와
-      // 평수대 필터(>= min && < max)에 모두 맞는다.
-      const key = Math.floor(row.area);
-      const list = areaGroups.get(key) ?? [];
-      list.push({
-        price: Number(row.priceKrw),
-        daysAgo: (now - row.dealDate.getTime()) / 86_400_000,
-        source: row.source,
-      });
-      areaGroups.set(key, list);
-    }
-  }
 
   const result = new Map<string, AreaMedian[]>();
   for (const [complexId, areaGroups] of byComplex) {
@@ -359,6 +373,38 @@ export async function getAreaMediansForMany(
     );
   }
   return result;
+}
+
+/**
+ * 여러 단지의 평형별 추정 현재가를 청크 단위 쿼리로 한 번에 집계한다.
+ * 단지별로 N번 쿼리하면 동시 쿼리 폭주로 DB 가 막히므로 일괄 처리.
+ * (런타임 핫패스는 스냅샷을 쓰므로 이제 주로 스냅샷 생성·오프라인 경로에서 사용된다.)
+ */
+export async function getAreaMediansForMany(
+  complexIds: string[],
+  sigunguById?: Map<string, string>,
+): Promise<Map<string, AreaMedian[]>> {
+  const since = medianSince();
+  const now = Date.now();
+  const CHUNK = 400;
+  const allRows: RawTxRow[] = [];
+  for (let i = 0; i < complexIds.length; i += CHUNK) {
+    const ids = complexIds.slice(i, i + CHUNK);
+    const rows = await db.transaction.findMany({
+      where: { complexId: { in: ids }, dealDate: { gte: since } },
+      select: { complexId: true, area: true, priceKrw: true, dealDate: true, source: true },
+    });
+    for (const r of rows) {
+      allRows.push({
+        complexId: r.complexId,
+        area: r.area,
+        priceKrw: Number(r.priceKrw),
+        dealDate: r.dealDate,
+        source: r.source,
+      });
+    }
+  }
+  return mediansFromGrouped(groupTxRows(allRows, now), sigunguById);
 }
 
 /**

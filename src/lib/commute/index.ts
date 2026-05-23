@@ -8,6 +8,12 @@ import { db } from "@/lib/db";
 export type { CommuteProvider, CommuteResult };
 export { mockProvider };
 
+// 간이 서킷브레이커 — 캐시 DB 가 한 번 실패하면 짧은 동안 조회를 통째로 건너뛴다.
+// 쿼터 소진·다운 시 한 요청에서 단지 수십 곳을 매번 실패 조회하면 십수 초가 새기 때문.
+// 회복되면 TTL 경과 후 한 번 재시도해 자동으로 닫힌다(정상 운영 땐 절대 안 열림).
+let cacheDownUntil = 0;
+const CACHE_DOWN_TTL_MS = 30_000;
+
 export function getCommuteProvider(): CommuteProvider {
   // 카카오 길찾기(Navi) API 는 지오코딩과 동일한 developers.kakao.com REST 키를 쓴다.
   // (별도 Mobility 키가 필요하다는 종전 가정은 오류였다 — REST 키로 실호출 200 확인.)
@@ -35,13 +41,33 @@ export async function getCommuteMinutes(
     return effectiveProvider.travelMinutes(origin, complexCoord, mode);
   }
 
+  // 서킷 오픈(최근 캐시 DB 실패) — 조회·Kakao 모두 건너뛰고 mock 으로 즉시 degrade.
+  if (Date.now() < cacheDownUntil) {
+    return mockProvider.travelMinutes(origin, complexCoord, mode);
+  }
+
   const originKey = `${origin.lat.toFixed(3)},${origin.lng.toFixed(3)}`;
 
-  const cached = await db.commuteCache.findUnique({
-    where: {
-      originKey_complexId_mode: { originKey, complexId, mode },
-    },
-  });
+  // 캐시 조회. DB 다운·쿼터 소진 시엔 "미스"가 아니라 "캐시 불가"로 구분한다.
+  let cached: Awaited<ReturnType<typeof db.commuteCache.findUnique>> = null;
+  let cacheAvailable = true;
+  try {
+    cached = await db.commuteCache.findUnique({
+      where: {
+        originKey_complexId_mode: { originKey, complexId, mode },
+      },
+    });
+  } catch {
+    cacheAvailable = false;
+    cacheDownUntil = Date.now() + CACHE_DOWN_TTL_MS; // 서킷 오픈
+  }
+
+  // 캐시 자체가 불가(DB 다운)면 실 길찾기(Kakao)를 호출하지 않는다 — 캐시 없이 매 요청
+  // 단지 수십 곳을 라이브 호출하면 응답이 수십 초로 늘고(서버리스 타임아웃) Kakao 쿼터도
+  // 태운다. 이 요청 한정으로 mock(직선거리 추정)으로 degrade — 빠르고 무료, 결과는 계속 나온다.
+  if (!cacheAvailable) {
+    return mockProvider.travelMinutes(origin, complexCoord, mode);
+  }
 
   if (cached !== null) {
     // 운전 거리는 캐시에 같이 저장(distanceMeters) — 없으면(구 캐시 레코드) 생략.
@@ -66,13 +92,18 @@ export async function getCommuteMinutes(
   const distanceMeters =
     result.roadDistanceKm != null ? Math.round(result.roadDistanceKm * 1000) : null;
 
-  await db.commuteCache.upsert({
-    where: {
-      originKey_complexId_mode: { originKey, complexId, mode },
-    },
-    update: { minutes: result.minutes, distanceMeters },
-    create: { originKey, complexId, mode, minutes: result.minutes, distanceMeters },
-  });
+  // 캐시 저장 실패(DB 다운·쿼터 소진)는 무시 — 캐시는 비용 절감용 부가기능이라 응답을 깨지 않는다.
+  try {
+    await db.commuteCache.upsert({
+      where: {
+        originKey_complexId_mode: { originKey, complexId, mode },
+      },
+      update: { minutes: result.minutes, distanceMeters },
+      create: { originKey, complexId, mode, minutes: result.minutes, distanceMeters },
+    });
+  } catch {
+    cacheDownUntil = Date.now() + CACHE_DOWN_TTL_MS; // 쓰기도 실패하면 서킷 오픈
+  }
 
   return result;
 }
