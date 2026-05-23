@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import type { ReactNode } from "react";
 import { ProfileForm } from "@/components/ProfileForm";
 import type {
   RecommendationResult,
@@ -425,6 +426,19 @@ export function HomeExperience() {
     window.history.replaceState(null, "", url.toString());
   }
 
+  // 결과 → 폼으로 돌아가기 (입력 보존). 폼은 결과 뒤에서 언마운트되지 않고 숨겨져 있어
+  // state 만 비우면 입력 30여 개가 그대로 복원된다. handleRestart 와 달리 started 는
+  // 유지 → 랜딩이 아니라 폼으로 복귀.
+  function handleBack() {
+    setState(null);
+    // 결과 공유 해시 제거 — 폼에서 새로고침해도 옛 결과가 자동 로드되지 않게.
+    const url = new URL(window.location.href);
+    url.searchParams.delete(SHARE_PARAM);
+    url.hash = "";
+    window.history.replaceState(null, "", url.toString());
+    window.scrollTo({ top: 0 });
+  }
+
   async function handleReanalyze() {
     if (!state) return;
     setReanalyzing(true);
@@ -622,47 +636,51 @@ export function HomeExperience() {
     })),
   );
 
-  // ── 입력 화면 ──────────────────────────────────────────────
-  if (state === null) {
-    if (autoLoading) {
-      return (
-        <div className="flex flex-col items-center gap-2 rounded-3xl border border-coral-100 bg-coral-50/60 px-6 py-12 text-center">
-          <Homi mood="running" size={92} />
-          <p className="text-sm font-semibold text-coral-700">
-            공유 링크 분석 중…
-          </p>
-          <p className="text-xs text-coral-500/80">잠시만 기다려 주세요</p>
-        </div>
-      );
-    }
-    // 시작 전 = 랜딩 히어로(가치제안+단일 CTA). CTA 누르면 폼 노출.
-    if (!started) {
-      return (
-        <LandingHero
-          onStart={() => {
-            setStarted(true);
-            window.scrollTo({ top: 0 });
-          }}
-        />
-      );
-    }
+  // ── 공유 링크 분석 중 ──────────────────────────────────────
+  if (state === null && autoLoading) {
     return (
-      <ProfileForm
-        onResult={handleResult}
-        onExit={() => setStarted(false)}
+      <div className="flex flex-col items-center gap-2 rounded-3xl border border-coral-100 bg-coral-50/60 px-6 py-12 text-center">
+        <Homi mood="running" size={92} />
+        <p className="text-sm font-semibold text-coral-700">공유 링크 분석 중…</p>
+        <p className="text-xs text-coral-500/80">잠시만 기다려 주세요</p>
+      </div>
+    );
+  }
+  // 시작 전 = 랜딩 히어로(가치제안+단일 CTA). CTA 누르면 폼 노출.
+  if (state === null && !started) {
+    return (
+      <LandingHero
+        onStart={() => {
+          setStarted(true);
+          window.scrollTo({ top: 0 });
+        }}
       />
     );
   }
 
-  const { result } = state;
-
   // ── 결과 화면 ──────────────────────────────────────────────
-  return (
-    <div className="flex flex-col gap-8">
-      {/* 상단 바: 검토 단지 수 + 공유 + 처음부터.
+  // 핵심: 폼(ProfileForm)은 결과가 떠도 같은 트리 위치에 그대로 두고 display:none 으로만
+  // 숨긴다 → 리마운트가 안 되므로 입력 30여 개가 보존된다. "← 이전"(handleBack)은 state 만
+  // 비워 폼을 다시 보여주고, "처음부터"(handleRestart)는 started=false 로 랜딩 복귀 →
+  // 폼이 트리에서 빠져 언마운트 → 다음 시작 때 새 폼(초기화).
+  let resultView: ReactNode = null;
+  if (state !== null) {
+    const { result } = state;
+    resultView = (
+      <div className="flex flex-col gap-8">
+        {/* 좌상단 ← 이전: 폼으로 복귀(입력 보존) */}
+        <button
+          type="button"
+          onClick={handleBack}
+          className="-mb-3 -ml-2 inline-flex items-center gap-1 self-start rounded-full px-2 py-1 text-sm font-semibold text-coral-600 transition-colors hover:bg-coral-50 hover:text-coral-800 focus:outline-none focus:ring-2 focus:ring-coral-400"
+        >
+          <span aria-hidden>←</span> 이전
+        </button>
+
+        {/* 상단 바: 검토 단지 수 + 공유 + 처음부터.
           모바일에선 버튼군이 좁아 왼쪽 텍스트를 글자단위로 짓눌렀다 → flex-wrap 으로
           버튼을 아랫줄로 내리고, 텍스트는 nowrap, 버튼군은 shrink-0 으로 보존. */}
-      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-2">
         <div className="flex items-center gap-1.5 min-w-0">
           <Homi mood="search" size={26} className="shrink-0" />
           <p
@@ -1371,6 +1389,21 @@ export function HomeExperience() {
           {result.disclaimer}
         </p>
       </footer>
-    </div>
+      </div>
+    );
+  }
+
+  // 폼은 결과 뒤에 항상 마운트(숨김만) → "← 이전" 시 입력 보존. 결과 없으면 폼이 보인다.
+  return (
+    <>
+      <div style={state !== null ? { display: "none" } : undefined}>
+        <ProfileForm
+          onResult={handleResult}
+          onExit={() => setStarted(false)}
+          historyActive={state === null}
+        />
+      </div>
+      {resultView}
+    </>
   );
 }

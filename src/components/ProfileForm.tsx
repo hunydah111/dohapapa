@@ -304,10 +304,14 @@ function WorkplaceInput({
 export function ProfileForm({
   onResult,
   onExit,
+  historyActive = true,
 }: {
   onResult: (result: RecommendationResult, profile: CoupleProfile) => void;
   /** step 1에서 뒤로 가면 호출 — 상위(랜딩)로 복귀. */
   onExit?: () => void;
+  /** 폼이 화면에 보이는 동안만 뒤로가기(popstate) 가드를 작동. 결과 화면에서 숨겨질 땐
+   *  false 로 줘 popstate 를 무시한다(숨은 폼의 단계가 브라우저 back 으로 바뀌는 회귀 방지). */
+  historyActive?: boolean;
 }) {
   // retired 는 직장 단계 없으므로 시각적으로 4단계, 나머지 5단계
   const [step, setStep] = useState<Step>(1);
@@ -554,15 +558,18 @@ export function ProfileForm({
   const stepRef = useRef(step);
   const goPrevRef = useRef(goPrev);
   const onExitRef = useRef(onExit);
+  const activeRef = useRef(historyActive);
   // 최신값을 ref에 반영 — 렌더가 아니라 effect에서(렌더 중 ref 쓰기 금지 규칙 준수).
   useEffect(() => {
     stepRef.current = step;
     goPrevRef.current = goPrev;
     onExitRef.current = onExit;
+    activeRef.current = historyActive;
   });
   useEffect(() => {
     window.history.pushState(null, ""); // sentinel 심기
     const onPop = () => {
+      if (!activeRef.current) return; // 결과 화면에서 숨겨진 동안엔 단계 가드 비활성
       if (stepRef.current > 1) {
         goPrevRef.current(); // 한 단계 뒤로
         window.history.pushState(null, ""); // 다시 심기
