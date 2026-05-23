@@ -124,7 +124,7 @@ export function HeroResultCard({
   return (
     <section
       className="relative overflow-hidden rounded-3xl px-6 py-8 text-white"
-      style={{ background: "linear-gradient(135deg, #ff7a59 0%, #7c3aed 100%)" }}
+      style={{ background: "linear-gradient(135deg, #fe7644 0%, #d24f24 100%)" }}
     >
       {/* 장식 글로우 */}
       <div
