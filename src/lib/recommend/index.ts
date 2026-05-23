@@ -1047,6 +1047,15 @@ export async function recommendComplexes(
     }
   }
 
+  // 지역 완화 레버 — 필수 지역이 설정됐는데 딱 맞는 결과가 적으면 "지역 제한 풀기"를 제안.
+  // 지역 밖 단지는 로드돼 있지 않아 사전 카운트는 생략(누르면 전체 수도권으로 즉시 재검색).
+  if (requiredRegions.length > 0 && withinLimitSurvivors.length < 3) {
+    relaxationSuggestions.push({
+      message: `📍 '${requiredRegions.join("·")}'만 보고 있어요 — 지역 제한을 풀면 더 넓게 찾아드려요`,
+      action: { kind: "region" },
+    });
+  }
+
   // ── 3티어 선정 ───────────────────────────────────────────────────────────
   // [전문가 패널] 세 티어가 실제로 달라야 한다 — 차별화 조건을 각 티어에 부여한다.
 
@@ -1126,17 +1135,10 @@ export async function recommendComplexes(
     }
   }
 
-  // 보충 후보가 예산 밴드 상한을 넘는지 표시 — 카드에서 "예산 초과" 배지로 솔직히 알린다.
-  const { upper: heroBandUpper } = bandBounds(
-    netPurchasePowerKrw,
-    dropLowerBand,
-    budgetFlex,
-  );
   const candidates: ComplexCandidate[] = fillRankReasons(
     chosen.map(({ entry, tier }) => ({
       ...entry.candidate,
       tier,
-      overBudget: entry.medianKrw > heroBandUpper,
     })),
   );
 

@@ -562,6 +562,9 @@ export function HomeExperience() {
           maxCommuteMinutes: p.workplaceB.maxCommuteMinutes + action.addMinutes,
         },
       };
+    } else if (action.kind === "region") {
+      // 지역 제한 풀기 — 전체 수도권으로 재검색.
+      merged = { ...p, requiredRegions: undefined };
     }
 
     setReanalyzing(true);
@@ -881,22 +884,26 @@ export function HomeExperience() {
                     >
                       {s.message}
                     </span>
-                    <span
-                      className={`flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
-                        i === 0
-                          ? "bg-coral-600 text-white"
-                          : "bg-coral-100 text-coral-700"
-                      }`}
-                    >
-                      {s.resultCount}곳
-                    </span>
+                    {s.resultCount != null && (
+                      <span
+                        className={`flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
+                          i === 0
+                            ? "bg-coral-600 text-white"
+                            : "bg-coral-100 text-coral-700"
+                        }`}
+                      >
+                        {s.resultCount}곳
+                      </span>
+                    )}
                   </div>
                   <span
                     className="inline-flex items-center gap-1 text-[12px] font-semibold text-coral-600"
                   >
                     {reanalyzing
                       ? "다시 찾는 중…"
-                      : `👆 눌러서 이 조건으로 단지 ${s.resultCount}곳 보기 →`}
+                      : s.resultCount != null
+                        ? `👆 눌러서 이 조건으로 단지 ${s.resultCount}곳 보기 →`
+                        : "👆 눌러서 이 조건으로 다시 찾기 →"}
                   </span>
                 </button>
               ))}
@@ -1213,9 +1220,11 @@ export function HomeExperience() {
                   >
                     {s.message}
                   </span>
-                  <span className="ml-4 flex-shrink-0 rounded-full bg-coral-100 px-2.5 py-1 text-xs font-bold text-coral-700">
-                    +{s.resultCount}곳
-                  </span>
+                  {s.resultCount != null && (
+                    <span className="ml-4 flex-shrink-0 rounded-full bg-coral-100 px-2.5 py-1 text-xs font-bold text-coral-700">
+                      +{s.resultCount}곳
+                    </span>
+                  )}
                 </button>
               ))}
             </div>

@@ -171,12 +171,6 @@ export interface ComplexCandidate {
   isChopumah: boolean;
   /** 같은 동·비슷한 연식 단지보다 ㎡당 단가가 높음 — '동네 인기단지' 배지용. */
   pricierThanPeers?: boolean;
-  /**
-   * 가격 밴드 상한을 넘는데도(예산 초과) 메인 카드로 채워 넣은 후보.
-   * 엄격 조건 통과 단지가 3개 미만일 때 빈 화면 대신 가장 가까운 후보로 채우면서 표시.
-   * true 면 카드에 "예산 초과" 배지로 솔직히 알린다.
-   */
-  overBudget?: boolean;
   /** 선호 입지(분위기) 매칭 시 표시할 배지 라벨(예: "🌊 한강변"). 미매칭/미선택이면 없음. */
   vibeBadge?: string;
   commuteLegs: CommuteLeg[];
@@ -218,13 +212,15 @@ export interface MoreCandidate {
 export type RelaxationAction =
   | { kind: "commute"; workplace: "A" | "B"; addMinutes: number }
   | { kind: "budget"; addKrw: number }
-  | { kind: "area"; areaRange: AreaRangeKey };
+  | { kind: "area"; areaRange: AreaRangeKey }
+  /** 필수 지역 제한을 풀어(전체 수도권) 다시 찾는다. */
+  | { kind: "region" };
 
 export interface RelaxationSuggestion {
   /** 사용자에게 보일 제안 문구 (예: "예산을 2억 늘리면 12곳"). */
   message: string;
-  /** 이 제안 적용 시 나오는 단지 수. */
-  resultCount: number;
+  /** 이 제안 적용 시 나오는 단지 수. 지역 완화 등 사전 카운트가 어려운 경우 생략. */
+  resultCount?: number;
   /** 누르면 자동 적용+재검색할 변경. */
   action: RelaxationAction;
 }

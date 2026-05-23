@@ -107,6 +107,7 @@ function applyRelax(p: CoupleProfile, a: RelaxationAction): CoupleProfile {
   if (a.kind === "area") return p.preferredAreaRanges.includes(a.areaRange) ? p : { ...p, preferredAreaRanges: [...p.preferredAreaRanges, a.areaRange] };
   if (a.kind === "commute" && a.workplace === "A" && p.workplaceA) return { ...p, workplaceA: { ...p.workplaceA, maxCommuteMinutes: p.workplaceA.maxCommuteMinutes + a.addMinutes } };
   if (a.kind === "commute" && a.workplace === "B" && p.workplaceB) return { ...p, workplaceB: { ...p.workplaceB, maxCommuteMinutes: p.workplaceB.maxCommuteMinutes + a.addMinutes } };
+  if (a.kind === "region") return { ...p, requiredRegions: undefined };
   return p;
 }
 
@@ -160,10 +161,10 @@ async function main() {
     r.closestCandidates.forEach((c, idx) => checkCandidateData(c, `closest#${idx}`, fails));
     // broken-promise: 완화 제안 클릭 후 candidates>0 (성공 헤드라인)
     for (const s of r.relaxationSuggestions) {
-      if (s.resultCount <= 0) continue;
+      if (s.resultCount != null && s.resultCount <= 0) continue;
       try {
         const r2 = await recommendComplexes(applyRelax(p, s.action));
-        if (r2.candidates.length === 0) fails.push(`broken-promise: "${s.message}"(약속 ${s.resultCount}) → 클릭후 candidates=0`);
+        if (r2.candidates.length === 0) fails.push(`broken-promise: "${s.message}"(약속 ${s.resultCount ?? "?"}) → 클릭후 candidates=0`);
       } catch (e) {
         fails.push(`완화 재검색 CRASH: ${(e as Error).message}`);
       }
