@@ -125,18 +125,18 @@ export function CandidateCard({
           {RANK_LABELS[rank] ?? `${rank}위`}
         </span>
         {candidate.isChopumah && (
-          <span className="inline-flex items-center rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700 ring-1 ring-sky-200">
+          <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 ring-1 ring-amber-200">
             초품아
           </span>
         )}
         {candidate.vibeBadge && (
-          <span className="inline-flex items-center rounded-full bg-violet-50 px-3 py-1 text-xs font-bold text-violet-700 ring-1 ring-violet-200">
+          <span className="inline-flex items-center rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600 ring-1 ring-rose-200">
             {candidate.vibeBadge}
           </span>
         )}
         {candidate.pricierThanPeers && (
           <span
-            className="inline-flex items-center rounded-full bg-fuchsia-50 px-3 py-1 text-xs font-bold text-fuchsia-700 ring-1 ring-fuchsia-200"
+            className="inline-flex items-center rounded-full bg-coral-50 px-3 py-1 text-xs font-bold text-coral-700 ring-1 ring-coral-200"
             title="같은 동·비슷한 연식 단지보다 ㎡당 단가가 높아요 — 시장이 더 높게 평가한 단지예요"
           >
             ✨ 동네에서 인정받는 단지
@@ -151,7 +151,7 @@ export function CandidateCard({
           </span>
         ) : candidate.priceFromPresale ? (
           <span
-            className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700 ring-1 ring-indigo-200"
+            className="inline-flex items-center rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-600 ring-1 ring-stone-300"
             title="등기 전 신축이라 분양권/입주권 실거래가 기준입니다 (소유권 이전 매매와 권리 상태가 다름)"
           >
             분양권·입주권

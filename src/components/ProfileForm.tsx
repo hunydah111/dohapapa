@@ -49,13 +49,13 @@ const VIBE_CHIP: Record<
 > = {
   riverside: {
     emoji: "🌊",
-    active: "border-sky-500 bg-sky-500 text-white focus:ring-sky-300",
-    idle: "border-sky-200 bg-sky-50 text-sky-700 hover:border-sky-400",
+    active: "border-coral-500 bg-coral-500 text-white focus:ring-coral-300",
+    idle: "border-coral-200 bg-coral-50 text-coral-700 hover:border-coral-400",
   },
   quiet: {
     emoji: "🍃",
-    active: "border-emerald-500 bg-emerald-500 text-white focus:ring-emerald-300",
-    idle: "border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-400",
+    active: "border-amber-500 bg-amber-500 text-white focus:ring-amber-300",
+    idle: "border-amber-200 bg-amber-50 text-amber-700 hover:border-amber-400",
   },
 };
 import { BudgetPreview } from "./BudgetPreview";
@@ -783,16 +783,20 @@ export function ProfileForm({
             </p>
           </div>
 
-          {/* 가구 유형 카드 */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* 가구 유형 카드 — 이모지 + 따뜻한 색감 칩으로 생기 부여, 가로 레이아웃으로 컴팩트하게 */}
+          <div className="grid grid-cols-2 gap-2.5">
             {(Object.keys(HOUSEHOLD_TYPE_LABELS) as HouseholdType[]).map(
               (type) => {
-                const subtitles: Record<HouseholdType, string> = {
-                  single: "1인 통근 기준",
-                  dualIncome: "두 직장 모두 고려",
-                  singleIncome: "한 직장 기준",
-                  retired: "통근 조건 없음",
+                const meta: Record<
+                  HouseholdType,
+                  { emoji: string; sub: string; tint: string }
+                > = {
+                  single: { emoji: "🧍", sub: "1인 통근 기준", tint: "bg-coral-100" },
+                  dualIncome: { emoji: "👫", sub: "두 직장 고려", tint: "bg-amber-100" },
+                  singleIncome: { emoji: "👨‍👩‍👧", sub: "한 직장 기준", tint: "bg-rose-100" },
+                  retired: { emoji: "🌿", sub: "통근 조건 없음", tint: "bg-[#e7ddcb]" },
                 };
+                const m = meta[type];
                 const selected = householdType === type;
                 return (
                   <button
@@ -800,22 +804,33 @@ export function ProfileForm({
                     type="button"
                     onClick={() => setHouseholdType(type)}
                     className={[
-                      "rounded-3xl border-2 px-4 py-5 text-left transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-coral-400",
+                      "flex items-center gap-2.5 rounded-2xl border-2 px-3 py-3 text-left transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-coral-400",
                       selected
-                        ? "border-coral-600 bg-coral-50 shadow-md"
-                        : "border-[#e5e5ea] bg-white hover:border-coral-300",
+                        ? "border-coral-600 bg-coral-50 shadow-sm"
+                        : "border-[#e5e5ea] bg-white hover:border-coral-300 hover:bg-coral-50/40",
                     ].join(" ")}
                   >
                     <span
                       className={[
-                        "block text-[15px] font-semibold leading-snug",
-                        selected ? "text-coral-700" : "text-[#3a322c]",
+                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[20px]",
+                        m.tint,
                       ].join(" ")}
+                      aria-hidden
                     >
-                      {HOUSEHOLD_TYPE_LABELS[type]}
+                      {m.emoji}
                     </span>
-                    <span className="mt-1 block text-[12px] text-[#9a8f82]">
-                      {subtitles[type]}
+                    <span className="min-w-0">
+                      <span
+                        className={[
+                          "block text-[14px] font-bold leading-tight",
+                          selected ? "text-coral-700" : "text-[#3a322c]",
+                        ].join(" ")}
+                      >
+                        {HOUSEHOLD_TYPE_LABELS[type]}
+                      </span>
+                      <span className="mt-0.5 block text-[11px] text-[#9a8f82]">
+                        {m.sub}
+                      </span>
                     </span>
                   </button>
                 );

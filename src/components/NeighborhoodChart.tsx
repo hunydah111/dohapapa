@@ -16,6 +16,13 @@ interface ChartData {
   week: string;
   entries: ChartEntry[];
   total: number;
+  lastUpdated: string | null;
+}
+
+// ISO 시각 → KST "M.D" (서버 UTC 기준이라 +9h 시프트 후 표기).
+function fmtKST(iso: string): string {
+  const d = new Date(new Date(iso).getTime() + 9 * 3_600_000);
+  return `${d.getUTCMonth() + 1}.${d.getUTCDate()}`;
 }
 
 // 표본이 너무 적으면 숨김 — 한두 줄짜리 빈 차트의 신뢰도 문제 방지.
@@ -79,6 +86,7 @@ export function NeighborhoodChart() {
         </p>
         <p className="text-[11px]" style={{ color: "#9a8f82" }}>
           매주 갱신
+          {data.lastUpdated ? ` · ${fmtKST(data.lastUpdated)} 기준` : ""}
         </p>
       </div>
       <div

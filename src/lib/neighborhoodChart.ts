@@ -59,6 +59,8 @@ export interface NeighborhoodChart {
   week: string;
   entries: NeighborhoodChartEntry[];
   total: number;
+  /** 이번 주 집계의 최신 갱신 시각(ISO) — 가장 최근 기록된 행 기준. 데이터 없으면 null. */
+  lastUpdated: string | null;
 }
 
 function rankRows(rows: { key: string; count: number }[], prefix: string) {
@@ -87,6 +89,13 @@ export async function getNeighborhoodChart(limit = 8): Promise<NeighborhoodChart
     const cur = rankRows(thisRows, `${PREFIX}${week}:`);
     const prev = rankRows(prevRows, `${PREFIX}${prevWeek}:`);
     const total = cur.counts.reduce((a, b) => a + b.count, 0);
+    const times = thisRows
+      .map((r) => (r as { updatedAt?: Date | string }).updatedAt)
+      .filter((t): t is Date | string => t != null)
+      .map((t) => new Date(t).getTime());
+    const lastUpdated = times.length
+      ? new Date(Math.max(...times)).toISOString()
+      : null;
     const entries: NeighborhoodChartEntry[] = cur.counts
       .slice(0, limit)
       .map((c, i) => {
@@ -98,8 +107,8 @@ export async function getNeighborhoodChart(limit = 8): Promise<NeighborhoodChart
           rankDelta: prevRank == null ? null : prevRank - (i + 1),
         };
       });
-    return { week, entries, total };
+    return { week, entries, total, lastUpdated };
   } catch {
-    return { week, entries: [], total: 0 };
+    return { week, entries: [], total: 0, lastUpdated: null };
   }
 }
