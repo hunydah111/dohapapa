@@ -5,9 +5,26 @@ import { join } from "node:path";
 // 카카오톡·페이스북·X 등에서 링크 공유 시 보이는 썸네일(1200×630).
 // 비집고 브랜드: 따뜻한 코랄. 상단 = 브랜드 로고(아파트+비버) + 호기심 후크 카피 + 3-티어 칩,
 // 하단 = 코랄 밴드에 흰 워드마크(축소 시에도 대비 확보). 한글은 Black Han Sans(OFL) 번들 폰트.
-export const alt = "비집고 — 내 돈으로 살 집 어디까지?";
-export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
+
+const SIZE = { width: 1200, height: 630 };
+const ALT = "비집고 — 내 돈으로 살 집 어디까지?";
+
+// og:image URL에 버전 경로(/opengraph-image/<id>)를 박는다. 카카오·페북·폰 로컬은 이미지 URL
+// 글자 단위로 캐싱하므로, 디자인을 바꾸면 OG_VERSION을 올려 "한 번도 본 적 없는 새 URL"로 강제
+// 교체 → 모든 캐시 계층이 새로 긁어간다. (카카오 OG 디버거 캐시 초기화로도 안 풀릴 때의 확실한 우회)
+const OG_VERSION = "2";
+
+export function generateImageMetadata() {
+  return [
+    {
+      id: OG_VERSION,
+      alt: ALT,
+      size: SIZE,
+      contentType,
+    },
+  ];
+}
 
 export default async function Image() {
   const font = await readFile(
@@ -97,7 +114,7 @@ export default async function Image() {
       </div>
     ),
     {
-      ...size,
+      ...SIZE,
       fonts: [
         { name: "BlackHanSans", data: font, style: "normal", weight: 400 },
       ],
