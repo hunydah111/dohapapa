@@ -41,7 +41,7 @@ export function Button({
   const variants: Record<NonNullable<ButtonProps["variant"]>, string> = {
     primary:
       "bg-coral-600 text-white hover:bg-coral-700 " +
-      "shadow-[0_1px_2px_rgba(0,0,0,0.06),0_4px_12px_-4px_rgba(242,96,60,0.35)]",
+      "shadow-[0_1px_2px_rgba(0,0,0,0.06),0_4px_12px_-4px_rgba(232,102,47,0.30)]",
     secondary:
       "bg-white text-[#3a322c] border border-black/[0.10] " +
       "hover:bg-[#f3ece4] " +

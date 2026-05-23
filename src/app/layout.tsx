@@ -67,18 +67,18 @@ export default function RootLayout({
               {/* 브랜드명 */}
               <span
                 className="font-jua text-[18px] tracking-tight"
-                style={{ color: "#3a322c" }}
+                style={{ color: "#e8662f" }}
               >
                 비집고
               </span>
             </a>
 
-            {/* 서브 태그라인 — 캐치프레이즈로 통일 */}
+            {/* 서브 태그라인 — 본문 카피와 중복 피하려 차별화(기능 요약) */}
             <span
               className="hidden text-xs sm:inline"
               style={{ color: "#9a8f82" }}
             >
-              내 통장으로 살 집 찾기
+              예산으로 찾는 수도권 아파트
             </span>
           </div>
         </header>

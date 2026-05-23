@@ -29,7 +29,7 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
         className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[420px]"
         style={{
           background:
-            "radial-gradient(60% 70% at 50% 12%, rgba(224,162,58,0.20) 0%, rgba(79,157,84,0.12) 44%, rgba(245,236,217,0) 75%)",
+            "radial-gradient(58% 64% at 50% 10%, rgba(254,118,68,0.22) 0%, rgba(224,162,58,0.16) 38%, rgba(245,236,217,0) 72%)",
         }}
       />
 
@@ -39,35 +39,82 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
         <img
           src="/biji/biji-hero.png?v=2"
           alt="비집고 비지 — 아파트 사이를 비집고"
-          width={132}
-          height={132}
-          className="h-32 w-32 drop-shadow-md"
+          width={112}
+          height={112}
+          className="h-28 w-28 drop-shadow-md"
           draggable={false}
         />
       </div>
 
-      {/* 캐치프레이즈 — "내 통장으로 / 비집고 / 살 집 찾기" 순서 재배치 (각 줄 폰트·크기는 기존 그대로) */}
+      {/* 캐치프레이즈 — "내 통장으로 / 비집고 / 들어갈 집" (브랜드어는 본문 톤,
+          강조 코랄은 CTA 한 곳에 집중해 시선 위계를 살린다) */}
       <p
-        className="font-jua mx-auto mt-2 text-[17px] sm:text-[19px]"
-        style={{ color: "#6b6157" }}
+        className="font-jua mx-auto mt-3 text-[15px] sm:text-[17px]"
+        style={{ color: "#8a7d6e" }}
       >
         내 통장으로
       </p>
       <h1
-        className="font-jua mt-1 text-[2.1rem] leading-[1.2] tracking-tight sm:text-[2.9rem]"
-        style={{ color: "#3a2c1d" }}
+        className="font-jua -mt-0.5 text-[3rem] leading-[1] tracking-tight sm:text-[3.6rem]"
+        style={{ color: "#e8662f" }}
       >
-        <span className="text-coral-600">비집고</span>
+        비집고
       </h1>
       <p
-        className="font-jua mx-auto mt-1 text-[17px] sm:text-[19px]"
-        style={{ color: "#6b6157" }}
+        className="font-jua mx-auto mt-0 text-[15px] sm:text-[17px]"
+        style={{ color: "#8a7d6e" }}
       >
-        살 집 찾기
+        들어갈 집
       </p>
 
-      {/* 예시 결과 미니카드 — 무엇을 받는지 미리 보여주기(가짜임을 명시) */}
-      <div className="mx-auto mt-6 w-full max-w-sm">
+      {/* 기능 한 줄 — "무엇을 해주는지"를 3초 안에 (본문 폰트로 위계 대비) */}
+      <p
+        className="mx-auto mt-3 max-w-sm text-[14px] leading-relaxed text-balance sm:text-[15px]"
+        style={{ color: "#6b6157" }}
+      >
+        수도권 아파트, 내 예산에 맞춰
+        <br />
+        안정·균형·도전형으로 정리해 드려요
+      </p>
+
+      {/* 3-티어 미리보기 — 결과가 세 갈래로 나옴을 시각적으로 예고(안정→도전 따뜻한 그라데이션) */}
+      <div className="mx-auto mt-3.5 flex items-center justify-center gap-2 text-[12px] font-bold">
+        <span
+          className="rounded-full px-3 py-1"
+          style={{ background: "#f7ead0", color: "#9a5a1e" }}
+        >
+          안정형
+        </span>
+        <span
+          className="rounded-full px-3 py-1"
+          style={{ background: "#ffd9c7", color: "#c4521f" }}
+        >
+          균형형
+        </span>
+        <span
+          className="rounded-full px-3 py-1 text-white"
+          style={{ background: "#fe7644" }}
+        >
+          도전형
+        </span>
+      </div>
+
+      {/* 단일 CTA — 예시카드보다 위에 둬서 첫 화면(스크롤 전)에서 바로 보이게 */}
+      <div className="mx-auto mt-5 w-full max-w-sm">
+        <Button onClick={onStart} fullWidth>
+          30초, 무료로 내 집 찾기 →
+        </Button>
+        <p className="mt-2 text-[12px]" style={{ color: "#9a8f82" }}>
+          가입·로그인 없이 · 입력 정보 저장 안 함
+        </p>
+        <p className="mt-1.5 text-[12px]" style={{ color: "#9a8f82" }}>
+          국토부 공개 실거래가 · 매일 갱신
+          {FRESH_DATE ? ` · ${FRESH_DATE} 기준` : " · 무료"}
+        </p>
+      </div>
+
+      {/* 예시 결과 미니카드 — 행동(CTA) 아래에서 증거로 받쳐줌(가짜임을 명시) */}
+      <div className="mx-auto mt-8 w-full max-w-sm">
         <p className="mb-2 text-[12px] font-semibold" style={{ color: "#9a8f82" }}>
           이런 결과를 받아요
         </p>
@@ -75,11 +122,11 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
           className="relative rounded-3xl bg-white p-5 text-left"
           style={{
             boxShadow:
-              "0 1px 2px rgba(0,0,0,0.04), 0 12px 32px -12px rgba(0,0,0,0.12)",
+              "0 1px 2px rgba(0,0,0,0.04), 0 12px 32px -12px rgba(0,0,0,0.08)",
           }}
         >
-          <span className="absolute right-4 top-4 rounded-full bg-[#f3ece4] px-2 py-0.5 text-[10px] font-bold text-[#9a8f82]">
-            예시
+          <span className="absolute right-4 top-4 rounded-full bg-[#f7ead0] px-2.5 py-0.5 text-[10px] font-bold text-[#9a5a1e]">
+            예시 화면
           </span>
           <span className="inline-flex items-center rounded-full bg-coral-600 px-2.5 py-1 text-[11px] font-bold text-white">
             균형형
@@ -99,21 +146,6 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
             <MiniBadge>⭐ 종합 88점</MiniBadge>
           </div>
         </div>
-      </div>
-
-      {/* 단일 CTA */}
-      <div className="mx-auto mt-6 w-full max-w-sm">
-        <Button onClick={onStart} fullWidth>
-          내 집 찾기 시작 →
-        </Button>
-        <p className="mt-3 text-[12px]" style={{ color: "#9a8f82" }}>
-          국토교통부 공개 실거래가 기반 · 매일 자동 갱신 · 무료
-        </p>
-        {FRESH_DATE && (
-          <p className="mt-1 text-[11px]" style={{ color: "#9a8f82" }}>
-            📅 최근 실거래 {FRESH_DATE}까지 반영
-          </p>
-        )}
       </div>
     </section>
   );

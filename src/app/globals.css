@@ -12,8 +12,8 @@
   --color-text-primary:   #3a2c1d;  /* 진한 우드 브라운 */
   --color-text-secondary: #6e5b46;
   --color-text-muted:     #9c8a72;
-  --color-accent:     #4f9d54;   /* 잎새 그린 — 주 CTA (시안의 초록 버튼) */
-  --color-accent-hover: #3f8444;
+  --color-accent:     #fe7644;   /* 코랄 — 주 브랜드/CTA (로고 비버·아파트와 통일) */
+  --color-accent-hover: #e8662f;
   --color-warm:       #e0a23a;   /* 허니 앰버 — 보조 액센트 */
   --color-warm-soft:  #f7ead0;   /* 배지·하이라이트 배경 */
   --color-warm-text:  #9a5a1e;   /* 따뜻한 텍스트 */
@@ -24,16 +24,17 @@
   --color-wood:       #8a6240;
   --color-wood-soft:  #efe2cf;
 
-  /* ── coral-* 스케일 → 잎새 그린 리맵 (레거시 토큰명 유지, 값만 교체) ── */
-  --color-coral-50:  #eef7ee;
-  --color-coral-100: #d7ecd8;
-  --color-coral-200: #b3dbb5;
-  --color-coral-300: #88c78c;
-  --color-coral-400: #66b46c;
-  --color-coral-500: #4f9d54;
-  --color-coral-600: #3f8444;
-  --color-coral-700: #336c38;
-  --color-coral-800: #28552d;
+  /* ── coral-* 스케일 → 따뜻한 코랄 (브랜드 통일: 로고 비버·아파트 톤) ──
+     초록은 의미색(통과/적격)으로만 남기고 emerald 계열과 --color-success 가 담당. */
+  --color-coral-50:  #fff4ef;
+  --color-coral-100: #ffe6dc;
+  --color-coral-200: #ffccb7;
+  --color-coral-300: #ffb094;
+  --color-coral-400: #ff926a;
+  --color-coral-500: #fe7d4f;
+  --color-coral-600: #fe7644;
+  --color-coral-700: #e8662f;
+  --color-coral-800: #c4521f;
 
   /* ── 그림자 토큰 ── */
   --shadow-card:
