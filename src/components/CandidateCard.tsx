@@ -110,9 +110,9 @@ export function CandidateCard({
   }
 
   return (
-    <Card className="flex flex-col gap-4">
+    <Card compact className="flex flex-col gap-2.5">
       {/* 상단 행: 티어 배지 + 순위 + 초품아 + 종합점수 */}
-      <div className="flex items-center gap-2.5 flex-wrap">
+      <div className="flex items-center gap-2 flex-wrap">
         <span
           className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold tracking-wide ${tier.bg} ${tier.text} ${tier.ring}`}
         >
@@ -201,13 +201,13 @@ export function CandidateCard({
       <div>
         <div className="flex flex-wrap items-start gap-2">
           <h3
-            className="text-2xl font-extrabold leading-tight tracking-tight"
+            className="text-lg font-extrabold leading-tight tracking-tight"
             style={{ color: "#3a322c" }}
           >
             {candidate.complexName}
             {candidate.buildYear !== null && (
               <span
-                className="ml-2 text-base font-semibold tabular-nums"
+                className="ml-1.5 text-xs font-semibold tabular-nums"
                 style={{ color: "#9a8f82" }}
               >
                 ({candidate.buildYear}년식)
@@ -270,38 +270,35 @@ export function CandidateCard({
                 : `📊 실거래 ${candidate.transactionCount}건·${candidate.lowDataConfidence ? "최근1년" : "최근6개월"}`}
           </span>
         </div>
-        <p className="mt-1.5 text-xs" style={{ color: "#9a8f82" }}>
+        <p className="mt-1 text-[11px] leading-snug" style={{ color: "#9a8f82" }}>
           {candidate.priceEstimated
-            ? `아직 실거래가 등재되기 전이라 ${candidate.estimateBasis ?? "주변 시세 연동"}으로 추정한 값이에요 (등기 진행 중 신축 등). 실제 등재 시 조망·층·향 따라 차이 날 수 있어요. `
+            ? `${candidate.estimateBasis ?? "주변 시세"} 환산 추정 · 실거래 미확정`
             : candidate.priceFromPresale
-              ? `분양권/입주권 실거래 ${candidate.transactionCount}건 기준이에요 (등기 전 권리 거래라 이후 소유권 매매가와 차이 날 수 있음). `
+              ? `분양권/입주권 ${candidate.transactionCount}건 기준`
               : showPriceRange
-              ? `최근 실거래 ${candidate.transactionCount}건이 층·향 따라 ${formatEok(candidate.priceLowKrw!)}~${formatEok(candidate.priceHighKrw!)}로 편차가 큰 단지예요 (신축 입주장 등). 중앙 추정 ${formatKrwHuman(candidate.medianPriceKrw)} — `
-              : candidate.lowDataConfidence
-                ? `최근 1년 실거래 ${candidate.transactionCount}건 (거래 적어 12개월로 추정 — 참고용) `
-                : `최근 6개월 실거래 ${candidate.transactionCount}건의 중위값 `}
-          (국토교통부 공개 데이터, 실제 거래가와 다를 수 있음)
+                ? `실거래 ${candidate.transactionCount}건 · 층·향 편차 큼(중앙 ${formatKrwHuman(candidate.medianPriceKrw)})`
+                : candidate.lowDataConfidence
+                  ? `최근 1년 ${candidate.transactionCount}건 · 거래 적음(참고용)`
+                  : `최근 6개월 실거래 ${candidate.transactionCount}건 중위값`}
+          {" · 국토부 공개데이터(실거래와 다를 수 있음)"}
         </p>
       </div>
 
-      {/* 리포트 — 왜 뽑혔는지 */}
+      {/* 리포트 — 왜 뽑혔는지 (따뜻한 코랄·골드 톤) */}
       <div
-        className="rounded-2xl px-4 py-3"
+        className="rounded-2xl px-3.5 py-2.5"
         style={{
-          background: "linear-gradient(135deg, #eef2ff 0%, #f0fdf4 100%)",
+          background: "linear-gradient(135deg, #fff4ef 0%, #f7ead0 100%)",
         }}
       >
-        <p
-          className="text-xs font-semibold mb-2"
-          style={{ color: "#f2603c" }}
-        >
+        <p className="text-[11px] font-bold mb-1.5" style={{ color: "#e8662f" }}>
           선택 이유
         </p>
-        <dl className="flex flex-col gap-2">
+        <dl className="flex flex-col gap-1">
           {reasonRows.map((r) => (
-            <div key={r.label} className="flex gap-2.5 text-sm leading-relaxed">
+            <div key={r.label} className="flex gap-2 text-[13px] leading-snug">
               <dt
-                className="w-16 flex-shrink-0 font-semibold"
+                className="w-12 flex-shrink-0 font-semibold"
                 style={{ color: "#9a8f82" }}
               >
                 {r.label}
@@ -324,38 +321,34 @@ export function CandidateCard({
         }}
       />
 
-      {/* 신호 바 — 항목별 점수 */}
-      <div className="flex flex-col gap-2">
-        <p className="text-xs font-semibold" style={{ color: "#9a8f82" }}>
+      {/* 신호 바 — 항목별 점수 (2열 컴팩트) */}
+      <div className="flex flex-col gap-1.5">
+        <p className="text-[11px] font-semibold" style={{ color: "#9a8f82" }}>
           항목별 점수
         </p>
-        {SIGNAL_ORDER.map((key) => {
-          const score = candidate.scores[key];
-          return (
-            <div key={key} className="flex flex-col gap-1">
-              <div className="flex items-center justify-between">
-                <span
-                  className="text-xs font-medium"
-                  style={{ color: "#6b6157" }}
-                >
-                  {CANDIDATE_SIGNAL_LABELS[key]}
-                </span>
-                <span
-                  className="text-xs tabular-nums font-semibold"
-                  style={{ color: "#3a322c" }}
-                >
-                  {score}
-                </span>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+          {SIGNAL_ORDER.map((key) => {
+            const score = candidate.scores[key];
+            return (
+              <div key={key} className="flex flex-col gap-0.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-medium" style={{ color: "#6b6157" }}>
+                    {CANDIDATE_SIGNAL_LABELS[key]}
+                  </span>
+                  <span className="text-[11px] tabular-nums font-semibold" style={{ color: "#3a322c" }}>
+                    {score}
+                  </span>
+                </div>
+                <div className="h-1 w-full overflow-hidden rounded-full bg-black/[0.06]">
+                  <div
+                    className={`h-full rounded-full ${tier.bar} transition-all duration-500`}
+                    style={{ width: `${score}%` }}
+                  />
+                </div>
               </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/[0.06]">
-                <div
-                  className={`h-full rounded-full ${tier.bar} transition-all duration-500`}
-                  style={{ width: `${score}%` }}
-                />
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       {/* 동네 (반경 1km) — 시설 사실 + 5축 레이더. fetch 후 fade-in, 데이터 없으면 숨김. */}
