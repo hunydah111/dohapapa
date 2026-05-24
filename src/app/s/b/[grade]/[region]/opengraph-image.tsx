@@ -84,7 +84,7 @@ export default async function Image({
           }}
         >
           <div style={{ fontSize: 80, color: "#fffdf8", lineHeight: 1 }}>비집고</div>
-          <div style={{ fontSize: 32, color: "#ffe6dc" }}>나도 찾아보기 · homenasia.kr</div>
+          <div style={{ fontSize: 32, color: "#ffe6dc" }}>너는 무슨 비버? · homenasia.kr</div>
         </div>
       </div>
     ),

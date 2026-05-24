@@ -66,9 +66,13 @@ export default async function Page({
         “{tier.drip}”
       </p>
 
+      <p className="mt-1 text-[17px] font-bold" style={{ color: "#e8662f" }}>
+        너는 무슨 비버? 👀
+      </p>
+
       <Link
         href="/"
-        className="mt-4 inline-flex items-center justify-center rounded-full bg-coral-600 px-7 py-3.5 text-base font-bold text-white shadow-lg transition-transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-coral-500"
+        className="mt-2 inline-flex items-center justify-center rounded-full bg-coral-600 px-7 py-3.5 text-base font-bold text-white shadow-lg transition-transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-coral-500"
       >
         나도 내 비버 찾기 →
       </Link>

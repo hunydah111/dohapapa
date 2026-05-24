@@ -309,6 +309,9 @@ export function HeroResultCard({
       {/* 공유 — 비버 등급 카드가 주(主), 유형 카드는 보조. 둘 다 소득·자산 미포함(바이럴 안전). */}
       {gradeShareUrl ? (
         <div className="mt-4 flex flex-col items-start gap-2">
+          <p className="text-[13px] font-bold text-amber-100">
+            친구는 무슨 비버일까? 👀 보내서 비교해봐요
+          </p>
           <button
             type="button"
             onClick={() => onShare(gradeShareUrl)}
