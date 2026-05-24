@@ -47,6 +47,14 @@ const CODE_TO_GU: Record<string, string> = Object.fromEntries(
   Object.entries(LAWD_CODES).map(([name, code]) => [code, name]),
 );
 
+// 알려진 시군구 이름 집합 — 공유 카드(/s/b/[grade]/[region]) 의 region 화이트리스트 검증용.
+export const SIGUNGU_NAMES: ReadonlySet<string> = new Set(Object.keys(LAWD_CODES));
+
+/** 수도권 72개 시군구 중 하나인지. 공유카드 region 검증(쓰레기/주입 카드 방지). */
+export function isKnownSigungu(name: string): boolean {
+  return SIGUNGU_NAMES.has(name);
+}
+
 // ---------------------------------------------------------------------------
 // Zod schema for a single item returned by the MOLIT API.
 // Fields arrive as numbers or numeric strings depending on the record.

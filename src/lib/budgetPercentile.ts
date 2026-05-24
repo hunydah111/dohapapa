@@ -43,25 +43,46 @@ export function budgetTopPercent(budgetKrw: number): number | null {
 // 상위 X% → 재미있는 등급. 위는 비현실 플렉스로 띄우고, 아래는 '짓는 중'으로 절대 안 깐다.
 // 컴플라이언스: '구매력=지을 수 있는 집 규모' 비유일 뿐, 자산가치·미래가치·투자권유 아님.
 // isFlex=false(그 이하)면 "상위 N%" 숫자를 숨겨 박탈감을 차단한다.
+export type BeaverTierSlug =
+  | "justin"
+  | "fever"
+  | "top"
+  | "nan"
+  | "gukmin"
+  | "baby";
+
 export interface BudgetTier {
+  /** URL·공유카드 식별 슬러그. */
+  slug: BeaverTierSlug;
   emoji: string;
   label: string;
   /** 결과 카드용 위트 한 줄. */
   drip: string;
   /** true면 "상위 N%" 노출, false(최하위)면 숫자 숨김. */
   isFlex: boolean;
+  /** 공유 OG·카드용 비버 이미지 (public/biji/…). 등급별 무드. */
+  image: string;
 }
 
+export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
+  justin: { slug: "justin", emoji: "🕺", label: "저스틴비버", drip: "취향껏 집짓는 비버", isFlex: true, image: "/biji/biji-money.png" },
+  fever: { slug: "fever", emoji: "🔥", label: "피버", drip: "골라짓는 비버", isFlex: true, image: "/biji/biji-key.png" },
+  top: { slug: "top", emoji: "🏆", label: "탑비버", drip: "잘나가는 비버", isFlex: true, image: "/biji/biji-thumbsup.png" },
+  nan: { slug: "nan", emoji: "😎", label: "난비버", drip: "알짜비버", isFlex: true, image: "/biji/biji-smile.png" },
+  gukmin: { slug: "gukmin", emoji: "🦫", label: "비버", drip: "국민비버", isFlex: false, image: "/biji/biji-wave.png" },
+  baby: { slug: "baby", emoji: "🐣", label: "아기비버", drip: "집짓기 시작하는 비버 — 비지가 옆에서 응원", isFlex: false, image: "/biji/biji-cheer.png" },
+};
+
 export function budgetTier(topPercent: number): BudgetTier {
-  if (topPercent <= 1)
-    return { emoji: "🕺", label: "저스틴비버", drip: "취향껏 집짓는 비버", isFlex: true };
-  if (topPercent <= 10)
-    return { emoji: "🔥", label: "피버", drip: "골라짓는 비버", isFlex: true };
-  if (topPercent <= 30)
-    return { emoji: "🏆", label: "탑비버", drip: "잘나가는 비버", isFlex: true };
-  if (topPercent <= 50)
-    return { emoji: "😎", label: "난비버", drip: "알짜비버", isFlex: true };
-  if (topPercent <= 70)
-    return { emoji: "🦫", label: "비버", drip: "국민비버", isFlex: false };
-  return { emoji: "🐣", label: "아기비버", drip: "집짓기 시작하는 비버 — 비지가 옆에서 응원", isFlex: false };
+  if (topPercent <= 1) return BEAVER_TIERS.justin;
+  if (topPercent <= 10) return BEAVER_TIERS.fever;
+  if (topPercent <= 30) return BEAVER_TIERS.top;
+  if (topPercent <= 50) return BEAVER_TIERS.nan;
+  if (topPercent <= 70) return BEAVER_TIERS.gukmin;
+  return BEAVER_TIERS.baby;
+}
+
+/** 슬러그로 등급 조회 (공유 OG·페이지용). 없으면 null. */
+export function getTierBySlug(slug: string): BudgetTier | null {
+  return (BEAVER_TIERS as Record<string, BudgetTier>)[slug] ?? null;
 }

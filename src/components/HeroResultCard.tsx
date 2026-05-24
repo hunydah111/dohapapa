@@ -106,6 +106,14 @@ export function HeroResultCard({
 }) {
   // 유형 카드 공유 링크 — 프로필 없이 유형만(바이럴 안전). /s/{slug} 에 동적 OG 카드.
   const typeShareUrl = `${SITE_URL}/s/${homeType.slug}`;
+  // 비버 등급 공유 링크 — 등급+시군구만(소득·자산·직장 X). /s/b/{grade}/{region} 동적 OG 카드.
+  // 닿는 동네 = 1순위 후보 시군구("이 동네가 잡혔어요"의 그 동네). 백분위 데이터 있을 때만.
+  const gradeShareUrl =
+    budgetTopPercent != null
+      ? `${SITE_URL}/s/b/${budgetTier(budgetTopPercent).slug}/${encodeURIComponent(
+          candidate.sigungu,
+        )}`
+      : null;
   const totalCommute = candidate.commuteLegs.reduce(
     (sum, leg) => sum + leg.minutes,
     0,
@@ -298,25 +306,52 @@ export function HeroResultCard({
         </div>
       )}
 
-      {/* 공유 */}
-      <button
-        type="button"
-        onClick={() => onShare(typeShareUrl)}
-        className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-coral-700 shadow-lg transition-transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-white/70"
-      >
-        내 유형 카드 공유하기
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          className="h-4 w-4"
+      {/* 공유 — 비버 등급 카드가 주(主), 유형 카드는 보조. 둘 다 소득·자산 미포함(바이럴 안전). */}
+      {gradeShareUrl ? (
+        <div className="mt-4 flex flex-col items-start gap-2">
+          <button
+            type="button"
+            onClick={() => onShare(gradeShareUrl)}
+            className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-coral-700 shadow-lg transition-transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-white/70"
+          >
+            🦫 내 비버 등급 공유하기
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="h-4 w-4"
+            >
+              <path d="M13 4.5a2.5 2.5 0 11.702 1.737L6.97 9.604a2.518 2.518 0 010 .792l6.733 3.367a2.5 2.5 0 11-.671 1.341l-6.733-3.367a2.5 2.5 0 110-3.475l6.733-3.366A2.52 2.52 0 0113 4.5z" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={() => onShare(typeShareUrl)}
+            className="text-[12px] font-semibold text-white/80 underline underline-offset-2 transition-colors hover:text-white focus:outline-none"
+          >
+            유형 카드로 공유하기
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => onShare(typeShareUrl)}
+          className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-coral-700 shadow-lg transition-transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-white/70"
         >
-          <path d="M13 4.5a2.5 2.5 0 11.702 1.737L6.97 9.604a2.518 2.518 0 010 .792l6.733 3.367a2.5 2.5 0 11-.671 1.341l-6.733-3.367a2.5 2.5 0 110-3.475l6.733-3.366A2.52 2.52 0 0113 4.5z" />
-        </svg>
-      </button>
+          내 유형 카드 공유하기
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="h-4 w-4"
+          >
+            <path d="M13 4.5a2.5 2.5 0 11.702 1.737L6.97 9.604a2.518 2.518 0 010 .792l6.733 3.367a2.5 2.5 0 11-.671 1.341l-6.733-3.367a2.5 2.5 0 110-3.475l6.733-3.366A2.52 2.52 0 0113 4.5z" />
+          </svg>
+        </button>
+      )}
 
       <p className="mt-2 text-[11px] leading-snug text-white/70">
-        🦫 유형 카드만 공유돼요 — 소득·자산·직장 정보는 안 담깁니다.
+        🦫 등급·동네만 공유돼요 — 소득·자산·직장 정보는 안 담깁니다.
       </p>
       <p className="mt-1 text-[11px] leading-snug text-white/60">
         실거래가 기반 추정 정보 · 부동산 중개·투자자문이 아닙니다

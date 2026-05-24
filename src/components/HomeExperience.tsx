@@ -381,12 +381,16 @@ export function HomeExperience() {
   async function handleShare(shareUrl?: string) {
     if (!state) return;
     const url = shareUrl ?? window.location.href;
-    const isTypeCard = !!shareUrl && shareUrl.includes("/s/");
+    // /s/b/ = 비버 등급 카드(등급+동네만), /s/{type} = 유형 카드, 그 외 = 전체 결과(프로필 해시).
+    const isGradeCard = !!shareUrl && shareUrl.includes("/s/b/");
+    const isTypeCard = !!shareUrl && shareUrl.includes("/s/") && !isGradeCard;
     const shareData = {
       title: "비집고",
-      text: isTypeCard
-        ? "내 집 찾기 유형 나왔다 — 너도 해봐! 🦫"
-        : "비버 비지가 찾아준 내 집 — 내 결과 보기",
+      text: isGradeCard
+        ? "내 비버 등급 나왔다 🦫 — 너도 해봐!"
+        : isTypeCard
+          ? "내 집 찾기 유형 나왔다 — 너도 해봐! 🦫"
+          : "비버 비지가 찾아준 내 집 — 내 결과 보기",
       url,
     };
 
@@ -406,9 +410,11 @@ export function HomeExperience() {
     try {
       await navigator.clipboard.writeText(url);
       setShareToast(
-        isTypeCard
-          ? "유형 카드 링크 복사됨! 친구에게 보내보세요 🦫"
-          : "링크 복사됨 ⚠️ 소득·자산·직장 정보가 담겨 있어요 — 믿는 사람에게만 보내세요.",
+        isGradeCard
+          ? "비버 등급 카드 링크 복사됨! 친구에게 보내보세요 🦫"
+          : isTypeCard
+            ? "유형 카드 링크 복사됨! 친구에게 보내보세요 🦫"
+            : "링크 복사됨 ⚠️ 소득·자산·직장 정보가 담겨 있어요 — 믿는 사람에게만 보내세요.",
       );
     } catch {
       setShareToast("복사에 실패했어요. 주소창에서 직접 복사해주세요.");
