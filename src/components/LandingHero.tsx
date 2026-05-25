@@ -43,15 +43,15 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
         }}
       />
 
-      {/* 비집고 로고 비지 — 아파트 사이를 비집고 들어가는 비버 + 등장 모션 (투명 배경, 건물·비버만) */}
-      <div className="biji-pop-in flex justify-center">
+      {/* 브랜드 히어로 — 한강에서 서울을 바라보며 '비집고' 들어갈 집을 그리는 비지 */}
+      <div className="biji-pop-in -mx-1 mb-4 overflow-hidden rounded-3xl shadow-sm sm:mx-auto sm:max-w-xl">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/biji/biji-hero.png?v=2"
-          alt="비집고 비지 — 아파트 사이를 비집고"
-          width={112}
-          height={112}
-          className="h-28 w-28 drop-shadow-md"
+          src="/biji/biji-hangang.png"
+          alt="한강에서 서울 도심을 바라보는 비지 — 비집고 들어갈 집을 그리며"
+          width={1200}
+          height={655}
+          className="block w-full"
           draggable={false}
         />
       </div>
