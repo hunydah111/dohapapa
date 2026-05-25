@@ -359,6 +359,25 @@ export function HeroResultCard({
       <p className="mt-1 text-[11px] leading-snug text-white/60">
         실거래가 기반 추정 정보 · 부동산 중개·투자자문이 아닙니다
       </p>
+
+      {/* 브랜드 워터마크 — 이 카드를 캡쳐해 공유해도 출처가 따라가게(V4). */}
+      <div className="mt-3 flex items-center justify-center gap-1.5 border-t border-white/15 pt-2.5">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/biji/biji-face.png?v=2"
+          alt=""
+          width={18}
+          height={18}
+          className="h-[18px] w-[18px]"
+          draggable={false}
+        />
+        <span className="text-[12px] font-extrabold tracking-tight text-white/90">
+          비집고
+        </span>
+        <span className="text-[11px] font-semibold text-white/55">
+          · homenasia.kr
+        </span>
+      </div>
     </section>
   );
 }
