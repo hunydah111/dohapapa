@@ -4,7 +4,7 @@
 // 리다이렉트 없이 정상 제공하는지 한 번에 확인한다. 사람이 카톡에 공유해 보지 않아도
 // 서버측 진실을 끝까지 검증할 수 있게 만든 게 목적.
 //
-// 사용법:  node scripts/og-check.mjs [baseUrl]      (기본 https://homenasia.kr)
+// 사용법:  node scripts/og-check.mjs [baseUrl]      (기본 https://bijigo.kr)
 //          npm run og:check
 //
 // 확인 항목:
@@ -26,7 +26,7 @@ import { dirname, join } from "node:path";
 
 const KAKAO_UA = "facebookexternalhit/1.1; kakaotalk-scrap/1.0";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const BASE = (process.argv[2] || "https://homenasia.kr").replace(/\/+$/, "");
+const BASE = (process.argv[2] || "https://bijigo.kr").replace(/\/+$/, "");
 const HOST = new URL(BASE).host;
 const APEX = HOST.replace(/^www\./, "");
 

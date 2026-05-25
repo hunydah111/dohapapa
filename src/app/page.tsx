@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { HomeExperience } from "@/components/HomeExperience";
 
-// apex(homenasia.kr)·www 둘 다 200으로 서빙하므로, 검색엔진엔 www를 정본으로 알린다.
-// 상대경로는 layout의 metadataBase(https://www.homenasia.kr)로 합성됨.
+// apex(bijigo.kr)가 정본. www·옛 도메인(homenasia.kr 등)은 Vercel에서 bijigo.kr로 308 리다이렉트.
+// 상대경로 canonical 은 layout 의 metadataBase(SITE_URL=https://bijigo.kr)로 합성됨.
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };

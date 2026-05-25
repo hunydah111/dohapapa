@@ -3,12 +3,12 @@ import Link from "next/link";
 import "./globals.css";
 import { Homi } from "@/components/Homi";
 import { Analytics } from "@/components/Analytics";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   // og:image 등 메타 URL을 절대경로로 만들어 카카오톡·SNS가 썸네일을 가져갈 수 있게 한다.
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.homenasia.kr",
-  ),
+  // 도메인은 site.ts(SITE_URL) 단일 소스를 따른다.
+  metadataBase: new URL(SITE_URL),
   title: "비집고 — 내 통장으로 어디 살 수 있을까?",
   description:
     "비버 비지가 직장·예산·학군 조건으로 국토부 실거래가에서 살 만한 아파트 단지를 비집고 찾아주는 정보 제공 도구.",
