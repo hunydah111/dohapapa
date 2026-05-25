@@ -273,6 +273,30 @@ export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
     monthlyPaymentFromPrincipal(loanEstimateKrw, appliedRate, LOAN_MONTHS),
   );
 
+  // ── 7-1. 월부담 신호등 (#2) ───────────────────────────────────────────────
+  // 월 원리금 ÷ 월 가구소득. 부담 경계는 단정 금지 — UI 에서 "30% 안팎(참고)"로 완화.
+  const monthlyIncomeKrw = householdIncomeKrwYear / 12;
+  const paymentToIncomeRatio =
+    monthlyIncomeKrw > 0 && monthlyPaymentKrw > 0
+      ? monthlyPaymentKrw / monthlyIncomeKrw
+      : undefined;
+
+  // ── 7-2. 금리 스트레스 (#3) ───────────────────────────────────────────────
+  // 적용 금리에서 +1%p / +2%p 오르면 월 원리금이 얼마가 되는지(금리 불안 대응).
+  const stressTest =
+    loanEstimateKrw > 0
+      ? [1, 2].map((deltaRatePct) => ({
+          deltaRatePct,
+          monthlyPaymentKrw: Math.round(
+            monthlyPaymentFromPrincipal(
+              loanEstimateKrw,
+              appliedRate + deltaRatePct / 100,
+              LOAN_MONTHS,
+            ),
+          ),
+        }))
+      : undefined;
+
   // ── 8. 총 예산 ────────────────────────────────────────────────────────────
   const grossBudgetKrw = totalEquityKrw + loanEstimateKrw;
 
@@ -415,6 +439,8 @@ export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
     appliedPolicyName,
     policyLoanMatches,
     monthlyPaymentKrw,
+    paymentToIncomeRatio,
+    stressTest,
     grossBudgetKrw,
     acquisitionCostsKrw,
     netPurchasePowerKrw,

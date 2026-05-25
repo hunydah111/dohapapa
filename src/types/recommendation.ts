@@ -48,6 +48,16 @@ export interface BudgetEstimate {
   policyLoanMatches: PolicyLoanMatch[];
   /** 추정 월 원리금 상환액 (원). */
   monthlyPaymentKrw: number;
+  /**
+   * 월 원리금 ÷ 월 가구소득 (0~1+). 상세모드·소득>0·월상환>0 일 때만 정의.
+   * 부담 '신호등' 표시용 — 경계는 단정 금지(완화·참고 표기, UI에서 처리).
+   */
+  paymentToIncomeRatio?: number;
+  /**
+   * 금리 스트레스 — 적용 금리 대비 +deltaRatePct(%p) 상승 시 추정 월 원리금(원).
+   * 대출>0 일 때만 정의. (예: [{deltaRatePct:1,...},{deltaRatePct:2,...}])
+   */
+  stressTest?: { deltaRatePct: number; monthlyPaymentKrw: number }[];
   /** totalEquity + loan. */
   grossBudgetKrw: number;
   /** 취득세 + 중개수수료 + 부대비용 (acquisitionCost 모듈로 정밀 산출). */

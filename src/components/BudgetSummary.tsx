@@ -199,18 +199,31 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
         )}
       </div>
 
-      {/* 월 상환액 */}
+      {/* 월 상환액 + 부담 신호등(#2) + 금리 스트레스(#3) */}
       {budget.monthlyPaymentKrw > 0 && (
-        <div className="rounded-2xl border border-coral-100 bg-coral-50/60 px-5 py-4 mb-5 flex items-center justify-between">
-          <span className="text-sm font-medium" style={{ color: "#6b6157" }}>
-            추정 월 원리금 상환액
-          </span>
-          <span
-            className="text-lg font-bold tabular-nums"
-            style={{ color: "#f2603c" }}
-          >
-            약 {formatManwon(budget.monthlyPaymentKrw)}
-          </span>
+        <div className="rounded-2xl border border-coral-100 bg-coral-50/60 px-5 py-4 mb-5">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium" style={{ color: "#6b6157" }}>
+              추정 월 원리금 상환액
+            </span>
+            <span
+              className="text-lg font-bold tabular-nums"
+              style={{ color: "#f2603c" }}
+            >
+              약 {formatManwon(budget.monthlyPaymentKrw)}
+            </span>
+          </div>
+
+          {budget.paymentToIncomeRatio !== undefined && (
+            <BurdenSignal ratio={budget.paymentToIncomeRatio} />
+          )}
+
+          {budget.stressTest && budget.stressTest.length > 0 && (
+            <StressRows
+              base={budget.monthlyPaymentKrw}
+              stress={budget.stressTest}
+            />
+          )}
         </div>
       )}
 
@@ -319,6 +332,89 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
         </div>
       )}
     </Card>
+  );
+}
+
+// 월부담 신호등 색·문구 — 단정(과부담) 금지, 30% 참고선 기준 부드럽게.
+function burdenTone(pct: number): { color: string; label: string } {
+  if (pct <= 25) return { color: "#2BB3A0", label: "여유 있는 편이에요" };
+  if (pct <= 35) return { color: "#E8A33D", label: "참고선 부근이에요" };
+  return { color: "#d9803a", label: "참고선 위 — 여유를 점검해보세요" };
+}
+
+function BurdenSignal({ ratio }: { ratio: number }) {
+  const pct = Math.round(ratio * 100);
+  const tone = burdenTone(pct);
+  return (
+    <div className="mt-3 border-t border-coral-100/70 pt-3">
+      <div className="flex items-baseline justify-between">
+        <span className="text-xs" style={{ color: "#6b6157" }}>
+          월소득 대비 원리금
+        </span>
+        <span
+          className="text-sm font-bold tabular-nums"
+          style={{ color: tone.color }}
+        >
+          약 {pct}%
+        </span>
+      </div>
+      <div
+        className="mt-1.5 h-2 w-full overflow-hidden rounded-full"
+        style={{ background: "#ece0cc" }}
+      >
+        <div
+          className="h-full rounded-full"
+          style={{ width: `${Math.min(100, pct)}%`, background: tone.color }}
+        />
+      </div>
+      <p
+        className="mt-1.5 text-[11px] leading-relaxed"
+        style={{ color: "#9a8f82" }}
+      >
+        일반적으로 <span className="font-semibold">30% 안팎</span>을 부담 경계로
+        참고해요(공식 단일 기준은 아님). {tone.label}.
+      </p>
+    </div>
+  );
+}
+
+function StressRows({
+  base,
+  stress,
+}: {
+  base: number;
+  stress: { deltaRatePct: number; monthlyPaymentKrw: number }[];
+}) {
+  return (
+    <div className="mt-3 border-t border-coral-100/70 pt-3">
+      <p className="mb-1.5 text-xs font-medium" style={{ color: "#6b6157" }}>
+        금리가 더 오르면 (추정 월 원리금)
+      </p>
+      <div className="flex flex-col gap-1">
+        {stress.map((s) => {
+          const delta = s.monthlyPaymentKrw - base;
+          return (
+            <div
+              key={s.deltaRatePct}
+              className="flex items-baseline justify-between text-xs"
+            >
+              <span style={{ color: "#9a8f82" }}>금리 +{s.deltaRatePct}%p</span>
+              <span className="tabular-nums" style={{ color: "#3a322c" }}>
+                약 {formatManwon(s.monthlyPaymentKrw)}
+                {delta > 0 && (
+                  <span
+                    className="ml-1 font-semibold"
+                    style={{ color: "#d9803a" }}
+                  >
+                    (+{formatManwon(delta)})
+                  </span>
+                )}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

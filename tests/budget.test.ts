@@ -149,4 +149,62 @@ describe("estimateBudget", () => {
       result.warnings.some((w) => w.includes("은퇴·저소득")),
     ).toBe(true);
   });
+
+  it("월부담 신호등: 대출>0이면 paymentToIncomeRatio = 월원리금/월소득", () => {
+    const profile = makeProfile({
+      householdIncomeKrwYear: 100_000_000,
+      seedMoneyKrw: 300_000_000,
+      existingLoanMonthlyKrw: 0,
+    });
+    const result = estimateBudget(profile);
+
+    expect(result.loanEstimateKrw).toBeGreaterThan(0);
+    expect(result.paymentToIncomeRatio).toBeDefined();
+    const monthlyIncome = 100_000_000 / 12;
+    expect(result.paymentToIncomeRatio!).toBeCloseTo(
+      result.monthlyPaymentKrw / monthlyIncome,
+      6,
+    );
+    expect(result.paymentToIncomeRatio!).toBeGreaterThan(0);
+  });
+
+  it("금리 스트레스: +1/+2%p 두 항목, 월원리금이 금리 따라 증가", () => {
+    const profile = makeProfile({
+      householdIncomeKrwYear: 100_000_000,
+      seedMoneyKrw: 300_000_000,
+      existingLoanMonthlyKrw: 0,
+    });
+    const result = estimateBudget(profile);
+
+    expect(result.stressTest).toBeDefined();
+    expect(result.stressTest!.map((s) => s.deltaRatePct)).toEqual([1, 2]);
+    // 금리가 오를수록 월 원리금 증가: base < +1%p < +2%p
+    expect(result.stressTest![0].monthlyPaymentKrw).toBeGreaterThan(
+      result.monthlyPaymentKrw,
+    );
+    expect(result.stressTest![1].monthlyPaymentKrw).toBeGreaterThan(
+      result.stressTest![0].monthlyPaymentKrw,
+    );
+    expect(
+      result.stressTest!.every((s) => Number.isInteger(s.monthlyPaymentKrw)),
+    ).toBe(true);
+  });
+
+  it("대출 0(소득 0)이면 신호등·스트레스 모두 undefined", () => {
+    const result = estimateBudget(makeProfile({ householdIncomeKrwYear: 0 }));
+    expect(result.loanEstimateKrw).toBe(0);
+    expect(result.paymentToIncomeRatio).toBeUndefined();
+    expect(result.stressTest).toBeUndefined();
+  });
+
+  it("간단 모드는 신호등·스트레스 없음", () => {
+    const result = estimateBudget(
+      makeProfile({
+        budgetMode: "simple",
+        availableBudgetKrw: 500_000_000,
+      }),
+    );
+    expect(result.paymentToIncomeRatio).toBeUndefined();
+    expect(result.stressTest).toBeUndefined();
+  });
 });
