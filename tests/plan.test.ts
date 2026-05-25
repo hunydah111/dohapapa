@@ -1,6 +1,14 @@
 import { describe, it, expect } from "vitest";
 import { estimateBudget } from "@/lib/budget";
-import { computePlan, formatDday, DEFAULT_APPRECIATION } from "@/lib/plan";
+import {
+  computePlan,
+  formatDday,
+  planGuidance,
+  regionScenarios,
+  defaultUpPct,
+  isSeoul,
+  DEFAULT_APPRECIATION,
+} from "@/lib/plan";
 import type { CoupleProfile } from "@/types/profile";
 
 function makeProfile(overrides: Partial<CoupleProfile> = {}): CoupleProfile {
@@ -117,5 +125,85 @@ describe("computePlan", () => {
     expect(formatDday(14)).toBe("1년 2개월");
     expect(formatDday(24)).toBe("2년");
     expect(formatDday(5)).toBe("5개월");
+  });
+});
+
+describe("planGuidance — 끝은 희망", () => {
+  it("정상 프로필: 도달 가능 → reachable", () => {
+    const budget = estimateBudget(makeProfile());
+    const plan = computePlan(budget, makeProfile(), {
+      targetPriceKrw: TARGET,
+      monthlySavingKrw: SAVE,
+      monthlySideKrw: 0,
+    });
+    expect(planGuidance(plan).tone).toBe("reachable");
+  });
+
+  it("전 시나리오 40년+ → hopeless + 동네↓·저축↑ 레버 수치 제공", () => {
+    // 저소득·소액현금이 30억을 노림 + 월 10만 저축 → 하락 시나리오조차 40년 안에 못 닿음.
+    const lowProfile = makeProfile({
+      householdIncomeKrwYear: 30_000_000,
+      seedMoneyKrw: 50_000_000,
+      netAssetsKrw: 50_000_000,
+    });
+    const budget = estimateBudget(lowProfile);
+    const plan = computePlan(budget, lowProfile, {
+      targetPriceKrw: 3_000_000_000, // 30억
+      monthlySavingKrw: 100_000, // 월 10만
+      monthlySideKrw: 0,
+    });
+    expect(plan.purchaseNowKrw).toBeGreaterThan(0);
+    expect(plan.scenarios.every((s) => s.months === null)).toBe(true);
+
+    const g = planGuidance(plan);
+    expect(g.tone).toBe("hopeless");
+    // 동네↓: 지금 페이스로 10년이면 닿는 가격 = 구매가능가 + 월순증×120
+    expect(g.reachableInHorizonKrw).toBe(
+      Math.max(0, plan.purchaseNowKrw + plan.monthlyAccumKrw * 12 * g.horizonYears),
+    );
+    expect(g.reachableInHorizonKrw).toBeGreaterThan(plan.purchaseNowKrw);
+    // 저축↑: 보합 기준 neededYears 안에 닿는 월 순증
+    expect(g.neededMonthlyKrw).toBe(Math.ceil(plan.gapKrw / (g.neededYears * 12)));
+  });
+
+  it("(scenario anchors) 서울/경기 상승률 분리 + 출처·하락 공통", () => {
+    expect(isSeoul("강남구")).toBe(true);
+    expect(isSeoul("광명시")).toBe(false);
+
+    const seoul = regionScenarios("강남구");
+    const gg = regionScenarios("광명시");
+    expect(seoul.up.rateAnnual).toBeCloseTo(0.05);
+    expect(gg.up.rateAnnual).toBeCloseTo(0.03);
+    expect(seoul.up.basis).toContain("서울");
+    expect(gg.up.basis).toContain("경기");
+    // 하락·보합은 권역 공통
+    for (const s of [seoul, gg]) {
+      expect(s.down.rateAnnual).toBeCloseTo(-0.06);
+      expect(s.flat.rateAnnual).toBe(0);
+      expect(s.up.source).toContain("KB");
+      expect(s.down.source).toContain("부동산원");
+    }
+    expect(defaultUpPct("강남구")).toBe(5);
+    expect(defaultUpPct("광명시")).toBe(3);
+    expect(DEFAULT_APPRECIATION.down).toBeCloseTo(-0.06);
+  });
+});
+
+describe("planGuidance — 추가", () => {
+  it("소득·현금·저축 모두 0 → needBasics", () => {
+    const empty = makeProfile({
+      householdIncomeKrwYear: 0,
+      seedMoneyKrw: 0,
+      netAssetsKrw: 0,
+    });
+    const budget = estimateBudget(empty);
+    const plan = computePlan(budget, empty, {
+      targetPriceKrw: TARGET,
+      monthlySavingKrw: 0,
+      monthlySideKrw: 0,
+    });
+    expect(plan.purchaseNowKrw).toBeLessThanOrEqual(0);
+    expect(plan.monthlyAccumKrw).toBe(0);
+    expect(planGuidance(plan).tone).toBe("needBasics");
   });
 });

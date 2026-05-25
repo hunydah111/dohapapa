@@ -10,6 +10,7 @@
 import type { CoupleProfile } from "@/types/profile";
 import type { BudgetEstimate } from "@/types/recommendation";
 import { estimateAcquisitionCosts } from "@/lib/acquisitionCost";
+import { DEFAULT_APPRECIATION } from "./priceScenarios";
 
 export type ScenarioKey = "down" | "flat" | "up";
 
@@ -57,8 +58,14 @@ export interface PlanResult {
   isEstimate: true;
 }
 
-/** 잠정 상승률 기본값 (Phase 2: 부동산원 권역지수로 교체). */
-export const DEFAULT_APPRECIATION = { down: -0.05, flat: 0, up: 0.035 } as const;
+// 시나리오 앵커(출처 박힌 상승/하락/보합)는 priceScenarios.ts 가 단일 소스.
+export {
+  DEFAULT_APPRECIATION,
+  regionScenarios,
+  isSeoul,
+  defaultUpPct,
+} from "./priceScenarios";
+export type { ScenarioAnchor } from "./priceScenarios";
 
 const MAX_MONTHS = 480; // 40년
 const SIDE_NET = 0.9; // 부업 세후 근사
@@ -112,15 +119,20 @@ export function computePlan(
     }),
   );
 
-  // 차트 지평: 유한 교차 중 최댓값 + 여유, [6,25]년 클램프.
+  // 차트 지평: 헤드라인(보합) 도달을 항상 화면에 담는다. 보합이 없으면(40년+) 유한 교차
+  // 최댓값(보통 하락) 기준. [6,40]년 클램프.
   const finiteYears = scenarios
     .map((s) => s.months)
     .filter((m): m is number => m !== null)
     .map((m) => m / 12);
-  const horizon = Math.min(
-    25,
-    Math.max(6, Math.ceil((finiteYears.length ? Math.max(...finiteYears) : 12) + 2)),
-  );
+  const flatMonths = scenarios.find((s) => s.key === "flat")!.months;
+  const refYears =
+    flatMonths !== null
+      ? flatMonths / 12
+      : finiteYears.length
+        ? Math.max(...finiteYears)
+        : 12;
+  const horizon = Math.min(40, Math.max(6, Math.ceil(refYears + 2)));
 
   const years: number[] = [];
   const affordable: number[] = [];
@@ -155,4 +167,43 @@ export function formatDday(months: number | null): string {
   if (y === 0) return `${m}개월`;
   if (m === 0) return `${y}년`;
   return `${y}년 ${m}개월`;
+}
+
+/**
+ * 결과 톤 — UI가 "맨 40년+" 대신 행동유도/격려를 보여주기 위한 분기.
+ * - reachable: 한 시나리오라도 40년 안에 도달 → 평소대로 시점 표시.
+ * - hopeless: 전 시나리오 40년+ → 동네↓·저축↑ 레버로 길 제시("끝은 희망").
+ * - needBasics: 구매가능가도 월 순증도 0 이하(소득·현금·저축 전무) → 출발선 안내.
+ */
+export type PlanTone = "reachable" | "hopeless" | "needBasics";
+
+export interface PlanGuidance {
+  tone: PlanTone;
+  /** 동네↓ 레버: 지금 저축 페이스로 horizonYears년이면 닿는 가격(원). */
+  reachableInHorizonKrw: number;
+  horizonYears: number;
+  /** 저축↑ 레버: 보합 기준 neededYears년 안에 닿으려면 필요한 '월 순증액'(원). gap 0이면 0. */
+  neededMonthlyKrw: number;
+  neededYears: number;
+}
+
+export function planGuidance(
+  plan: PlanResult,
+  opts: { horizonYears?: number; neededYears?: number } = {},
+): PlanGuidance {
+  const horizonYears = opts.horizonYears ?? 10;
+  const neededYears = opts.neededYears ?? 15;
+
+  const noBasics = plan.purchaseNowKrw <= 0 && plan.monthlyAccumKrw <= 0;
+  const allHopeless = plan.scenarios.every((s) => s.months === null);
+  const tone: PlanTone = noBasics ? "needBasics" : allHopeless ? "hopeless" : "reachable";
+
+  const reachableInHorizonKrw = Math.max(
+    0,
+    plan.purchaseNowKrw + plan.monthlyAccumKrw * 12 * horizonYears,
+  );
+  const neededMonthlyKrw =
+    plan.gapKrw > 0 ? Math.ceil(plan.gapKrw / (neededYears * 12)) : 0;
+
+  return { tone, reachableInHorizonKrw, horizonYears, neededMonthlyKrw, neededYears };
 }
