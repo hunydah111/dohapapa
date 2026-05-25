@@ -423,6 +423,20 @@ export function HomeExperience() {
     setTimeout(() => setShareToast(null), 3500);
   }
 
+  // 결과 저장(북마크) — 자체완결 링크(#p=)를 복사해 폼 없이 재방문하게(R1).
+  // 공유와 달리 '내가 다시 보기' 프레이밍 — navigator.share 대신 바로 클립보드 복사.
+  async function handleSaveLink() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setShareToast(
+        "🔖 링크 복사됨 — 메모·즐겨찾기에 붙여두면 다음에 폼 없이 바로 다시 봐요 (내 정보가 담긴 링크라 공개는 신중히)",
+      );
+    } catch {
+      setShareToast("복사에 실패했어요 — 주소창의 링크를 직접 저장해주세요.");
+    }
+    setTimeout(() => setShareToast(null), 4500);
+  }
+
   function handleRestart() {
     setState(null);
     setStarted(false); // 랜딩으로 복귀
@@ -815,6 +829,25 @@ export function HomeExperience() {
         netPurchasePowerKrw={result.budget.netPurchasePowerKrw}
         sigungu={result.candidates[0]?.sigungu}
       />
+
+      {/* 결과 저장(북마크) — 재방문 훅 R1. 자체완결 링크(#p=) 복사 */}
+      <button
+        type="button"
+        onClick={handleSaveLink}
+        className="flex w-full items-center justify-between gap-3 rounded-2xl border border-coral-200 bg-coral-50 px-4 py-3 text-left transition-colors hover:bg-coral-100 focus:outline-none focus:ring-2 focus:ring-coral-400"
+      >
+        <span className="flex min-w-0 flex-col">
+          <span className="text-[14px] font-bold text-coral-800">
+            🔖 이 결과 저장해두기
+          </span>
+          <span className="text-[12px] text-coral-700">
+            다음에 폼 없이 이 링크로 바로 다시 봐요
+          </span>
+        </span>
+        <span className="shrink-0 rounded-full bg-white px-3 py-1.5 text-[12px] font-bold text-coral-700 shadow-sm">
+          링크 복사
+        </span>
+      </button>
 
       {/* 조건에 맞는 단지 or 0건 */}
       {result.candidates.length > 0 ? (
