@@ -131,6 +131,62 @@ function heroBeaver(months: number | null, basics: boolean): { src: string; word
   return { src: "biji-clock", word: "천천히, 같이 세어봐요" };
 }
 
+// ── R3 재방문 — "살아있는 D-day": 저장된 플랜으로 경과월만큼 모았다면 시점 재계산 ──
+type SavedPlan = {
+  g: string; b: AreaRangeKey; t: TierKey; mm: number; mt: string;
+  i: string; c: string; s: string; sd: string; u: number; sc: ScenarioKey;
+  nh: number; nw: number; nb: number; at: number; sm: number | null;
+};
+
+function planProfileFrom(s: SavedPlan, extraCashKrw = 0): CoupleProfile {
+  const cash = manwon(s.c) + extraCashKrw;
+  return {
+    householdType: "single",
+    priorities: { commute: 3, school: 3, buildingAge: 3, largeComplex: 2 },
+    preferredAreaRanges: ["p32_35"],
+    hasSchoolAgedChild: false, hasInfant: !!s.nb, hasTwoOrMoreChildren: false,
+    hasThreeOrMoreChildren: false, isExpectingChild: false,
+    budgetMode: "detailed",
+    householdIncomeKrwYear: manwon(s.i), seedMoneyKrw: cash, netAssetsKrw: cash,
+    existingLoanMonthlyKrw: 0, hasOwnedHomeBefore: !s.nh, isNewlywed: !!s.nw, ownedHomeCount: 0,
+  };
+}
+function planTargetKrw(s: SavedPlan): number {
+  if (s.mm) return manwon(s.mt);
+  const cell = REGIONS[s.g]?.[s.b];
+  const tier = cell?.tiers?.find((t) => t.key === s.t) ?? cell?.tiers?.[1] ?? cell?.tiers?.[0];
+  return tier?.krw ?? cell?.medianKrw ?? 0;
+}
+function planMonthsFor(s: SavedPlan, extraCashKrw = 0): number | null {
+  const prof = planProfileFrom(s, extraCashKrw);
+  const scen = regionScenarios(s.g);
+  const p = computePlan(estimateBudget(prof), prof, {
+    targetPriceKrw: planTargetKrw(s),
+    monthlySavingKrw: manwon(s.s),
+    monthlySideKrw: manwon(s.sd),
+    appreciation: { down: scen.down.rateAnnual, flat: 0, up: s.u / 100 },
+    headlineKey: s.sc,
+  });
+  return p.scenarios.find((x) => x.key === s.sc)!.months;
+}
+function downloadPlanIcs() {
+  const start = new Date(Date.now() + 30 * 86_400_000);
+  const f = (d: Date) => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  const ics = [
+    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//bijigo//plan//KO", "BEGIN:VEVENT",
+    "UID:" + Date.now() + "@bijigo.kr", "DTSTAMP:" + f(new Date()), "DTSTART:" + f(start),
+    "SUMMARY:비집고 — 내 집 마련 플랜 다시 보기",
+    "DESCRIPTION:그동안 모은 만큼 D-day가 당겨졌는지 확인해보세요 https://bijigo.kr/plan",
+    "END:VEVENT", "END:VCALENDAR",
+  ].join("\r\n");
+  const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "비집고-내집마련-점검일.ics";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 // 기본 동네 — 타깃(무주택 신혼·생애최초)에 현실적인 수도권 중가 동네로(첫 데모가 '희망'이게).
 const DEFAULT_SGG = REGIONS["구리시"]
   ? "구리시"
@@ -231,6 +287,53 @@ export function PlanExperience() {
   const rollingSelected = useRollingMonths(selectedMonths);
   const tierLabel = manualMode ? "직접 입력" : (selectedTier?.label ?? "");
 
+  // R3 재방문 — 이 기기에 저장한 플랜 복원 + "그동안 모았다면" 진전 표시
+  const [revisit, setRevisit] = useState<
+    { months: number; savedMonths: number; advanced: number } | null
+  >(null);
+  const [justSaved, setJustSaved] = useState(false);
+  /* eslint-disable react-hooks/set-state-in-effect -- localStorage 복원은 마운트 후 1회(하이드레이션 안전) */
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("biji-plan");
+      if (!raw) return;
+      const s = JSON.parse(raw) as SavedPlan;
+      if (!s || !s.g) return;
+      setSgg(s.g); setBand(s.b); setTierKey(s.t); setManualMode(!!s.mm); setManualTarget(s.mt);
+      setIncome(s.i); setCash(s.c); setSaveStr(s.s); setSideStr(s.sd); setUpPct(s.u); setScenarioKey(s.sc);
+      setNoHome(!!s.nh); setNewlywed(!!s.nw); setNewborn(!!s.nb);
+      // 경과월만큼 계획대로 모았다면 — 당겨진 시점
+      if (s.sm != null) {
+        const days = (Date.now() - s.at) / 86_400_000;
+        const months = Math.floor(days / 30);
+        const accum = manwon(s.s) + Math.round(manwon(s.sd) * 0.9);
+        if (days >= 7 && months >= 1 && accum > 0) {
+          const advanced = planMonthsFor(s, months * accum);
+          if (advanced != null && advanced < s.sm) {
+            setRevisit({ months, savedMonths: s.sm, advanced });
+          }
+        }
+      }
+    } catch {
+      /* 손상된 저장값 무시 */
+    }
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
+  function savePlan() {
+    const s: SavedPlan = {
+      g: sgg, b: band, t: tierKey, mm: manualMode ? 1 : 0, mt: manualTarget,
+      i: income, c: cash, s: saveStr, sd: sideStr, u: upPct, sc: scenarioKey,
+      nh: noHome ? 1 : 0, nw: newlywed ? 1 : 0, nb: newborn ? 1 : 0,
+      at: Date.now(), sm: selectedMonths,
+    };
+    try {
+      localStorage.setItem("biji-plan", JSON.stringify(s));
+      setJustSaved(true);
+    } catch {
+      /* 저장 불가(시크릿 모드 등) — 조용히 무시 */
+    }
+  }
+
   // 각 티어의 '보합 기준' 도달 시점 — 카드에 띄워 "이 집이면 D−Xy, 한 칸 아래면 D−Yy" 체감.
   const tierMonths = useMemo(() => {
     const out: Partial<Record<TierKey, number | null>> = {};
@@ -311,6 +414,30 @@ export function PlanExperience() {
           </div>
         </div>
       </section>
+
+      {/* R3 재방문 — 지난번보다 당겨진 D-day */}
+      {revisit && (
+        <section className="flex items-center gap-3 rounded-3xl border border-coral-200 bg-coral-50/70 p-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/biji/biji-compare.png"
+            alt=""
+            aria-hidden
+            className="h-14 w-14 shrink-0"
+            draggable={false}
+          />
+          <div className="min-w-0">
+            <p className="text-[12px]" style={{ color: "#6e5b46" }}>
+              지난번 저장한 플랜이에요 · 계획대로 <b>{revisit.months}개월</b> 모았다면
+            </p>
+            <p className="mt-0.5 text-sm font-bold" style={{ color: "#3a2c1d" }}>
+              {formatDday(revisit.savedMonths)}{" "}
+              <span style={{ color: "#9c8a72" }}>→</span>{" "}
+              <span style={{ color: "#fe7644" }}>{formatDday(revisit.advanced)}</span> 로 당겨졌어요 ▼
+            </p>
+          </div>
+        </section>
+      )}
 
       {/* 목표 — 동네+평형 → 티어 선택 */}
       <section className="rounded-3xl border border-coral-200 bg-coral-50/60 p-5">
@@ -570,6 +697,50 @@ export function PlanExperience() {
           style={{ background: "#fff4ef", color: "#9a5a1e" }}
         >
           이 집에서 살 날, 비집고가 같이 세어줄게요 🔑
+        </p>
+      </section>
+
+      {/* R3 저장 — 한 달 뒤 다시 보기(이 기기에만) */}
+      <section className="rounded-3xl border border-coral-100 bg-white p-5 shadow-sm">
+        <div className="flex items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/biji/biji-calendar.png"
+            alt=""
+            aria-hidden
+            className="h-14 w-14 shrink-0"
+            draggable={false}
+          />
+          <div className="min-w-0">
+            <h2 className="text-[15px] font-bold" style={{ color: "#3a2c1d" }}>
+              한 달 뒤 다시 보기
+            </h2>
+            <p className="mt-0.5 text-[12px] leading-relaxed" style={{ color: "#6e5b46" }}>
+              지금 저장해두면, 한 달 뒤 다시 왔을 때 그동안 계획대로 모은 만큼 D-day가 당겨져 보여요.
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={savePlan}
+            className="rounded-full bg-coral-600 px-4 py-2 text-[13px] font-bold text-white"
+          >
+            {justSaved ? "이 기기에 저장됨 ✓" : "이 플랜 저장"}
+          </button>
+          {justSaved && (
+            <button
+              type="button"
+              onClick={downloadPlanIcs}
+              className="rounded-full border border-coral-300 px-4 py-2 text-[13px] font-semibold"
+              style={{ color: "#c4521f" }}
+            >
+              📅 점검일 캘린더에 추가
+            </button>
+          )}
+        </div>
+        <p className="mt-2 text-[11px]" style={{ color: "#9c8a72" }}>
+          소득·현금 포함 <b>이 기기에만</b> 저장돼요 · 서버로 보내지 않아요.
         </p>
       </section>
 
