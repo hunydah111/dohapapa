@@ -24,6 +24,11 @@ export const metadata: Metadata = {
     title: "비집고",
     description: "내 통장으로 어디 살 수 있을까?",
   },
+  verification: {
+    other: {
+      "naver-site-verification": "19575f0573a982d969ea4b33a64ff4973798a9a6",
+    },
+  },
 };
 
 export default function RootLayout({
