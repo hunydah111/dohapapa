@@ -26,10 +26,17 @@ export async function generateMetadata({
   const tier = getTierBySlug(grade);
   if (!tier) return { title: "비집고 — 내 통장으로 살 집 찾기" };
   const region = safeRegion(rawRegion);
+  const title = `나는 ${tier.label} — 내 예산이면 ${region}까지`;
+  const description = `${tier.drip} — 비집고에서 내 통장으로 살 수 있는 집을 찾아보세요.`;
+  const path = `/s/b/${grade}/${encodeURIComponent(region)}`;
   return {
-    title: `나는 ${tier.label} — 내 예산이면 ${region}까지 | 비집고`,
-    description: `${tier.drip} — 비집고에서 내 통장으로 살 수 있는 집을 찾아보세요.`,
-    alternates: { canonical: `/s/b/${grade}/${encodeURIComponent(region)}` },
+    title: `${title} | 비집고`,
+    description,
+    alternates: { canonical: path },
+    // 공유 미리보기(카톡 등)에 일반 기본값 대신 개인화된 제목·설명이 뜨도록 명시.
+    // og:image 는 opengraph-image.tsx 가 자동 주입하므로 여기서 images 는 건드리지 않는다.
+    openGraph: { title, description, type: "website", url: path },
+    twitter: { title, description, card: "summary_large_image" },
   };
 }
 

@@ -18,10 +18,16 @@ export async function generateMetadata({
   const { type } = await params;
   const ht = getHomeTypeBySlug(type);
   if (!ht) return { title: "비집고 — 내 통장으로 살 집 찾기" };
+  const title = `나의 집 찾기 유형: ${ht.name}`;
+  const description = `${ht.tagline} — 비집고에서 내 통장으로 살 수 있는 집을 찾아보세요.`;
   return {
-    title: `나의 집 찾기 유형: ${ht.name} | 비집고`,
-    description: `${ht.tagline} — 비집고에서 내 통장으로 살 수 있는 집을 찾아보세요.`,
+    title: `${title} | 비집고`,
+    description,
     alternates: { canonical: `/s/${type}` },
+    // 공유 미리보기에 개인화된 제목·설명 노출(레이아웃 일반값 상속 방지).
+    // og:image 는 opengraph-image.tsx 자동 주입 — images 미지정.
+    openGraph: { title, description, type: "website", url: `/s/${type}` },
+    twitter: { title, description, card: "summary_large_image" },
   };
 }
 
