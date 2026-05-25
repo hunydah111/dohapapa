@@ -5,6 +5,7 @@ import type { CoupleProfile } from "@/types/profile";
 import { getHomeType } from "@/lib/homeType";
 import { incrementTypeCount } from "@/lib/typeStats";
 import { recordNeighborhoods } from "@/lib/neighborhoodChart";
+import { recordPopularComplexes } from "@/lib/popularComplexChart";
 
 export const runtime = "nodejs";
 
@@ -202,6 +203,15 @@ export async function POST(req: Request): Promise<Response> {
           ? result.candidates
           : result.closestCandidates;
       await recordNeighborhoods(src.map((c) => c.sigungu));
+      // 주간 인기 아파트 차트 — 상위 단지 집계(비-PII: 단지명·시군구·동만).
+      await recordPopularComplexes(
+        src.map((c) => ({
+          complexId: c.complexId,
+          complexName: c.complexName,
+          sigungu: c.sigungu,
+          dongName: c.dongName,
+        })),
+      );
     }
 
     return Response.json(result);

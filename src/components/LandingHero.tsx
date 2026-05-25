@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/Button";
 import { NeighborhoodChart } from "@/components/NeighborhoodChart";
+import { PopularComplexChart } from "@/components/PopularComplexChart";
 import dataMeta from "@/data/dataMeta.json";
 
 // 최근 실거래 반영일 — "2026-05-20" → "2026.5.20". 매일 크론이 dataMeta.json 을 갱신.
@@ -149,8 +150,9 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
         </div>
       </div>
 
-      {/* 이번 주 인기 동네(멜론식) — 데이터 빈약하면 컴포넌트가 스스로 숨음 */}
+      {/* 이번 주 인기 동네·아파트(멜론식) — 데이터 빈약하면 각 컴포넌트가 스스로 숨음 */}
       <NeighborhoodChart />
+      <PopularComplexChart />
     </section>
   );
 }
