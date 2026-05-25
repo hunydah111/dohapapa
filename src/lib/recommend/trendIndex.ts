@@ -115,3 +115,56 @@ export function bridgeFactor(
   if (!series) return 1;
   return bridgeWithinSeries(series, fromMonth, toMonth);
 }
+
+/** 가장 최근 month 기준 n개월 전 month. 데이터 부족 시 null. */
+export function monthsAgo(n: number): string | null {
+  const m = data.months;
+  if (m.length === 0) return null;
+  const idx = m.length - 1 - n;
+  return idx >= 0 ? m[idx] : null;
+}
+
+export interface TierTrend {
+  /** 최근 windowMonths 개월 변동률(소수, 예 0.021 = +2.1%). 과거 사실 — 미래 예측 아님. */
+  changeRatio: number;
+  /** 실제 사용된 scope("강남구" 등 시군구 또는 "수도권" 폴백). */
+  scope: string;
+  tier: PriceTier;
+  fromMonth: string;
+  toMonth: string;
+}
+
+// 표시용 추세는 클램프하지 않되, 데이터 노이즈로 보이는 극단치(3개월 ±50% 초과)는 숨긴다.
+const TREND_SANITY = 0.5;
+
+/**
+ * (시군구, 가격대)의 최근 windowMonths 개월 실거래 추세 변동률(표시용, 과거 사실).
+ * 폴백: 시군구×tier → 수도권×tier. 데이터 부족·시리즈 없음·극단치면 null(→ UI 숨김).
+ * 컴플라이언스: 과거 실거래 지수 변동일 뿐 미래가치 예측·투자권유 아님.
+ */
+export function tierTrend(
+  sigungu: string,
+  tier: PriceTier,
+  windowMonths = 3,
+): TierTrend | null {
+  if (isTrendIndexEmpty()) return null;
+  const toMonth = data.latestMonth;
+  const fromMonth = monthsAgo(windowMonths);
+  if (!fromMonth || !toMonth || fromMonth === toMonth) return null;
+  const useSigungu = data.series[`${sigungu}|${tier}`] != null;
+  const series =
+    data.series[`${sigungu}|${tier}`] ?? data.series[`${ALL_SCOPE}|${tier}`];
+  if (!series) return null;
+  const from = valueAt(series, fromMonth);
+  const to = valueAt(series, toMonth);
+  if (from === null || to === null || from <= 0) return null;
+  const changeRatio = to / from - 1;
+  if (Math.abs(changeRatio) > TREND_SANITY) return null;
+  return {
+    changeRatio,
+    scope: useSigungu ? sigungu : ALL_SCOPE,
+    tier,
+    fromMonth,
+    toMonth,
+  };
+}

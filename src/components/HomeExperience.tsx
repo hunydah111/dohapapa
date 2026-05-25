@@ -14,6 +14,7 @@ import { AREA_RANGES, AREA_RANGE_ORDER } from "@/types/profile";
 import { BudgetSummary } from "./BudgetSummary";
 import { CandidateCard } from "./CandidateCard";
 import { HeroResultCard } from "./HeroResultCard";
+import { BudgetTrendCard } from "./BudgetTrendCard";
 import { LandingHero } from "./LandingHero";
 import { Homi } from "./Homi";
 import { RequiredRegionPicker } from "./RequiredRegionPicker";
@@ -808,6 +809,12 @@ export function HomeExperience() {
 
       {/* 예산 분석 */}
       <BudgetSummary budget={result.budget} />
+
+      {/* 내 예산대 시세 흐름 — 재방문 훅(trendIndex 재활용). 데이터 없으면 스스로 숨음 */}
+      <BudgetTrendCard
+        netPurchasePowerKrw={result.budget.netPurchasePowerKrw}
+        sigungu={result.candidates[0]?.sigungu}
+      />
 
       {/* 조건에 맞는 단지 or 0건 */}
       {result.candidates.length > 0 ? (
