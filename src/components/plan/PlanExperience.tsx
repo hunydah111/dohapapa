@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { CoupleProfile, AreaRangeKey } from "@/types/profile";
 import {
@@ -65,6 +65,20 @@ const fmtMonth = (s?: string): string | null => {
   return m ? `${y}.${Number(m)}` : y;
 };
 
+// 입력칸 단위 미리보기 — "7000" → "= 7,000만원" / "20000" → "= 2억"
+const unitHint = (s: string): string | undefined =>
+  parseFloat(s) > 0 ? `= ${formatKrwHuman(manwon(s))}` : undefined;
+
+// 타이핑마다 전체 재계산되어 느려지는 것 방지 — 무거운 계산은 디바운스된 값으로.
+function useDebounced<T>(value: T, ms = 200): T {
+  const [d, setD] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setD(value), ms);
+    return () => clearTimeout(t);
+  }, [value, ms]);
+  return d;
+}
+
 const SCEN_LABEL: Record<ScenarioKey, string> = { down: "하락", flat: "보합", up: "상승" };
 const SCEN_COLOR: Record<ScenarioKey, string> = {
   down: "#4CB07A",
@@ -94,10 +108,16 @@ export function PlanExperience() {
   const [newlywed, setNewlywed] = useState(false);
   const [newborn, setNewborn] = useState(false);
 
-  // 레버
-  const [saveM, setSaveM] = useState(200);
-  const [sideM, setSideM] = useState(0);
+  // 레버 (저축·부업은 캡 없이 직접 입력 — 만원)
+  const [saveStr, setSaveStr] = useState("200");
+  const [sideStr, setSideStr] = useState("0");
   const [upPct, setUpPct] = useState(() => defaultUpPct(DEFAULT_SGG));
+
+  // 무거운 재계산은 디바운스된 값으로(타이핑 부드럽게). 입력칸 표시·미리보기는 즉시.
+  const incomeKrw = useDebounced(manwon(income));
+  const cashKrw = useDebounced(manwon(cash));
+  const saveKrw = useDebounced(manwon(saveStr));
+  const sideKrw = useDebounced(manwon(sideStr));
 
   const scen = regionScenarios(sgg);
   const downRate = scen.down.rateAnnual;
@@ -122,15 +142,15 @@ export function PlanExperience() {
       hasThreeOrMoreChildren: false,
       isExpectingChild: false,
       budgetMode: "detailed",
-      householdIncomeKrwYear: manwon(income),
-      seedMoneyKrw: manwon(cash),
-      netAssetsKrw: manwon(cash),
+      householdIncomeKrwYear: incomeKrw,
+      seedMoneyKrw: cashKrw,
+      netAssetsKrw: cashKrw,
       existingLoanMonthlyKrw: 0,
       hasOwnedHomeBefore: !noHome,
       isNewlywed: newlywed,
       ownedHomeCount: 0,
     }),
-    [income, cash, noHome, newlywed, newborn],
+    [incomeKrw, cashKrw, noHome, newlywed, newborn],
   );
 
   const budget = useMemo(() => estimateBudget(profile), [profile]);
@@ -139,11 +159,11 @@ export function PlanExperience() {
     () =>
       computePlan(budget, profile, {
         targetPriceKrw: targetKrw,
-        monthlySavingKrw: saveM * 10_000,
-        monthlySideKrw: sideM * 10_000,
+        monthlySavingKrw: saveKrw,
+        monthlySideKrw: sideKrw,
         appreciation: { down: downRate, flat: 0, up: upPct / 100 },
       }),
-    [budget, profile, targetKrw, saveM, sideM, upPct, downRate],
+    [budget, profile, targetKrw, saveKrw, sideKrw, upPct, downRate],
   );
 
   const guide = useMemo(() => planGuidance(plan), [plan]);
@@ -155,15 +175,15 @@ export function PlanExperience() {
       for (const t of tiers) {
         const p = computePlan(budget, profile, {
           targetPriceKrw: t.krw,
-          monthlySavingKrw: saveM * 10_000,
-          monthlySideKrw: sideM * 10_000,
+          monthlySavingKrw: saveKrw,
+          monthlySideKrw: sideKrw,
           appreciation: { down: downRate, flat: 0, up: upPct / 100 },
         });
         out[t.key] = p.scenarios.find((s) => s.key === "flat")!.months;
       }
     }
     return out;
-  }, [tiers, budget, profile, saveM, sideM, upPct, downRate]);
+  }, [tiers, budget, profile, saveKrw, sideKrw, upPct, downRate]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -246,7 +266,7 @@ export function PlanExperience() {
             )}
           </>
         ) : (
-          <NumField label="목표 집값(만원)" value={manualTarget} onChange={setManualTarget} />
+          <NumField label="목표 집값(만원)" value={manualTarget} onChange={setManualTarget} hint={unitHint(manualTarget)} />
         )}
 
         <button
@@ -265,8 +285,8 @@ export function PlanExperience() {
           내 상황
         </h2>
         <div className="grid grid-cols-2 gap-3">
-          <NumField label="연 가구소득(만원)" value={income} onChange={setIncome} />
-          <NumField label="보유 현금(만원)" value={cash} onChange={setCash} />
+          <NumField label="연 가구소득(만원)" value={income} onChange={setIncome} hint={unitHint(income)} />
+          <NumField label="보유 현금(만원)" value={cash} onChange={setCash} hint={unitHint(cash)} />
         </div>
         <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#9a8f82" }}>
           소득은 <b>대출 한도</b>(DSR), 현금은 <b>자기자본</b>을 정해요 — 이 둘이 “지금 살 수 있는
@@ -344,10 +364,12 @@ export function PlanExperience() {
       {/* 레버 */}
       <section className="rounded-3xl border border-coral-100 bg-coral-50/50 p-5">
         <h2 className="mb-3 text-[15px] font-bold" style={{ color: "#3a322c" }}>
-          레버 — 당기면 시점이 움직여요
+          레버 — 바꾸면 시점이 움직여요
         </h2>
-        <Slider label="월 저축" value={saveM} suffix="만원" min={0} max={500} step={10} onChange={setSaveM} />
-        <Slider label="월 부업(세전)" value={sideM} suffix="만원" min={0} max={300} step={10} onChange={setSideM} />
+        <div className="mb-3 grid grid-cols-2 gap-3">
+          <NumField label="월 저축(만원)" value={saveStr} onChange={setSaveStr} hint={unitHint(saveStr)} />
+          <NumField label="월 부업·세전(만원)" value={sideStr} onChange={setSideStr} hint={unitHint(sideStr)} />
+        </div>
         <Slider label="‘상승’ 시나리오 연 상승률" value={upPct} suffix="%" min={0} max={10} step={0.5} onChange={setUpPct} />
         <p className="-mt-1 text-[11px] leading-relaxed" style={{ color: "#9a8f82" }}>
           하락 −6%(직전 하락기 2022·한국부동산원) · 보합 0% · 상승 기본 {Math.round(scen.up.rateAnnual * 100)}%({scen.up.basis}·KB 2025.9).
@@ -546,10 +568,12 @@ function NumField({
   label,
   value,
   onChange,
+  hint,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  hint?: string;
 }) {
   return (
     <label className="flex flex-col gap-1">
@@ -563,6 +587,12 @@ function NumField({
         onChange={(e) => onChange(e.target.value)}
         className="rounded-xl border border-[#e5e5ea] bg-white px-3 py-2 text-sm tabular-nums focus:border-coral-400 focus:outline-none"
       />
+      <span
+        className="h-3.5 text-[11px] font-semibold tabular-nums"
+        style={{ color: "#f2603c" }}
+      >
+        {hint ?? ""}
+      </span>
     </label>
   );
 }
