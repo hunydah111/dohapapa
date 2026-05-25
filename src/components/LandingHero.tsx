@@ -33,24 +33,14 @@ function MiniBadge({ children }: { children: React.ReactNode }) {
 export function LandingHero({ onStart }: { onStart: () => void }) {
   return (
     <section className="relative overflow-hidden px-1 pt-6 pb-4 text-center sm:pt-10">
-      {/* 따뜻한 라디얼 워시 배경 */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[420px]"
-        style={{
-          background:
-            "radial-gradient(58% 64% at 50% 10%, rgba(254,118,68,0.22) 0%, rgba(224,162,58,0.16) 38%, rgba(245,236,217,0) 72%)",
-        }}
-      />
-
       {/* 브랜드 히어로 — 한강에서 서울을 바라보며 '비집고' 들어갈 집을 그리는 비지 */}
-      <div className="biji-pop-in -mx-1 mb-4 overflow-hidden rounded-3xl shadow-sm sm:mx-auto sm:max-w-xl">
+      <div className="biji-pop-in mx-auto mb-5 max-w-xl overflow-hidden rounded-3xl shadow-md ring-1 ring-black/5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/biji/biji-hangang.png"
           alt="한강에서 서울 도심을 바라보는 비지 — 비집고 들어갈 집을 그리며"
           width={1200}
-          height={655}
+          height={731}
           className="block w-full"
           draggable={false}
         />
