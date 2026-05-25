@@ -67,16 +67,16 @@ export function CandidateCard({
     candidate.priceLowKrw > 0 &&
     candidate.priceHighKrw >= candidate.priceLowKrw * 1.12;
 
-  // 네이버 통합검색으로 보낸다 — 단지명+구+동으로 검색하면 상단에 해당 단지의
-  // 부동산 단지 카드(매물 링크 포함)가 안정적으로 노출된다.
-  // (m.land 직접 검색은 "단지명 동" 조합을 한 덩어리로 인식해 매칭 실패가 잦았음)
-  const naverSearchUrl = `https://search.naver.com/search.naver?query=${encodeURIComponent(
-    `${candidate.complexName} ${candidate.sigungu} ${candidate.dongName}`
+  // 네이버 부동산(m.land)으로 직접 보낸다 — 일반 통합검색(search.naver)이 아니라 부동산 UI 가
+  // 바로 뜬다. 단지명만 넘기면 고유 매칭 시 해당 단지 페이지로 직행하고, 흔한 이름이면 부동산
+  // 검색목록이 뜬다. (과거 '단지명 동' 합친 쿼리는 매칭 실패가 잦아 이름만 넘긴다.)
+  const naverSearchUrl = `https://m.land.naver.com/search/result/${encodeURIComponent(
+    candidate.complexName,
   )}`;
 
-  // 단지 매물이 0건일 때 폴백 — 동네(동/구) 전체 매매 매물로 넓혀 검색.
-  const naverAreaUrl = `https://search.naver.com/search.naver?query=${encodeURIComponent(
-    `${candidate.sigungu} ${candidate.dongName} 아파트 매매`
+  // 단지 매물이 0건일 때 폴백 — 동네(시군구+동)로 넓혀 네이버 부동산에서 보기.
+  const naverAreaUrl = `https://m.land.naver.com/search/result/${encodeURIComponent(
+    `${candidate.sigungu} ${candidate.dongName}`,
   )}`;
 
   // 카카오맵 — 단지명+동으로 검색해 해당 단지 위치를 띄운다.
