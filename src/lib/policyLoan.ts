@@ -10,10 +10,35 @@
 import type { CoupleProfile } from "@/types/profile";
 import type { PolicyLoanMatch } from "@/types/recommendation";
 
-// ── 정책 기준일 라벨 (단일 출처) ──────────────────────────────────────────
-// 대출 정책은 자주 바뀌므로, 아래 상수·로직이 '어느 시점 정책'을 반영하는지 명시한다.
-// 정책이 바뀌어 상수를 갱신할 때마다 이 라벨도 함께 갱신할 것. (UI에 노출됨)
-export const POLICY_BASIS = "2025–2026 정책 기준 (최종 점검 2026-05)";
+// ── 정책 기준일 메타 (단일 출처) ──────────────────────────────────────────
+// 대출 정책·세제는 자주 바뀌므로(예: 2025.6.28 디딤돌 한도 축소), 아래 상수·로직이
+// '어느 시점 정책'을 반영하는지 한 곳에 명시하고 UI 에 눈에 띄게 노출한다.
+// ⚠️ 정책이 바뀌어 상수를 갱신할 때마다 effectiveLabel·lastVerified 를 함께 갱신할 것.
+export const POLICY_META = {
+  /** 한도·요건이 반영하는 최신 개정 시점 (사용자 표시용). */
+  effectiveLabel: "2025.6.28 개정 한도 반영",
+  /** 사람이 마지막으로 1차 출처와 대조 검증한 날 (YYYY-MM-DD). 신선도 판정 기준. */
+  lastVerified: "2026-05-25",
+  /** 1차 출처 (자격 안내 신뢰용). 특정 은행 상품 아님. */
+  sources: ["주택도시기금", "한국주택금융공사"],
+} as const;
+
+/** 검증일 경과로 신선도 판정. stale 이면 UI 에 "확인 필요" 표시. */
+export function policyFreshness(now: Date = new Date()): {
+  daysSinceVerified: number;
+  stale: boolean;
+} {
+  const verified = new Date(`${POLICY_META.lastVerified}T00:00:00Z`);
+  const daysSinceVerified = Math.max(
+    0,
+    Math.floor((now.getTime() - verified.getTime()) / 86_400_000),
+  );
+  // 정책대출·세제는 분기 단위로 자주 바뀌어 ~120일(약 4개월) 넘으면 재확인 권고.
+  return { daysSinceVerified, stale: daysSinceVerified > 120 };
+}
+
+/** 하위호환 — 계산 가정 문구용 한 줄 라벨 (POLICY_META 파생). */
+export const POLICY_BASIS = `${POLICY_META.effectiveLabel} · 최종 점검 ${POLICY_META.lastVerified}`;
 
 // ── 소득·자산 기준 상수 (2025~2026 기준) ──────────────────────────────────
 

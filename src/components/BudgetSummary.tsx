@@ -2,11 +2,19 @@ import type { BudgetEstimate, PolicyLoanMatch } from "@/types/recommendation";
 import { Card } from "@/components/ui/Card";
 import { Homi } from "@/components/Homi";
 import { MonthlyBurden } from "@/components/MonthlyBurden";
+import { POLICY_META, policyFreshness } from "@/lib/policyLoan";
 import { formatKrwHuman, formatManwon } from "@/lib/format";
+
+// "2026-05-25" → "2026.5.25"
+function fmtPolicyDate(iso: string): string {
+  const [y, m, d] = iso.split("-");
+  return `${y}.${Number(m)}.${Number(d)}`;
+}
 
 export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
   const hasHomeSale = budget.homeSaleNetKrw !== 0;
   const homeSaleNegative = budget.homeSaleNetKrw < 0;
+  const fresh = policyFreshness();
 
   const eligibleLoans = budget.policyLoanMatches.filter((m) => m.eligible);
   const ineligibleLoans = budget.policyLoanMatches.filter((m) => !m.eligible);
@@ -32,6 +40,29 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
             공개 공식 기반 추정치입니다. 실제 한도는 금융기관 상담 결과에 따릅니다.
           </p>
         </div>
+      </div>
+
+      {/* 정책·세제 반영 기준 — 눈에 띄게(신뢰). 검증일 오래되면 '확인 필요'. */}
+      <div className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl bg-[#f3ece4] px-3.5 py-2.5">
+        <span
+          className="text-[11px] leading-relaxed"
+          style={{ color: "#6b6157" }}
+        >
+          정책·세제{" "}
+          <span className="font-bold" style={{ color: "#3a322c" }}>
+            {POLICY_META.effectiveLabel}
+          </span>{" "}
+          · 최종 점검 {fmtPolicyDate(POLICY_META.lastVerified)}
+        </span>
+        <span
+          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+            fresh.stale
+              ? "bg-amber-100 text-amber-700"
+              : "bg-coral-100 text-coral-700"
+          }`}
+        >
+          {fresh.stale ? "확인 필요" : "최신 점검됨"}
+        </span>
       </div>
 
       {/* P0: 갈아타기 음수 경고 */}

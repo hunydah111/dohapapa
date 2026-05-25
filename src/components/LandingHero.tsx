@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/Button";
 import { NeighborhoodChart } from "@/components/NeighborhoodChart";
 import { PopularComplexChart } from "@/components/PopularComplexChart";
 import dataMeta from "@/data/dataMeta.json";
+import { POLICY_META } from "@/lib/policyLoan";
 
 // 최근 실거래 반영일 — "2026-05-20" → "2026.5.20". 매일 크론이 dataMeta.json 을 갱신.
 const FRESH_DATE: string | null = (() => {
@@ -9,6 +10,12 @@ const FRESH_DATE: string | null = (() => {
   if (!d) return null;
   const [y, m, day] = d.split("-");
   return `${y}.${Number(m)}.${Number(day)}`;
+})();
+
+// 정책(대출·세제) 점검 시점 — "2026-05-25" → "2026.5". 검색 전부터 기준일 노출(신뢰).
+const POLICY_VERIFIED_SHORT: string = (() => {
+  const [y, m] = POLICY_META.lastVerified.split("-");
+  return `${y}.${Number(m)}`;
 })();
 
 // 첫 화면(랜딩) — 가치 제안 헤드라인 + 작은 비버 + "예시 결과" 미니카드 + 단일 CTA.
@@ -112,6 +119,10 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
         <p className="mt-1.5 text-[12px]" style={{ color: "#9a8f82" }}>
           국토부 공개 실거래가 · 매일 갱신
           {FRESH_DATE ? ` · ${FRESH_DATE} 기준` : " · 무료"}
+        </p>
+        <p className="mt-1 text-[12px]" style={{ color: "#9a8f82" }}>
+          대출·세제 정책 {POLICY_META.effectiveLabel} · {POLICY_VERIFIED_SHORT}{" "}
+          점검
         </p>
       </div>
 
