@@ -9,11 +9,11 @@ import type { PlanResult, ScenarioKey } from "@/lib/plan";
 // ④ 선택한 시나리오(focus)를 굵게 비춤. 예측 아님 — 과거 지표 + 가정.
 
 const COLOR = {
-  power: "#f2603c",
+  power: "#fe7644",
   price: "#8a96a3",
   band: "#94a3b8",
   reach: "#2fb39a",
-  axis: "#9a8f82",
+  axis: "#9c8a72",
   grid: "#eee7dd",
 };
 
@@ -206,7 +206,7 @@ export function PlanRaceChart({
       </svg>
 
       {/* 그래프 바로 아래 한 문장 설명 (40인 테스트 #1 요청) */}
-      <p className="mt-1.5 text-[11px] leading-relaxed" style={{ color: "#6b6157" }}>
+      <p className="mt-1.5 text-[11px] leading-relaxed" style={{ color: "#6e5b46" }}>
         <b style={{ color: COLOR.power }}>굵은 선</b> = 내가 모으는 돈(대출 포함) ·{" "}
         <span style={{ color: COLOR.price }}>회색 선</span> = 집값({FOCUS_LABEL[focus]}). 둘이 만나는{" "}
         <b style={{ color: COLOR.power }}>●</b>이 살 수 있는 때예요.
@@ -216,7 +216,7 @@ export function PlanRaceChart({
         type="button"
         onClick={() => setShowBand((v) => !v)}
         className="mt-1 text-[11px] font-semibold underline"
-        style={{ color: "#9a8f82" }}
+        style={{ color: "#9c8a72" }}
       >
         {showBand ? "집값 범위 접기 ▴" : "집값이 오르내릴 범위 보기 ▾"}
       </button>
@@ -242,8 +242,8 @@ function FlagLabel({
   const fy = below ? y + 8 : y - 24;
   return (
     <g>
-      <rect x={fx} y={fy} width={w} height={16} rx={8} fill="#fff" stroke="#f2603c" strokeWidth={1} />
-      <text x={fx + w / 2} y={fy + 11} fontSize={9} fill="#f2603c" textAnchor="middle" fontWeight={700}>
+      <rect x={fx} y={fy} width={w} height={16} rx={8} fill="#fff" stroke="#fe7644" strokeWidth={1} />
+      <text x={fx + w / 2} y={fy + 11} fontSize={9} fill="#fe7644" textAnchor="middle" fontWeight={700}>
         {text}
       </text>
     </g>

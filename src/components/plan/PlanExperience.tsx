@@ -122,6 +122,15 @@ const SCEN_INFO: Record<ScenarioKey, { label: string; hint: string }> = {
   up: { label: "상승", hint: "오를 때" },
 };
 
+// 결과에 따라 반응하는 비버 — 끝은 희망(멀어도 같이 세보자).
+function heroBeaver(months: number | null, basics: boolean): { src: string; word: string } {
+  if (basics) return { src: "biji-shrug", word: "같이 시작해봐요" };
+  if (months === null) return { src: "biji-think", word: "동네·시나리오 바꿔볼까요?" };
+  if (months <= 36) return { src: "biji-cheer", word: "거의 다 왔어요!" };
+  if (months <= 84) return { src: "biji-running", word: "같이 차근차근 모아요" };
+  return { src: "biji-clock", word: "천천히, 같이 세어봐요" };
+}
+
 // 기본 동네 — 타깃(무주택 신혼·생애최초)에 현실적인 수도권 중가 동네로(첫 데모가 '희망'이게).
 const DEFAULT_SGG = REGIONS["구리시"]
   ? "구리시"
@@ -241,53 +250,74 @@ export function PlanExperience() {
 
   return (
     <div className="flex flex-col gap-5">
-      {/* 결론 히어로 — 답 먼저 */}
+      {/* 결론 히어로 — 답 먼저 + 반응형 비버 */}
       <section
-        className="rounded-3xl px-5 py-6 text-white"
+        className="relative overflow-hidden rounded-3xl px-5 py-6 text-white"
         style={{
           background: "linear-gradient(135deg,#ff8a5c 0%,#fe7644 55%,#e8662f 100%)",
           boxShadow: "0 10px 26px -12px rgba(232,102,47,0.55)",
         }}
       >
-        <p className="text-[12px] font-semibold" style={{ color: "rgba(255,255,255,0.88)" }}>
-          {sgg} {cell ? AREA_RANGES[band].label : ""}
-          {tierLabel ? ` · ${tierLabel}` : ""} · {SCEN_INFO[scenarioKey].label} 가정
-        </p>
-        {selectedMonths === null ? (
-          <>
-            <p className="font-jua mt-1.5 leading-tight" style={{ fontSize: 26 }}>
-              지금 조건으론 시간이 걸려요
+        <div className="flex items-stretch gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-[12px] font-semibold" style={{ color: "rgba(255,255,255,0.88)" }}>
+              {sgg} {cell ? AREA_RANGES[band].label : ""}
+              {tierLabel ? ` · ${tierLabel}` : ""} · {SCEN_INFO[scenarioKey].label} 가정
             </p>
-            <p className="mt-1.5 text-[13px]" style={{ color: "rgba(255,255,255,0.92)" }}>
-              아래에서 동네를 한 칸 낮추거나 저축을 늘리면 길이 보여요.
-            </p>
-          </>
-        ) : (
-          <>
-            <p className="mt-1 text-[13px]" style={{ color: "rgba(255,255,255,0.9)" }}>
-              지금 속도면 내 집 마련까지
-            </p>
-            <div className="mt-0.5 flex flex-wrap items-end gap-x-2 gap-y-0.5">
-              <span className="font-jua leading-none" style={{ fontSize: 40 }}>
-                약 {formatDday(rollingSelected)}
-              </span>
-              <DeltaCallout months={selectedMonths} />
-            </div>
-            {boostedMonths != null && boostedMonths < selectedMonths && (
-              <p className="mt-1.5 text-[13px]" style={{ color: "rgba(255,255,255,0.92)" }}>
-                월 30만원 더 모으면 <b>약 {formatDday(boostedMonths)}</b>
-              </p>
+            {selectedMonths === null ? (
+              <>
+                <p className="font-jua mt-1.5 leading-tight" style={{ fontSize: 25 }}>
+                  지금 조건으론 시간이 걸려요
+                </p>
+                <p className="mt-1.5 text-[13px]" style={{ color: "rgba(255,255,255,0.92)" }}>
+                  아래에서 동네를 한 칸 낮추거나 저축을 늘리면 길이 보여요.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="mt-1 text-[13px]" style={{ color: "rgba(255,255,255,0.9)" }}>
+                  지금 속도면 내 집 마련까지
+                </p>
+                <div className="mt-0.5 flex flex-wrap items-end gap-x-2 gap-y-0.5">
+                  <span className="font-jua leading-none" style={{ fontSize: 42 }}>
+                    약 {formatDday(rollingSelected)}
+                  </span>
+                  <DeltaCallout months={selectedMonths} />
+                </div>
+                {boostedMonths != null && boostedMonths < selectedMonths && (
+                  <p className="mt-1.5 text-[13px]" style={{ color: "rgba(255,255,255,0.92)" }}>
+                    월 30만원 더 모으면 <b>약 {formatDday(boostedMonths)}</b>
+                  </p>
+                )}
+              </>
             )}
-          </>
-        )}
+          </div>
+          <div className="flex w-[78px] shrink-0 flex-col items-center justify-end">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`/biji/${heroBeaver(selectedMonths, guide.tone === "needBasics").src}.png`}
+              alt="비집고 비지"
+              width={72}
+              height={72}
+              className="h-[72px] w-[72px] drop-shadow-md"
+              draggable={false}
+            />
+            <span
+              className="mt-1 rounded-full bg-white/20 px-2 py-0.5 text-center text-[10px] font-semibold leading-tight"
+              style={{ backdropFilter: "blur(2px)" }}
+            >
+              {heroBeaver(selectedMonths, guide.tone === "needBasics").word}
+            </span>
+          </div>
+        </div>
       </section>
 
       {/* 목표 — 동네+평형 → 티어 선택 */}
       <section className="rounded-3xl border border-coral-200 bg-coral-50/60 p-5">
-        <h2 className="mb-1 text-[15px] font-bold" style={{ color: "#3a322c" }}>
+        <h2 className="mb-1 text-[15px] font-bold" style={{ color: "#3a2c1d" }}>
           어떤 집을 그리세요?
         </h2>
-        <p className="mb-3 text-[12px]" style={{ color: "#6b6157" }}>
+        <p className="mb-3 text-[12px]" style={{ color: "#6e5b46" }}>
           동네·평형을 고르고, 어느 정도 집을 목표로 할지 골라요. 평균이 아니라 <b>내가 그리는 집</b>으로.
         </p>
 
@@ -336,7 +366,7 @@ export function PlanExperience() {
                     value={targetKrw}
                   />
                 )}
-                <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#9a8f82" }}>
+                <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#9c8a72" }}>
                   동네 등급이 아니라 <b>내가 목표로 할 가격대</b>예요. 국토부 공개 실거래 예시 · 추정
                   {fmtMonth(cell?.asOf) ? ` · ${fmtMonth(cell?.asOf)} 기준` : FRESH_DATE ? ` · ${FRESH_DATE} 기준` : ""}
                   {cell ? ` · ${cell.sampleCount}건` : ""}. 예시는 그 가격대 실거래 단지 중 하나이며 매수 권유가 아니에요.
@@ -345,14 +375,14 @@ export function PlanExperience() {
             ) : (
               <div className="mt-3">
                 <div className="flex items-baseline justify-between">
-                  <span className="text-[13px]" style={{ color: "#6b6157" }}>
+                  <span className="text-[13px]" style={{ color: "#6e5b46" }}>
                     {sgg} {cell ? AREA_RANGES[band].label : ""} 추정 시세
                   </span>
-                  <span className="text-2xl font-extrabold tabular-nums" style={{ color: "#f2603c" }}>
+                  <span className="text-2xl font-extrabold tabular-nums" style={{ color: "#fe7644" }}>
                     {cell ? eok(cell.medianKrw) : "—"}
                   </span>
                 </div>
-                <p className="mt-0.5 text-[11px]" style={{ color: "#9a8f82" }}>
+                <p className="mt-0.5 text-[11px]" style={{ color: "#9c8a72" }}>
                   표본이 적어 티어 없이 단일 추정치예요
                   {cell ? ` · 실거래 ${cell.sampleCount}건` : ""}
                   {fmtMonth(cell?.asOf) ? ` · ${fmtMonth(cell?.asOf)} 기준` : ""}
@@ -368,7 +398,7 @@ export function PlanExperience() {
           type="button"
           onClick={() => setManualMode((v) => !v)}
           className="mt-3 text-[12px] font-semibold underline"
-          style={{ color: "#6b6157" }}
+          style={{ color: "#6e5b46" }}
         >
           {manualMode ? "동네로 고르기" : "직접 금액 입력"}
         </button>
@@ -376,14 +406,14 @@ export function PlanExperience() {
 
       {/* 내 상황 */}
       <section className="rounded-3xl border border-[#e5e5ea] bg-white p-5 shadow-sm">
-        <h2 className="mb-3 text-[15px] font-bold" style={{ color: "#3a322c" }}>
+        <h2 className="mb-3 text-[15px] font-bold" style={{ color: "#3a2c1d" }}>
           내 상황
         </h2>
         <div className="grid grid-cols-2 gap-3">
           <NumField label="연 가구소득(만원)" value={income} onChange={setIncome} hint={unitHint(income)} />
           <NumField label="보유 현금(만원)" value={cash} onChange={setCash} hint={unitHint(cash)} />
         </div>
-        <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#9a8f82" }}>
+        <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#9c8a72" }}>
           소득은 <b>대출 한도</b>(DSR), 현금은 <b>자기자본</b>을 정해요 — 이 둘이 “지금 살 수 있는
           가격”의 출발선이에요. 아래 <b>월 저축</b>은 거기서부터 ‘모으는 속도’고요.
         </p>
@@ -402,9 +432,9 @@ export function PlanExperience() {
           boxShadow: "0 1px 3px rgba(242,96,60,0.08)",
         }}
       >
-        <p className="text-xs font-medium" style={{ color: "#6b6157" }}>
+        <p className="text-xs font-medium" style={{ color: "#6e5b46" }}>
           집값이 앞으로 어떻게 될까요?{" "}
-          <span style={{ color: "#9a8f82" }}>· 가정(예측 아님), 골라보세요</span>
+          <span style={{ color: "#9c8a72" }}>· 가정(예측 아님), 골라보세요</span>
         </p>
 
         <div className="mt-2 flex flex-col gap-1.5">
@@ -422,7 +452,7 @@ export function PlanExperience() {
 
         {scenarioKey === "up" && (
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            <span className="text-[11px]" style={{ color: "#6b6157" }}>
+            <span className="text-[11px]" style={{ color: "#6e5b46" }}>
               상승률
             </span>
             {[3, 5, 7].map((r) => (
@@ -433,13 +463,13 @@ export function PlanExperience() {
                 className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition-colors ${
                   Math.round(upPct) === r
                     ? "border-coral-600 bg-coral-600 text-white"
-                    : "border-[#e0d3bf] bg-white text-[#9a8f82]"
+                    : "border-[#e0d3bf] bg-white text-[#9c8a72]"
                 }`}
               >
                 +{r}%
               </button>
             ))}
-            <span className="text-[11px]" style={{ color: "#9a8f82" }}>
+            <span className="text-[11px]" style={{ color: "#9c8a72" }}>
               · 동네 10년 평균 ≈ +{Math.round(defaultUpPct(sgg))}%(KB)
             </span>
           </div>
@@ -451,7 +481,7 @@ export function PlanExperience() {
           <HopelessGuide guide={guide} regionLabel={manualMode ? null : sgg} />
         ) : null}
 
-        <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#9a8f82" }}>
+        <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#9c8a72" }}>
           하락 −6%(직전 하락기 2022·부동산원) · 보합 0% · 상승(동네 10년 평균·KB). 예측이 아니라 과거
           지표 + 가정이에요. 아래 저축을 늘리면 시점이 당겨져요 👇
         </p>
@@ -462,21 +492,21 @@ export function PlanExperience() {
         <PlanRaceChart result={plan} focus={scenarioKey} />
         <details className="mt-3 rounded-2xl bg-coral-50/50 p-3 [&_summary::-webkit-details-marker]:hidden">
           <summary className="flex cursor-pointer list-none items-baseline justify-between">
-            <span className="text-[12px] font-semibold" style={{ color: "#3a322c" }}>
+            <span className="text-[12px] font-semibold" style={{ color: "#3a2c1d" }}>
               지금 살 수 있는 가격{" "}
-              <span className="text-[11px] font-normal" style={{ color: "#9a8f82" }}>
+              <span className="text-[11px] font-normal" style={{ color: "#9c8a72" }}>
                 (출발선 · 자세히 ▾)
               </span>
             </span>
-            <span className="text-base font-extrabold tabular-nums" style={{ color: "#f2603c" }}>
+            <span className="text-base font-extrabold tabular-nums" style={{ color: "#fe7644" }}>
               {eok(Math.max(0, plan.purchaseNowKrw))}
             </span>
           </summary>
-          <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#6b6157" }}>
+          <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#6e5b46" }}>
             현금(자기자본) <b>{eok(plan.equityKrw)}</b> + 소득 기반 추정 대출{" "}
             <b>{eok(plan.loanKrw)}</b> − 부대비용 <b>{eok(plan.acqCostKrw)}</b>
           </p>
-          <p className="mt-1 text-[11px] leading-relaxed" style={{ color: "#9a8f82" }}>
+          <p className="mt-1 text-[11px] leading-relaxed" style={{ color: "#9c8a72" }}>
             여기서 <b>월 {formatKrwHuman(plan.monthlyAccumKrw)}</b>씩 모아 목표까지 부족한{" "}
             <b>{eok(plan.gapKrw)}</b>을 따라잡는 게 위 그래프예요. 모두 추정.
           </p>
@@ -485,10 +515,10 @@ export function PlanExperience() {
 
       {/* 레버 */}
       <section className="rounded-3xl border border-coral-100 bg-coral-50/50 p-5">
-        <h2 className="mb-1 text-[15px] font-bold" style={{ color: "#3a322c" }}>
+        <h2 className="mb-1 text-[15px] font-bold" style={{ color: "#3a2c1d" }}>
           레버 — 바꾸면 시점이 움직여요
         </h2>
-        <p className="mb-3 text-[11px]" style={{ color: "#9a8f82" }}>
+        <p className="mb-3 text-[11px]" style={{ color: "#9c8a72" }}>
           매달 더 모을수록 위 ‘내 집 마련 시점’이 당겨져요.
         </p>
         <div className="grid grid-cols-2 gap-3">
@@ -497,7 +527,7 @@ export function PlanExperience() {
         </div>
       </section>
 
-      <p className="px-1 text-[11px] leading-relaxed" style={{ color: "#9a8f82" }}>
+      <p className="px-1 text-[11px] leading-relaxed" style={{ color: "#9c8a72" }}>
         모든 수치는 공개 공식·과거 지표 기반 <b>추정</b>이며 미래 가격 예측이 아닙니다. 과거 ≠ 미래,
         투자자문이 아닙니다. 실제 한도·세액은 금융기관·세무 상담 결과에 따릅니다.
       </p>
@@ -535,20 +565,20 @@ function TierCard({
       <div className="flex items-baseline justify-between">
         <span
           className="text-sm font-bold"
-          style={{ color: selected ? "#f2603c" : "#3a322c" }}
+          style={{ color: selected ? "#fe7644" : "#3a2c1d" }}
         >
           {tier.label}
         </span>
-        <span className="text-lg font-extrabold tabular-nums" style={{ color: "#f2603c" }}>
+        <span className="text-lg font-extrabold tabular-nums" style={{ color: "#fe7644" }}>
           {eok(tier.krw)}
         </span>
       </div>
       {!hideNames && names && (
-        <p className="mt-0.5 truncate text-[11px]" style={{ color: "#6b6157" }}>
+        <p className="mt-0.5 truncate text-[11px]" style={{ color: "#6e5b46" }}>
           예: {names} 등 (이 가격대 실거래 중)
         </p>
       )}
-      <p className="mt-0.5 text-[11px]" style={{ color: "#9a8f82" }}>
+      <p className="mt-0.5 text-[11px]" style={{ color: "#9c8a72" }}>
         {sub ? `${sub} · ` : ""}보합 가정 {formatDday(months ?? null)}
       </p>
     </button>
@@ -575,15 +605,15 @@ function DistributionBar({
           className="absolute top-1/2 h-3 w-3 -translate-y-1/2 rounded-full border-2 border-white"
           style={{
             left: `calc(${(pct * 100).toFixed(1)}% - 6px)`,
-            background: "#f2603c",
+            background: "#fe7644",
             boxShadow: "0 1px 3px rgba(0,0,0,.2)",
           }}
         />
       </div>
-      <div className="mt-1 flex justify-between text-[10px]" style={{ color: "#9a8f82" }}>
+      <div className="mt-1 flex justify-between text-[10px]" style={{ color: "#9c8a72" }}>
         <span>최저 {eok(min)}</span>
         <span>이 동네·평형 실거래</span>
-        <span style={{ color: "#6b6157", fontWeight: 600 }}>최고 {eok(max)}</span>
+        <span style={{ color: "#6e5b46", fontWeight: 600 }}>최고 {eok(max)}</span>
       </div>
     </div>
   );
@@ -593,10 +623,10 @@ function DistributionBar({
 function BasicsGuide() {
   return (
     <div className="mt-2 rounded-2xl bg-white/80 p-4">
-      <p className="text-sm font-bold" style={{ color: "#3a322c" }}>
+      <p className="text-sm font-bold" style={{ color: "#3a2c1d" }}>
         🌱 아직 출발선이에요
       </p>
-      <p className="mt-1.5 text-[12px] leading-relaxed" style={{ color: "#6b6157" }}>
+      <p className="mt-1.5 text-[12px] leading-relaxed" style={{ color: "#6e5b46" }}>
         소득·현금·월 저축이 모두 0이라 아직 시점을 그릴 수 없어요. 아래 레버에서 <b>월 저축</b>을
         올리거나 위에서 <b>소득·현금</b>을 채워보면 길이 보이기 시작해요.
       </p>
@@ -615,12 +645,12 @@ function HopelessGuide({
   const showSaveLever = guide.neededMonthlyKrw > 0 && guide.neededMonthlyKrw <= 5_000_000;
   return (
     <div className="mt-2 rounded-2xl bg-white/80 p-4">
-      <p className="text-sm font-bold" style={{ color: "#3a322c" }}>
+      <p className="text-sm font-bold" style={{ color: "#3a2c1d" }}>
         지금 페이스로는 시간이 걸려요 — 그래도 길은 있어요
       </p>
       <ul className="mt-2 flex flex-col gap-2.5">
-        <li className="text-[12px] leading-relaxed" style={{ color: "#6b6157" }}>
-          <span className="font-semibold" style={{ color: "#f2603c" }}>
+        <li className="text-[12px] leading-relaxed" style={{ color: "#6e5b46" }}>
+          <span className="font-semibold" style={{ color: "#fe7644" }}>
             ① 동네를 한 칸 낮추면
           </span>{" "}
           — 지금 저축 페이스라면 {guide.horizonYears}년이면 약{" "}
@@ -630,14 +660,14 @@ function HopelessGuide({
           <Link
             href="/"
             className="ml-1 font-semibold underline"
-            style={{ color: "#f2603c" }}
+            style={{ color: "#fe7644" }}
           >
             그 가격대 매물 보기 →
           </Link>
         </li>
         {showSaveLever && (
-          <li className="text-[12px] leading-relaxed" style={{ color: "#6b6157" }}>
-            <span className="font-semibold" style={{ color: "#f2603c" }}>
+          <li className="text-[12px] leading-relaxed" style={{ color: "#6e5b46" }}>
+            <span className="font-semibold" style={{ color: "#fe7644" }}>
               ② 저축을 조금 더 늘리면
             </span>{" "}
             — 월 순증(저축+부업)을 약 <b>{formatKrwHuman(guide.neededMonthlyKrw)}</b>으로 올리면
@@ -645,7 +675,7 @@ function HopelessGuide({
           </li>
         )}
       </ul>
-      <p className="mt-2.5 text-[11px] leading-relaxed" style={{ color: "#9a8f82" }}>
+      <p className="mt-2.5 text-[11px] leading-relaxed" style={{ color: "#9c8a72" }}>
         조급해하지 않아도 돼요. 동네를 한 칸 낮추거나 저축을 조금만 늘려도 시점은 확 당겨집니다.
         (예측이 아니라 과거 지표 + 가정 시나리오예요.)
       </p>
@@ -666,7 +696,7 @@ function Select({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[12px]" style={{ color: "#6b6157" }}>
+      <span className="text-[12px]" style={{ color: "#6e5b46" }}>
         {label}
       </span>
       <select
@@ -697,7 +727,7 @@ function NumField({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[12px]" style={{ color: "#6b6157" }}>
+      <span className="text-[12px]" style={{ color: "#6e5b46" }}>
         {label}
       </span>
       <input
@@ -709,7 +739,7 @@ function NumField({
       />
       <span
         className="h-3.5 text-[11px] font-semibold tabular-nums"
-        style={{ color: "#f2603c" }}
+        style={{ color: "#fe7644" }}
       >
         {hint ?? ""}
       </span>
@@ -723,7 +753,7 @@ function Chip({ on, onClick, label }: { on: boolean; onClick: () => void; label:
       type="button"
       onClick={onClick}
       className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
-        on ? "border-coral-600 bg-coral-600 text-white" : "border-[#e0d3bf] bg-white text-[#9a8f82]"
+        on ? "border-coral-600 bg-coral-600 text-white" : "border-[#e0d3bf] bg-white text-[#9c8a72]"
       }`}
     >
       {label}
@@ -784,17 +814,17 @@ function ScenarioRow({
           style={{ width: 8, height: 8, borderRadius: 9, background: SCEN_COLOR[scenKey] }}
         />
         <span className="truncate">
-          <span className="text-[13px] font-bold" style={{ color: "#3a322c" }}>
+          <span className="text-[13px] font-bold" style={{ color: "#3a2c1d" }}>
             {info.label}
           </span>{" "}
-          <span className="text-[11px]" style={{ color: "#9a8f82" }}>
+          <span className="text-[11px]" style={{ color: "#9c8a72" }}>
             연 {sign}% · {info.hint}
           </span>
         </span>
       </span>
       <span
         className="shrink-0 text-[13px] font-bold tabular-nums"
-        style={{ color: selected ? "#f2603c" : "#6b6157" }}
+        style={{ color: selected ? "#fe7644" : "#6e5b46" }}
       >
         {formatDday(months)}
       </span>
