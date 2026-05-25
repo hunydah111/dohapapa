@@ -1,22 +1,31 @@
-import type { PlanResult } from "@/lib/plan";
+"use client";
+
+import { useState } from "react";
+import type { PlanResult, ScenarioKey } from "@/lib/plan";
 
 // "저축 vs 집값 경주" 차트 — 의존성 없는 자체 SVG.
-// 핵심: ① 색 온도로 "내 힘(따뜻한 코랄 실선·확정) vs 쫓는 집값(차가운 회색·불확실)"을 분리,
-// ② D-day(보합 교차)를 영웅 마커+연도 플래그로, ③ 오늘 기준선·부족액·실 눈금, ④ 도달 후는
-// "살 수 있는 구간" 워시. 예측 아님 — 과거 지표 앵커 + 사용자 가정(면책은 호출부).
+// 40인 사용성 테스트 반영: ① 선이 무엇인지 그래프 바로 아래 한 문장으로 설명(코랄=내가 모으는
+// 돈·대출 포함 / 회색=집값), ② 교차점(●)=살 수 있는 때를 명시, ③ 추정 범위 밴드는 기본 숨김·토글,
+// ④ 선택한 시나리오(focus)를 굵게 비춤. 예측 아님 — 과거 지표 + 가정.
 
 const COLOR = {
-  power: "#f2603c", // 내 구매가능가 (따뜻·확정)
-  price: "#8a96a3", // 보합 집값 (차가운 회색)
-  band: "#94a3b8", // 불확실 밴드
-  reach: "#2fb39a", // 살 수 있는 구간 (민트)
+  power: "#f2603c",
+  price: "#8a96a3",
+  band: "#94a3b8",
+  reach: "#2fb39a",
   axis: "#9a8f82",
   grid: "#eee7dd",
 };
 
 const W = 400;
-const H = 244;
-const PAD = { l: 40, r: 14, t: 18, b: 26 };
+const H = 240;
+const PAD = { l: 40, r: 14, t: 16, b: 24 };
+
+const FOCUS_LABEL: Record<ScenarioKey, string> = {
+  down: "하락 가정",
+  flat: "보합 가정",
+  up: "상승 가정",
+};
 
 function eok(krw: number): string {
   return (krw / 1e8).toFixed(1) + "억";
@@ -30,14 +39,21 @@ function niceStep(raw: number): number {
   return nf * 10 ** exp;
 }
 
-export function PlanRaceChart({ result }: { result: PlanResult }) {
+export function PlanRaceChart({
+  result,
+  focus = "flat",
+}: {
+  result: PlanResult;
+  focus?: ScenarioKey;
+}) {
+  const [showBand, setShowBand] = useState(false);
   const { years, affordable, price } = result.curve;
   const horizon = years[years.length - 1] || 1;
   const target = price.flat[0];
+  const focusPrice = price[focus];
 
-  // y 범위는 '내 구매가능가·보합·하락'으로 잡는다. 상승 밴드는 장기에 폭주하므로 제외하고
-  // 위로 넘치는 부분은 clip(상한선 위로 잘림 = "더 오를 수도" 시각적 정직).
-  const visible = [...affordable, ...price.down, target];
+  // y 범위: 내 힘 + 포커스 집값 + (범위 보기 시 하락). 폭주하는 상승은 clip.
+  const visible = [...affordable, ...focusPrice, target, ...(showBand ? price.down : [])];
   const lo = Math.min(...visible);
   const hi = Math.max(...visible);
   const padY = (hi - lo) * 0.08 || hi * 0.08 || 1;
@@ -49,11 +65,9 @@ export function PlanRaceChart({ result }: { result: PlanResult }) {
   const plotH = H - PAD.t - PAD.b;
   const X = (yr: number) => PAD.l + (yr / horizon) * plotW;
   const Y = (v: number) => PAD.t + plotH - ((v - yMin) / range) * plotH;
-
   const poly = (s: number[]) =>
     years.map((yr, i) => `${X(yr).toFixed(1)},${Y(s[i]).toFixed(1)}`).join(" ");
 
-  // 불확실 밴드 폴리곤: 상승(위) → 하락(아래, 역순)
   const bandPts =
     years.map((yr, i) => `${X(yr).toFixed(1)},${Y(price.up[i]).toFixed(1)}`).join(" ") +
     " " +
@@ -62,21 +76,18 @@ export function PlanRaceChart({ result }: { result: PlanResult }) {
       .map((i) => `${X(years[i]).toFixed(1)},${Y(price.down[i]).toFixed(1)}`)
       .join(" ");
 
-  // D-day = 보합 교차
-  const flat = result.scenarios.find((s) => s.key === "flat")!;
-  const reachable = flat.months !== null && flat.months / 12 <= horizon;
-  const crossX = reachable ? X(flat.months! / 12) : null;
-  const crossY = reachable ? Y(target) : null;
-  const crossYear = reachable
-    ? new Date().getFullYear() + Math.round(flat.months! / 12)
-    : null;
+  // 교차 = 선택 시나리오
+  const fs = result.scenarios.find((s) => s.key === focus)!;
+  const reachable = fs.months !== null && fs.months / 12 <= horizon;
+  const crossT = reachable ? fs.months! / 12 : 0;
+  const crossX = reachable ? X(crossT) : null;
+  const crossY = reachable ? Y(target * Math.pow(1 + fs.rateAnnual, crossT)) : null;
+  const crossYear = reachable ? new Date().getFullYear() + Math.round(fs.months! / 12) : null;
 
-  // y 눈금(억)
   const step = niceStep(range / 3);
   const yticks: number[] = [];
   for (let v = Math.ceil(yMin / step) * step; v <= yMax; v += step) yticks.push(v);
 
-  // x 눈금(년)
   const xstep = horizon <= 6 ? 2 : horizon <= 12 ? 3 : 5;
   const xticks: number[] = [];
   for (let yr = 0; yr <= horizon; yr += xstep) xticks.push(yr);
@@ -99,7 +110,7 @@ export function PlanRaceChart({ result }: { result: PlanResult }) {
             <rect x={PAD.l} y={PAD.t} width={plotW} height={plotH} />
           </clipPath>
         </defs>
-        {/* y 격자 + 라벨 */}
+
         {yticks.map((v) => (
           <g key={v}>
             <line x1={PAD.l} y1={Y(v)} x2={W - PAD.r} y2={Y(v)} stroke={COLOR.grid} strokeWidth={1} />
@@ -109,7 +120,7 @@ export function PlanRaceChart({ result }: { result: PlanResult }) {
           </g>
         ))}
 
-        {/* 살 수 있는 구간 워시 */}
+        {/* 살 수 있는 구간 */}
         {reachable && crossX !== null && (
           <>
             <rect x={crossX} y={PAD.t} width={W - PAD.r - crossX} height={plotH} fill={COLOR.reach} opacity={0.09} />
@@ -119,29 +130,32 @@ export function PlanRaceChart({ result }: { result: PlanResult }) {
           </>
         )}
 
-        {/* 불확실 밴드 (상승이 폭주해도 플롯 영역으로 clip) */}
         <g clipPath="url(#planPlotClip)">
-          <polygon points={bandPts} fill={COLOR.band} opacity={0.12} />
-          <polyline points={poly(price.up)} fill="none" stroke={COLOR.band} strokeWidth={1} strokeDasharray="3 3" opacity={0.65} />
-          <polyline points={poly(price.down)} fill="none" stroke={COLOR.band} strokeWidth={1} strokeDasharray="3 3" opacity={0.65} />
-          {/* 보합 집값 (기준선) */}
-          <polyline points={poly(price.flat)} fill="none" stroke={COLOR.price} strokeWidth={1.8} />
+          {showBand && (
+            <>
+              <polygon points={bandPts} fill={COLOR.band} opacity={0.12} />
+              <polyline points={poly(price.up)} fill="none" stroke={COLOR.band} strokeWidth={1} strokeDasharray="3 3" opacity={0.6} />
+              <polyline points={poly(price.down)} fill="none" stroke={COLOR.band} strokeWidth={1} strokeDasharray="3 3" opacity={0.6} />
+            </>
+          )}
+          {/* 집값 (선택 시나리오) */}
+          <polyline points={poly(focusPrice)} fill="none" stroke={COLOR.price} strokeWidth={1.8} />
           {/* 내 구매가능가 (영웅) */}
           <polyline points={poly(affordable)} fill="none" stroke={COLOR.power} strokeWidth={2.8} />
         </g>
 
-        {/* 오늘 기준선 + 지금 부족액 */}
+        {/* 오늘 + 지금 부족액 */}
         <line x1={X(0)} y1={PAD.t} x2={X(0)} y2={PAD.t + plotH} stroke={COLOR.axis} strokeWidth={1} strokeDasharray="2 2" opacity={0.45} />
         {result.gapKrw > 0 && Math.abs(startY - targetY) > 14 && (
           <>
             <line x1={X(0)} y1={startY} x2={X(0)} y2={targetY} stroke={COLOR.power} strokeWidth={1} opacity={0.4} />
             <text x={X(0) + 3} y={(startY + targetY) / 2 + 3} fontSize={8.5} fill={COLOR.power}>
-              지금 −{eok(result.gapKrw)}
+              지금 {eok(result.gapKrw)} 부족
             </text>
           </>
         )}
 
-        {/* D-day 영웅 마커 */}
+        {/* 교차 마커 */}
         {reachable && crossX !== null && crossY !== null && (
           <g>
             <circle cx={crossX} cy={crossY} r={9} fill={COLOR.power} opacity={0.18} />
@@ -156,7 +170,6 @@ export function PlanRaceChart({ result }: { result: PlanResult }) {
           </g>
         )}
 
-        {/* 희망없음: 거짓 교차 대신 '계속 좁혀가는 중' */}
         {!reachable && (
           <text
             x={W - PAD.r}
@@ -170,7 +183,6 @@ export function PlanRaceChart({ result }: { result: PlanResult }) {
           </text>
         )}
 
-        {/* x 눈금 */}
         {xticks.map((yr) => (
           <text
             key={yr}
@@ -185,12 +197,21 @@ export function PlanRaceChart({ result }: { result: PlanResult }) {
         ))}
       </svg>
 
-      {/* 범례 */}
-      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
-        <Legend color={COLOR.power} label="내 구매가능가" bold />
-        <Legend color={COLOR.price} label="집값(보합 가정)" />
-        <Legend color={COLOR.band} label="집값 추정 범위" dashed />
-      </div>
+      {/* 그래프 바로 아래 한 문장 설명 (40인 테스트 #1 요청) */}
+      <p className="mt-1.5 text-[11px] leading-relaxed" style={{ color: "#6b6157" }}>
+        <b style={{ color: COLOR.power }}>굵은 선</b> = 내가 모으는 돈(대출 포함) ·{" "}
+        <span style={{ color: COLOR.price }}>회색 선</span> = 집값({FOCUS_LABEL[focus]}). 둘이 만나는{" "}
+        <b style={{ color: COLOR.power }}>●</b>이 살 수 있는 때예요.
+      </p>
+
+      <button
+        type="button"
+        onClick={() => setShowBand((v) => !v)}
+        className="mt-1 text-[11px] font-semibold underline"
+        style={{ color: "#9a8f82" }}
+      >
+        {showBand ? "집값 범위 접기 ▴" : "집값이 오르내릴 범위 보기 ▾"}
+      </button>
     </div>
   );
 }
@@ -218,34 +239,5 @@ function FlagLabel({
         {text}
       </text>
     </g>
-  );
-}
-
-function Legend({
-  color,
-  label,
-  bold,
-  dashed,
-}: {
-  color: string;
-  label: string;
-  bold?: boolean;
-  dashed?: boolean;
-}) {
-  return (
-    <span className="inline-flex items-center gap-1 text-[11px]" style={{ color: "#6b6157" }}>
-      <span
-        className="inline-block"
-        style={{
-          width: 12,
-          height: bold ? 4 : 3,
-          borderRadius: 2,
-          background: dashed
-            ? `repeating-linear-gradient(90deg, ${color} 0 3px, transparent 3px 6px)`
-            : color,
-        }}
-      />
-      <span className={bold ? "font-semibold" : ""}>{label}</span>
-    </span>
   );
 }

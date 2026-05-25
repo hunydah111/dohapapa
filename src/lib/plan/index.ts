@@ -26,6 +26,8 @@ export interface PlanInput {
    * ⚠️ Phase 2에서 한국부동산원 권역 실거래가격지수(반복매매)로 교체. 지금은 "가정" 라벨 필수.
    */
   appreciation?: { down: number; flat: number; up: number };
+  /** 차트 지평을 맞출 헤드라인 시나리오(사용자 선택). 미지정 시 보합. */
+  headlineKey?: ScenarioKey;
 }
 
 export interface PlanScenario {
@@ -125,10 +127,11 @@ export function computePlan(
     .map((s) => s.months)
     .filter((m): m is number => m !== null)
     .map((m) => m / 12);
-  const flatMonths = scenarios.find((s) => s.key === "flat")!.months;
+  const headKey = input.headlineKey ?? "flat";
+  const headMonths = scenarios.find((s) => s.key === headKey)!.months;
   const refYears =
-    flatMonths !== null
-      ? flatMonths / 12
+    headMonths !== null
+      ? headMonths / 12
       : finiteYears.length
         ? Math.max(...finiteYears)
         : 12;

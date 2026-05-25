@@ -79,11 +79,20 @@ function useDebounced<T>(value: T, ms = 200): T {
   return d;
 }
 
-const SCEN_LABEL: Record<ScenarioKey, string> = { down: "하락", flat: "보합", up: "상승" };
 const SCEN_COLOR: Record<ScenarioKey, string> = {
   down: "#4CB07A",
   flat: "#b9a98f",
   up: "#e0682f",
+};
+const SCEN_INFO: Record<ScenarioKey, { label: string; hint: string }> = {
+  down: { label: "하락", hint: "집값 떨어질 때" },
+  flat: { label: "보합", hint: "비슷할 때 · 기본" },
+  up: { label: "상승", hint: "오를 때" },
+};
+const SCEN_MEANING: Record<ScenarioKey, string> = {
+  down: "집값이 떨어지면",
+  flat: "집값이 그대로면",
+  up: "집값이 오르면",
 };
 
 // 기본 동네 — 타깃(무주택 신혼·생애최초)에 현실적인 수도권 중가 동네로(첫 데모가 '희망'이게).
@@ -112,6 +121,7 @@ export function PlanExperience() {
   const [saveStr, setSaveStr] = useState("200");
   const [sideStr, setSideStr] = useState("0");
   const [upPct, setUpPct] = useState(() => defaultUpPct(DEFAULT_SGG));
+  const [scenarioKey, setScenarioKey] = useState<ScenarioKey>("flat");
 
   // 무거운 재계산은 디바운스된 값으로(타이핑 부드럽게). 입력칸 표시·미리보기는 즉시.
   const incomeKrw = useDebounced(manwon(income));
@@ -162,11 +172,25 @@ export function PlanExperience() {
         monthlySavingKrw: saveKrw,
         monthlySideKrw: sideKrw,
         appreciation: { down: downRate, flat: 0, up: upPct / 100 },
+        headlineKey: scenarioKey,
       }),
-    [budget, profile, targetKrw, saveKrw, sideKrw, upPct, downRate],
+    [budget, profile, targetKrw, saveKrw, sideKrw, upPct, downRate, scenarioKey],
   );
 
   const guide = useMemo(() => planGuidance(plan), [plan]);
+
+  // 선택 시나리오의 도달 시점 + "월 30만 더" 시뮬(행동 유도).
+  const selectedMonths = plan.scenarios.find((s) => s.key === scenarioKey)!.months;
+  const boostedMonths = useMemo(() => {
+    const p = computePlan(budget, profile, {
+      targetPriceKrw: targetKrw,
+      monthlySavingKrw: saveKrw + 300_000,
+      monthlySideKrw: sideKrw,
+      appreciation: { down: downRate, flat: 0, up: upPct / 100 },
+      headlineKey: scenarioKey,
+    });
+    return p.scenarios.find((s) => s.key === scenarioKey)!.months;
+  }, [budget, profile, targetKrw, saveKrw, sideKrw, upPct, downRate, scenarioKey]);
 
   // 각 티어의 '보합 기준' 도달 시점 — 카드에 띄워 "이 집이면 D−Xy, 한 칸 아래면 D−Yy" 체감.
   const tierMonths = useMemo(() => {
@@ -308,36 +332,78 @@ export function PlanExperience() {
         }}
       >
         <p className="text-xs font-medium" style={{ color: "#6b6157" }}>
-          내 집 마련 시점 (시나리오 · 추정)
+          집값이 앞으로 어떻게 될까요?{" "}
+          <span style={{ color: "#9a8f82" }}>· 가정(예측 아님), 골라보세요</span>
         </p>
 
+        <div className="mt-2 flex flex-col gap-1.5">
+          {(["down", "flat", "up"] as ScenarioKey[]).map((k) => (
+            <ScenarioRow
+              key={k}
+              scenKey={k}
+              ratePct={k === "down" ? -6 : k === "flat" ? 0 : Math.round(upPct)}
+              months={plan.scenarios.find((s) => s.key === k)!.months}
+              selected={scenarioKey === k}
+              onSelect={() => setScenarioKey(k)}
+            />
+          ))}
+        </div>
+
+        {scenarioKey === "up" && (
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px]" style={{ color: "#6b6157" }}>
+              상승률
+            </span>
+            {[3, 5, 7].map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setUpPct(r)}
+                className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition-colors ${
+                  Math.round(upPct) === r
+                    ? "border-coral-600 bg-coral-600 text-white"
+                    : "border-[#e0d3bf] bg-white text-[#9a8f82]"
+                }`}
+              >
+                +{r}%
+              </button>
+            ))}
+            <span className="text-[11px]" style={{ color: "#9a8f82" }}>
+              · 동네 10년 평균 ≈ +{Math.round(defaultUpPct(sgg))}%(KB)
+            </span>
+          </div>
+        )}
+
         {guide.tone === "reachable" ? (
-          <>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {plan.scenarios.map((s) => (
-                <span
-                  key={s.key}
-                  className="rounded-full bg-white px-3 py-1 text-sm font-bold"
-                  style={{ color: SCEN_COLOR[s.key] }}
-                >
-                  {SCEN_LABEL[s.key]} {formatDday(s.months)}
-                </span>
-              ))}
-            </div>
-            <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#9a8f82" }}>
-              예측이 아니라 과거 지표 + 가정 시나리오예요. 레버를 당기면 시점이 당겨져요 👇
+          <div className="mt-3 rounded-2xl bg-white/70 p-3">
+            <p className="text-[15px] font-bold" style={{ color: "#3a322c" }}>
+              {SCEN_MEANING[scenarioKey]} 내 집 마련까지{" "}
+              <span style={{ color: "#f2603c" }}>약 {formatDday(selectedMonths)}</span>
             </p>
-          </>
+            {boostedMonths != null &&
+              selectedMonths != null &&
+              boostedMonths < selectedMonths && (
+                <p className="mt-0.5 text-[12px]" style={{ color: "#6b6157" }}>
+                  월 30만원 더 모으면{" "}
+                  <b style={{ color: "#f2603c" }}>약 {formatDday(boostedMonths)}</b>로 당겨져요.
+                </p>
+              )}
+          </div>
         ) : guide.tone === "needBasics" ? (
           <BasicsGuide />
         ) : (
           <HopelessGuide guide={guide} regionLabel={manualMode ? null : sgg} />
         )}
+
+        <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#9a8f82" }}>
+          하락 −6%(직전 하락기 2022·부동산원) · 보합 0% · 상승(동네 10년 평균·KB). 예측이 아니라 과거
+          지표 + 가정이에요. 아래 저축을 늘리면 시점이 당겨져요 👇
+        </p>
       </section>
 
       {/* 경주 차트 */}
       <section className="rounded-3xl border border-[#e5e5ea] bg-white p-4 shadow-sm">
-        <PlanRaceChart result={plan} />
+        <PlanRaceChart result={plan} focus={scenarioKey} />
         <div className="mt-3 rounded-2xl bg-coral-50/50 p-3">
           <div className="flex items-baseline justify-between">
             <span className="text-[12px] font-semibold" style={{ color: "#3a322c" }}>
@@ -363,18 +429,16 @@ export function PlanExperience() {
 
       {/* 레버 */}
       <section className="rounded-3xl border border-coral-100 bg-coral-50/50 p-5">
-        <h2 className="mb-3 text-[15px] font-bold" style={{ color: "#3a322c" }}>
+        <h2 className="mb-1 text-[15px] font-bold" style={{ color: "#3a322c" }}>
           레버 — 바꾸면 시점이 움직여요
         </h2>
-        <div className="mb-3 grid grid-cols-2 gap-3">
+        <p className="mb-3 text-[11px]" style={{ color: "#9a8f82" }}>
+          매달 더 모을수록 위 ‘내 집 마련 시점’이 당겨져요.
+        </p>
+        <div className="grid grid-cols-2 gap-3">
           <NumField label="월 저축(만원)" value={saveStr} onChange={setSaveStr} hint={unitHint(saveStr)} />
           <NumField label="월 부업·세전(만원)" value={sideStr} onChange={setSideStr} hint={unitHint(sideStr)} />
         </div>
-        <Slider label="‘상승’ 시나리오 연 상승률" value={upPct} suffix="%" min={0} max={10} step={0.5} onChange={setUpPct} />
-        <p className="-mt-1 text-[11px] leading-relaxed" style={{ color: "#9a8f82" }}>
-          하락 −6%(직전 하락기 2022·한국부동산원) · 보합 0% · 상승 기본 {Math.round(scen.up.rateAnnual * 100)}%({scen.up.basis}·KB 2025.9).
-          이 레버는 ‘상승’만 조절해요 — 예측이 아니라 과거 기준이에요.
-        </p>
       </section>
 
       <p className="px-1 text-[11px] leading-relaxed" style={{ color: "#9a8f82" }}>
@@ -611,43 +675,50 @@ function Chip({ on, onClick, label }: { on: boolean; onClick: () => void; label:
   );
 }
 
-function Slider({
-  label,
-  value,
-  suffix,
-  min,
-  max,
-  step,
-  onChange,
+function ScenarioRow({
+  scenKey,
+  ratePct,
+  months,
+  selected,
+  onSelect,
 }: {
-  label: string;
-  value: number;
-  suffix: string;
-  min: number;
-  max: number;
-  step: number;
-  onChange: (v: number) => void;
+  scenKey: ScenarioKey;
+  ratePct: number;
+  months: number | null;
+  selected: boolean;
+  onSelect: () => void;
 }) {
+  const info = SCEN_INFO[scenKey];
+  const sign = ratePct > 0 ? `+${ratePct}` : `${ratePct}`;
   return (
-    <div className="mb-3 last:mb-0">
-      <div className="flex items-baseline justify-between">
-        <span className="text-sm font-medium" style={{ color: "#3a322c" }}>
-          {label}
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
+      className={`flex items-center justify-between gap-2 rounded-2xl border px-3 py-2 text-left transition-colors ${
+        selected ? "border-coral-500 bg-white shadow-sm" : "border-[#e7ddcd] bg-white/60"
+      }`}
+    >
+      <span className="flex min-w-0 items-center gap-2">
+        <span
+          className="inline-block shrink-0"
+          style={{ width: 8, height: 8, borderRadius: 9, background: SCEN_COLOR[scenKey] }}
+        />
+        <span className="truncate">
+          <span className="text-[13px] font-bold" style={{ color: "#3a322c" }}>
+            {info.label}
+          </span>{" "}
+          <span className="text-[11px]" style={{ color: "#9a8f82" }}>
+            연 {sign}% · {info.hint}
+          </span>
         </span>
-        <span className="text-sm font-bold tabular-nums" style={{ color: "#f2603c" }}>
-          {value}
-          {suffix}
-        </span>
-      </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="mt-1.5 w-full accent-coral-600"
-      />
-    </div>
+      </span>
+      <span
+        className="shrink-0 text-[13px] font-bold tabular-nums"
+        style={{ color: selected ? "#f2603c" : "#6b6157" }}
+      >
+        {formatDday(months)}
+      </span>
+    </button>
   );
 }
