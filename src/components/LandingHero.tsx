@@ -32,9 +32,10 @@ function MiniBadge({ children }: { children: React.ReactNode }) {
 
 export function LandingHero({ onStart }: { onStart: () => void }) {
   return (
-    <section className="relative overflow-hidden px-1 pt-6 pb-4 text-center sm:pt-10">
-      {/* 브랜드 히어로 — 한강에서 서울을 바라보며 '비집고' 들어갈 집을 그리는 비지 */}
-      <div className="biji-pop-in mx-auto mb-5 max-w-xl overflow-hidden rounded-3xl shadow-md ring-1 ring-black/5">
+    <section className="relative px-1 pt-6 pb-4 text-center sm:pt-10">
+      {/* 브랜드 히어로 — 한강에서 서울을 바라보며 '비집고' 들어갈 집을 그리는 비지.
+          모바일은 위·좌·우 풀블리드(검은 하늘이 화면 끝까지), sm+는 둥근 카드. */}
+      <div className="biji-pop-in relative left-1/2 mb-5 -mt-10 w-screen -translate-x-1/2 overflow-hidden rounded-b-[26px] shadow-md sm:left-auto sm:mx-auto sm:mt-0 sm:w-full sm:max-w-xl sm:translate-x-0 sm:rounded-3xl sm:ring-1 sm:ring-black/5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/biji/biji-hangang.png"

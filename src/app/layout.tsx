@@ -52,7 +52,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-screen flex flex-col antialiased">
+      <body className="min-h-screen flex flex-col overflow-x-clip antialiased">
         {/* ── 헤더 ── */}
         <header
           className="sticky top-0 z-20 border-b border-black/[0.06] bg-white/85 backdrop-blur-md"
