@@ -47,6 +47,9 @@ export function PlanRaceChart({
   focus?: ScenarioKey;
 }) {
   const [showBand, setShowBand] = useState(false);
+  const reduce =
+    typeof window !== "undefined" &&
+    !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
   const { years, affordable, price } = result.curve;
   const horizon = years[years.length - 1] || 1;
   const target = price.flat[0];
@@ -155,14 +158,19 @@ export function PlanRaceChart({
           </>
         )}
 
-        {/* 교차 마커 */}
+        {/* 교차 마커 — 입력 바뀌면 새 위치로 부드럽게 미끄러짐 */}
         {reachable && crossX !== null && crossY !== null && (
-          <g>
-            <circle cx={crossX} cy={crossY} r={9} fill={COLOR.power} opacity={0.18} />
-            <circle cx={crossX} cy={crossY} r={5} fill={COLOR.power} stroke="#fff" strokeWidth={2} />
+          <g
+            style={{
+              transform: `translate(${crossX}px, ${crossY}px)`,
+              transition: reduce ? undefined : "transform 0.6s cubic-bezier(.22,1,.36,1)",
+            }}
+          >
+            <circle cx={0} cy={0} r={9} fill={COLOR.power} opacity={0.18} />
+            <circle cx={0} cy={0} r={5} fill={COLOR.power} stroke="#fff" strokeWidth={2} />
             <FlagLabel
-              x={crossX}
-              y={crossY}
+              x={0}
+              y={0}
               text={`${crossYear}년 가능`}
               rightHalf={crossX > PAD.l + plotW / 2}
               below={crossY < PAD.t + 30}

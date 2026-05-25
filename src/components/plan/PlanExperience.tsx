@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { CoupleProfile, AreaRangeKey } from "@/types/profile";
 import {
@@ -79,6 +79,38 @@ function useDebounced<T>(value: T, ms = 200): T {
   return d;
 }
 
+function prefersReduced(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
+// D-day 숫자가 새 값으로 부드럽게 굴러가는(롤링) 표시값. null(40년+)은 즉시 전환.
+function useRollingMonths(target: number | null): number | null {
+  const [disp, setDisp] = useState<number | null>(target);
+  const prev = useRef<number | null>(target);
+  useEffect(() => {
+    const from = prev.current;
+    prev.current = target;
+    if (target === null || from === null || from === target || prefersReduced()) {
+      setDisp(target);
+      return;
+    }
+    let raf = 0;
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - t0) / 600);
+      const e = 1 - Math.pow(1 - p, 3);
+      setDisp(Math.round(from + (target - from) * e));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target]);
+  return disp;
+}
+
 const SCEN_COLOR: Record<ScenarioKey, string> = {
   down: "#4CB07A",
   flat: "#b9a98f",
@@ -88,11 +120,6 @@ const SCEN_INFO: Record<ScenarioKey, { label: string; hint: string }> = {
   down: { label: "하락", hint: "집값 떨어질 때" },
   flat: { label: "보합", hint: "비슷할 때 · 기본" },
   up: { label: "상승", hint: "오를 때" },
-};
-const SCEN_MEANING: Record<ScenarioKey, string> = {
-  down: "집값이 떨어지면",
-  flat: "집값이 그대로면",
-  up: "집값이 오르면",
 };
 
 // 기본 동네 — 타깃(무주택 신혼·생애최초)에 현실적인 수도권 중가 동네로(첫 데모가 '희망'이게).
@@ -192,6 +219,9 @@ export function PlanExperience() {
     return p.scenarios.find((s) => s.key === scenarioKey)!.months;
   }, [budget, profile, targetKrw, saveKrw, sideKrw, upPct, downRate, scenarioKey]);
 
+  const rollingSelected = useRollingMonths(selectedMonths);
+  const tierLabel = manualMode ? "직접 입력" : (selectedTier?.label ?? "");
+
   // 각 티어의 '보합 기준' 도달 시점 — 카드에 띄워 "이 집이면 D−Xy, 한 칸 아래면 D−Yy" 체감.
   const tierMonths = useMemo(() => {
     const out: Partial<Record<TierKey, number | null>> = {};
@@ -211,6 +241,47 @@ export function PlanExperience() {
 
   return (
     <div className="flex flex-col gap-5">
+      {/* 결론 히어로 — 답 먼저 */}
+      <section
+        className="rounded-3xl px-5 py-6 text-white"
+        style={{
+          background: "linear-gradient(135deg,#ff8a5c 0%,#fe7644 55%,#e8662f 100%)",
+          boxShadow: "0 10px 26px -12px rgba(232,102,47,0.55)",
+        }}
+      >
+        <p className="text-[12px] font-semibold" style={{ color: "rgba(255,255,255,0.88)" }}>
+          {sgg} {cell ? AREA_RANGES[band].label : ""}
+          {tierLabel ? ` · ${tierLabel}` : ""} · {SCEN_INFO[scenarioKey].label} 가정
+        </p>
+        {selectedMonths === null ? (
+          <>
+            <p className="font-jua mt-1.5 leading-tight" style={{ fontSize: 26 }}>
+              지금 조건으론 시간이 걸려요
+            </p>
+            <p className="mt-1.5 text-[13px]" style={{ color: "rgba(255,255,255,0.92)" }}>
+              아래에서 동네를 한 칸 낮추거나 저축을 늘리면 길이 보여요.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="mt-1 text-[13px]" style={{ color: "rgba(255,255,255,0.9)" }}>
+              지금 속도면 내 집 마련까지
+            </p>
+            <div className="mt-0.5 flex flex-wrap items-end gap-x-2 gap-y-0.5">
+              <span className="font-jua leading-none" style={{ fontSize: 40 }}>
+                약 {formatDday(rollingSelected)}
+              </span>
+              <DeltaCallout months={selectedMonths} />
+            </div>
+            {boostedMonths != null && boostedMonths < selectedMonths && (
+              <p className="mt-1.5 text-[13px]" style={{ color: "rgba(255,255,255,0.92)" }}>
+                월 30만원 더 모으면 <b>약 {formatDday(boostedMonths)}</b>
+              </p>
+            )}
+          </>
+        )}
+      </section>
+
       {/* 목표 — 동네+평형 → 티어 선택 */}
       <section className="rounded-3xl border border-coral-200 bg-coral-50/60 p-5">
         <h2 className="mb-1 text-[15px] font-bold" style={{ color: "#3a322c" }}>
@@ -374,26 +445,11 @@ export function PlanExperience() {
           </div>
         )}
 
-        {guide.tone === "reachable" ? (
-          <div className="mt-3 rounded-2xl bg-white/70 p-3">
-            <p className="text-[15px] font-bold" style={{ color: "#3a322c" }}>
-              {SCEN_MEANING[scenarioKey]} 내 집 마련까지{" "}
-              <span style={{ color: "#f2603c" }}>약 {formatDday(selectedMonths)}</span>
-            </p>
-            {boostedMonths != null &&
-              selectedMonths != null &&
-              boostedMonths < selectedMonths && (
-                <p className="mt-0.5 text-[12px]" style={{ color: "#6b6157" }}>
-                  월 30만원 더 모으면{" "}
-                  <b style={{ color: "#f2603c" }}>약 {formatDday(boostedMonths)}</b>로 당겨져요.
-                </p>
-              )}
-          </div>
-        ) : guide.tone === "needBasics" ? (
+        {guide.tone === "needBasics" ? (
           <BasicsGuide />
-        ) : (
+        ) : guide.tone === "hopeless" ? (
           <HopelessGuide guide={guide} regionLabel={manualMode ? null : sgg} />
-        )}
+        ) : null}
 
         <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#9a8f82" }}>
           하락 −6%(직전 하락기 2022·부동산원) · 보합 0% · 상승(동네 10년 평균·KB). 예측이 아니라 과거
@@ -404,19 +460,19 @@ export function PlanExperience() {
       {/* 경주 차트 */}
       <section className="rounded-3xl border border-[#e5e5ea] bg-white p-4 shadow-sm">
         <PlanRaceChart result={plan} focus={scenarioKey} />
-        <div className="mt-3 rounded-2xl bg-coral-50/50 p-3">
-          <div className="flex items-baseline justify-between">
+        <details className="mt-3 rounded-2xl bg-coral-50/50 p-3 [&_summary::-webkit-details-marker]:hidden">
+          <summary className="flex cursor-pointer list-none items-baseline justify-between">
             <span className="text-[12px] font-semibold" style={{ color: "#3a322c" }}>
               지금 살 수 있는 가격{" "}
               <span className="text-[11px] font-normal" style={{ color: "#9a8f82" }}>
-                (그래프 출발선)
+                (출발선 · 자세히 ▾)
               </span>
             </span>
             <span className="text-base font-extrabold tabular-nums" style={{ color: "#f2603c" }}>
               {eok(Math.max(0, plan.purchaseNowKrw))}
             </span>
-          </div>
-          <p className="mt-1 text-[11px] leading-relaxed" style={{ color: "#6b6157" }}>
+          </summary>
+          <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#6b6157" }}>
             현금(자기자본) <b>{eok(plan.equityKrw)}</b> + 소득 기반 추정 대출{" "}
             <b>{eok(plan.loanKrw)}</b> − 부대비용 <b>{eok(plan.acqCostKrw)}</b>
           </p>
@@ -424,7 +480,7 @@ export function PlanExperience() {
             여기서 <b>월 {formatKrwHuman(plan.monthlyAccumKrw)}</b>씩 모아 목표까지 부족한{" "}
             <b>{eok(plan.gapKrw)}</b>을 따라잡는 게 위 그래프예요. 모두 추정.
           </p>
-        </div>
+        </details>
       </section>
 
       {/* 레버 */}
@@ -672,6 +728,29 @@ function Chip({ on, onClick, label }: { on: boolean; onClick: () => void; label:
     >
       {label}
     </button>
+  );
+}
+
+// 레버 조작으로 시점이 바뀌면 "▼ N개월 당겨졌어요" 플로팅(1.5s 페이드).
+function DeltaCallout({ months }: { months: number | null }) {
+  const prev = useRef<number | null>(months);
+  const [delta, setDelta] = useState<{ v: number; id: number } | null>(null);
+  useEffect(() => {
+    const from = prev.current;
+    prev.current = months;
+    if (from === null || months === null || from === months || prefersReduced()) return;
+    setDelta({ v: months - from, id: Date.now() });
+  }, [months]);
+  if (!delta) return null;
+  const faster = delta.v < 0;
+  return (
+    <span
+      key={delta.id}
+      className="plan-delta text-[12px] font-bold"
+      style={{ color: faster ? "#fff" : "rgba(255,255,255,0.8)" }}
+    >
+      {faster ? "▼" : "▲"} {formatDday(Math.abs(delta.v))} {faster ? "당겨졌어요" : "늦춰졌어요"}
+    </span>
   );
 }
 

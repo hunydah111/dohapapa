@@ -107,8 +107,16 @@ body {
 /* 콘텐츠 비동기 등장 — 카드 안 동네 분석이 fetch 후 부드럽게 들어옴 */
 @keyframes fade-in-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .fade-in-up { animation: fade-in-up 0.4s ease both; }
+/* 레버 조작 시 "−1년 4개월 당겨졌어요" 플로팅 델타 */
+@keyframes plan-delta {
+  0% { opacity: 0; transform: translateY(7px); }
+  16% { opacity: 1; transform: none; }
+  78% { opacity: 1; transform: translateY(-2px); }
+  100% { opacity: 0; transform: translateY(-9px); }
+}
+.plan-delta { animation: plan-delta 1.5s ease both; }
 @media (prefers-reduced-motion: reduce) {
-  .biji-breathe, .biji-blink, .biji-compass, .biji-tail, .biji-hop, .biji-pop-in, .fade-in-up { animation: none; }
+  .biji-breathe, .biji-blink, .biji-compass, .biji-tail, .biji-hop, .biji-pop-in, .fade-in-up, .plan-delta { animation: none; }
 }
 
 /* ── (구) 마스코트 호미 모션 ── */
