@@ -91,7 +91,7 @@ function evaluateShinseona(profile: CoupleProfile): PolicyLoanMatch {
     productName: "신생아 특례 디딤돌",
     eligible: true,
     reason:
-      "출산 2년 이내 자녀 + 무주택 + 합산 소득 2억 이하 — 정확한 출생일 기준 자격은 주택금융공사 확인 (주택가 5억 이하 요건 별도)",
+      "출산 2년 이내 자녀 + 무주택 + 합산 소득 2억 이하 — 정확한 출생일 기준 자격은 주택금융공사 확인 (주택가 9억 이하 요건 별도)",
     loanLimitKrw: SHINSEONA_LOAN_LIMIT,
     rateMin: 1.8,
     rateMax: 4.5,

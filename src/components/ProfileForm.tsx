@@ -710,6 +710,12 @@ export function ProfileForm({
     ? (parseFloat(seedMoney) || 0) > 0 && (parseFloat(householdIncome) || 0) > 0
     : (parseFloat(availableBudget) || 0) > 0;
 
+  // step4 진행 가드 — 빈 예산(0원·0소득)으로 분석 넘어가는 것 방지(P0).
+  // detailed: 현금·소득 중 최소 1개, simple: 가용 예산 입력 시에만 '다음' 활성.
+  const step4CanProceed = detailedBudget
+    ? (parseFloat(seedMoney) || 0) > 0 || (parseFloat(householdIncome) || 0) > 0
+    : (parseFloat(availableBudget) || 0) > 0;
+
   const previewBudget = useMemo(
     () => (canPreviewBudget ? estimateBudget(buildProfile()) : null),
     [canPreviewBudget, buildProfile],
@@ -1576,7 +1582,7 @@ export function ProfileForm({
             <Button variant="secondary" onClick={() => window.history.back()}>
               이전
             </Button>
-            <Button fullWidth onClick={goNext}>
+            <Button fullWidth disabled={!step4CanProceed} onClick={goNext}>
               다음
             </Button>
           </div>
@@ -1596,7 +1602,9 @@ export function ProfileForm({
           </div>
 
           <div className="flex flex-col gap-4">
-            {(Object.keys(PRIORITY_LABELS) as PriorityKey[]).map((key) => {
+            {(Object.keys(PRIORITY_LABELS) as PriorityKey[])
+              .filter((key) => !(isRetired && key === "commute"))
+              .map((key) => {
               const hints: Record<PriorityKey, string> = {
                 commute: "직장별 자동차·대중교통 통근 시간 기준",
                 school: "초등학교 도보 거리 기준 (중·고·학업성취도·학원가 미반영)",
