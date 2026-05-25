@@ -432,10 +432,20 @@ export function PlanExperience() {
           boxShadow: "0 1px 3px rgba(242,96,60,0.08)",
         }}
       >
-        <p className="text-xs font-medium" style={{ color: "#6e5b46" }}>
-          집값이 앞으로 어떻게 될까요?{" "}
-          <span style={{ color: "#9c8a72" }}>· 가정(예측 아님), 골라보세요</span>
-        </p>
+        <div className="flex items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/biji/biji-talk.png"
+            alt=""
+            aria-hidden
+            className="h-11 w-11 shrink-0"
+            draggable={false}
+          />
+          <p className="text-xs font-medium" style={{ color: "#6e5b46" }}>
+            집값이 앞으로 어떻게 될까요?{" "}
+            <span style={{ color: "#9c8a72" }}>· 가정(예측 아님), 골라보세요</span>
+          </p>
+        </div>
 
         <div className="mt-2 flex flex-col gap-1.5">
           {(["down", "flat", "up"] as ScenarioKey[]).map((k) => (
@@ -495,9 +505,19 @@ export function PlanExperience() {
           boxShadow: "0 12px 30px -14px rgba(44,33,22,0.6)",
         }}
       >
-        <p className="mb-1.5 text-[12px] font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>
-          저축 vs 집값 경주
-        </p>
+        <div className="mb-1.5 flex items-center justify-between">
+          <p className="text-[12px] font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>
+            저축 vs 집값 경주
+          </p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/biji/biji-point-up.png"
+            alt=""
+            aria-hidden
+            className="h-12 w-12 drop-shadow"
+            draggable={false}
+          />
+        </div>
         <PlanRaceChart result={plan} focus={scenarioKey} dark />
         <details className="mt-3 rounded-2xl bg-white/10 p-3 [&_summary::-webkit-details-marker]:hidden">
           <summary className="flex cursor-pointer list-none items-baseline justify-between">
@@ -534,6 +554,23 @@ export function PlanExperience() {
           <NumField label="월 저축(만원)" value={saveStr} onChange={setSaveStr} hint={unitHint(saveStr)} />
           <NumField label="월 부업·세전(만원)" value={sideStr} onChange={setSideStr} hint={unitHint(sideStr)} />
         </div>
+      </section>
+
+      {/* 도달의 모습 — 비지가 새 집 앞에서 (끝은 희망) */}
+      <section className="overflow-hidden rounded-3xl border border-coral-100 shadow-sm">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/biji/biji-newhome.png"
+          alt="열쇠 들고 새 아파트 앞에 선 비지"
+          className="block w-full"
+          draggable={false}
+        />
+        <p
+          className="px-4 py-2.5 text-center text-[12px] font-semibold"
+          style={{ background: "#fff4ef", color: "#9a5a1e" }}
+        >
+          이 집에서 살 날, 비집고가 같이 세어줄게요 🔑
+        </p>
       </section>
 
       <p className="px-1 text-[11px] leading-relaxed" style={{ color: "#9c8a72" }}>
