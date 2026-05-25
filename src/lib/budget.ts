@@ -297,6 +297,51 @@ export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
         }))
       : undefined;
 
+  // ── 7-3. 안전선 (#6) — 월 상환을 소득의 ~30% 이내로 맞춘 보수적 한도 ──────────
+  // '은행 최대(DSR)'와 분리 제시. 안전 대출 = min(은행 최대, 월상환 30% 역산).
+  // 은행 최대가 이미 30% 이내면 동일값(토글 의미 없음 → UI 가 숨김).
+  const SAFE_PAYMENT_RATIO = 0.3;
+  let safeLine: BudgetEstimate["safeLine"];
+  if (paymentToIncomeRatio !== undefined && loanEstimateKrw > 0) {
+    const safeMonthlyMax = monthlyIncomeKrw * SAFE_PAYMENT_RATIO;
+    const safeLoanByPayment = loanPrincipalFromMonthlyPayment(
+      safeMonthlyMax,
+      appliedRate,
+      LOAN_MONTHS,
+    );
+    const safeLoanKrw = Math.round(Math.min(loanEstimateKrw, safeLoanByPayment));
+    const safeMonthly = Math.round(
+      monthlyPaymentFromPrincipal(safeLoanKrw, appliedRate, LOAN_MONTHS),
+    );
+    const safeGross = totalEquityKrw + safeLoanKrw;
+    const safeAcq = estimateAcquisitionCosts(
+      Math.max(0, safeGross),
+      profile,
+    ).totalKrw;
+    safeLine = {
+      loanEstimateKrw: safeLoanKrw,
+      monthlyPaymentKrw: safeMonthly,
+      netPurchasePowerKrw: Math.max(0, safeGross - safeAcq),
+      paymentToIncomeRatio:
+        monthlyIncomeKrw > 0 && safeMonthly > 0
+          ? safeMonthly / monthlyIncomeKrw
+          : undefined,
+      stressTest:
+        safeLoanKrw > 0
+          ? [1, 2].map((deltaRatePct) => ({
+              deltaRatePct,
+              monthlyPaymentKrw: Math.round(
+                monthlyPaymentFromPrincipal(
+                  safeLoanKrw,
+                  appliedRate + deltaRatePct / 100,
+                  LOAN_MONTHS,
+                ),
+              ),
+            }))
+          : undefined,
+    };
+  }
+
   // ── 8. 총 예산 ────────────────────────────────────────────────────────────
   const grossBudgetKrw = totalEquityKrw + loanEstimateKrw;
 
@@ -441,6 +486,7 @@ export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
     monthlyPaymentKrw,
     paymentToIncomeRatio,
     stressTest,
+    safeLine,
     grossBudgetKrw,
     acquisitionCostsKrw,
     netPurchasePowerKrw,

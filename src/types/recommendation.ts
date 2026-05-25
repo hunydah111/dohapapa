@@ -58,6 +58,18 @@ export interface BudgetEstimate {
    * 대출>0 일 때만 정의. (예: [{deltaRatePct:1,...},{deltaRatePct:2,...}])
    */
   stressTest?: { deltaRatePct: number; monthlyPaymentKrw: number }[];
+  /**
+   * 안전선(#6) — 월 상환액을 월소득의 ~30% 이내로 맞춘 보수적 시나리오.
+   * '은행 최대(DSR 한도)'와 분리 제시해 감당 안정선을 보여준다. 상세모드·대출>0 일 때만.
+   * loan 은 은행 최대 대출을 넘지 않는다(min). 은행 최대가 이미 30% 이내면 동일값.
+   */
+  safeLine?: {
+    loanEstimateKrw: number;
+    monthlyPaymentKrw: number;
+    netPurchasePowerKrw: number;
+    paymentToIncomeRatio?: number;
+    stressTest?: { deltaRatePct: number; monthlyPaymentKrw: number }[];
+  };
   /** totalEquity + loan. */
   grossBudgetKrw: number;
   /** 취득세 + 중개수수료 + 부대비용 (acquisitionCost 모듈로 정밀 산출). */

@@ -197,7 +197,7 @@ describe("estimateBudget", () => {
     expect(result.stressTest).toBeUndefined();
   });
 
-  it("간단 모드는 신호등·스트레스 없음", () => {
+  it("간단 모드는 신호등·스트레스·안전선 없음", () => {
     const result = estimateBudget(
       makeProfile({
         budgetMode: "simple",
@@ -206,5 +206,33 @@ describe("estimateBudget", () => {
     );
     expect(result.paymentToIncomeRatio).toBeUndefined();
     expect(result.stressTest).toBeUndefined();
+    expect(result.safeLine).toBeUndefined();
+  });
+
+  it("안전선(#6): 은행 최대 월부담이 30% 초과면 safeLine 대출·월상환↓, 비율≈30%", () => {
+    const result = estimateBudget(
+      makeProfile({
+        householdIncomeKrwYear: 100_000_000,
+        seedMoneyKrw: 300_000_000,
+        existingLoanMonthlyKrw: 0,
+      }),
+    );
+    // 일반 DSR 한도(40%) 적용 프로필 → 월부담 30% 초과 가정
+    expect(result.paymentToIncomeRatio).toBeGreaterThan(0.3);
+    expect(result.safeLine).toBeDefined();
+    const safe = result.safeLine!;
+    expect(safe.loanEstimateKrw).toBeLessThan(result.loanEstimateKrw);
+    expect(safe.monthlyPaymentKrw).toBeLessThan(result.monthlyPaymentKrw);
+    expect(safe.netPurchasePowerKrw).toBeLessThanOrEqual(
+      result.netPurchasePowerKrw,
+    );
+    expect(safe.paymentToIncomeRatio!).toBeCloseTo(0.3, 2);
+    expect(safe.stressTest).toBeDefined();
+    expect(Number.isInteger(safe.loanEstimateKrw)).toBe(true);
+  });
+
+  it("대출 0이면 safeLine undefined", () => {
+    const result = estimateBudget(makeProfile({ householdIncomeKrwYear: 0 }));
+    expect(result.safeLine).toBeUndefined();
   });
 });
