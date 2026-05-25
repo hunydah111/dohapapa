@@ -25,6 +25,12 @@ import { TextField } from "@/components/ui/TextField";
 import { Card } from "@/components/ui/Card";
 import { formatKrwHuman } from "@/lib/format";
 import { SHARE_PARAM, encodeProfile, decodeProfile } from "@/lib/shareLink";
+import {
+  saveSearchPrefs,
+  loadSearchPrefs,
+  resumeLabel,
+  type SearchPrefs,
+} from "@/lib/searchPrefs";
 import { MiniMap, KAKAO_JS_ENABLED } from "./MiniMap";
 import { useNeighborhood } from "./NeighborhoodSection";
 
@@ -121,6 +127,9 @@ export function HomeExperience() {
   const [state, setState] = useState<ResultState | null>(null);
   const [autoLoading, setAutoLoading] = useState(false);
   const [started, setStarted] = useState(false); // 랜딩 CTA 누르면 폼 시작
+  // 재방문 이어보기(R2) — 저장된 검색 취향. resumePrefs=랜딩 배너 노출용, resumeInit=폼 초기값.
+  const [resumePrefs, setResumePrefs] = useState<SearchPrefs | null>(null);
+  const [resumeInit, setResumeInit] = useState<SearchPrefs | undefined>(undefined);
   const [shareToast, setShareToast] = useState<string | null>(null);
 
   // 조건 수정 패널 상태
@@ -151,6 +160,8 @@ export function HomeExperience() {
     (result: RecommendationResult, profile: CoupleProfile) => {
       setState({ result, profile });
       setPanelOpen(false);
+      // 재방문 이어보기(R2) — 비민감 검색 취향만 기기에 저장(소득·자산·직장·예산·가족 제외).
+      saveSearchPrefs(profile);
       // 조건 수정 패널 기본값을 현재 프로필로 초기화 (만원 단위).
       // 간단(simple) 모드는 예산 드라이버가 availableBudgetKrw 이므로 그 값을 보여준다
       // (seedMoneyKrw 는 simple 에서 무시되므로 보여주면 사용자가 혼동·미반영됨).
@@ -227,6 +238,20 @@ export function HomeExperience() {
     };
     // handleResult 는 안정적 — 의존성 OK
   }, [handleResult]);
+
+  // 재방문 이어보기(R2) — 공유링크(#p=) 자동로드가 없을 때만, 저장된 검색 취향이 있으면
+  // 랜딩에 "이어보기" 배너를 띄운다. (자동 실행은 안 함 — 사용자가 누를 때만)
+  useEffect(() => {
+    const rawHash = window.location.hash.replace(/^#/, "");
+    const hasShare =
+      new URLSearchParams(rawHash).get(SHARE_PARAM) ??
+      new URLSearchParams(window.location.search).get(SHARE_PARAM);
+    if (hasShare) return; // 공유링크 자동분석이 우선
+    const prefs = loadSearchPrefs();
+    // 마운트 시 저장된 취향으로 배너 노출 — 외부(localStorage) 동기화라 의도된 setState
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (prefs) setResumePrefs(prefs);
+  }, []);
 
   // ── 대중교통 실측(ODsay) → 티어 재정렬 ─────────────────────────────────────
   // 1차(mock) 결과가 뜨면, 후보 풀의 대중교통 시간을 브라우저에서 실측한 뒤 그 값으로
@@ -435,6 +460,14 @@ export function HomeExperience() {
       setShareToast("복사에 실패했어요 — 주소창의 링크를 직접 저장해주세요.");
     }
     setTimeout(() => setShareToast(null), 4500);
+  }
+
+  // 이어보기(R2) — 저장된 취향으로 폼을 미리 채워 시작. 민감 항목은 사용자가 다시 입력.
+  function handleResume() {
+    if (!resumePrefs) return;
+    setResumeInit(resumePrefs);
+    setStarted(true);
+    window.scrollTo({ top: 0 });
   }
 
   function handleRestart() {
@@ -673,12 +706,45 @@ export function HomeExperience() {
   // 시작 전 = 랜딩 히어로(가치제안+단일 CTA). CTA 누르면 폼 노출.
   if (state === null && !started) {
     return (
-      <LandingHero
-        onStart={() => {
-          setStarted(true);
-          window.scrollTo({ top: 0 });
-        }}
-      />
+      <>
+        {/* 재방문 이어보기(R2) — 저장된 검색 취향이 있으면 폼 미리채워 시작 제안 */}
+        {resumePrefs && (
+          <div className="mx-auto mb-4 flex w-full max-w-md items-center gap-2 rounded-2xl border border-coral-200 bg-coral-50 px-3 py-2.5">
+            <button
+              type="button"
+              onClick={handleResume}
+              className="flex min-w-0 flex-1 items-center gap-2 text-left focus:outline-none"
+            >
+              <span aria-hidden className="text-lg">🕑</span>
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="text-[13px] font-bold text-coral-800">
+                  지난번 검색 조건으로 이어보기
+                </span>
+                <span className="truncate text-[12px] text-coral-700">
+                  {resumeLabel(resumePrefs)} · 민감정보는 다시 입력해요
+                </span>
+              </span>
+              <span className="shrink-0 rounded-full bg-white px-3 py-1.5 text-[12px] font-bold text-coral-700 shadow-sm">
+                이어보기
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setResumePrefs(null)}
+              aria-label="이어보기 닫기"
+              className="shrink-0 rounded-full p-1 text-coral-400 transition-colors hover:bg-coral-100 hover:text-coral-700 focus:outline-none"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+        <LandingHero
+          onStart={() => {
+            setStarted(true);
+            window.scrollTo({ top: 0 });
+          }}
+        />
+      </>
     );
   }
 
@@ -1462,6 +1528,7 @@ export function HomeExperience() {
           onResult={handleResult}
           onExit={() => setStarted(false)}
           historyActive={state === null}
+          initialPrefs={resumeInit}
         />
       </div>
       {resultView}

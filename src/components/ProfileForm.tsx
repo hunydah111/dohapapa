@@ -32,6 +32,7 @@ import {
   DEFAULT_BUDGET_FLEX,
 } from "@/types/profile";
 import type { RecommendationResult } from "@/types/recommendation";
+import type { SearchPrefs } from "@/lib/searchPrefs";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { Segmented } from "@/components/ui/Segmented";
@@ -305,6 +306,7 @@ export function ProfileForm({
   onResult,
   onExit,
   historyActive = true,
+  initialPrefs,
 }: {
   onResult: (result: RecommendationResult, profile: CoupleProfile) => void;
   /** step 1에서 뒤로 가면 호출 — 상위(랜딩)로 복귀. */
@@ -312,14 +314,18 @@ export function ProfileForm({
   /** 폼이 화면에 보이는 동안만 뒤로가기(popstate) 가드를 작동. 결과 화면에서 숨겨질 땐
    *  false 로 줘 popstate 를 무시한다(숨은 폼의 단계가 브라우저 back 으로 바뀌는 회귀 방지). */
   historyActive?: boolean;
+  /** 재방문 이어보기(R2) — 저장된 검색 취향으로 비민감 필드만 초기값 채움. 마운트 시 1회. */
+  initialPrefs?: SearchPrefs;
 }) {
   // retired 는 직장 단계 없으므로 시각적으로 4단계, 나머지 5단계
   const [step, setStep] = useState<Step>(1);
 
   // ── Step 1: 가구 유형 & 평수 ────────────────────────────────
-  const [householdType, setHouseholdType] = useState<HouseholdType | "">("");
+  const [householdType, setHouseholdType] = useState<HouseholdType | "">(
+    initialPrefs?.householdType ?? "",
+  );
   const [preferredAreaRanges, setPreferredAreaRanges] = useState<AreaRangeKey[]>(
-    [DEFAULT_AREA_RANGE],
+    initialPrefs?.preferredAreaRanges ?? [DEFAULT_AREA_RANGE],
   );
   // 평수 칩 토글 — 마지막 1개는 못 끄게(최소 1개 유지).
   const toggleAreaRange = (key: AreaRangeKey) =>
@@ -330,11 +336,23 @@ export function ProfileForm({
           : prev
         : [...prev, key],
     );
-  const [locationVibes, setLocationVibes] = useState<LocationVibes>({});
-  // 추가 조건 (접이식)
-  const [extraOpen, setExtraOpen] = useState(false);
-  const [requiredRegions, setRequiredRegions] = useState<string[]>([]);
-  const [budgetFlex, setBudgetFlex] = useState<BudgetFlex>(DEFAULT_BUDGET_FLEX);
+  const [locationVibes, setLocationVibes] = useState<LocationVibes>(
+    initialPrefs?.locationVibes ?? {},
+  );
+  // 추가 조건 (접이식) — 이어보기로 지역·분위기가 복원되면 펼쳐 보여준다.
+  const [extraOpen, setExtraOpen] = useState(
+    !!(
+      initialPrefs &&
+      ((initialPrefs.requiredRegions?.length ?? 0) > 0 ||
+        Object.keys(initialPrefs.locationVibes ?? {}).length > 0)
+    ),
+  );
+  const [requiredRegions, setRequiredRegions] = useState<string[]>(
+    initialPrefs?.requiredRegions ?? [],
+  );
+  const [budgetFlex, setBudgetFlex] = useState<BudgetFlex>(
+    initialPrefs?.budgetFlex ?? DEFAULT_BUDGET_FLEX,
+  );
 
   // ── Step 2: 직장 & 통근 ─────────────────────────────────────
   // 통근 수단은 직장별로 자동차/대중교통 선택. 대중교통은 ODsay 길찾기 기준.
@@ -378,9 +396,9 @@ export function ProfileForm({
   const [showTaxGuide, setShowTaxGuide] = useState(false);
 
   // ── Step 5: 우선순위 ────────────────────────────────────────
-  const [priorities, setPriorities] = useState<Record<PriorityKey, number>>({
-    ...DEFAULT_PRIORITIES,
-  });
+  const [priorities, setPriorities] = useState<Record<PriorityKey, number>>(
+    initialPrefs?.priorities ?? { ...DEFAULT_PRIORITIES },
+  );
 
   // ── 제출 상태 ────────────────────────────────────────────────
   const [submitting, setSubmitting] = useState(false);

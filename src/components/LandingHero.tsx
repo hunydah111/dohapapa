@@ -107,7 +107,7 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
           30초, 무료로 내 집 찾기 →
         </Button>
         <p className="mt-2 text-[12px]" style={{ color: "#9a8f82" }}>
-          가입·로그인 없이 · 입력 정보 저장 안 함
+          가입·로그인 없이 · 민감정보(소득·자산·직장) 저장 안 함
         </p>
         <p className="mt-1.5 text-[12px]" style={{ color: "#9a8f82" }}>
           국토부 공개 실거래가 · 매일 갱신
