@@ -8,13 +8,22 @@ import type { PlanResult, ScenarioKey } from "@/lib/plan";
 // 돈·대출 포함 / 회색=집값), ② 교차점(●)=살 수 있는 때를 명시, ③ 추정 범위 밴드는 기본 숨김·토글,
 // ④ 선택한 시나리오(focus)를 굵게 비춤. 예측 아님 — 과거 지표 + 가정.
 
-const COLOR = {
+const LIGHT_COLOR = {
   power: "#fe7644",
   price: "#8a96a3",
   band: "#94a3b8",
   reach: "#2fb39a",
   axis: "#9c8a72",
   grid: "#eee7dd",
+};
+// 따뜻한 다크(딥 우드브라운) 위에서 — 코랄선이 빛나는 클라이맥스.
+const DARK_COLOR = {
+  power: "#ff8a5c",
+  price: "rgba(255,255,255,0.5)",
+  band: "rgba(255,255,255,0.42)",
+  reach: "#5bd6b6",
+  axis: "rgba(255,255,255,0.5)",
+  grid: "rgba(255,255,255,0.09)",
 };
 
 const W = 400;
@@ -42,10 +51,13 @@ function niceStep(raw: number): number {
 export function PlanRaceChart({
   result,
   focus = "flat",
+  dark = false,
 }: {
   result: PlanResult;
   focus?: ScenarioKey;
+  dark?: boolean;
 }) {
+  const COLOR = dark ? DARK_COLOR : LIGHT_COLOR;
   const [showBand, setShowBand] = useState(false);
   const reduce =
     typeof window !== "undefined" &&
@@ -112,6 +124,9 @@ export function PlanRaceChart({
           <clipPath id="planPlotClip">
             <rect x={PAD.l} y={PAD.t} width={plotW} height={plotH} />
           </clipPath>
+          <filter id="planGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2.6" />
+          </filter>
         </defs>
 
         {yticks.map((v) => (
@@ -126,7 +141,7 @@ export function PlanRaceChart({
         {/* 살 수 있는 구간 */}
         {reachable && crossX !== null && (
           <>
-            <rect x={crossX} y={PAD.t} width={W - PAD.r - crossX} height={plotH} fill={COLOR.reach} opacity={0.09} />
+            <rect x={crossX} y={PAD.t} width={W - PAD.r - crossX} height={plotH} fill={COLOR.reach} opacity={dark ? 0.16 : 0.09} />
             <text x={W - PAD.r - 3} y={PAD.t + 11} fontSize={9} fill={COLOR.reach} textAnchor="end" fontWeight={600}>
               살 수 있는 구간
             </text>
@@ -143,7 +158,17 @@ export function PlanRaceChart({
           )}
           {/* 집값 (선택 시나리오) */}
           <polyline points={poly(focusPrice)} fill="none" stroke={COLOR.price} strokeWidth={1.8} />
-          {/* 내 구매가능가 (영웅) */}
+          {/* 내 구매가능가 (영웅) — 다크에선 코랄 글로우 */}
+          {dark && (
+            <polyline
+              points={poly(affordable)}
+              fill="none"
+              stroke={COLOR.power}
+              strokeWidth={6}
+              opacity={0.5}
+              filter="url(#planGlow)"
+            />
+          )}
           <polyline points={poly(affordable)} fill="none" stroke={COLOR.power} strokeWidth={2.8} />
         </g>
 
@@ -206,17 +231,20 @@ export function PlanRaceChart({
       </svg>
 
       {/* 그래프 바로 아래 한 문장 설명 (40인 테스트 #1 요청) */}
-      <p className="mt-1.5 text-[11px] leading-relaxed" style={{ color: "#6e5b46" }}>
+      <p
+        className="mt-1.5 text-[11px] leading-relaxed"
+        style={{ color: dark ? "rgba(255,255,255,0.82)" : "#6e5b46" }}
+      >
         <b style={{ color: COLOR.power }}>굵은 선</b> = 내가 모으는 돈(대출 포함) ·{" "}
-        <span style={{ color: COLOR.price }}>회색 선</span> = 집값({FOCUS_LABEL[focus]}). 둘이 만나는{" "}
-        <b style={{ color: COLOR.power }}>●</b>이 살 수 있는 때예요.
+        <span style={{ color: dark ? "rgba(255,255,255,0.7)" : COLOR.price }}>회색 선</span> = 집값(
+        {FOCUS_LABEL[focus]}). 둘이 만나는 <b style={{ color: COLOR.power }}>●</b>이 살 수 있는 때예요.
       </p>
 
       <button
         type="button"
         onClick={() => setShowBand((v) => !v)}
         className="mt-1 text-[11px] font-semibold underline"
-        style={{ color: "#9c8a72" }}
+        style={{ color: dark ? "rgba(255,255,255,0.6)" : "#9c8a72" }}
       >
         {showBand ? "집값 범위 접기 ▴" : "집값이 오르내릴 범위 보기 ▾"}
       </button>

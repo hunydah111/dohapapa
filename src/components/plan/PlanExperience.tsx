@@ -487,26 +487,35 @@ export function PlanExperience() {
         </p>
       </section>
 
-      {/* 경주 차트 */}
-      <section className="rounded-3xl border border-[#e5e5ea] bg-white p-4 shadow-sm">
-        <PlanRaceChart result={plan} focus={scenarioKey} />
-        <details className="mt-3 rounded-2xl bg-coral-50/50 p-3 [&_summary::-webkit-details-marker]:hidden">
+      {/* 경주 차트 — 따뜻한 다크 클라이맥스(코랄선이 빛남) */}
+      <section
+        className="rounded-3xl p-4 text-white"
+        style={{
+          background: "linear-gradient(165deg,#3a2c1d 0%,#2c2116 100%)",
+          boxShadow: "0 12px 30px -14px rgba(44,33,22,0.6)",
+        }}
+      >
+        <p className="mb-1.5 text-[12px] font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>
+          저축 vs 집값 경주
+        </p>
+        <PlanRaceChart result={plan} focus={scenarioKey} dark />
+        <details className="mt-3 rounded-2xl bg-white/10 p-3 [&_summary::-webkit-details-marker]:hidden">
           <summary className="flex cursor-pointer list-none items-baseline justify-between">
-            <span className="text-[12px] font-semibold" style={{ color: "#3a2c1d" }}>
+            <span className="text-[12px] font-semibold text-white">
               지금 살 수 있는 가격{" "}
-              <span className="text-[11px] font-normal" style={{ color: "#9c8a72" }}>
+              <span className="text-[11px] font-normal" style={{ color: "rgba(255,255,255,0.6)" }}>
                 (출발선 · 자세히 ▾)
               </span>
             </span>
-            <span className="text-base font-extrabold tabular-nums" style={{ color: "#fe7644" }}>
+            <span className="text-base font-extrabold tabular-nums" style={{ color: "#ff8a5c" }}>
               {eok(Math.max(0, plan.purchaseNowKrw))}
             </span>
           </summary>
-          <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#6e5b46" }}>
+          <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.82)" }}>
             현금(자기자본) <b>{eok(plan.equityKrw)}</b> + 소득 기반 추정 대출{" "}
             <b>{eok(plan.loanKrw)}</b> − 부대비용 <b>{eok(plan.acqCostKrw)}</b>
           </p>
-          <p className="mt-1 text-[11px] leading-relaxed" style={{ color: "#9c8a72" }}>
+          <p className="mt-1 text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>
             여기서 <b>월 {formatKrwHuman(plan.monthlyAccumKrw)}</b>씩 모아 목표까지 부족한{" "}
             <b>{eok(plan.gapKrw)}</b>을 따라잡는 게 위 그래프예요. 모두 추정.
           </p>
