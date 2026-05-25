@@ -318,10 +318,26 @@ export function PlanExperience() {
       {/* 경주 차트 */}
       <section className="rounded-3xl border border-[#e5e5ea] bg-white p-4 shadow-sm">
         <PlanRaceChart result={plan} />
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px]" style={{ color: "#6b6157" }}>
-          <span>지금 구매가능가 <b>{formatKrwHuman(Math.max(0, plan.purchaseNowKrw))}</b></span>
-          <span>부족액 <b>{formatKrwHuman(plan.gapKrw)}</b></span>
-          <span>월 순증 <b>{formatKrwHuman(plan.monthlyAccumKrw)}</b></span>
+        <div className="mt-3 rounded-2xl bg-coral-50/50 p-3">
+          <div className="flex items-baseline justify-between">
+            <span className="text-[12px] font-semibold" style={{ color: "#3a322c" }}>
+              지금 살 수 있는 가격{" "}
+              <span className="text-[11px] font-normal" style={{ color: "#9a8f82" }}>
+                (그래프 출발선)
+              </span>
+            </span>
+            <span className="text-base font-extrabold tabular-nums" style={{ color: "#f2603c" }}>
+              {eok(Math.max(0, plan.purchaseNowKrw))}
+            </span>
+          </div>
+          <p className="mt-1 text-[11px] leading-relaxed" style={{ color: "#6b6157" }}>
+            현금(자기자본) <b>{eok(plan.equityKrw)}</b> + 소득 기반 추정 대출{" "}
+            <b>{eok(plan.loanKrw)}</b> − 부대비용 <b>{eok(plan.acqCostKrw)}</b>
+          </p>
+          <p className="mt-1 text-[11px] leading-relaxed" style={{ color: "#9a8f82" }}>
+            여기서 <b>월 {formatKrwHuman(plan.monthlyAccumKrw)}</b>씩 모아 목표까지 부족한{" "}
+            <b>{eok(plan.gapKrw)}</b>을 따라잡는 게 위 그래프예요. 모두 추정.
+          </p>
         </div>
       </section>
 
