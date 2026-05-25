@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { getTierBySlug, BEAVER_TIERS } from "@/lib/budgetPercentile";
 import { isKnownSigungu } from "@/lib/molit";
+import { SITE_DOMAIN } from "@/lib/site";
 
 // 비버 등급 공유카드(1200×630) — "나는 ○○비버 · 내 예산이면 △△구까지". PII 없음(등급+시군구만).
 // 메인 OG와 동일한 따뜻한 코랄 톤. 이모지는 Satori 미지원이라 비버 이미지로 대체(텍스트엔 이모지 X).
@@ -84,7 +85,7 @@ export default async function Image({
           }}
         >
           <div style={{ fontSize: 80, color: "#fffdf8", lineHeight: 1 }}>비집고</div>
-          <div style={{ fontSize: 32, color: "#ffe6dc" }}>너는 무슨 비버? · homenasia.kr</div>
+          <div style={{ fontSize: 32, color: "#ffe6dc" }}>{`너는 무슨 비버? · ${SITE_DOMAIN}`}</div>
         </div>
       </div>
     ),

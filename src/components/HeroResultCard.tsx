@@ -4,7 +4,7 @@ import type { HomeType } from "@/lib/homeType";
 import type { NeighborhoodData } from "@/lib/neighborhood";
 import { formatKrwHuman } from "@/lib/format";
 import { budgetTier } from "@/lib/budgetPercentile";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, SITE_DOMAIN } from "@/lib/site";
 import { NeighborhoodRadar } from "./NeighborhoodSection";
 
 function Badge({ children }: { children: ReactNode }) {
@@ -375,7 +375,7 @@ export function HeroResultCard({
           비집고
         </span>
         <span className="text-[11px] font-semibold text-white/55">
-          · homenasia.kr
+          · {SITE_DOMAIN}
         </span>
       </div>
     </section>

@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { getHomeTypeBySlug, HOME_TYPE_SLUGS } from "@/lib/homeType";
+import { SITE_DOMAIN } from "@/lib/site";
 
 // 유형별 공유 카드(1200×630) — "나의 집 찾기 유형: ○○형" + 유형 비지. MBTI식 바이럴 후킹.
 // 메인 OG와 동일한 따뜻한 코랄 톤(크림 배경 + 하단 코랄 밴드 흰 워드마크)으로 통일.
@@ -69,7 +70,7 @@ export default async function Image({ params }: { params: Promise<{ type: string
           }}
         >
           <div style={{ fontSize: 80, color: "#fffdf8", lineHeight: 1 }}>비집고</div>
-          <div style={{ fontSize: 32, color: "#ffe6dc" }}>나도 찾아보기 · homenasia.kr</div>
+          <div style={{ fontSize: 32, color: "#ffe6dc" }}>{`나도 찾아보기 · ${SITE_DOMAIN}`}</div>
         </div>
       </div>
     ),

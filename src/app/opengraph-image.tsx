@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { SITE_DOMAIN } from "@/lib/site";
 
 // 카카오톡·페이스북·X 등에서 링크 공유 시 보이는 썸네일(1200×630).
 // 비집고 브랜드: 따뜻한 코랄. 상단 = 브랜드 로고(아파트+비버) + 호기심 후크 카피 + 3-티어 칩,
@@ -108,7 +109,7 @@ export default async function Image() {
         >
           <div style={{ fontSize: 106, color: "#fffdf8", lineHeight: 1 }}>비집고</div>
           <div style={{ fontSize: 38, color: "#ffe6dc" }}>
-            수도권 아파트 · 국토부 실거래가 · homenasia.kr
+            {`수도권 아파트 · 국토부 실거래가 · ${SITE_DOMAIN}`}
           </div>
         </div>
       </div>
