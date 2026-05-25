@@ -94,4 +94,15 @@ describe("estimateAcquisitionCosts", () => {
       result.acquisitionTaxKrw + result.brokerFeeKrw + result.miscKrw,
     );
   });
+
+  it("중개보수 요율 구간 — 2~9억 0.4% / 9~12억 0.5% / 12~15억 0.6% / 15억↑ 0.7%", () => {
+    const p = makeProfile({ hasOwnedHomeBefore: true });
+    const rate = (price: number) =>
+      estimateAcquisitionCosts(price, p).brokerFeeKrw / price;
+    expect(rate(5 * BILLION)).toBeCloseTo(0.004, 4); // 2~9억
+    expect(rate(8 * BILLION)).toBeCloseTo(0.004, 4); // 6~9억 (과거 0.5% 버그 구간)
+    expect(rate(10 * BILLION)).toBeCloseTo(0.005, 4); // 9~12억
+    expect(rate(13 * BILLION)).toBeCloseTo(0.006, 4); // 12~15억
+    expect(rate(16 * BILLION)).toBeCloseTo(0.007, 4); // 15억↑
+  });
 });

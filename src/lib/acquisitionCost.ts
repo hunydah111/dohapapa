@@ -43,14 +43,15 @@ function calcEffectiveTaxRate(purchasePriceKrw: number): number {
 }
 
 /**
- * 중개수수료 상한요율 반환.
- *
- * 공인중개사법 시행규칙 별표 1 기준 (주거용 매매):
- * 6억 미만 → 0.4%, 6억~9억 미만 → 0.5%, 9억 이상 → 0.7%
+ * 중개수수료 상한요율 반환 (주거용 매매 — 공인중개사법 시행규칙 별표 1 / 시도 조례 상한).
+ * 5천만↓ 0.6% · 5천만~2억 0.5% · 2~9억 0.4% · 9~12억 0.5% · 12~15억 0.6% · 15억↑ 0.7%
  */
 function calcBrokerRate(purchasePriceKrw: number): number {
-  if (purchasePriceKrw < 6 * BILLION) return 0.004;
-  if (purchasePriceKrw < 9 * BILLION) return 0.005;
+  if (purchasePriceKrw < 0.5 * BILLION) return 0.006;
+  if (purchasePriceKrw < 2 * BILLION) return 0.005;
+  if (purchasePriceKrw < 9 * BILLION) return 0.004;
+  if (purchasePriceKrw < 12 * BILLION) return 0.005;
+  if (purchasePriceKrw < 15 * BILLION) return 0.006;
   return 0.007;
 }
 

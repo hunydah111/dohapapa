@@ -167,7 +167,7 @@ function evaluateDidimdolNewlywed(profile: CoupleProfile): PolicyLoanMatch {
     productName: "디딤돌(신혼)",
     eligible: true,
     reason:
-      "신혼 + 무주택 + 합산 소득 8,500만원 이하 + 순자산 5.11억 이하 — 주택가 요건 별도 적용 (5억 이하)",
+      "신혼 + 무주택 + 합산 소득 8,500만원 이하 + 순자산 5.11억 이하 — 주택가 요건 별도 적용 (6억 이하)",
     loanLimitKrw: DIDIMDOL_NEWLYWED_LOAN_LIMIT,
     rateMin: 2.85,
     rateMax: 4.15,
