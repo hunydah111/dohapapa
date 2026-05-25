@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { NeighborhoodChart } from "@/components/NeighborhoodChart";
 import { PopularComplexChart } from "@/components/PopularComplexChart";
@@ -113,6 +114,13 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
         <Button onClick={onStart} fullWidth>
           30초, 무료로 내 집 찾기 →
         </Button>
+        <Link
+          href="/plan"
+          className="mt-2.5 flex w-full items-center justify-center rounded-2xl border-2 border-coral-300 bg-white px-4 py-3 text-[15px] font-bold transition-colors hover:border-coral-500"
+          style={{ color: "#c4521f" }}
+        >
+          내 집 마련 플랜 · 언제 살 수 있을까? →
+        </Link>
         <p className="mt-2 text-[12px]" style={{ color: "#9a8f82" }}>
           가입·로그인 없이 · 민감정보(소득·자산·직장) 저장 안 함
         </p>
