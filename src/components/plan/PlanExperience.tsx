@@ -268,6 +268,10 @@ export function PlanExperience() {
           <NumField label="연 가구소득(만원)" value={income} onChange={setIncome} />
           <NumField label="보유 현금(만원)" value={cash} onChange={setCash} />
         </div>
+        <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#9a8f82" }}>
+          소득은 <b>대출 한도</b>(DSR), 현금은 <b>자기자본</b>을 정해요 — 이 둘이 “지금 살 수 있는
+          가격”의 출발선이에요. 아래 <b>월 저축</b>은 거기서부터 ‘모으는 속도’고요.
+        </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Chip on={noHome} onClick={() => setNoHome((v) => !v)} label="무주택" />
           <Chip on={newlywed} onClick={() => setNewlywed((v) => !v)} label="혼인 7년 이내" />
