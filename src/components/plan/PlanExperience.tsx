@@ -10,6 +10,7 @@ import {
   GYEONGGI_SIGUNGU,
 } from "@/types/profile";
 import { estimateBudget } from "@/lib/budget";
+import { evaluatePolicyLoans } from "@/lib/policyLoan";
 import {
   computePlan,
   formatDday,
@@ -151,6 +152,37 @@ function planProfileFrom(s: SavedPlan, extraCashKrw = 0): CoupleProfile {
     existingLoanMonthlyKrw: 0, hasOwnedHomeBefore: !s.nh, isNewlywed: !!s.nw, ownedHomeCount: 0,
   };
 }
+function withIncome(p: CoupleProfile, krw: number): CoupleProfile {
+  return { ...p, householdIncomeKrwYear: krw };
+}
+
+// 부업이 소득요건을 넘겨 정책대출 한도가 줄기 시작하는 지점(만원/월). 한도 변화 없으면 null.
+function computeSideWarn(
+  profile: CoupleProfile,
+  incomeKrw: number,
+): { keepMan: number; lost: string[] } | null {
+  const base = withIncome(profile, incomeKrw); // 부업 제외 기본 소득
+  const baseLoan = estimateBudget(base).loanEstimateKrw;
+  if (baseLoan <= 0) return null;
+  const baseElig = evaluatePolicyLoans(base)
+    .filter((m) => m.eligible)
+    .map((m) => m.productName);
+  if (baseElig.length === 0) return null;
+  for (let v = 10; v <= 300; v += 10) {
+    const over = withIncome(profile, incomeKrw + v * 120_000); // +v만/월
+    if (estimateBudget(over).loanEstimateKrw < baseLoan - 1_000_000) {
+      const overElig = new Set(
+        evaluatePolicyLoans(over)
+          .filter((m) => m.eligible)
+          .map((m) => m.productName),
+      );
+      const lost = baseElig.filter((p) => !overElig.has(p));
+      return { keepMan: Math.max(0, v - 10), lost: lost.length ? lost : baseElig };
+    }
+  }
+  return null;
+}
+
 function planTargetKrw(s: SavedPlan): number {
   if (s.mm) return manwon(s.mt);
   const cell = REGIONS[s.g]?.[s.b];
@@ -244,7 +276,8 @@ export function PlanExperience() {
       hasThreeOrMoreChildren: false,
       isExpectingChild: false,
       budgetMode: "detailed",
-      householdIncomeKrwYear: incomeKrw,
+      // 부업도 부부합산 소득에 포함(현실화) — 대출 한도·정책대출 자격에 반영.
+      householdIncomeKrwYear: incomeKrw + sideKrw * 12,
       seedMoneyKrw: cashKrw,
       netAssetsKrw: cashKrw,
       existingLoanMonthlyKrw: 0,
@@ -252,10 +285,13 @@ export function PlanExperience() {
       isNewlywed: newlywed,
       ownedHomeCount: 0,
     }),
-    [incomeKrw, cashKrw, noHome, newlywed, newborn],
+    [incomeKrw, sideKrw, cashKrw, noHome, newlywed, newborn],
   );
 
   const budget = useMemo(() => estimateBudget(profile), [profile]);
+
+  // 부업 절벽 경고 — 대출 한도가 실제로 줄어드는 경우(정책대출 활용 중)에만 노출.
+  const sideWarn = computeSideWarn(profile, incomeKrw);
 
   const plan = useMemo(
     () =>
@@ -681,6 +717,26 @@ export function PlanExperience() {
           <NumField label="월 저축(만원)" value={saveStr} onChange={setSaveStr} hint={unitHint(saveStr)} />
           <NumField label="월 부업·세전(만원)" value={sideStr} onChange={setSideStr} hint={unitHint(sideStr)} />
         </div>
+        {sideWarn && (
+          <p
+            className="mt-2 rounded-xl px-3 py-2 text-[11px] leading-relaxed"
+            style={{ background: "#fdf4e3", color: "#9a5a1e" }}
+          >
+            💡 부업도 부부합산 소득에 잡혀요.{" "}
+            {sideWarn.keepMan > 0 ? (
+              <>
+                <b>월 {sideWarn.keepMan}만</b>까지는 <b>{sideWarn.lost.join("·")}</b> 자격이 유지되지만,
+                그 이상이면 소득요건을 넘겨 정책대출 한도가 줄 수 있어요.
+              </>
+            ) : (
+              <>
+                부업을 더하면 소득이 늘어 <b>{sideWarn.lost.join("·")}</b> 소득요건을 넘겨 정책대출
+                한도가 줄 수 있어요.
+              </>
+            )}{" "}
+            추정이며 실제 자격은 기관 확인.
+          </p>
+        )}
       </section>
 
       {/* 도달의 모습 — 비지가 새 집 앞에서 (끝은 희망) */}
