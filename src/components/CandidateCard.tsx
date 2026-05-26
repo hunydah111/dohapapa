@@ -235,12 +235,18 @@ export function CandidateCard({
           </span>
           <span style={{ color: "#c7c7cc" }}>·</span>
           <span
-            className="text-sm font-semibold"
+            className="text-[18px] font-bold tabular-nums tracking-tight"
             style={{ color: "#3a322c" }}
           >
             {showPriceRange
-              ? `추정 ${formatEok(candidate.priceLowKrw!)}~${formatEok(candidate.priceHighKrw!)}`
-              : `실거래 중위가 ${formatKrwHuman(candidate.medianPriceKrw)}`}
+              ? `${formatEok(candidate.priceLowKrw!)}~${formatEok(candidate.priceHighKrw!)}`
+              : formatKrwHuman(candidate.medianPriceKrw)}
+          </span>
+          <span
+            className="text-[11px] font-medium -ml-1"
+            style={{ color: "#9a8f82" }}
+          >
+            {showPriceRange ? "추정" : "실거래 중위가"}
           </span>
           {/* 근거 배지 — 추정가가 무엇에 근거하는지 스캔 가능하게(거래건수·기간). */}
           <span
