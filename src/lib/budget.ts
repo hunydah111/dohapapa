@@ -252,15 +252,12 @@ export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
     ltvLabel = "70% (생애최초·무주택)";
   }
 
-  // 가격 구간별 LTV 절대 한도 (2025~2026 기준)
-  let bracketCap: number;
-  if (assumedPrice <= 15 * HUNDRED_MILLION) {
-    bracketCap = 6 * HUNDRED_MILLION;
-  } else if (assumedPrice <= 25 * HUNDRED_MILLION) {
-    bracketCap = 4 * HUNDRED_MILLION;
-  } else {
-    bracketCap = 2 * HUNDRED_MILLION;
-  }
+  // 규제지역 무주택/생애최초 주담대 실무 절대 상한(보수적 6억).
+  // ⚠️ 종전 로직은 가격대가 높을수록 한도가 6억→4억→2억으로 줄어드는 버그였음
+  //   (assumedPrice = 자기자본 + 대출capacity 라, 고소득·고자산일수록 assumedPrice 가 커져
+  //    오히려 한도가 2억으로 잘림 — 소득 3억·현금 8억이 2억으로 나오던 원인).
+  //   LTV 비율(assumedPrice × ltvRate)은 그대로 적용하고, 절대 상한은 가격 무관 단일값으로.
+  const bracketCap = 6 * HUNDRED_MILLION;
 
   const ltvCeiling = Math.min(assumedPrice * ltvRate, bracketCap);
 
