@@ -172,6 +172,22 @@ body {
   outline-offset: 2px;
 }
 
+/* ── 카드 일관 그림자·hover lift (Mercury "hard border 0 · depth는 shadow + spacing") ── */
+.card-elevate {
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.04),
+    0 12px 32px -12px rgba(0,0,0,0.12);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card-elevate:hover {
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.05),
+    0 18px 44px -14px rgba(0,0,0,0.16);
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-elevate { transition: none; }
+}
+
 /* ── 스크롤바 미니멀 (webkit) ── */
 ::-webkit-scrollbar {
   width: 4px;
