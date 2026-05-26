@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/Card";
 import { CommuteDiagram } from "./CommuteDiagram";
 import { NeighborhoodInline } from "./NeighborhoodSection";
 import { formatKrwHuman, formatEok } from "@/lib/format";
+import { classifyRegulation } from "@/lib/regulation";
 
 const SIGNAL_ORDER: CandidateSignalKey[] = [
   "commute",
@@ -225,6 +226,21 @@ export function CandidateCard({
           <span className="text-sm" style={{ color: "#6b6157" }}>
             {candidate.sigungu}
           </span>
+          {(() => {
+            // 2025.10.15 대책: 규제지역(서울25+경기12)은 동일 범위가 토허제 — 매수 시
+            // 사전허가 + 2년 실거주 의무. 카드에 작은 칩으로 사실만 표시(추천·평가 아님).
+            const reg = classifyRegulation(candidate.sigungu);
+            if (!reg.landUseRestricted) return null;
+            return (
+              <span
+                className="inline-flex items-center rounded-full bg-[#fff4ef] px-2 py-0.5 text-[10.5px] font-semibold"
+                style={{ color: "#c4521f" }}
+                title="2025.10.20~ 매수 시 사전허가 + 2년 실거주 의무"
+              >
+                토허제
+              </span>
+            );
+          })()}
           <span style={{ color: "#c7c7cc" }}>·</span>
           <span className="text-sm" style={{ color: "#6b6157" }}>
             {candidate.dongName}

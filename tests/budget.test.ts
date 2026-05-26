@@ -210,12 +210,15 @@ describe("estimateBudget", () => {
   });
 
   it("안전선(#6): 은행 최대 월부담이 30% 초과면 safeLine 대출·월상환↓, 비율≈30%", () => {
+    // 비규제지역(인천 등) — LTV 70%·DSR +1.5%p 트랙이라 월부담 30% 초과 시나리오 가능.
+    // 규제지역(서울25+경기12)은 LTV 40%로 떨어져 자연 월부담이 30% 이하라 이 케이스 의미 없음.
     const result = estimateBudget(
       makeProfile({
         householdIncomeKrwYear: 100_000_000,
         seedMoneyKrw: 300_000_000,
         existingLoanMonthlyKrw: 0,
       }),
+      { sigungu: "미추홀구" }, // 비규제 — 70% 트랙
     );
     // 일반 DSR 한도(40%) 적용 프로필 → 월부담 30% 초과 가정
     expect(result.paymentToIncomeRatio).toBeGreaterThan(0.3);
@@ -234,5 +237,80 @@ describe("estimateBudget", () => {
   it("대출 0이면 safeLine undefined", () => {
     const result = estimateBudget(makeProfile({ householdIncomeKrwYear: 0 }));
     expect(result.safeLine).toBeUndefined();
+  });
+
+  // ── 2025.10.15 대책: 시군구 × 보유 LTV 매트릭스 ──────────────────────────
+  describe("2025.10.15 LTV 매트릭스 (sigungu 기반 분기)", () => {
+    const base = {
+      householdIncomeKrwYear: 100_000_000,
+      seedMoneyKrw: 300_000_000,
+      existingLoanMonthlyKrw: 0,
+    };
+
+    it("규제지역 무주택 → LTV 40% 트랙·스트레스 7.0%·6억 캡", () => {
+      const r = estimateBudget(makeProfile({ ...base, ownedHomeCount: 0 }), {
+        sigungu: "강남구",
+      });
+      expect(r.assumptions.some((a) => /40%/.test(a))).toBe(true);
+      expect(r.assumptions.some((a) => /7\.0%/.test(a))).toBe(true);
+      expect(r.assumptions.some((a) => /규제지역/.test(a))).toBe(true);
+    });
+
+    it("규제지역 1주택 보유 → LTV 0% (유주택 대출 제한)", () => {
+      const r = estimateBudget(
+        makeProfile({ ...base, ownedHomeCount: 1, hasOwnedHomeBefore: true }),
+        { sigungu: "성남시 분당구" },
+      );
+      expect(r.loanEstimateKrw).toBe(0);
+      expect(r.assumptions.some((a) => /유주택/.test(a))).toBe(true);
+    });
+
+    it("비규제지역 무주택 → LTV 70% 트랙·스트레스 5.5%·캡 없음", () => {
+      const reg = estimateBudget(makeProfile({ ...base, ownedHomeCount: 0 }), {
+        sigungu: "강남구", // 규제
+      });
+      const nonReg = estimateBudget(
+        makeProfile({ ...base, ownedHomeCount: 0 }),
+        { sigungu: "미추홀구" }, // 인천·비규제
+      );
+      // 비규제(70%·5.5%·캡無)가 규제(40%·7.0%·6억캡)보다 대출 더 많이 나옴
+      expect(nonReg.loanEstimateKrw).toBeGreaterThan(reg.loanEstimateKrw);
+      expect(nonReg.assumptions.some((a) => /70%/.test(a))).toBe(true);
+      expect(nonReg.assumptions.some((a) => /5\.5%/.test(a))).toBe(true);
+      expect(nonReg.assumptions.some((a) => /비규제지역/.test(a))).toBe(true);
+    });
+
+    it("비규제지역 1주택 → LTV 60%", () => {
+      const r = estimateBudget(
+        makeProfile({ ...base, ownedHomeCount: 1, hasOwnedHomeBefore: true }),
+        { sigungu: "구리시" },
+      );
+      expect(r.loanEstimateKrw).toBeGreaterThan(0);
+      expect(r.assumptions.some((a) => /60%/.test(a))).toBe(true);
+    });
+
+    it("2주택+ 는 규제·비규제 무관 LTV 0", () => {
+      const reg = estimateBudget(
+        makeProfile({ ...base, ownedHomeCount: 2, hasOwnedHomeBefore: true }),
+        { sigungu: "강남구" },
+      );
+      const nonReg = estimateBudget(
+        makeProfile({ ...base, ownedHomeCount: 2, hasOwnedHomeBefore: true }),
+        { sigungu: "구리시" },
+      );
+      expect(reg.loanEstimateKrw).toBe(0);
+      expect(nonReg.loanEstimateKrw).toBe(0);
+    });
+
+    it("sigungu 미지정 → 보수적 규제 가정 (예산 과대 추정 회피)", () => {
+      const noSgg = estimateBudget(makeProfile({ ...base, ownedHomeCount: 0 }));
+      const reg = estimateBudget(
+        makeProfile({ ...base, ownedHomeCount: 0 }),
+        { sigungu: "강남구" },
+      );
+      // 미지정 결과 = 규제 결과 (동일 LTV 40%·스트레스 7.0%)
+      expect(noSgg.loanEstimateKrw).toBe(reg.loanEstimateKrw);
+      expect(noSgg.assumptions.some((a) => /동네 미지정/.test(a))).toBe(true);
+    });
   });
 });

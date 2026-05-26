@@ -2,8 +2,13 @@
 // 모든 수치는 "추정(isEstimate: true)"으로 반환되며 실제 대출 심사 결과와 다를 수 있음.
 //
 // 변경 이력:
-//   - opts 인자 제거: 항상 서울 규제지역으로 가정
-//   - 스트레스 DSR 가산율 7% → 5.5% (수도권 1.5%p 가산 원칙 반영)
+//   - opts 인자 제거: 항상 서울 규제지역으로 가정 → **2026-05-26 재도입**:
+//     2025.10.15 대책으로 규제지역이 서울25+경기12로 확장되고, 비규제지역은 LTV/DSR
+//     다른 트랙이 됨. opts.sigungu 받아 regulation 분류로 분기.
+//   - 스트레스 DSR 가산율 7% → 5.5% → 7%(2025.10.16~) → **2026-05-26 분기 도입**:
+//     규제 +3.0%p(=7.0% 실효) / 비규제 +1.5%p(=5.5% 실효).
+//   - LTV: 70/50/0 일괄 → **2026-05-26 분기**: 규제 40/0/0 · 비규제 70/60/0.
+//     (2025.10.15 대책 — 무주택 40% 통합, 유주택 0%; 비규제는 유주택 60%.)
 //   - acquisitionCost flat 3.5% → estimateAcquisitionCosts 정밀 모듈 연결
 //   - 갈아타기 homeSaleNetKrw 음수 클램프 제거 + 경고 추가
 //   - 기존 대출이 DSR 한도 초과 시 경고 추가
@@ -14,6 +19,7 @@ import type { BudgetEstimate, PolicyLoanMatch } from "@/types/recommendation";
 import { estimateCapitalGainsTax } from "@/lib/capitalGainsTax";
 import { estimateAcquisitionCosts } from "@/lib/acquisitionCost";
 import { evaluatePolicyLoans, POLICY_BASIS } from "@/lib/policyLoan";
+import { isRegulated } from "@/lib/regulation";
 
 const HUNDRED_MILLION = 100_000_000; // 1억
 
@@ -54,7 +60,13 @@ function monthlyPaymentFromPrincipal(
 /**
  * 가구 프로필로부터 구매 예산을 추정한다.
  *
- * 항상 서울 규제지역을 가정 (opts 인자 제거).
+ * opts.sigungu 로 규제지역(서울25+경기12) / 비규제지역(나머지 수도권) 분기.
+ *   - 규제: LTV 무주택 40% · 유주택 0% · 스트레스 DSR +3.0%p · 가격대캡 6/4/2억
+ *   - 비규제: LTV 무주택 70% · 1주택 60% · 2주택+ 0% · 스트레스 DSR +1.5%p · 캡 없음
+ *
+ * sigungu 미지정 시 보수적으로 **규제지역으로 가정** — 사용자가 예산 과대 추정에
+ * 의존해 못 살 집을 고르는 위험보다, 안전한 추정으로 과소가 낫다.
+ *
  * 정책대출 자격 판정을 수행해 일반 DSR 한도와 비교, 유리한 쪽을 채택한다.
  */
 /**
@@ -101,7 +113,7 @@ function estimateSimpleBudget(profile: CoupleProfile): BudgetEstimate {
 
 export function estimateBudget(
   profile: CoupleProfile,
-  opts?: { targetPriceKrw?: number },
+  opts?: { targetPriceKrw?: number; sigungu?: string | null },
 ): BudgetEstimate {
   // 간단 모드 — 가용 예산 직접 입력 시 대출 계산을 건너뛴다.
   if (profile.budgetMode === "simple") {
@@ -146,16 +158,21 @@ export function estimateBudget(
   // 추가 동원자금(전세보증금 회수·부모지원 등)도 자기자본에 합산.
   const totalEquityKrw = seedMoneyKrw + homeSaleNetKrw + additionalFundsKrw;
 
+  // ── 2-1. 지역 분류 (2025.10.15 대책) ─────────────────────────────────────
+  // 규제지역(서울25+경기12) → 스트레스 DSR +3.0%p, LTV 매트릭스 40/0/0.
+  // 비규제(인천·동탄·구리·남양주 등) → +1.5%p, 70/60/0.
+  // sigungu 미지정 시 보수적 규제 가정 (예산 과대 추정 회피).
+  const sigunguGiven = opts?.sigungu ?? null;
+  const inRegulated = sigunguGiven === null ? true : isRegulated(sigunguGiven);
+
   // ── 3. DSR 기반 대출 한도 ─────────────────────────────────────────────────
   const annualDsrAllowance = householdIncomeKrwYear * 0.4;
   const monthlyDsrAllowance = annualDsrAllowance / 12;
   const availableMonthly = monthlyDsrAllowance - existingLoanMonthlyKrw;
 
-  // WHY 스트레스 금리 7.0%: 기준 4.0% + 수도권 스트레스 가산 3.0%p = 7.0% 실효.
-  // 금융위 스트레스 DSR 3단계(2025.10.16~ 시행): 수도권·규제지역 주담대 가산 3.0%p
-  // (그 외 1.5%p, 지방 0.75%p ~2025말 유예). 앱은 수도권 전용이라 3.0%p 일괄 적용.
-  // 이전(2024.09 2단계) 1.5%p에서 상향 — DSR 대출 한도 ~15% 축소가 정상.
-  const STRESS_RATE = 0.07; // 4.0% 기준 + 3.0%p = 7.0%
+  // 스트레스 DSR (3단계, 2025.10.16~): 규제지역 +3.0%p(=실효 7.0%), 비규제 +1.5%p(=5.5%).
+  // 4.0% 기준금리에 가산. 지방 0.75%p 유예는 수도권 전용 앱이라 미적용.
+  const STRESS_RATE = inRegulated ? 0.07 : 0.055;
   const LOAN_MONTHS = 360; // 30년 원리금균등
 
   let dsrLoanCapacity = 0;
@@ -235,8 +252,11 @@ export function estimateBudget(
   const equityForLtv = Math.max(0, totalEquityKrw);
   const assumedPrice = equityForLtv + finalLoanCapacity;
 
-  // LTV — 보유 주택 수로 차등 (서울 전역 규제지역 가정).
-  //   0채(생애최초/무주택) 70% · 1채(처분조건부 갈아타기) 50% · 2채+ 0%(규제지역 다주택 주담대 제한).
+  // LTV — 2025.10.15 대책 매트릭스 (보유 × 규제/비규제).
+  //   규제(서울25+경기12):  0채 40%(처분조건부 1주택 포함) · 1채 0%(유주택 일괄) · 2채+ 0%
+  //   비규제(인천·동탄·구리 등): 0채 70% · 1채 60% · 2채+ 0%
+  // 종전 "70/50/0 서울 전역 규제" 일괄 가정 폐기. 무주택 LTV가 70%→40%로 떨어진 게
+  // 가장 큰 변화 — 사용자가 못 살 가격을 살 수 있다고 보던 과대 추정을 차단.
   // WHY ownedHomeCount 우선: 자세히 모드 폼이 0/1/2+ 를 받음. 없으면 보유이력 불리언으로 근사.
   const ownedHomeCount =
     profile.ownedHomeCount ?? (hasOwnedHomeBefore ? 1 : 0);
@@ -244,25 +264,43 @@ export function estimateBudget(
   let ltvLabel: string;
   if (ownedHomeCount >= 2) {
     ltvRate = 0;
-    ltvLabel = "0% (다주택자·규제지역 주담대 제한)";
+    ltvLabel = "0% (다주택자 주담대 제한)";
     warnings.push(
-      "2주택 이상 보유 — 서울 규제지역에서는 추가 주택담보대출이 사실상 제한(LTV 0)됩니다. 기존 주택 처분 등 별도 검토가 필요해요.",
+      "2주택 이상 보유 — 추가 주택담보대출이 사실상 제한(LTV 0)됩니다. 기존 주택 처분 등 별도 검토가 필요해요.",
     );
   } else if (ownedHomeCount === 1) {
-    ltvRate = 0.5;
-    ltvLabel = "50% (처분조건부 1주택)";
+    if (inRegulated) {
+      // 규제지역 유주택 — 처분조건부도 무주택과 동등 40% 트랙이지만, "계속 보유 1주택"은 0%.
+      // 폼이 "처분조건부" 플래그를 따로 받지 않으므로 보수적으로 유주택 0%로 가정.
+      // 정확 처분조건부 입력 추가 시 무주택 트랙으로 흐르게 분기 가능.
+      ltvRate = 0;
+      ltvLabel = "0% (규제지역 유주택 — 추가 주담대 제한)";
+      warnings.push(
+        "규제지역(서울25+경기12)에서 유주택자는 추가 주택담보대출이 0% — 처분조건부 매수는 무주택 트랙(40%)로 별도 신청.",
+      );
+    } else {
+      ltvRate = 0.6;
+      ltvLabel = "60% (비규제·1주택)";
+    }
   } else {
-    ltvRate = 0.7;
-    ltvLabel = "70% (생애최초·무주택)";
+    if (inRegulated) {
+      ltvRate = 0.4;
+      ltvLabel = "40% (규제·무주택·생애최초 통합)";
+    } else {
+      ltvRate = 0.7;
+      ltvLabel = "70% (비규제·무주택)";
+    }
   }
 
-  // 규제지역 LTV 절대 상한 — 실제 주택가(targetPriceKrw)가 주어지면 정확한 가격대별 캡
-  //   (≤15억 6억 / 15~25억 4억 / 25억↑ 2억)을 적용. 주택가 모르면(추천 엔진 등) 보수적
-  //   단일 6억(생애최초 우대 한도)로 폴백 — 종전 assumedPrice 기반 역전 버그(고소득→2억) 회피.
+  // 규제지역 가격대별 절대 상한 (15억↓ 6억 / 15~25억 4억 / 25억↑ 2억). 비규제 캡 없음.
+  // 타깃가 미상이면 보수적 단일 6억으로 폴백 — assumedPrice 기반 역전 버그(고소득→2억) 회피.
   const targetPrice = opts?.targetPriceKrw;
   const knownPrice = targetPrice !== undefined && targetPrice > 0;
   let bracketCap: number;
-  if (knownPrice) {
+  if (!inRegulated) {
+    // 비규제: 가격대 절대 상한 없음 → Infinity 로 두면 LTV%만 작용.
+    bracketCap = Number.POSITIVE_INFINITY;
+  } else if (knownPrice) {
     if (targetPrice <= 15 * HUNDRED_MILLION) bracketCap = 6 * HUNDRED_MILLION;
     else if (targetPrice <= 25 * HUNDRED_MILLION) bracketCap = 4 * HUNDRED_MILLION;
     else bracketCap = 2 * HUNDRED_MILLION;
@@ -373,9 +411,15 @@ export function estimateBudget(
   }
 
   // ── 11. 가정 문구 ─────────────────────────────────────────────────────────
+  const regionLabel = sigunguGiven
+    ? `${sigunguGiven} (${inRegulated ? "규제지역" : "비규제지역"})`
+    : "동네 미지정 — 보수적으로 규제지역 가정";
+  const stressLabel = inRegulated
+    ? "스트레스 DSR +3.0%p (규제지역, 실효 7.0%)"
+    : "스트레스 DSR +1.5%p (비규제지역, 실효 5.5%)";
   const assumptions: string[] = [
-    "서울 전역 규제지역으로 가정",
-    "스트레스 DSR +1.5%p 반영 (수도권 가산 원칙, 실효 5.5%)",
+    `${regionLabel} · 2025.10.15 대책 반영`,
+    stressLabel,
     "30년 원리금균등 상환 가정",
     `LTV ${ltvLabel} 적용`,
     "취득·부대비용 정밀 산출 (취득세 구간·중개수수료·법무사 등)",
@@ -474,7 +518,7 @@ export function estimateBudget(
       )}억 ÷ 12 − 기존상환 = 월 가용 ${manwon(availableMonthly)}만원`,
     );
     loanReasonLines.push(
-      `30년 원리금균등 + 스트레스 5.5% 환산 → DSR 한도 약 ${eok(
+      `30년 원리금균등 + 스트레스 ${(STRESS_RATE * 100).toFixed(1)}% 환산 → DSR 한도 약 ${eok(
         dsrLoanCapacity,
       )}억`,
     );
