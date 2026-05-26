@@ -148,10 +148,11 @@ export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
   const monthlyDsrAllowance = annualDsrAllowance / 12;
   const availableMonthly = monthlyDsrAllowance - existingLoanMonthlyKrw;
 
-  // WHY 스트레스 금리 5.5%: 기준 4.0% + 수도권 스트레스 가산 1.5%p = 5.5% 실효.
-  // 이전 코드는 3.0%p 가산(= 7%)을 적용해 한도를 10~20% 과소추정했음.
-  // 금융위원회 스트레스 DSR 2단계(2024.09 시행): 수도권 변동금리 가산 1.5%p.
-  const STRESS_RATE = 0.055; // 4.0% 기준 + 1.5%p = 5.5%
+  // WHY 스트레스 금리 7.0%: 기준 4.0% + 수도권 스트레스 가산 3.0%p = 7.0% 실효.
+  // 금융위 스트레스 DSR 3단계(2025.10.16~ 시행): 수도권·규제지역 주담대 가산 3.0%p
+  // (그 외 1.5%p, 지방 0.75%p ~2025말 유예). 앱은 수도권 전용이라 3.0%p 일괄 적용.
+  // 이전(2024.09 2단계) 1.5%p에서 상향 — DSR 대출 한도 ~15% 축소가 정상.
+  const STRESS_RATE = 0.07; // 4.0% 기준 + 3.0%p = 7.0%
   const LOAN_MONTHS = 360; // 30년 원리금균등
 
   let dsrLoanCapacity = 0;

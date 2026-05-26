@@ -18,7 +18,7 @@ export const POLICY_META = {
   /** 한도·요건이 반영하는 최신 개정 시점 (사용자 표시용). */
   effectiveLabel: "2025.6.28 개정 한도 반영",
   /** 사람이 마지막으로 1차 출처와 대조 검증한 날 (YYYY-MM-DD). 신선도 판정 기준. */
-  lastVerified: "2026-05-25",
+  lastVerified: "2026-05-26",
   /** 1차 출처 (자격 안내 신뢰용). 특정 은행 상품 아님. */
   sources: ["주택도시기금", "한국주택금융공사"],
 } as const;
