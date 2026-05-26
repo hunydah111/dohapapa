@@ -88,7 +88,6 @@ export function HeroResultCard({
   typeRarityPercent,
   profileRadar,
   neighborhood,
-  serious = false,
 }: {
   candidate: ComplexCandidate;
   homeType: HomeType;
@@ -103,8 +102,6 @@ export function HeroResultCard({
   profileRadar?: number[];
   /** 1순위 단지 동네 데이터 — 아파트 옆 5각형(아래 카드와 동일). */
   neighborhood?: NeighborhoodData | null;
-  /** 진지 모드 — 캐릭터·레이더·계급 드립을 끄고 표·숫자 위주로(40~50대 신뢰형). */
-  serious?: boolean;
 }) {
   // 유형 카드 공유 링크 — 프로필 없이 유형만(바이럴 안전). /s/{slug} 에 동적 OG 카드.
   const typeShareUrl = `${SITE_URL}/s/${homeType.slug}`;
@@ -143,26 +140,22 @@ export function HeroResultCard({
         style={{ background: "radial-gradient(circle, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 70%)" }}
       />
 
-      {/* ── 유형(homeType) — 큰 비지·이름·태그라인은 BijiCard 등급과 정체성 충돌이라 제거.
-          유형은 보조 칩 한 줄로 흡수해 "여러 자아"에서 하나로 단순화. 진지 모드는 표·숫자만. ── */}
-      {!serious && (
-        <div className="flex flex-wrap items-center justify-center gap-1.5">
-          <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11.5px] font-semibold text-white/90 backdrop-blur-sm">
-            <span aria-hidden="true">{homeType.emoji}</span>
-            {homeType.name}
+      {/* ── 유형(homeType) — 칩 한 줄로 흡수. 진지 모드 폐기(2026-05-27 — 친구 지적 "전혀 필요 없음"). ── */}
+      <div className="flex flex-wrap items-center justify-center gap-1.5">
+        <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11.5px] font-semibold text-white/90 backdrop-blur-sm">
+          <span aria-hidden="true">{homeType.emoji}</span>
+          {homeType.name}
+        </span>
+        {typeRarityPercent != null && (
+          <span className="inline-flex items-center rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white/75 backdrop-blur-sm">
+            방문자 {typeRarityPercent}%
+            {typeRarityPercent <= 15 ? " · 희귀" : ""}
           </span>
-          {typeRarityPercent != null && (
-            <span className="inline-flex items-center rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white/75 backdrop-blur-sm">
-              방문자 {typeRarityPercent}%
-              {typeRarityPercent <= 15 ? " · 희귀" : ""}
-            </span>
-          )}
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* 유형 레이더 — 내 우선순위 5각형. 정체성이 아니라 *내 우선순위 시각화*라 BijiCard 와 충돌
-          안 함. 진지 모드 숨김. */}
-      {!serious && profileRadar && (
+      {/* 유형 레이더 — 내 우선순위 5각형. */}
+      {profileRadar && (
         <div className="mt-2.5 flex flex-col items-center">
           <p className="mb-0.5 text-[10.5px] font-semibold uppercase tracking-wider text-white/65">
             내 우선순위
@@ -171,30 +164,9 @@ export function HeroResultCard({
         </div>
       )}
 
-      {/* ── 구매력 계급 밴드 — 전 구간 노출. 사용자 예산을 실거래가 분포에 줄 세움(특정 단지 아님).
-          최하위(isFlex=false)는 숫자 숨기고 응원 라벨만. 미래예측 아님·추정 표기로 컴플라이언스 안전. ── */}
-      {budgetTopPercent != null && serious && (
-        <div className="mx-auto mt-5 max-w-sm rounded-2xl bg-white/15 px-4 py-3 text-center backdrop-blur-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-white/75">
-            추정 구매력
-          </p>
-          <p className="mt-1 text-xl font-extrabold leading-tight">
-            {budgetNetKrw != null && budgetNetKrw > 0
-              ? formatKrwHuman(budgetNetKrw)
-              : "—"}
-            {budgetTopPercent <= 50 && (
-              <span className="text-[13px] font-semibold text-white/85">
-                {" "}· 수도권 실거래 상위 {budgetTopPercent}%
-              </span>
-            )}
-          </p>
-          <p className="mt-1 text-[11px] leading-relaxed text-white/55">
-            국토교통부 실거래가 기반 추정 · 미래가치 예측이 아닙니다
-          </p>
-        </div>
-      )}
+      {/* ── 구매력 계급(BijiCard) — 전 구간 노출. 사용자 예산을 실거래가 분포에 줄 세움.
+          최하위(isFlex=false)는 숫자 숨기고 응원 라벨만. ── */}
       {budgetTopPercent != null &&
-        !serious &&
         (() => {
           const t = budgetTier(budgetTopPercent);
           // 라이프스타일 칩 — 카드에 동행할 1~2개 (정신없음 차단). 우선순위: vibe > 초품아 > 짧은 통근.
