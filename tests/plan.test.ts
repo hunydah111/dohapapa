@@ -207,3 +207,55 @@ describe("planGuidance — 추가", () => {
     expect(planGuidance(plan).tone).toBe("needBasics");
   });
 });
+
+describe("2025.10.15 — Plan sigungu 패스로 LTV 차등이 D-day에 반영", () => {
+  it("동일 프로필도 비규제(미추홀구)가 규제(강남)보다 보합 D-day 짧음", () => {
+    const profile = makeProfile({
+      householdIncomeKrwYear: 100_000_000,
+      seedMoneyKrw: 300_000_000,
+      netAssetsKrw: 300_000_000,
+    });
+    const target = 600_000_000;
+
+    // 규제(강남) — LTV 40%·스트레스 7.0%
+    const regBudget = estimateBudget(profile, { targetPriceKrw: target, sigungu: "강남구" });
+    const regPlan = computePlan(regBudget, profile, {
+      targetPriceKrw: target,
+      monthlySavingKrw: SAVE,
+      monthlySideKrw: 0,
+    });
+
+    // 비규제(인천 미추홀) — LTV 70%·스트레스 5.5%
+    const nonRegBudget = estimateBudget(profile, { targetPriceKrw: target, sigungu: "미추홀구" });
+    const nonRegPlan = computePlan(nonRegBudget, profile, {
+      targetPriceKrw: target,
+      monthlySavingKrw: SAVE,
+      monthlySideKrw: 0,
+    });
+
+    // 비규제가 대출·구매가능가 더 큼 → 갭 더 작음 → 보합 D-day 짧음(또는 즉시).
+    expect(nonRegBudget.loanEstimateKrw).toBeGreaterThan(regBudget.loanEstimateKrw);
+    expect(nonRegPlan.purchaseNowKrw).toBeGreaterThan(regPlan.purchaseNowKrw);
+    expect(nonRegPlan.gapKrw).toBeLessThanOrEqual(regPlan.gapKrw);
+    const regFlat = regPlan.scenarios.find((s) => s.key === "flat")!.months;
+    const nonRegFlat = nonRegPlan.scenarios.find((s) => s.key === "flat")!.months;
+    // 보합 도달 시점: 둘 다 도달하면 비규제 ≤ 규제, 또는 비규제는 도달·규제는 null 가능.
+    if (regFlat !== null && nonRegFlat !== null) {
+      expect(nonRegFlat).toBeLessThanOrEqual(regFlat);
+    } else if (nonRegFlat === null) {
+      expect(regFlat).toBeNull(); // 비규제도 못 닿으면 규제는 더 못 닿음
+    }
+  });
+
+  it("sigungu 미지정은 보수적 규제 fallback과 동일", () => {
+    const profile = makeProfile({
+      householdIncomeKrwYear: 100_000_000,
+      seedMoneyKrw: 300_000_000,
+      netAssetsKrw: 300_000_000,
+    });
+    const target = 600_000_000;
+    const noSgg = estimateBudget(profile, { targetPriceKrw: target });
+    const reg = estimateBudget(profile, { targetPriceKrw: target, sigungu: "강남구" });
+    expect(noSgg.loanEstimateKrw).toBe(reg.loanEstimateKrw);
+  });
+});

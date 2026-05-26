@@ -187,9 +187,10 @@ function withIncome(p: CoupleProfile, krw: number): CoupleProfile {
 function computeSideWarn(
   profile: CoupleProfile,
   incomeKrw: number,
+  sigungu?: string | null,
 ): { keepMan: number; lost: string[] } | null {
   const base = withIncome(profile, incomeKrw); // 부업 제외 기본 소득
-  const baseLoan = estimateBudget(base).loanEstimateKrw;
+  const baseLoan = estimateBudget(base, { sigungu }).loanEstimateKrw;
   if (baseLoan <= 0) return null;
   const baseElig = evaluatePolicyLoans(base)
     .filter((m) => m.eligible)
@@ -197,7 +198,7 @@ function computeSideWarn(
   if (baseElig.length === 0) return null;
   for (let v = 10; v <= 300; v += 10) {
     const over = withIncome(profile, incomeKrw + v * 120_000); // +v만/월
-    if (estimateBudget(over).loanEstimateKrw < baseLoan - 1_000_000) {
+    if (estimateBudget(over, { sigungu }).loanEstimateKrw < baseLoan - 1_000_000) {
       const overElig = new Set(
         evaluatePolicyLoans(over)
           .filter((m) => m.eligible)
@@ -220,7 +221,7 @@ function planMonthsFor(s: SavedPlan, extraCashKrw = 0): number | null {
   const prof = planProfileFrom(s, extraCashKrw);
   const scen = regionScenarios(s.g);
   const target = planTargetKrw(s);
-  const p = computePlan(estimateBudget(prof, { targetPriceKrw: target }), prof, {
+  const p = computePlan(estimateBudget(prof, { targetPriceKrw: target, sigungu: s.g }), prof, {
     targetPriceKrw: target,
     monthlySavingKrw: manwon(s.s),
     monthlySideKrw: manwon(s.sd),
@@ -363,12 +364,12 @@ export function PlanExperience() {
   );
 
   const budget = useMemo(
-    () => estimateBudget(profile, { targetPriceKrw: targetKrw }),
-    [profile, targetKrw],
+    () => estimateBudget(profile, { targetPriceKrw: targetKrw, sigungu: sgg }),
+    [profile, targetKrw, sgg],
   );
 
   // 부업 절벽 경고 — 대출 한도가 실제로 줄어드는 경우(정책대출 활용 중)에만 노출.
-  const sideWarn = computeSideWarn(profile, incomeKrw);
+  const sideWarn = computeSideWarn(profile, incomeKrw, sgg);
 
   const plan = useMemo(
     () =>
@@ -493,7 +494,7 @@ export function PlanExperience() {
     const out: Partial<Record<TierKey, number | null>> = {};
     if (tiers) {
       for (const t of tiers) {
-        const tBudget = estimateBudget(profile, { targetPriceKrw: t.krw });
+        const tBudget = estimateBudget(profile, { targetPriceKrw: t.krw, sigungu: sgg });
         const p = computePlan(tBudget, profile, {
           targetPriceKrw: t.krw,
           monthlySavingKrw: saveKrw,
@@ -504,7 +505,7 @@ export function PlanExperience() {
       }
     }
     return out;
-  }, [tiers, profile, saveKrw, sideKrw, upPct, downRate]);
+  }, [tiers, profile, sgg, saveKrw, sideKrw, upPct, downRate]);
 
   return (
     <div className="flex flex-col gap-5">
