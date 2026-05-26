@@ -1,0 +1,88 @@
+# 비집고 Geometry Master 자동 측정 결과
+# 측정 일시: 2026-05-26T09:57:47.643Z
+# 소스: C:/Users/User/OneDrive/Desktop/비버/baseline front biji.jpg
+# 해상도: 1024 × 1024
+#
+# ⚠️ 이 파일은 자동 생성. 수동 편집 금지 — 다시 측정하려면 measure-biji-master.cjs 재실행.
+
+CANVAS:
+  source_resolution: 1024x1024
+  bg_color: "#FFFFFF"
+
+CHARACTER_BBOX_PX:
+  left: 231
+  top: 177
+  right: 933
+  bottom: 901
+  total_width: 703
+  total_height: 725
+  occupancy_height_pct: "70.8%"
+
+PROPORTIONS:
+  head_width_px: 484
+  head_height_px: 389
+  body_height_px: 336
+  total_heads_tall: 1.86
+  head_to_body_ratio: "1 : 0.86"
+  neck_y_px: 565
+  neck_width_px: 338
+
+# head_width 기준 정규화 (Nano Banana 프롬프트에 박을 정량 spec)
+RELATIVE_TO_HEAD_WIDTH:
+  total_height: "149.8%"
+  body_height: "69.4%"
+  head_height: "80.4%"
+  eye_diameter: "61.2%"
+  eye_spacing_centers: "0.2%"
+  eye_y_from_head_top: "52.4% of head_height"
+  cheeks: "측정 실패"
+
+# Top 8 dominant colors (캐릭터 영역만, 픽셀 카운트 내림차순)
+COLOR_PALETTE:
+  - rank: 1
+    hex: "#B07245"
+    rgb: [176, 114, 69]
+    ratio: "56.3%"
+    likely: "보디 fur (브라운 톤)"
+  - rank: 2
+    hex: "#F0D0A0"
+    rgb: [240, 208, 160]
+    ratio: "10.5%"
+    likely: "배 cream 또는 이빨"
+  - rank: 3
+    hex: "#3A1E0D"
+    rgb: [58, 30, 13]
+    ratio: "16.6%"
+    likely: "확인 필요"
+  - rank: 4
+    hex: "#D2D0D0"
+    rgb: [210, 208, 208]
+    ratio: "4.9%"
+    likely: "배 cream 또는 이빨"
+  - rank: 5
+    hex: "#8E5A32"
+    rgb: [142, 90, 50]
+    ratio: "7.6%"
+    likely: "확인 필요"
+  - rank: 6
+    hex: "#F0E0C0"
+    rgb: [240, 224, 192]
+    ratio: "1.6%"
+    likely: "배 cream 또는 이빨"
+  - rank: 7
+    hex: "#009062"
+    rgb: [0, 144, 98]
+    ratio: "1.6%"
+    likely: "확인 필요"
+  - rank: 8
+    hex: "#B28160"
+    rgb: [178, 129, 96]
+    ratio: "0.9%"
+    likely: "보디 fur (브라운 톤)"
+
+# 측정 신뢰도 메모
+NOTES:
+  - "이 spec은 baseline 이미지 픽셀 측정 결과. 갸웃 비지(Style Master)가 아닌 정면 baseline 기준."
+  - "head_width = 머리 가장 넓은 곳 가로 폭. eye_diameter = 검정 영역 connected component bbox 평균 가로/세로."
+  - "color rank 1~3은 보통 보디 fur · 배 cream · outline. 4~6은 눈·코·볼·이빨. 직접 확인 권장."
+  - "16개 프롬프트 작성 시 이 RELATIVE_TO_HEAD_WIDTH 섹션을 그대로 박는다."

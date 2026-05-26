@@ -6,6 +6,8 @@ import { formatKrwHuman } from "@/lib/format";
 import { budgetTier } from "@/lib/budgetPercentile";
 import { SITE_URL, SITE_DOMAIN } from "@/lib/site";
 import { NeighborhoodRadar } from "./NeighborhoodSection";
+import { BijiCard } from "./BijiCard";
+import { classifyRegulation } from "@/lib/regulation";
 
 function Badge({ children }: { children: ReactNode }) {
   return (
@@ -215,24 +217,35 @@ export function HeroResultCard({
         !serious &&
         (() => {
           const t = budgetTier(budgetTopPercent);
+          // 라이프스타일 칩 — 카드에 동행할 1~3개. 우선순위: vibe > 초품아 > 짧은 통근 > 상위%.
+          const chips: string[] = [];
+          if (candidate.vibeBadge) chips.push(candidate.vibeBadge);
+          if (candidate.isChopumah) chips.push("🏫 초품아");
+          if (totalCommute > 0 && totalCommute <= 35 && !transitPending) {
+            chips.push(`${commuteIcon} ${totalCommute}분`);
+          }
+          if (t.isFlex && chips.length < 3 && budgetTopPercent <= 50) {
+            chips.push(`상위 ${budgetTopPercent}%`);
+          }
           return (
-            <div className="mx-auto mt-3.5 max-w-sm rounded-2xl bg-white/15 px-4 py-2.5 text-center backdrop-blur-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-white/75">
-                내 구매력 계급
-              </p>
-              <p className="mt-1 text-xl font-extrabold leading-tight">
-                {t.emoji} {t.label}
-              </p>
-              <p className="mt-0.5 text-[13px] font-semibold text-amber-100">
-                {budgetNetKrw != null && budgetNetKrw > 0
-                  ? formatKrwHuman(budgetNetKrw)
-                  : ""}
-                {t.isFlex ? ` · 수도권 실거래 상위 ${budgetTopPercent}%` : ""}
-              </p>
-              <p className="mt-1 text-[12px] leading-relaxed text-white/85">
+            <div className="mx-auto mt-3.5 flex w-full max-w-[280px] flex-col items-center">
+              <BijiCard
+                tier={t}
+                sigungu={candidate.sigungu}
+                dongName={candidate.dongName}
+                areaM2={candidate.representativeArea}
+                chips={chips}
+                className="w-full"
+              />
+              {budgetNetKrw != null && budgetNetKrw > 0 && (
+                <p className="mt-2 text-[13px] font-semibold text-amber-100">
+                  추정 구매력 {formatKrwHuman(budgetNetKrw)}
+                </p>
+              )}
+              <p className="mt-1 px-2 text-center text-[11px] leading-relaxed text-white/70">
                 &ldquo;{t.drip}&rdquo;
               </p>
-              <p className="mt-1.5 text-[11px] leading-relaxed text-white/55">
+              <p className="mt-1.5 px-2 text-center text-[11px] leading-relaxed text-white/55">
                 국토교통부 실거래가 기반 추정 · 미래가치 예측이 아닙니다
               </p>
             </div>
@@ -282,6 +295,18 @@ export function HeroResultCard({
         {candidate.sigungu} · {candidate.dongName} · 전용{" "}
         {candidate.representativeArea}㎡
       </p>
+      {(() => {
+        // 2025.10.15 대책 안내 — 규제지역(서울25+경기12)이 토허제. 사전허가·2년 실거주.
+        // 카피톤: 사실만, 추천·평가 아님. 코랄 히어로 안에선 흰 반투명 박스로 절제.
+        const reg = classifyRegulation(candidate.sigungu);
+        if (!reg.noticeLine) return null;
+        return (
+          <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/18 px-2.5 py-1 text-[11.5px] font-semibold text-white/95 backdrop-blur-sm">
+            <span aria-hidden="true">🛈</span>
+            {reg.noticeLine}
+          </p>
+        );
+      })()}
 
       {/* 핵심 스탯 뱃지 */}
       <div className="mt-3.5 flex flex-wrap gap-2">

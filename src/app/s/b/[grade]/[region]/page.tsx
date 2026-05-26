@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTierBySlug } from "@/lib/budgetPercentile";
 import { isKnownSigungu } from "@/lib/molit";
+import { BijiCard } from "@/components/BijiCard";
 
 // 비버 등급 공유 링크 진입 페이지 — "나는 ○○비버! 내 예산이면 △△구까지" + "나도 찾기" CTA.
 // 담기는 것: 등급(6단계) + 시군구 1개뿐. 소득·자산·직장 없음 — 바이럴 안전.
@@ -50,26 +51,20 @@ export default async function Page({
   if (!tier) notFound();
   const region = safeRegion(rawRegion);
 
+  // 시군구 폴백("수도권") 시엔 합성 이름이 라벨로 되돌아가게 sigungu=null로 넘김.
+  const cardSigungu = region === "수도권" ? null : region;
+  // 공유 진입은 위 isFlex 단계 정보만 있고 라이프스타일·평형은 없음 — 칩 비움.
+
   return (
     <main className="mx-auto flex min-h-[80vh] w-full max-w-lg flex-col items-center justify-center gap-5 px-5 py-12 text-center">
-      <div
-        className="biji-pop-in flex h-40 w-40 items-center justify-center rounded-full"
-        style={{ background: "radial-gradient(circle, rgba(224,162,58,0.18) 0%, rgba(245,236,217,0) 70%)" }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={`${tier.image}?v=2`} alt={`${tier.label} 비지`} className="h-36 w-auto" />
+      <div className="w-full max-w-[300px]">
+        <BijiCard tier={tier} sigungu={cardSigungu} className="w-full" />
       </div>
 
-      <p className="text-sm font-semibold tracking-wide" style={{ color: "#9a8f82" }}>
-        내 비버 등급
-      </p>
-      <h1 className="font-jua text-[2.4rem] leading-tight" style={{ color: "#3a2c1d" }}>
-        {tier.emoji} {tier.label}
-      </h1>
-      <p className="text-[19px] font-semibold leading-relaxed" style={{ color: "#3a322c" }}>
+      <p className="text-[17px] font-semibold leading-relaxed" style={{ color: "#3a322c" }}>
         내 예산이면 {region}까지 닿아요
       </p>
-      <p className="text-[15px] leading-relaxed" style={{ color: "#6b6157" }}>
+      <p className="text-[14px] leading-relaxed" style={{ color: "#6b6157" }}>
         “{tier.drip}”
       </p>
 

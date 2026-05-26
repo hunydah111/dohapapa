@@ -51,6 +51,23 @@ export type BeaverTierSlug =
   | "gukmin"
   | "baby";
 
+// 트레이딩 카드(BijiCard) 등급별 시각 차별화 — 비지 자세·소품·표정이 달라도 카드 자체가
+// 등급 무드를 살려주면 6마리가 "같은 시리즈"로 보임. 우디 팔레트 안에서만 변주(SKILL.md §7
+// 보라/네온 금지 룰). 다크 카드(textTone=light)는 락스타·엘비스 컨셉, 라이트는 친근 컨셉.
+export type BijiOrnament = "stars" | "flames" | "gold-stars" | "notes" | "confetti" | "hearts";
+export interface BeaverTierTheme {
+  /** 카드 배경 — CSS background 값(linear-gradient). */
+  cardBg: string;
+  /** 텍스트 톤. light=흰 텍스트(다크 카드), dark=우드 브라운 텍스트(라이트 카드). */
+  textTone: "light" | "dark";
+  /** 카드 코너 글로우(반투명 radial). */
+  glow: string;
+  /** 장식 패턴 — 비지 등급 특색과 매칭. */
+  ornament: BijiOrnament;
+  /** 핵심 액센트(이름·테두리). */
+  accent: string;
+}
+
 export interface BudgetTier {
   /** URL·공유카드 식별 슬러그. */
   slug: BeaverTierSlug;
@@ -60,17 +77,79 @@ export interface BudgetTier {
   drip: string;
   /** true면 "상위 N%" 노출, false(최하위)면 숫자 숨김. */
   isFlex: boolean;
-  /** 공유 OG·카드용 비버 이미지 (public/biji/…). 등급별 무드. */
+  /** 공유 OG·카드용 비버 이미지 (public/biji/tier/…). 등급별 무드. */
   image: string;
+  /** 트레이딩 카드 시각 테마. */
+  theme: BeaverTierTheme;
 }
 
 export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
-  justin: { slug: "justin", emoji: "🕺", label: "저스틴비버", drip: "취향껏 집짓는 비버", isFlex: true, image: "/biji/biji-money.png" },
-  fever: { slug: "fever", emoji: "🔥", label: "피버", drip: "골라짓는 비버", isFlex: true, image: "/biji/biji-key.png" },
-  top: { slug: "top", emoji: "🏆", label: "탑비버", drip: "잘나가는 비버", isFlex: true, image: "/biji/biji-thumbsup.png" },
-  nan: { slug: "nan", emoji: "😎", label: "난비버", drip: "알짜비버", isFlex: true, image: "/biji/biji-smile.png" },
-  gukmin: { slug: "gukmin", emoji: "🦫", label: "비버", drip: "국민비버", isFlex: false, image: "/biji/biji-wave.png" },
-  baby: { slug: "baby", emoji: "🐣", label: "아기비버", drip: "집짓기 시작하는 비버 — 비지가 옆에서 응원", isFlex: false, image: "/biji/biji-cheer.png" },
+  justin: {
+    slug: "justin", emoji: "🕺", label: "저스틴비버", drip: "취향껏 집짓는 비버", isFlex: true,
+    image: "/biji/tier/justin.png",
+    theme: {
+      cardBg: "linear-gradient(155deg, #3a2c1d 0%, #5a3520 55%, #fe7644 100%)",
+      textTone: "light",
+      glow: "radial-gradient(circle at 80% 0%, rgba(224,162,58,0.55) 0%, rgba(224,162,58,0) 60%)",
+      ornament: "gold-stars",
+      accent: "#e0a23a",
+    },
+  },
+  fever: {
+    slug: "fever", emoji: "🔥", label: "피버", drip: "골라짓는 비버", isFlex: true,
+    image: "/biji/tier/fever.png",
+    theme: {
+      cardBg: "linear-gradient(160deg, #fff4ef 0%, #ffb094 55%, #fe7644 100%)",
+      textTone: "dark",
+      glow: "radial-gradient(circle at 75% 10%, rgba(254,118,68,0.45) 0%, rgba(254,118,68,0) 65%)",
+      ornament: "flames",
+      accent: "#c4521f",
+    },
+  },
+  top: {
+    slug: "top", emoji: "🏆", label: "탑비버", drip: "잘나가는 비버", isFlex: true,
+    image: "/biji/tier/top.png",
+    theme: {
+      cardBg: "linear-gradient(160deg, #fffdf8 0%, #f7ead0 55%, #e0a23a 100%)",
+      textTone: "dark",
+      glow: "radial-gradient(circle at 50% 0%, rgba(224,162,58,0.45) 0%, rgba(224,162,58,0) 65%)",
+      ornament: "stars",
+      accent: "#9a5a1e",
+    },
+  },
+  nan: {
+    slug: "nan", emoji: "😎", label: "난비버", drip: "알짜비버", isFlex: true,
+    image: "/biji/tier/nan.png",
+    theme: {
+      cardBg: "linear-gradient(160deg, #2c2116 0%, #4a3a28 55%, #6e5b46 100%)",
+      textTone: "light",
+      glow: "radial-gradient(circle at 20% 15%, rgba(224,162,58,0.45) 0%, rgba(224,162,58,0) 60%)",
+      ornament: "notes",
+      accent: "#e0a23a",
+    },
+  },
+  gukmin: {
+    slug: "gukmin", emoji: "🦫", label: "비버", drip: "국민비버", isFlex: false,
+    image: "/biji/tier/gukmin.png",
+    theme: {
+      cardBg: "linear-gradient(160deg, #fffdf8 0%, #efe2cf 60%, #d9c5a4 100%)",
+      textTone: "dark",
+      glow: "radial-gradient(circle at 50% 0%, rgba(254,118,68,0.25) 0%, rgba(254,118,68,0) 65%)",
+      ornament: "confetti",
+      accent: "#8a6240",
+    },
+  },
+  baby: {
+    slug: "baby", emoji: "🐣", label: "아기비버", drip: "집짓기 시작하는 비버 — 비지가 옆에서 응원", isFlex: false,
+    image: "/biji/tier/baby.png",
+    theme: {
+      cardBg: "linear-gradient(160deg, #fffdf8 0%, #ffe6dc 55%, #ffccb7 100%)",
+      textTone: "dark",
+      glow: "radial-gradient(circle at 75% 15%, rgba(254,118,68,0.35) 0%, rgba(254,118,68,0) 65%)",
+      ornament: "hearts",
+      accent: "#c4521f",
+    },
+  },
 };
 
 export function budgetTier(topPercent: number): BudgetTier {

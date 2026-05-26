@@ -26,7 +26,9 @@ export type HomiMood =
   | "river" // 한강변(씬배경) — 한강변 입지
   | "tree" // 나무옆(씬배경) — 조용한 동네
   | "wave" // 손 흔들며 인사 — 랜딩 환영
-  | "key"; // 집 열쇠 — 단지·가능성
+  | "key" // 집 열쇠 — 단지·가능성
+  | "blueprint" // 도면 — 플랜 설계·"같이 그려봐요"
+  | "binoculars"; // 쌍안경 — 더 둘러보기·그 밖의 후보
 
 const BIJI_ASPECT = 0.9; // 레이아웃 시프트 방지용 힌트(실제 렌더는 width:auto)
 
@@ -56,6 +58,8 @@ const SRC: Record<HomiMood, string> = {
   tree: `/biji/biji-tree.png${V}`,
   wave: `/biji/biji-wave.png${V}`,
   key: `/biji/biji-key.png${V}`,
+  blueprint: `/biji/biji-blueprint.png${V}`,
+  binoculars: `/biji/biji-binoculars.png${V}`,
 };
 
 export function Homi({

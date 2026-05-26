@@ -2,16 +2,18 @@ import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { getTierBySlug, BEAVER_TIERS } from "@/lib/budgetPercentile";
+import { composeBijiName } from "@/lib/bijiName";
 import { isKnownSigungu } from "@/lib/molit";
 import { SITE_DOMAIN } from "@/lib/site";
 
-// 비버 등급 공유카드(1200×630) — "나는 ○○비버 · 내 예산이면 △△구까지". PII 없음(등급+시군구만).
-// 메인 OG와 동일한 따뜻한 코랄 톤. 이모지는 Satori 미지원이라 비버 이미지로 대체(텍스트엔 이모지 X).
+// 비버 등급 공유카드(1200×630) — 등급별 테마 통째.
+// 좌측 = 등급 비지 일러스트, 우측 = 합성 이름(예 "광피버") + 동네 + 드립 + 워드마크.
+// 등급별 cardBg 그라데를 OG 배경에 통째 적용 — 같은 시리즈인데 6장 다 다른 무드.
+// Satori 이모지 미지원 → 텍스트엔 이모지 X(비지 그림이 그 역할).
 export const alt = "내 비버 등급 — 비집고";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-// 432조합(6등급×72시군구)이라 정적 생성하지 않고 런타임 렌더(동적 OG).
 export default async function Image({
   params,
 }: {
@@ -25,7 +27,7 @@ export default async function Image({
     const decoded = decodeURIComponent(rawRegion);
     if (isKnownSigungu(decoded)) region = decoded;
   } catch {
-    /* 잘못된 인코딩 — 기본 '수도권' 유지 */
+    /* 잘못된 인코딩 — '수도권' 폴백 */
   }
 
   const font = await readFile(join(process.cwd(), "assets/BlackHanSans-Regular.ttf"));
@@ -34,6 +36,13 @@ export default async function Image({
   );
   const beaver = `data:image/png;base64,${beaverBuf.toString("base64")}`;
 
+  const name = composeBijiName(region === "수도권" ? null : region, tier);
+  const light = tier.theme.textTone === "light";
+  const primary = light ? "#ffffff" : "#3a2c1d";
+  const secondary = light ? "rgba(255,255,255,0.82)" : "#6e5b46";
+  const muted = light ? "rgba(255,255,255,0.6)" : "#9c8a72";
+  const wordmark = light ? "#ffffff" : tier.theme.accent;
+
   return new ImageResponse(
     (
       <div
@@ -41,51 +50,76 @@ export default async function Image({
           width: "100%",
           height: "100%",
           display: "flex",
-          flexDirection: "column",
-          background: "#f5ecd9",
+          background: tier.theme.cardBg,
           fontFamily: "BlackHanSans",
         }}
       >
-        {/* 상단: 등급 비버 + 등급·동네 */}
+        {/* 좌측: 등급 비지 — bottom 정렬, 큰 그림자로 배경 대비 보강 */}
         <div
           style={{
             display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            flex: 1,
-            padding: "0 64px",
+            width: "48%",
+            alignItems: "flex-end",
+            justifyContent: "center",
+            paddingBottom: 40,
+            paddingLeft: 30,
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={beaver} width={360} height={360} style={{ objectFit: "contain" }} alt="" />
-          <div style={{ display: "flex", flexDirection: "column", flex: 1, marginLeft: 40 }}>
-            <div style={{ fontSize: 36, color: "#6b6157" }}>내 비버 등급</div>
-            <div style={{ fontSize: 110, lineHeight: 1.05, marginTop: 4, color: "#e8662f" }}>
-              {tier.label}
-            </div>
-            <div style={{ fontSize: 40, marginTop: 16, color: "#3a322c" }}>
-              {`내 예산이면 ${region}까지 닿아요`}
-            </div>
-            <div style={{ fontSize: 30, marginTop: 12, color: "#8a8076" }}>
-              {`“${tier.drip}”`}
-            </div>
-          </div>
+          <img
+            src={beaver}
+            width={460}
+            height={460}
+            style={{
+              objectFit: "contain",
+              filter: "drop-shadow(0 10px 26px rgba(0,0,0,0.28))",
+            }}
+            alt=""
+          />
         </div>
 
-        {/* 하단 코랄 밴드 — 흰글자 워드마크 */}
+        {/* 우측: 합성 이름 + 동네 + 드립 + 워드마크 */}
         <div
           style={{
             display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            background: "#e8662f",
-            padding: "0 64px",
-            height: 140,
+            flexDirection: "column",
+            width: "52%",
+            padding: "70px 64px 60px 0",
+            justifyContent: "center",
           }}
         >
-          <div style={{ fontSize: 80, color: "#fffdf8", lineHeight: 1 }}>비집고</div>
-          <div style={{ fontSize: 32, color: "#ffe6dc" }}>{`너는 무슨 비버? · ${SITE_DOMAIN}`}</div>
+          <div style={{ fontSize: 34, color: secondary }}>내 비버 등급</div>
+          <div
+            style={{
+              fontSize: name.length >= 5 ? 110 : 138,
+              lineHeight: 1.02,
+              marginTop: 8,
+              color: primary,
+            }}
+          >
+            {name}
+          </div>
+          <div style={{ fontSize: 38, marginTop: 22, color: primary }}>
+            {`내 예산이면 ${region}까지`}
+          </div>
+          <div style={{ fontSize: 28, marginTop: 14, color: muted }}>
+            {`"${tier.drip}"`}
+          </div>
+
+          {/* 워드마크 영역 */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "flex-end",
+              marginTop: 44,
+            }}
+          >
+            <div style={{ fontSize: 62, color: wordmark, lineHeight: 1 }}>비집고</div>
+            <div style={{ fontSize: 24, color: muted, marginLeft: 18, marginBottom: 6 }}>
+              {`너는 무슨 비버? · ${SITE_DOMAIN}`}
+            </div>
+          </div>
         </div>
       </div>
     ),
