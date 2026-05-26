@@ -1,10 +1,8 @@
 import Link from "next/link";
 import type {
   ComplexCandidate,
-  CandidateSignalKey,
   CandidateTier,
 } from "@/types/recommendation";
-import { CANDIDATE_SIGNAL_LABELS } from "@/types/recommendation";
 import type { NeighborhoodData } from "@/lib/neighborhood";
 import { Card } from "@/components/ui/Card";
 import { CommuteDiagram } from "./CommuteDiagram";
@@ -12,35 +10,24 @@ import { NeighborhoodInline } from "./NeighborhoodSection";
 import { formatKrwHuman, formatEok } from "@/lib/format";
 import { classifyRegulation } from "@/lib/regulation";
 
-const SIGNAL_ORDER: CandidateSignalKey[] = [
-  "commute",
-  "budgetFit",
-  "school",
-  "buildingAge",
-  "largeComplex",
-];
-
 const TIER_CONFIG: Record<
   CandidateTier,
-  { bg: string; text: string; ring: string; bar: string }
+  { bg: string; text: string; ring: string }
 > = {
   안정형: {
     bg: "bg-emerald-50",
     text: "text-emerald-800",
     ring: "ring-1 ring-emerald-200",
-    bar: "bg-emerald-400",
   },
   균형형: {
     bg: "bg-coral-50",
     text: "text-coral-800",
     ring: "ring-1 ring-coral-200",
-    bar: "bg-coral-400",
   },
   도전형: {
     bg: "bg-amber-50",
     text: "text-amber-800",
     ring: "ring-1 ring-amber-200",
-    bar: "bg-amber-400",
   },
 };
 
@@ -89,9 +76,8 @@ export function CandidateCard({
 
   // 선택 이유 — 줄줄이 한 문장 대신 "라벨 : 값" 행으로 정돈. 정보 없는 신호는 숨김.
   // (연식은 price-first 철학상 중립화돼 선정 사유가 아니므로 헤더 'N년식'으로만 노출.)
-  const reasonRows: { label: string; value: string }[] = [
-    { label: "평수", value: `전용 ${candidate.representativeArea}㎡` },
-  ];
+  // 평수 행은 단지 메타 줄에 이미 있어 중복 제거(2026-05-27 β).
+  const reasonRows: { label: string; value: string }[] = [];
   if (candidate.commuteLegs.length > 0) {
     reasonRows.push({ label: "통근", value: candidate.reasoning.commute });
   }
@@ -113,7 +99,8 @@ export function CandidateCard({
 
   return (
     <Card compact className="flex flex-col gap-2.5">
-      {/* 상단 행: 티어 배지 + 순위 + 초품아 + 종합점수 */}
+      {/* 상단 행: 티어 + 순위 + 신뢰 배지(추정·분양권·실거래적음) + 종합점수.
+          재미 배지(초품아·vibe·인정받는)는 본문 정보와 중복이라 제거(2026-05-27 β). */}
       <div className="flex items-center gap-2 flex-wrap">
         <span
           className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold tracking-wide ${tier.bg} ${tier.text} ${tier.ring}`}
@@ -126,24 +113,6 @@ export function CandidateCard({
         >
           {RANK_LABELS[rank] ?? `${rank}위`}
         </span>
-        {candidate.isChopumah && (
-          <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 ring-1 ring-amber-200">
-            초품아
-          </span>
-        )}
-        {candidate.vibeBadge && (
-          <span className="inline-flex items-center rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600 ring-1 ring-rose-200">
-            {candidate.vibeBadge}
-          </span>
-        )}
-        {candidate.pricierThanPeers && (
-          <span
-            className="inline-flex items-center rounded-full bg-coral-50 px-3 py-1 text-xs font-bold text-coral-700 ring-1 ring-coral-200"
-            title="같은 동·비슷한 연식 단지보다 ㎡당 단가가 높아요 — 시장이 더 높게 평가한 단지예요"
-          >
-            동네에서 인정받는 단지
-          </span>
-        )}
         {candidate.priceEstimated ? (
           <span
             className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 ring-1 ring-amber-200"
@@ -343,35 +312,8 @@ export function CandidateCard({
         }}
       />
 
-      {/* 신호 바 — 항목별 점수 (2열 컴팩트) */}
-      <div className="flex flex-col gap-1.5">
-        <p className="text-[11px] font-semibold" style={{ color: "#9a8f82" }}>
-          항목별 점수
-        </p>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-          {SIGNAL_ORDER.map((key) => {
-            const score = candidate.scores[key];
-            return (
-              <div key={key} className="flex flex-col gap-0.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-medium" style={{ color: "#6b6157" }}>
-                    {CANDIDATE_SIGNAL_LABELS[key]}
-                  </span>
-                  <span className="text-[11px] tabular-nums font-semibold" style={{ color: "#3a322c" }}>
-                    {score}
-                  </span>
-                </div>
-                <div className="h-1 w-full overflow-hidden rounded-full bg-black/[0.06]">
-                  <div
-                    className={`h-full rounded-full ${tier.bar} transition-all duration-500`}
-                    style={{ width: `${score}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      {/* 항목별 점수 5종(통근·예산·학군·연식·대단지)은 종합점수와 중복이고
+          buildingAge가 항상 60 고정(price-first 중립화)이라 노이즈만 줘서 제거(2026-05-27 β). */}
 
       {/* 동네 (반경 1km) — 시설 사실 + 5축 레이더. fetch 후 fade-in, 데이터 없으면 숨김. */}
       {neighborhood && (
