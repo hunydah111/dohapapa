@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type {
   ComplexCandidate,
   CandidateSignalKey,
@@ -380,6 +381,24 @@ export function CandidateCard({
       >
         매물이 안 보이면 → {candidate.dongName} 동네 매물 둘러보기
       </a>
+
+      {/* 이 집 기준으로 플랜 — 추천 → 플랜 크로스링크 */}
+      <Link
+        href={{
+          pathname: "/plan",
+          query: {
+            price: candidate.medianPriceKrw,
+            name: candidate.complexName,
+            sgg: candidate.sigungu,
+            dong: candidate.dongName,
+            area: candidate.representativeArea,
+          },
+        }}
+        className="mt-1 block text-center text-xs font-semibold underline underline-offset-2 transition-colors hover:text-coral-700"
+        style={{ color: "#9a5a1e" }}
+      >
+        🔑 이 집 기준으로 내 집 마련 플랜 짜보기 →
+      </Link>
     </Card>
   );
 }

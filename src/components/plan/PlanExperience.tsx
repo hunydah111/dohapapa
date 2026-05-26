@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import type { CoupleProfile, AreaRangeKey } from "@/types/profile";
 import {
   AREA_RANGES,
@@ -64,6 +65,15 @@ const fmtMonth = (s?: string): string | null => {
   if (!s) return null;
   const [y, m] = s.split("-");
   return m ? `${y}.${Number(m)}` : y;
+};
+
+// 전용㎡ → 평형 밴드 (찾기→플랜 크로스링크 prefill용)
+const bandOfArea = (m2: number): AreaRangeKey | null => {
+  for (const k of AREA_RANGE_ORDER) {
+    const r = AREA_RANGES[k];
+    if (m2 >= r.minM2 && (r.maxM2 === null || m2 < r.maxM2)) return k;
+  }
+  return null;
 };
 
 // 입력칸 단위 미리보기 — "7000" → "= 7,000만원" / "20000" → "= 2억"
@@ -327,13 +337,39 @@ export function PlanExperience() {
   const rollingSelected = useRollingMonths(selectedMonths);
   const tierLabel = manualMode ? "직접 입력" : (selectedTier?.label ?? "");
 
-  // R3 재방문 — 이 기기에 저장한 플랜 복원 + "그동안 모았다면" 진전 표시
+  // R3 재방문 — 이 기기에 저장한 플랜 복원 + "그동안 모았다면" 진전 표시.
+  // 추천(찾기)에서 단지 클릭으로 들어온 경우 URL 파라미터를 우선 적용한다.
   const [revisit, setRevisit] = useState<
     { months: number; savedMonths: number; advanced: number } | null
   >(null);
+  const [fromComplex, setFromComplex] = useState<
+    { name?: string; sgg?: string; dong?: string; price: number } | null
+  >(null);
   const [justSaved, setJustSaved] = useState(false);
-  /* eslint-disable react-hooks/set-state-in-effect -- localStorage 복원은 마운트 후 1회(하이드레이션 안전) */
+  const searchParams = useSearchParams();
+  /* eslint-disable react-hooks/set-state-in-effect -- localStorage·URL 복원은 마운트 후 1회(하이드레이션 안전) */
   useEffect(() => {
+    // URL 파라미터(찾기→플랜 크로스링크)가 있으면 우선 적용.
+    const priceP = searchParams?.get("price");
+    const priceN = priceP ? parseFloat(priceP) : 0;
+    if (priceN > 0) {
+      const nameP = searchParams?.get("name") ?? undefined;
+      const sggP = searchParams?.get("sgg") ?? undefined;
+      const dongP = searchParams?.get("dong") ?? undefined;
+      const areaP = searchParams?.get("area");
+      setManualMode(true);
+      setManualTarget(Math.round(priceN / 10_000).toString());
+      if (sggP && REGIONS[sggP]) {
+        setSgg(sggP);
+        setUpPct(defaultUpPct(sggP));
+        if (areaP) {
+          const b = bandOfArea(parseFloat(areaP));
+          if (b && REGIONS[sggP]?.[b]) setBand(b);
+        }
+      }
+      setFromComplex({ name: nameP, sgg: sggP, dong: dongP, price: priceN });
+      return; // URL prefill 시 localStorage·revisit 무시
+    }
     try {
       const raw = localStorage.getItem("biji-plan");
       if (!raw) return;
@@ -357,7 +393,7 @@ export function PlanExperience() {
     } catch {
       /* 손상된 저장값 무시 */
     }
-  }, []);
+  }, [searchParams]);
   /* eslint-enable react-hooks/set-state-in-effect */
   function savePlan() {
     const s: SavedPlan = {
@@ -481,8 +517,22 @@ export function PlanExperience() {
         </section>
       )}
 
-      {/* 목표 — 동네+평형 → 티어 선택 */}
+      {/* 목표 — 동네+평형 → 티어 선택 (또는 찾기에서 넘어온 단지 기준) */}
       <section className="rounded-3xl border border-coral-200 bg-coral-50/60 p-5">
+        {fromComplex ? (
+          <div
+            className="mb-3 rounded-2xl border px-3 py-2.5"
+            style={{ background: "#fff7e6", borderColor: "#f0d9a0" }}
+          >
+            <p className="text-[13px] font-bold" style={{ color: "#3a2c1d" }}>
+              🔑 {fromComplex.name ?? "선택한 집"} 기준 플랜
+            </p>
+            <p className="mt-0.5 text-[11px]" style={{ color: "#9a5a1e" }}>
+              {fromComplex.sgg ?? ""} {fromComplex.dong ?? ""} · {eok(fromComplex.price)} (찾기에서
+              넘어옴)
+            </p>
+          </div>
+        ) : null}
         <h2 className="mb-1 text-[15px] font-bold" style={{ color: "#3a2c1d" }}>
           어떤 집을 그리세요?
         </h2>

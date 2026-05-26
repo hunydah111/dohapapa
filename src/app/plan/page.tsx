@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { PlanExperience } from "@/components/plan/PlanExperience";
 
 export const metadata: Metadata = {
@@ -28,7 +29,10 @@ export default function PlanPage() {
         </p>
       </div>
 
-      <PlanExperience />
+      {/* useSearchParams(찾기→플랜 prefill)를 위한 Suspense 경계 */}
+      <Suspense fallback={null}>
+        <PlanExperience />
+      </Suspense>
 
       <div className="mt-8 text-center">
         <Link href="/" className="text-[13px] font-semibold underline" style={{ color: "#9a8f82" }}>
