@@ -50,8 +50,8 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
 
       {/* 브랜드 히어로 — 한강에서 서울을 바라보며 '비집고' 들어갈 집을 그리는 비지.
           모바일: 위·좌·우 풀블리드(검은 하늘이 화면 끝까지)
-          데스크탑: 페이지 컨테이너(672px)보다 넓은 880px 패노라마, 가운데 정렬 — 정체성 강조 */}
-      <div className="biji-pop-in relative left-1/2 mb-5 -mt-10 w-screen -translate-x-1/2 overflow-hidden rounded-b-[26px] shadow-md sm:mt-0 sm:w-[min(880px,calc(100vw-32px))] sm:rounded-3xl sm:ring-1 sm:ring-black/5">
+          데스크탑: 페이지 컨테이너에 맞춘 max-w-2xl(672px). 도미네이트 X. */}
+      <div className="biji-pop-in relative left-1/2 mb-5 -mt-10 w-screen -translate-x-1/2 overflow-hidden rounded-b-[26px] shadow-md sm:left-auto sm:mx-auto sm:mt-0 sm:w-full sm:max-w-2xl sm:translate-x-0 sm:rounded-3xl sm:ring-1 sm:ring-black/5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/biji/biji-hangang.png"
