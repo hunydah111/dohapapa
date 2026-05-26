@@ -186,6 +186,10 @@ export interface ExistingHome {
   remainingLoanKrw: number;
   /** 1세대 1주택 양도세 비과세 요건 충족 (2년 이상 보유+거주). */
   qualifiesForTaxExemption: boolean;
+  /** 취득가(원) — 정확한 양도차익 계산용. 모르면 undefined → 보수적 폴백. */
+  acquisitionPriceKrw?: number;
+  /** 보유 연수 — 장기보유특별공제 산정용. 미지정 시 5년 가정. */
+  holdingYears?: number;
 }
 
 // ── 가구 프로필 ──────────────────────────────────────────────

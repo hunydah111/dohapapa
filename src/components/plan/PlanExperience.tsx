@@ -12,6 +12,7 @@ import {
 } from "@/types/profile";
 import { estimateBudget } from "@/lib/budget";
 import { evaluatePolicyLoans } from "@/lib/policyLoan";
+import { estimateCapitalGainsTax } from "@/lib/capitalGainsTax";
 import {
   computePlan,
   formatDday,
@@ -147,10 +148,22 @@ type SavedPlan = {
   g: string; b: AreaRangeKey; t: TierKey; mm: number; mt: string;
   i: string; c: string; s: string; sd: string; u: number; sc: ScenarioKey;
   nh: number; nw: number; nb: number; at: number; sm: number | null;
+  // v2 (선택): 1주택 갈아타기 — em=on, es=매도가, er=잔금, ea=취득가(0이면 미상), ey=보유연수, ex=비과세
+  em?: number; es?: string; er?: string; ea?: string; ey?: string; ex?: number;
 };
 
 function planProfileFrom(s: SavedPlan, extraCashKrw = 0): CoupleProfile {
   const cash = manwon(s.c) + extraCashKrw;
+  const em = !!s.em;
+  const existingHome = em
+    ? {
+        expectedSalePriceKrw: manwon(s.es ?? "0"),
+        remainingLoanKrw: manwon(s.er ?? "0"),
+        qualifiesForTaxExemption: !!s.ex,
+        acquisitionPriceKrw: parseFloat(s.ea ?? "0") > 0 ? manwon(s.ea ?? "0") : undefined,
+        holdingYears: parseInt(s.ey ?? "0") > 0 ? parseInt(s.ey ?? "0") : undefined,
+      }
+    : undefined;
   return {
     householdType: "single",
     priorities: { commute: 3, school: 3, buildingAge: 3, largeComplex: 2 },
@@ -159,7 +172,11 @@ function planProfileFrom(s: SavedPlan, extraCashKrw = 0): CoupleProfile {
     hasThreeOrMoreChildren: false, isExpectingChild: false,
     budgetMode: "detailed",
     householdIncomeKrwYear: manwon(s.i), seedMoneyKrw: cash, netAssetsKrw: cash,
-    existingLoanMonthlyKrw: 0, hasOwnedHomeBefore: !s.nh, isNewlywed: !!s.nw, ownedHomeCount: 0,
+    existingLoanMonthlyKrw: 0,
+    hasOwnedHomeBefore: em ? true : !s.nh,
+    isNewlywed: !!s.nw,
+    ownedHomeCount: em ? 1 : 0,
+    existingHome,
   };
 }
 function withIncome(p: CoupleProfile, krw: number): CoupleProfile {
@@ -252,6 +269,14 @@ export function PlanExperience() {
   const [newlywed, setNewlywed] = useState(false);
   const [newborn, setNewborn] = useState(false);
 
+  // 1주택 갈아타기 (existingHome) — 토글 + 매도가/잔금/취득가/보유연수/비과세 요건
+  const [existingMode, setExistingMode] = useState(false);
+  const [existingSaleStr, setExistingSaleStr] = useState("60000"); // 6억
+  const [existingRemainStr, setExistingRemainStr] = useState("20000"); // 2억
+  const [existingAcqStr, setExistingAcqStr] = useState(""); // 취득가(선택, 만원)
+  const [existingYearsStr, setExistingYearsStr] = useState("5"); // 보유연수(기본 5)
+  const [existingExempt, setExistingExempt] = useState(true);
+
   // 레버 (저축·부업은 캡 없이 직접 입력 — 만원)
   const [saveStr, setSaveStr] = useState("200");
   const [sideStr, setSideStr] = useState("0");
@@ -263,6 +288,42 @@ export function PlanExperience() {
   const cashKrw = useDebounced(manwon(cash));
   const saveKrw = useDebounced(manwon(saveStr));
   const sideKrw = useDebounced(manwon(sideStr));
+  const existingSaleKrw = useDebounced(manwon(existingSaleStr));
+  const existingRemainKrw = useDebounced(manwon(existingRemainStr));
+  const existingAcqKrw = useDebounced(manwon(existingAcqStr));
+  const existingYears = useDebounced(parseInt(existingYearsStr) || 0);
+
+  // 갈아타기 ON 시 budget 엔진에 넘길 existingHome — 매도가/잔금/(취득가)/(보유연수)/비과세.
+  const existingHomeObj = useMemo(
+    () =>
+      existingMode
+        ? {
+            expectedSalePriceKrw: existingSaleKrw,
+            remainingLoanKrw: existingRemainKrw,
+            qualifiesForTaxExemption: existingExempt,
+            acquisitionPriceKrw: existingAcqKrw > 0 ? existingAcqKrw : undefined,
+            holdingYears: existingYears > 0 ? existingYears : undefined,
+          }
+        : undefined,
+    [existingMode, existingSaleKrw, existingRemainKrw, existingExempt, existingAcqKrw, existingYears],
+  );
+
+  // 자기자본 분해 표시용 양도세 추정(엔진과 동일 모듈, 표시만 별도).
+  const cgtEst = useMemo(
+    () =>
+      existingHomeObj && existingHomeObj.expectedSalePriceKrw > 0
+        ? estimateCapitalGainsTax(existingHomeObj)
+        : null,
+    [existingHomeObj],
+  );
+  const homeSaleNetKrw = useMemo(() => {
+    if (!existingHomeObj) return 0;
+    const net =
+      existingHomeObj.expectedSalePriceKrw -
+      existingHomeObj.remainingLoanKrw -
+      (cgtEst?.taxKrw ?? 0);
+    return net; // 음수도 그대로 — 언더워터 경고용
+  }, [existingHomeObj, cgtEst]);
 
   const scen = regionScenarios(sgg);
   const downRate = scen.down.rateAnnual;
@@ -292,11 +353,13 @@ export function PlanExperience() {
       seedMoneyKrw: cashKrw,
       netAssetsKrw: cashKrw,
       existingLoanMonthlyKrw: 0,
-      hasOwnedHomeBefore: !noHome,
+      // 갈아타기 ON → 기보유(1주택), 그 외엔 noHome 칩 반전.
+      hasOwnedHomeBefore: existingMode ? true : !noHome,
       isNewlywed: newlywed,
-      ownedHomeCount: 0,
+      ownedHomeCount: existingMode ? 1 : 0,
+      existingHome: existingHomeObj,
     }),
-    [incomeKrw, sideKrw, cashKrw, noHome, newlywed, newborn],
+    [incomeKrw, sideKrw, cashKrw, noHome, newlywed, newborn, existingMode, existingHomeObj],
   );
 
   const budget = useMemo(
@@ -378,6 +441,14 @@ export function PlanExperience() {
       setSgg(s.g); setBand(s.b); setTierKey(s.t); setManualMode(!!s.mm); setManualTarget(s.mt);
       setIncome(s.i); setCash(s.c); setSaveStr(s.s); setSideStr(s.sd); setUpPct(s.u); setScenarioKey(s.sc);
       setNoHome(!!s.nh); setNewlywed(!!s.nw); setNewborn(!!s.nb);
+      if (s.em) {
+        setExistingMode(true);
+        if (s.es) setExistingSaleStr(s.es);
+        if (s.er) setExistingRemainStr(s.er);
+        if (s.ea) setExistingAcqStr(s.ea);
+        if (s.ey) setExistingYearsStr(s.ey);
+        setExistingExempt(!!s.ex);
+      }
       // 경과월만큼 계획대로 모았다면 — 당겨진 시점
       if (s.sm != null) {
         const days = (Date.now() - s.at) / 86_400_000;
@@ -401,6 +472,12 @@ export function PlanExperience() {
       i: income, c: cash, s: saveStr, sd: sideStr, u: upPct, sc: scenarioKey,
       nh: noHome ? 1 : 0, nw: newlywed ? 1 : 0, nb: newborn ? 1 : 0,
       at: Date.now(), sm: selectedMonths,
+      em: existingMode ? 1 : 0,
+      es: existingMode ? existingSaleStr : undefined,
+      er: existingMode ? existingRemainStr : undefined,
+      ea: existingMode ? existingAcqStr : undefined,
+      ey: existingMode ? existingYearsStr : undefined,
+      ex: existingMode && existingExempt ? 1 : 0,
     };
     try {
       localStorage.setItem("biji-plan", JSON.stringify(s));
@@ -637,10 +714,99 @@ export function PlanExperience() {
           가격”의 출발선이에요. 아래 <b>월 저축</b>은 거기서부터 ‘모으는 속도’고요.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
-          <Chip on={noHome} onClick={() => setNoHome((v) => !v)} label="무주택" />
+          <Chip
+            on={noHome && !existingMode}
+            onClick={() => {
+              setNoHome((v) => !v);
+              if (existingMode) setExistingMode(false); // 무주택↔갈아타기 상호 배타
+            }}
+            label="무주택"
+          />
           <Chip on={newlywed} onClick={() => setNewlywed((v) => !v)} label="혼인 7년 이내" />
           <Chip on={newborn} onClick={() => setNewborn((v) => !v)} label="출산 2년 이내" />
+          <Chip
+            on={existingMode}
+            onClick={() => {
+              const next = !existingMode;
+              setExistingMode(next);
+              if (next) setNoHome(false); // 갈아타기 ON → 무주택 OFF
+            }}
+            label="🏠 1주택 갈아타기"
+          />
         </div>
+
+        {existingMode && (
+          <div className="mt-3 rounded-2xl border border-coral-100 bg-coral-50/40 p-4">
+            <p className="text-[12px] font-bold" style={{ color: "#3a2c1d" }}>
+              지금 사는 집 정보 — 매도 순수령액이 새 집 자기자본에 합산돼요
+            </p>
+            <p className="mt-1 text-[11px] leading-relaxed" style={{ color: "#9a5a1e" }}>
+              <b>양도세</b>는 매도가·취득가·보유기간으로 달라져요. 취득가를 입력하면 정확해지고,
+              모르면 보수적으로 매도가의 약 6%로 잡아요. 모두 추정 · 실 세액은 세무사 상담.
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <NumField
+                label="예상 매도가(만원)"
+                value={existingSaleStr}
+                onChange={setExistingSaleStr}
+                hint={unitHint(existingSaleStr)}
+              />
+              <NumField
+                label="남은 주담대 잔금(만원)"
+                value={existingRemainStr}
+                onChange={setExistingRemainStr}
+                hint={unitHint(existingRemainStr)}
+              />
+              <NumField
+                label="취득가(만원, 선택)"
+                value={existingAcqStr}
+                onChange={setExistingAcqStr}
+                hint={parseFloat(existingAcqStr) > 0 ? unitHint(existingAcqStr) : "모르면 비워두세요"}
+              />
+              <NumField
+                label="보유 연수(년)"
+                value={existingYearsStr}
+                onChange={setExistingYearsStr}
+                hint={parseInt(existingYearsStr) > 0 ? `장특공제 산정` : undefined}
+              />
+            </div>
+            <label className="mt-3 flex cursor-pointer items-start gap-2 rounded-xl bg-white px-3 py-2.5">
+              <input
+                type="checkbox"
+                checked={existingExempt}
+                onChange={(e) => setExistingExempt(e.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-[#fe7644]"
+              />
+              <span className="text-[12px] leading-relaxed" style={{ color: "#3a2c1d" }}>
+                <b>1세대 1주택 비과세 요건 충족</b> (2년 이상 보유 · 거주, 매도가 12억 이하면 양도세 0)
+                <span className="ml-1 text-[11px]" style={{ color: "#9c8a72" }}>
+                  · 매도가 12억 초과 시 초과분만 과세
+                </span>
+              </span>
+            </label>
+            {cgtEst && (
+              <div className="mt-3 rounded-xl bg-white px-3 py-2.5 text-[12px] leading-relaxed">
+                <p style={{ color: "#3a2c1d" }}>
+                  <b>매도 순수령액 약 {eok(Math.max(0, homeSaleNetKrw))}</b>
+                  <span style={{ color: "#9c8a72" }}>
+                    {" "}
+                    = 매도 {eok(existingSaleKrw)} − 잔금 {eok(existingRemainKrw)} − 양도세 약{" "}
+                    {formatKrwHuman(cgtEst.taxKrw)}
+                  </span>
+                </p>
+                <p className="mt-1 text-[11px]" style={{ color: "#9a5a1e" }}>
+                  💰 {cgtEst.note}
+                </p>
+                {homeSaleNetKrw < 0 && (
+                  <p className="mt-1 text-[11px] font-bold" style={{ color: "#c4521f" }}>
+                    ⚠️ 매도가 − 잔금 − 양도세가 음수예요 — 자기자본이 줄어드는 상황. 매도 타이밍·잔금
+                    정리 우선 고려.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
       {/* D-day 범위 / 가이드 */}
@@ -751,9 +917,24 @@ export function PlanExperience() {
             </span>
           </summary>
           <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.82)" }}>
-            현금(자기자본) <b>{eok(plan.equityKrw)}</b> + 소득 기반 추정 대출{" "}
-            <b>{eok(plan.loanKrw)}</b> − 부대비용 <b>{eok(plan.acqCostKrw)}</b>
+            자기자본 <b>{eok(plan.equityKrw)}</b>
+            {existingMode && cgtEst ? (
+              <>
+                {" "}
+                <span style={{ color: "rgba(255,255,255,0.6)" }}>
+                  (현금 {eok(cashKrw)} + 매도 순수령액 {eok(Math.max(0, homeSaleNetKrw))})
+                </span>
+              </>
+            ) : null}{" "}
+            + 소득 기반 추정 대출 <b>{eok(plan.loanKrw)}</b> − 부대비용{" "}
+            <b>{eok(plan.acqCostKrw)}</b>
           </p>
+          {existingMode && cgtEst && (
+            <p className="mt-1 text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.66)" }}>
+              🏠 매도 {eok(existingSaleKrw)} − 잔금 {eok(existingRemainKrw)} − 양도세 약{" "}
+              {formatKrwHuman(cgtEst.taxKrw)} · LTV는 1주택 처분조건부 50% 적용
+            </p>
+          )}
           <p className="mt-1 text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>
             여기서 <b>월 {formatKrwHuman(plan.monthlyAccumKrw)}</b>씩 모아 목표까지 부족한{" "}
             <b>{eok(plan.gapKrw)}</b>을 따라잡는 게 위 그래프예요. 모두 추정.
