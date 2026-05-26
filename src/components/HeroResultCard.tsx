@@ -1,64 +1,10 @@
-import type { ReactNode } from "react";
 import type { ComplexCandidate } from "@/types/recommendation";
 import type { HomeType } from "@/lib/homeType";
-import type { NeighborhoodData } from "@/lib/neighborhood";
 import { formatKrwHuman } from "@/lib/format";
 import { budgetTier } from "@/lib/budgetPercentile";
 import { SITE_URL, SITE_DOMAIN } from "@/lib/site";
-import { NeighborhoodRadar } from "./NeighborhoodSection";
 import { BijiCard } from "./BijiCard";
 import { classifyRegulation } from "@/lib/regulation";
-
-function Badge({ children }: { children: ReactNode }) {
-  return (
-    <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-sm font-semibold text-white backdrop-blur-sm">
-      {children}
-    </span>
-  );
-}
-
-// 유형 프로필 레이더 — 사용자 우선순위(통근·학군·신축·대단지·예산) 5각형. 그라데이션 위라 흰 반투명.
-// 바닥 floor 0.32 — 0점 축도 중심까지 안 꺼지게(우리 '안 까는' 원칙).
-const PROFILE_AXES = ["통근", "학군", "신축", "대단지", "예산"];
-function ProfileRadar({ values }: { values: number[] }) {
-  const size = 116;
-  const cx = size / 2;
-  const cy = size / 2;
-  const maxR = 34;
-  const n = PROFILE_AXES.length;
-  const FLOOR = 0.32;
-  const pt = (i: number, r: number) => {
-    const a = -Math.PI / 2 + (i * 2 * Math.PI) / n;
-    return [cx + r * Math.cos(a), cy + r * Math.sin(a)] as const;
-  };
-  const ring = (f: number) =>
-    PROFILE_AXES.map((_, i) => pt(i, maxR * f).join(",")).join(" ");
-  const radius = (v: number) =>
-    maxR * (FLOOR + (1 - FLOOR) * (Math.max(0, Math.min(5, v)) / 5));
-  const dataPoly = PROFILE_AXES.map((_, i) =>
-    pt(i, radius(values[i] ?? 0)).join(","),
-  ).join(" ");
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
-      {[1, 0.66, 0.33].map((f) => (
-        <polygon key={f} points={ring(f)} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth={1} />
-      ))}
-      {PROFILE_AXES.map((_, i) => {
-        const [x, y] = pt(i, maxR);
-        return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(255,255,255,0.25)" strokeWidth={1} />;
-      })}
-      <polygon points={dataPoly} fill="rgba(255,224,130,0.45)" stroke="#ffe082" strokeWidth={2} />
-      {PROFILE_AXES.map((ax, i) => {
-        const [x, y] = pt(i, maxR + 9);
-        return (
-          <text key={ax} x={x} y={y} textAnchor="middle" dominantBaseline="middle" fontSize={10} fontWeight={700} fill="rgba(255,255,255,0.9)">
-            {ax}
-          </text>
-        );
-      })}
-    </svg>
-  );
-}
 
 // 발견의 의외성 카피 — "이 조건에 이 동네가?" (회의: 재미=발견). 컴플라이언스: 투자권유 아님, 가벼운 톤.
 function discoveryLine(c: ComplexCandidate): string {
@@ -86,8 +32,6 @@ export function HeroResultCard({
   budgetTopPercent,
   budgetNetKrw,
   typeRarityPercent,
-  profileRadar,
-  neighborhood,
 }: {
   candidate: ComplexCandidate;
   homeType: HomeType;
@@ -98,10 +42,6 @@ export function HeroResultCard({
   budgetNetKrw?: number;
   /** 이 유형이 전체 방문자 중 차지하는 % (표본 충분할 때만). null = 숨김. */
   typeRarityPercent?: number | null;
-  /** 유형 프로필 레이더 값 [통근,학군,신축,대단지,예산] 0~5. */
-  profileRadar?: number[];
-  /** 1순위 단지 동네 데이터 — 아파트 옆 5각형(아래 카드와 동일). */
-  neighborhood?: NeighborhoodData | null;
 }) {
   // 유형 카드 공유 링크 — 프로필 없이 유형만(바이럴 안전). /s/{slug} 에 동적 OG 카드.
   const typeShareUrl = `${SITE_URL}/s/${homeType.slug}`;
@@ -153,16 +93,6 @@ export function HeroResultCard({
           </span>
         )}
       </div>
-
-      {/* 유형 레이더 — 내 우선순위 5각형. */}
-      {profileRadar && (
-        <div className="mt-2.5 flex flex-col items-center">
-          <p className="mb-0.5 text-[10.5px] font-semibold uppercase tracking-wider text-white/65">
-            내 우선순위
-          </p>
-          <ProfileRadar values={profileRadar} />
-        </div>
-      )}
 
       {/* ── 구매력 계급(BijiCard) — 전 구간 노출. 사용자 예산을 실거래가 분포에 줄 세움.
           최하위(isFlex=false)는 숫자 숨기고 응원 라벨만. ── */}
@@ -271,29 +201,6 @@ export function HeroResultCard({
         }
         return null;
       })()}
-
-      {/* 핵심 스탯 뱃지 */}
-      <div className="mt-3.5 flex flex-wrap gap-2">
-        <Badge>💰 {formatKrwHuman(candidate.medianPriceKrw)}</Badge>
-        {totalCommute > 0 && (
-          <Badge>
-            {commuteIcon} {transitPending ? "계산 중…" : `${totalCommute}분`}
-          </Badge>
-        )}
-        <Badge>⭐ 종합 {candidate.totalScore}점</Badge>
-        {candidate.isChopumah && <Badge>🏫 초품아</Badge>}
-        {candidate.vibeBadge && <Badge>{candidate.vibeBadge}</Badge>}
-      </div>
-
-      {/* 동네 5각형 — 1순위 단지 반경 1km(아래 카드와 동일한 레이더). 흰 박스로 동일 스타일 유지. */}
-      {neighborhood && (
-        <div className="fade-in-up mt-4 flex flex-col items-center rounded-2xl bg-white p-3">
-          <p className="mb-1 self-start text-[11px] font-semibold" style={{ color: "#9a8f82" }}>
-            동네 · 반경 1km 시설 (사실, 추천·평가 아님)
-          </p>
-          <NeighborhoodRadar scores={neighborhood.scores} />
-        </div>
-      )}
 
       {/* 공유 — 비버 등급 카드가 주(主), 유형 카드는 보조. 둘 다 소득·자산 미포함(바이럴 안전). */}
       {gradeShareUrl ? (
