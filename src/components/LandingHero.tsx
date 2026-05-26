@@ -96,13 +96,13 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
         <Button onClick={onStart} fullWidth>
           30초, 무료로 내 집 찾기 →
         </Button>
-        {/* 보조 동선 — 텍스트 링크로 강도 약화 (Mercury "secondary as text link" 패턴) */}
+        {/* 비집고 두 축의 다른 한 쪽 — primary CTA 아래 풀너비 세컨더리 버튼(약화하되 또렷이 보이게) */}
         <Link
           href="/plan"
-          className="mt-3 inline-block text-[13px] font-semibold underline underline-offset-4 transition-colors hover:text-coral-700"
-          style={{ color: "#9a8f82" }}
+          className="mt-2.5 flex w-full items-center justify-center rounded-2xl border-2 border-coral-300 bg-white px-4 py-3 text-[15px] font-bold transition-colors hover:border-coral-500"
+          style={{ color: "#c4521f" }}
         >
-          또는, 내 집 마련 플랜 미리보기 →
+          내 집 마련 플랜 · 언제 살 수 있을까? →
         </Link>
 
         {/* 신뢰 한 줄 (3줄 → 1줄 압축) — 가입·민감정보·데이터·정책 점검 한 호흡 */}
