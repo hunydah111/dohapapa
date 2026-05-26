@@ -235,8 +235,8 @@ export function CandidateCard({
           </span>
           <span style={{ color: "#c7c7cc" }}>·</span>
           <span
-            className="text-[18px] font-bold tabular-nums tracking-tight"
-            style={{ color: "#3a322c" }}
+            className="font-jua text-[20px] tabular-nums tracking-tight"
+            style={{ color: "#b87914" }}
           >
             {showPriceRange
               ? `${formatEok(candidate.priceLowKrw!)}~${formatEok(candidate.priceHighKrw!)}`

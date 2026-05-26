@@ -193,8 +193,8 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
         {budget.netPurchasePowerKrw > 0 ? (
           <>
             <p
-              className="text-4xl font-extrabold tabular-nums tracking-tight"
-              style={{ color: "#3a322c" }}
+              className="font-jua text-5xl tabular-nums tracking-tight"
+              style={{ color: "#b87914" }}
             >
               {formatKrwHuman(budget.netPurchasePowerKrw)}
             </p>

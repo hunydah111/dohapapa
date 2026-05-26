@@ -153,13 +153,13 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
               전용 84㎡
             </span>
           </h3>
-          {/* 가격은 토스풍 영웅화 — 작은 라벨 + 큰 숫자 */}
+          {/* 가격 영웅화 — 비집고 시그니처(Jua + 페일 골드, 당근에 없는 황토 톤) */}
           <div className="mt-3">
             <HeroNumber
               value="12억 1,000만"
               caption="추정 현재가 · 국토부 실거래 환산"
               size="hero"
-              tone="ink"
+              tone="gold"
             />
           </div>
           <div className="mt-3 flex flex-wrap gap-1.5">
