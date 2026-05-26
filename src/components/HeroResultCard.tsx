@@ -71,9 +71,9 @@ function discoveryLine(c: ComplexCandidate): string {
     "과천시",
   ];
   const commute = c.commuteLegs.reduce((s, l) => s + l.minutes, 0);
-  if (popular.includes(c.sigungu)) return `🤯 ${c.sigungu}가 내 조건에 잡혔어요!`;
-  if (commute > 0 && commute <= 35) return `🚀 통근 ${commute}분, 생각보다 가깝죠?`;
-  return `🔍 ${c.sigungu} ${c.dongName}, 이런 단지 있는 거 아셨어요?`;
+  if (popular.includes(c.sigungu)) return `${c.sigungu}가 내 조건에 잡혔어요`;
+  if (commute > 0 && commute <= 35) return `통근 ${commute}분, 생각보다 가깝죠?`;
+  return `${c.sigungu} ${c.dongName}, 이런 단지 있는 거 아셨어요?`;
 }
 
 // 결과 공개 히어로 카드 — "집 찾기 유형"(유형 비지 캐릭터) + 1순위 단지를 MBTI 결과 카드 톤으로.

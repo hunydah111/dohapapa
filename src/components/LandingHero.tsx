@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import { HeroNumber } from "@/components/ui/HeroNumber";
 import { NeighborhoodChart } from "@/components/NeighborhoodChart";
 import { PopularComplexChart } from "@/components/PopularComplexChart";
 import dataMeta from "@/data/dataMeta.json";
@@ -13,14 +14,18 @@ const FRESH_DATE: string | null = (() => {
   return `${y}.${Number(m)}.${Number(day)}`;
 })();
 
-// 정책(대출·세제) 점검 시점 — "2026-05-25" → "2026.5". 검색 전부터 기준일 노출(신뢰).
+// 정책(대출·세제) 점검 시점 — "2026-05-25" → "2026.5".
 const POLICY_VERIFIED_SHORT: string = (() => {
   const [y, m] = POLICY_META.lastVerified.split("-");
   return `${y}.${Number(m)}`;
 })();
 
-// 첫 화면(랜딩) — 가치 제안 헤드라인 + 작은 비버 + "예시 결과" 미니카드 + 단일 CTA.
-// 폼(가구유형 등)은 CTA 를 누른 뒤에 노출된다(폼 벽 제거).
+// 첫 화면(랜딩) — sober-warm 톤. 정체성(한강·비집고·코랄)은 보존하되 절제.
+// 변경 핵심(2026-05-26 디자인 라운드 F2):
+//  • CTA 2개 → 1개(plan은 텍스트 링크로 약화) — 당근/토스 패턴
+//  • 3티어 칩 → 예시 카드로 통합 (한 fold 요소 수 감축)
+//  • 안내 3줄 → 신뢰 1줄로 압축
+//  • 페이지 배경에 페일 코랄 wash (Mercury 페이지별 페일 액센트 패턴)
 
 function MiniBadge({ children }: { children: React.ReactNode }) {
   return (
@@ -33,8 +38,17 @@ function MiniBadge({ children }: { children: React.ReactNode }) {
 export function LandingHero({ onStart }: { onStart: () => void }) {
   return (
     <section className="relative px-1 pt-6 pb-4 text-center sm:pt-10">
-      {/* 브랜드 히어로 — 한강에서 서울을 바라보며 '비집고' 들어갈 집을 그리는 비지.
-          모바일은 위·좌·우 풀블리드(검은 하늘이 화면 끝까지), sm+는 둥근 카드. */}
+      {/* 페이지별 페일 액센트 — 한강 위쪽으로 부드러운 코랄 wash (Mercury 패턴) */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[420px] w-screen -translate-x-1/2"
+        style={{
+          background:
+            "radial-gradient(ellipse 70% 100% at 50% 0%, var(--accent-home) 0%, transparent 70%)",
+        }}
+      />
+
+      {/* 브랜드 히어로 — 한강에서 서울을 바라보며 '비집고' 들어갈 집을 그리는 비지. */}
       <div className="biji-pop-in relative left-1/2 mb-5 -mt-10 w-screen -translate-x-1/2 overflow-hidden rounded-b-[26px] shadow-md sm:left-auto sm:mx-auto sm:mt-0 sm:w-full sm:max-w-xl sm:translate-x-0 sm:rounded-3xl sm:ring-1 sm:ring-black/5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -47,8 +61,7 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
         />
       </div>
 
-      {/* 캐치프레이즈 — "내 통장으로 / 비집고 / 들어갈 집" (브랜드어는 본문 톤,
-          강조 코랄은 CTA 한 곳에 집중해 시선 위계를 살린다) */}
+      {/* 캐치프레이즈 — 시적 3줄, 정체성 핵심. 코랄은 "비집고" 한 곳에만 */}
       <p
         className="font-jua mx-auto mt-3 text-[15px] sm:text-[17px]"
         style={{ color: "#8a7d6e" }}
@@ -68,9 +81,9 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
         들어갈 집
       </p>
 
-      {/* 기능 한 줄 — "무엇을 해주는지"를 3초 안에 (본문 폰트로 위계 대비) */}
+      {/* 기능 한 줄 — 무엇을 해주는지 3초 안에 */}
       <p
-        className="mx-auto mt-3 max-w-sm text-[14px] leading-relaxed text-balance sm:text-[15px]"
+        className="mx-auto mt-4 max-w-sm text-[14px] leading-relaxed text-balance sm:text-[15px]"
         style={{ color: "#6b6157" }}
       >
         수도권 아파트, 내 예산에 맞춰
@@ -78,56 +91,35 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
         안정·균형·도전형으로 정리해 드려요
       </p>
 
-      {/* 3-티어 미리보기 — 결과가 세 갈래로 나옴을 시각적으로 예고(안정→도전 따뜻한 그라데이션) */}
-      <div className="mx-auto mt-3.5 flex items-center justify-center gap-2 text-[12px] font-bold">
-        <span
-          className="rounded-full px-3 py-1"
-          style={{ background: "#f7ead0", color: "#9a5a1e" }}
-        >
-          안정형
-        </span>
-        <span
-          className="rounded-full px-3 py-1"
-          style={{ background: "#ffd9c7", color: "#c4521f" }}
-        >
-          균형형
-        </span>
-        <span
-          className="rounded-full px-3 py-1 text-white"
-          style={{ background: "#fe7644" }}
-        >
-          도전형
-        </span>
-      </div>
-
-      {/* 단일 CTA — 예시카드보다 위에 둬서 첫 화면(스크롤 전)에서 바로 보이게 */}
-      <div className="mx-auto mt-5 w-full max-w-sm">
+      {/* 단일 메인 CTA — 한 화면 한 결정 (토스/Mercury 패턴) */}
+      <div className="mx-auto mt-7 w-full max-w-sm">
         <Button onClick={onStart} fullWidth>
           30초, 무료로 내 집 찾기 →
         </Button>
+        {/* 보조 동선 — 텍스트 링크로 강도 약화 (Mercury "secondary as text link" 패턴) */}
         <Link
           href="/plan"
-          className="mt-2.5 flex w-full items-center justify-center rounded-2xl border-2 border-coral-300 bg-white px-4 py-3 text-[15px] font-bold transition-colors hover:border-coral-500"
-          style={{ color: "#c4521f" }}
+          className="mt-3 inline-block text-[13px] font-semibold underline underline-offset-4 transition-colors hover:text-coral-700"
+          style={{ color: "#9a8f82" }}
         >
-          내 집 마련 플랜 · 언제 살 수 있을까? →
+          또는, 내 집 마련 플랜 미리보기 →
         </Link>
-        <p className="mt-2 text-[12px]" style={{ color: "#9a8f82" }}>
-          가입·로그인 없이 · 민감정보(소득·자산·직장) 저장 안 함
-        </p>
-        <p className="mt-1.5 text-[12px]" style={{ color: "#9a8f82" }}>
-          국토부 공개 실거래가 · 매일 갱신
-          {FRESH_DATE ? ` · ${FRESH_DATE} 기준` : " · 무료"}
-        </p>
-        <p className="mt-1 text-[12px]" style={{ color: "#9a8f82" }}>
-          대출·세제 정책 {POLICY_META.effectiveLabel} · {POLICY_VERIFIED_SHORT}{" "}
-          점검
+
+        {/* 신뢰 한 줄 (3줄 → 1줄 압축) — 가입·민감정보·데이터·정책 점검 한 호흡 */}
+        <p
+          className="mx-auto mt-5 max-w-xs text-[11.5px] leading-relaxed"
+          style={{ color: "#9a8f82" }}
+        >
+          가입·로그인 없음 · 민감정보 저장 안 함
+          <br />
+          국토부 공개 실거래
+          {FRESH_DATE ? ` ${FRESH_DATE}` : ""} · 정책 {POLICY_VERIFIED_SHORT} 점검
         </p>
       </div>
 
-      {/* 예시 결과 미니카드 — 행동(CTA) 아래에서 증거로 받쳐줌(가짜임을 명시) */}
-      <div className="mx-auto mt-8 w-full max-w-sm">
-        <p className="mb-2 text-[12px] font-semibold" style={{ color: "#9a8f82" }}>
+      {/* 예시 결과 미니카드 — 첫 fold 아래(스크롤 보상). 3티어 칩 통합 위치 */}
+      <div className="mx-auto mt-10 w-full max-w-sm">
+        <p className="mb-3 text-[12px] font-semibold" style={{ color: "#9a8f82" }}>
           이런 결과를 받아요
         </p>
         <div
@@ -140,22 +132,40 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
           <span className="absolute right-4 top-4 rounded-full bg-[#f7ead0] px-2.5 py-0.5 text-[10px] font-bold text-[#9a5a1e]">
             예시 화면
           </span>
-          <span className="inline-flex items-center rounded-full bg-coral-600 px-2.5 py-1 text-[11px] font-bold text-white">
-            균형형
-          </span>
-          <h3 className="mt-2 text-[18px] font-bold leading-snug" style={{ color: "#3a322c" }}>
+          {/* 3티어 미리보기 통합 — 카드 안에서 "균형형이 강조됨"으로 자연스럽게 */}
+          <div className="flex items-center gap-1.5 text-[11px] font-bold">
+            <span className="rounded-full bg-[#f5f3ee] px-2 py-0.5" style={{ color: "#9a8f82" }}>
+              안정
+            </span>
+            <span className="rounded-full bg-coral-600 px-2.5 py-0.5 text-white">
+              균형
+            </span>
+            <span className="rounded-full bg-[#f5f3ee] px-2 py-0.5" style={{ color: "#9a8f82" }}>
+              도전
+            </span>
+            <span className="ml-auto text-[10px] font-medium" style={{ color: "#9a8f82" }}>
+              3티어로 정리
+            </span>
+          </div>
+          <h3 className="mt-3 text-[18px] font-bold leading-snug" style={{ color: "#3a322c" }}>
             ○○○아파트{" "}
             <span className="text-[13px] font-medium" style={{ color: "#9a8f82" }}>
               전용 84㎡
             </span>
           </h3>
-          <p className="mt-1 text-[15px] font-bold" style={{ color: "#e0a23a" }}>
-            추정 12억 1,000만
-          </p>
+          {/* 가격은 토스풍 영웅화 — 작은 라벨 + 큰 숫자 */}
+          <div className="mt-3">
+            <HeroNumber
+              value="12억 1,000만"
+              caption="추정 현재가 · 국토부 실거래 환산"
+              size="hero"
+              tone="ink"
+            />
+          </div>
           <div className="mt-3 flex flex-wrap gap-1.5">
-            <MiniBadge>🚇 통근 28분</MiniBadge>
-            <MiniBadge>🏫 초품아</MiniBadge>
-            <MiniBadge>⭐ 종합 88점</MiniBadge>
+            <MiniBadge>통근 28분</MiniBadge>
+            <MiniBadge>초품아</MiniBadge>
+            <MiniBadge>종합 88점</MiniBadge>
           </div>
         </div>
       </div>

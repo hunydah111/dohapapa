@@ -45,6 +45,32 @@
   --radius-card:   1.5rem;  /* rounded-3xl */
   --radius-block:  1rem;    /* rounded-2xl */
   --radius-chip:   9999px;  /* rounded-full */
+
+  /* ── 타입 스케일 (sober-warm: 토스 숫자 영웅화 + 당근 절제) ──
+     사용 가이드 (CLAUDE.md 부속):
+     • text-display = D-day·핵심 가격·금액 — 페이지당 1-2회만 (영웅화)
+     • text-hero    = 페이지 h1 (한 줄, 20자 이내)
+     • text-h2      = 섹션 타이틀
+     • text-body    = 본문 (기본)
+     • text-caption = 보조·메타·디스클레임
+  */
+  --text-display:    3.5rem;   /* 56px */
+  --text-display--line-height: 1;
+  --text-hero:       2rem;     /* 32px */
+  --text-hero--line-height: 1.1;
+  --text-h2:         1.375rem; /* 22px */
+  --text-h2--line-height: 1.3;
+  --text-body:       0.9375rem;/* 15px */
+  --text-caption:    0.75rem;  /* 12px */
+
+  /* ── 페이지별 페일 액센트 (Mercury 패턴 — 페이지가 작품처럼 분위기 가짐) ── */
+  --accent-home:     #fff4ef;  /* blush coral (홈) */
+  --accent-result:   #f7ead0;  /* warm sand (결과) */
+  --accent-plan:     #f5ecd9;  /* oatmeal (플랜·기본 페이지 배경) */
+
+  /* ── 여백 토큰 (Mercury 4-6rem 섹션 gap) ── */
+  --space-section:   4rem;     /* 섹션 간 (큰 호흡) */
+  --space-block:     1.5rem;   /* 블록 내부 표준 */
 }
 
 /* ── 베이스 ── */

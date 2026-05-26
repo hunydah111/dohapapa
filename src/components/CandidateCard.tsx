@@ -140,12 +140,12 @@ export function CandidateCard({
             className="inline-flex items-center rounded-full bg-coral-50 px-3 py-1 text-xs font-bold text-coral-700 ring-1 ring-coral-200"
             title="같은 동·비슷한 연식 단지보다 ㎡당 단가가 높아요 — 시장이 더 높게 평가한 단지예요"
           >
-            ✨ 동네에서 인정받는 단지
+            동네에서 인정받는 단지
           </span>
         )}
         {candidate.priceEstimated ? (
           <span
-            className="inline-flex items-center rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700 ring-1 ring-orange-200"
+            className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 ring-1 ring-amber-200"
             title="이 평형의 직접 실거래가 아직 없어 인근 단지 시세로 환산한 추정값입니다 (등기 진행 중 신축 등)"
           >
             추정 시세 · 실거래 미확정
@@ -249,10 +249,10 @@ export function CandidateCard({
             title="추정가 산정 근거 — 국토교통부 공개 실거래 기준"
           >
             {candidate.priceEstimated
-              ? "📊 주변시세 환산"
+              ? "주변시세 환산"
               : candidate.priceFromPresale
-                ? `📊 분양권 ${candidate.transactionCount}건`
-                : `📊 실거래 ${candidate.transactionCount}건·${candidate.lowDataConfidence ? "최근1년" : "최근6개월"}`}
+                ? `분양권 ${candidate.transactionCount}건`
+                : `실거래 ${candidate.transactionCount}건·${candidate.lowDataConfidence ? "최근1년" : "최근6개월"}`}
           </span>
         </div>
         <p className="mt-1 text-[11px] leading-snug" style={{ color: "#9a8f82" }}>
@@ -397,7 +397,7 @@ export function CandidateCard({
         className="mt-1 block text-center text-xs font-semibold underline underline-offset-2 transition-colors hover:text-coral-700"
         style={{ color: "#9a5a1e" }}
       >
-        🔑 이 집 기준으로 내 집 마련 플랜 짜보기 →
+        이 집 기준으로 내 집 마련 플랜 짜보기 →
       </Link>
     </Card>
   );
