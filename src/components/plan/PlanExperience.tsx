@@ -572,7 +572,7 @@ export function PlanExperience() {
 
       {/* R3 재방문 — 지난번보다 당겨진 D-day */}
       {revisit && (
-        <section className="flex items-center gap-3 rounded-3xl border border-coral-200 bg-coral-50/70 p-4">
+        <section className="flex items-center gap-3 rounded-3xl border border-[#ecd9b3] bg-[#fdf6e7]/80 p-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/biji/biji-compare.png"
@@ -595,7 +595,7 @@ export function PlanExperience() {
       )}
 
       {/* 목표 — 동네+평형 → 티어 선택 (또는 찾기에서 넘어온 단지 기준) */}
-      <section className="rounded-3xl border border-coral-200 bg-coral-50/60 p-5">
+      <section className="rounded-3xl border border-[#ecd9b3] bg-[#fdf6e7]/70 p-5">
         {fromComplex ? (
           <div
             className="mb-3 rounded-2xl border px-3 py-2.5"
@@ -736,7 +736,7 @@ export function PlanExperience() {
         </div>
 
         {existingMode && (
-          <div className="mt-3 rounded-2xl border border-coral-100 bg-coral-50/40 p-4">
+          <div className="mt-3 rounded-2xl border border-[#ecd9b3] bg-[#fdf6e7]/60 p-4">
             <p className="text-[12px] font-bold" style={{ color: "#3a2c1d" }}>
               지금 사는 집 정보 — 매도 순수령액이 새 집 자기자본에 합산돼요
             </p>
@@ -943,7 +943,7 @@ export function PlanExperience() {
       </section>
 
       {/* 레버 */}
-      <section className="rounded-3xl border border-coral-100 bg-coral-50/50 p-5">
+      <section className="rounded-3xl border border-[#ecd9b3] bg-[#fdf6e7]/70 p-5">
         <h2 className="mb-1 text-[15px] font-bold" style={{ color: "#3a2c1d" }}>
           레버 — 바꾸면 시점이 움직여요
         </h2>

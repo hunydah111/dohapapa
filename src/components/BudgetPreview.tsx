@@ -12,7 +12,7 @@ export function BudgetPreview({ budget }: { budget: BudgetEstimate }) {
   const negative = budget.netPurchasePowerKrw <= 0;
 
   return (
-    <div className="rounded-3xl border border-coral-100 bg-coral-50/50 p-5 flex flex-col gap-3">
+    <div className="rounded-3xl border border-[#ecd9b3] bg-[#fdf6e7]/70 p-5 flex flex-col gap-3">
       <div className="flex items-baseline justify-between">
         <p className="text-[15px] font-semibold text-[#3a322c]">
           예상 예산 미리보기

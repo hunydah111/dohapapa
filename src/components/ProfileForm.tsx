@@ -195,7 +195,7 @@ function WorkplaceInput({
 
       {/* 직장 검색 / 선택 */}
       {hasSelected ? (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-coral-50 border border-coral-200">
+        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#fdf6e7] border border-[#ecd9b3]">
           <span className="flex-1 text-[15px] text-[#3a322c] font-medium">
             {state.selected!.label}
           </span>
@@ -927,7 +927,7 @@ export function ProfileForm({
                 />
 
                 {/* 취향 한 스푼 (입지) — 복수선택 · 강도(한 스푼/두 스푼/듬뿍) */}
-                <div className="rounded-3xl border border-dashed border-coral-200 bg-gradient-to-br from-coral-50 via-white to-pink-50 px-4 py-5">
+                <div className="rounded-3xl border border-dashed border-[#ecd9b3] bg-[#fdf6e7] px-4 py-5">
                   <p className="text-[15px] font-bold text-[#3a322c]">
                     🌊 한강변 한 스푼{" "}
                     <span className="text-[12px] font-medium text-coral-500">
@@ -1206,7 +1206,7 @@ export function ProfileForm({
           )}
 
           {/* 정책대출 예비 안내 — 가족 구성 기준 */}
-          <div className="rounded-3xl border border-coral-100 bg-coral-50/50 p-5 flex flex-col gap-2">
+          <div className="rounded-3xl border border-[#ecd9b3] bg-[#fdf6e7]/70 p-5 flex flex-col gap-2">
             <p className="text-[15px] font-semibold text-[#3a322c]">
               정책대출 예비 안내
             </p>
@@ -1340,8 +1340,8 @@ export function ProfileForm({
           {detailedBudget && (
             <div className="flex flex-col gap-6">
           {/* 정책대출 안내 배너 */}
-          <div className="rounded-2xl bg-coral-50 border border-coral-100 px-4 py-3">
-            <p className="text-[13px] text-coral-700 leading-relaxed">
+          <div className="rounded-2xl bg-[#fdf6e7] border border-[#ecd9b3] px-4 py-3">
+            <p className="text-[13px] leading-relaxed" style={{ color: "#9a5a1e" }}>
               입력 정보로 디딤돌·신생아 특례·보금자리론 등 정책대출 자격도 함께 확인해 드립니다
             </p>
           </div>
@@ -1530,11 +1530,11 @@ export function ProfileForm({
 
                   {/* 양도세 비과세 미니 가이드 — ? 클릭 시 표시 */}
                   {showTaxGuide && (
-                    <div className="rounded-2xl bg-coral-50/60 border border-coral-200 px-4 py-3">
-                      <p className="text-[12px] font-semibold text-coral-800 mb-2">
+                    <div className="rounded-2xl bg-[#fdf6e7]/80 border border-[#ecd9b3] px-4 py-3">
+                      <p className="text-[12px] font-semibold mb-2" style={{ color: "#7a4e15" }}>
                         1세대 1주택 양도세 비과세 — 모두 충족해야 적용
                       </p>
-                      <ul className="flex flex-col gap-1.5 text-[12px] leading-relaxed text-coral-900">
+                      <ul className="flex flex-col gap-1.5 text-[12px] leading-relaxed" style={{ color: "#5a3a10" }}>
                         <li className="flex gap-2">
                           <span className="flex-shrink-0">①</span>
                           <span>매도하는 집이 <strong>1세대 1주택</strong> (세대원 모두 다른 집 없음)</span>
@@ -1552,7 +1552,7 @@ export function ProfileForm({
                           <span><strong>양도가 12억원 이하</strong> (12억 초과분은 과세)</span>
                         </li>
                       </ul>
-                      <p className="mt-2 text-[11px] text-coral-700 leading-relaxed">
+                      <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#7a5a25" }}>
                         헷갈리면 ❌ 그대로 두세요 — 양도세 6% 정도가 계산에 반영돼
                         보수적으로 추정됩니다. 정확한 판정은 세무사 상담 권장.
                       </p>
@@ -1656,12 +1656,12 @@ export function ProfileForm({
 
           {/* 분석 중 안내 — 호미가 돋보기 들고 두리번 */}
           {submitting && (
-            <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-coral-50 border border-coral-100 px-4 py-5">
+            <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-[#fdf6e7] border border-[#ecd9b3] px-4 py-5">
               <Homi mood="running" size={88} />
-              <p className="text-[14px] font-semibold text-coral-700">
+              <p className="text-[14px] font-semibold" style={{ color: "#7a4e15" }}>
                 열심히 찾는 중…
               </p>
-              <p className="text-[12px] text-coral-600">
+              <p className="text-[12px]" style={{ color: "#9a5a1e" }}>
                 조건에 맞는 단지·예산을 계산하고 있어요
               </p>
             </div>

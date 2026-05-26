@@ -696,10 +696,10 @@ export function HomeExperience() {
   // ── 공유 링크 분석 중 ──────────────────────────────────────
   if (state === null && autoLoading) {
     return (
-      <div className="flex flex-col items-center gap-2 rounded-3xl border border-coral-100 bg-coral-50/60 px-6 py-12 text-center">
+      <div className="flex flex-col items-center gap-2 rounded-3xl border border-[#ecd9b3] bg-[#fdf6e7]/70 px-6 py-12 text-center">
         <Homi mood="running" size={92} />
-        <p className="text-sm font-semibold text-coral-700">공유 링크 분석 중…</p>
-        <p className="text-xs text-coral-500/80">잠시만 기다려 주세요</p>
+        <p className="text-sm font-semibold" style={{ color: "#7a4e15" }}>공유 링크 분석 중…</p>
+        <p className="text-xs" style={{ color: "#9a8f82" }}>잠시만 기다려 주세요</p>
       </div>
     );
   }
@@ -709,7 +709,7 @@ export function HomeExperience() {
       <>
         {/* 재방문 이어보기(R2) — 저장된 검색 취향이 있으면 폼 미리채워 시작 제안 */}
         {resumePrefs && (
-          <div className="mx-auto mb-4 flex w-full max-w-md items-center gap-2 rounded-2xl border border-coral-200 bg-coral-50 px-3 py-2.5">
+          <div className="mx-auto mb-4 flex w-full max-w-md items-center gap-2 rounded-2xl border border-[#ecd9b3] bg-[#fdf6e7] px-3 py-2.5">
             <button
               type="button"
               onClick={handleResume}
@@ -1217,8 +1217,8 @@ export function HomeExperience() {
               {result.overBudgetCandidates.length}곳
             </p>
           </div>
-          <div className="overflow-hidden rounded-3xl border border-coral-200 bg-coral-50/40">
-            <ul className="divide-y divide-coral-200/60">
+          <div className="overflow-hidden rounded-3xl border border-[#ecd9b3] bg-[#fdf6e7]/50">
+            <ul className="divide-y divide-[#ecd9b3]/70">
               {result.overBudgetCandidates.map((m: MoreCandidate) => {
                 const diff = Math.max(
                   0,
@@ -1480,7 +1480,7 @@ export function HomeExperience() {
 
             {/* P2 로딩 진행 표시 */}
             {reanalyzing && (
-              <div className="flex items-center gap-3 rounded-2xl bg-coral-50 border border-coral-100 px-4 py-3">
+              <div className="flex items-center gap-3 rounded-2xl bg-[#fdf6e7] border border-[#ecd9b3] px-4 py-3">
                 <span className="flex h-4 w-4 flex-shrink-0">
                   <span className="animate-ping inline-flex h-full w-full rounded-full bg-coral-400 opacity-75" />
                 </span>

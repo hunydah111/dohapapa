@@ -19,7 +19,7 @@ export function MonthlyBurden({ budget }: { budget: BudgetEstimate }) {
   const stress = useSafe ? safe!.stressTest : budget.stressTest;
 
   return (
-    <div className="mb-5 rounded-2xl border border-coral-100 bg-coral-50/60 px-5 py-4">
+    <div className="mb-5 rounded-2xl border border-[#ecd9b3] bg-[#fdf6e7]/70 px-5 py-4">
       {hasSafeToggle && safe && (
         <div className="mb-3 grid grid-cols-2 gap-1 rounded-xl bg-white/60 p-1">
           {(["max", "safe"] as const).map((m) => (
