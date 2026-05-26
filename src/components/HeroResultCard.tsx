@@ -143,49 +143,29 @@ export function HeroResultCard({
         style={{ background: "radial-gradient(circle, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 70%)" }}
       />
 
-      {/* ── 유형 공개 (MBTI 카드 톤) ── */}
-      <p className="text-center text-xs font-semibold uppercase tracking-wider text-white/75">
-        당신의 집 찾기 유형
-      </p>
-
-      {/* 유형 비지 캐릭터 — 흰 원 배경 위에 pop-in. 진지 모드에선 숨김. */}
+      {/* ── 유형(homeType) — 큰 비지·이름·태그라인은 BijiCard 등급과 정체성 충돌이라 제거.
+          유형은 보조 칩 한 줄로 흡수해 "여러 자아"에서 하나로 단순화. 진지 모드는 표·숫자만. ── */}
       {!serious && (
-        <div className="biji-pop-in mt-2 flex justify-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/18 shadow-inner ring-1 ring-white/25">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`${homeType.image}?v=2`}
-              alt={`${homeType.name} 비지`}
-              width={72}
-              height={72}
-              className="h-16 w-auto drop-shadow-md"
-              draggable={false}
-            />
-          </div>
+        <div className="flex flex-wrap items-center justify-center gap-1.5">
+          <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11.5px] font-semibold text-white/90 backdrop-blur-sm">
+            <span aria-hidden="true">{homeType.emoji}</span>
+            {homeType.name}
+          </span>
+          {typeRarityPercent != null && (
+            <span className="inline-flex items-center rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white/75 backdrop-blur-sm">
+              방문자 {typeRarityPercent}%
+              {typeRarityPercent <= 15 ? " · 희귀" : ""}
+            </span>
+          )}
         </div>
       )}
 
-      <div className="mt-2 flex items-center justify-center gap-2 text-center text-[1.55rem] font-extrabold leading-tight tracking-tight sm:text-[1.9rem]">
-        {!serious && <span aria-hidden="true">{homeType.emoji}</span>}
-        <span>{homeType.name}</span>
-      </div>
-      <p className="mx-auto mt-1 max-w-xs text-center text-[13px] leading-relaxed text-white/90">
-        {homeType.tagline}
-      </p>
-
-      {/* 유형 희귀도 — 방문자 분포(집계). 표본 충분할 때만. 진지 모드 숨김. */}
-      {!serious && typeRarityPercent != null && (
-        <p className="mx-auto mt-2 text-center text-[13px] font-semibold text-white/85">
-          🦫 비집고 방문자의 {typeRarityPercent}%가 이 유형
-          {typeRarityPercent <= 15 ? " — 희귀해요!" : ""}
-        </p>
-      )}
-
-      {/* 유형 레이더 — 내 우선순위 5각형. 진지 모드 숨김. */}
+      {/* 유형 레이더 — 내 우선순위 5각형. 정체성이 아니라 *내 우선순위 시각화*라 BijiCard 와 충돌
+          안 함. 진지 모드 숨김. */}
       {!serious && profileRadar && (
         <div className="mt-2.5 flex flex-col items-center">
-          <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wider text-white/70">
-            내 집 찾기 프로필
+          <p className="mb-0.5 text-[10.5px] font-semibold uppercase tracking-wider text-white/65">
+            내 우선순위
           </p>
           <ProfileRadar values={profileRadar} />
         </div>
@@ -217,15 +197,13 @@ export function HeroResultCard({
         !serious &&
         (() => {
           const t = budgetTier(budgetTopPercent);
-          // 라이프스타일 칩 — 카드에 동행할 1~3개. 우선순위: vibe > 초품아 > 짧은 통근 > 상위%.
+          // 라이프스타일 칩 — 카드에 동행할 1~2개 (정신없음 차단). 우선순위: vibe > 초품아 > 짧은 통근.
+          // "상위 N%"는 문맥 없이 뜬금 → 제거. 백분위는 카드 밖 보조 라인에서만.
           const chips: string[] = [];
           if (candidate.vibeBadge) chips.push(candidate.vibeBadge);
           if (candidate.isChopumah) chips.push("🏫 초품아");
-          if (totalCommute > 0 && totalCommute <= 35 && !transitPending) {
+          if (chips.length < 2 && totalCommute > 0 && totalCommute <= 35 && !transitPending) {
             chips.push(`${commuteIcon} ${totalCommute}분`);
-          }
-          if (t.isFlex && chips.length < 3 && budgetTopPercent <= 50) {
-            chips.push(`상위 ${budgetTopPercent}%`);
           }
           return (
             <div className="mx-auto mt-3.5 flex w-full max-w-[280px] flex-col items-center">
@@ -237,16 +215,20 @@ export function HeroResultCard({
                 chips={chips}
                 className="w-full"
               />
+              {/* 카드 아래 단 한 줄 보조 — 구매력 + 백분위(있을 때) + 면책 한 줄 통합.
+                  카드 안 drip("골라짓는 비버")은 BijiCard 내부 라벨로 충분 → 외부 quote 제거. */}
               {budgetNetKrw != null && budgetNetKrw > 0 && (
-                <p className="mt-2 text-[13px] font-semibold text-amber-100">
-                  추정 구매력 {formatKrwHuman(budgetNetKrw)}
+                <p className="mt-2 text-center text-[12px] text-white/80">
+                  <span className="font-semibold text-amber-100">
+                    추정 구매력 {formatKrwHuman(budgetNetKrw)}
+                  </span>
+                  {t.isFlex && budgetTopPercent <= 50 && (
+                    <span className="text-white/65"> · 실거래 상위 {budgetTopPercent}%</span>
+                  )}
                 </p>
               )}
-              <p className="mt-1 px-2 text-center text-[11px] leading-relaxed text-white/70">
-                &ldquo;{t.drip}&rdquo;
-              </p>
-              <p className="mt-1.5 px-2 text-center text-[11px] leading-relaxed text-white/55">
-                국토교통부 실거래가 기반 추정 · 미래가치 예측이 아닙니다
+              <p className="mt-1 px-2 text-center text-[11px] leading-relaxed text-white/50">
+                국토부 실거래가 기반 추정 · 미래가치 예측 아님
               </p>
             </div>
           );

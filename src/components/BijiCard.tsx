@@ -179,26 +179,33 @@ export function BijiCard({
       </div>
 
       {/* 텍스트 영역 (하단 35%) */}
-      <div className="absolute inset-x-0 bottom-0 flex h-[35%] flex-col justify-between px-5 pb-4 pt-3">
-        {/* 합성 이름 — Jua + 등급 accent. */}
-        <div>
-          <p className={`text-[11px] font-semibold uppercase tracking-wider ${colors.muted}`}>비지 등급</p>
+      <div className="absolute inset-x-0 bottom-0 flex h-[35%] flex-col justify-between px-4 pb-3 pt-2.5">
+        {/* 합성 이름 — 길이별 fontSize 자동(자연어 형태라 "강남 저스틴비버" 8자도 가능). */}
+        <div className="min-w-0">
           <h3
-            className={`font-jua leading-tight ${colors.primary}`}
-            style={{ fontSize: "1.9rem", color: tier.theme.textTone === "dark" ? tier.theme.accent : undefined }}
+            className={`font-jua leading-[1.05] ${colors.primary} truncate`}
+            style={{
+              fontSize: name.length >= 8 ? "1.2rem" : name.length >= 6 ? "1.45rem" : "1.75rem",
+              color: tier.theme.textTone === "dark" ? tier.theme.accent : undefined,
+            }}
+            title={name}
           >
             {name}
           </h3>
-          {meta && <p className={`mt-0.5 text-[12px] ${colors.secondary}`}>{meta}</p>}
+          {meta && (
+            <p className={`mt-0.5 text-[11.5px] ${colors.secondary} truncate`} title={meta}>
+              {meta}
+            </p>
+          )}
         </div>
 
-        {/* 라이프스타일 칩 — 최대 3개. */}
+        {/* 라이프스타일 칩 — 최대 2개 (정신없음 차단). */}
         {chips && chips.length > 0 && (
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
-            {chips.slice(0, 3).map((chip, i) => (
+          <div className="mt-1 flex flex-wrap gap-1">
+            {chips.slice(0, 2).map((chip, i) => (
               <span
                 key={i}
-                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${colors.chipBg}`}
+                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${colors.chipBg}`}
               >
                 {chip}
               </span>
@@ -207,18 +214,18 @@ export function BijiCard({
         )}
 
         {/* 워터마크 — 캡쳐 공유 시 출처 동행. */}
-        <div className={`mt-2 flex items-center gap-1.5 border-t ${colors.divider} pt-1.5`}>
+        <div className={`mt-1.5 flex items-center gap-1 border-t ${colors.divider} pt-1.5`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/biji/biji-face.png?v=2"
             alt=""
-            width={14}
-            height={14}
-            className="h-[14px] w-[14px]"
+            width={12}
+            height={12}
+            className="h-3 w-3"
             draggable={false}
           />
-          <span className={`text-[11px] font-extrabold tracking-tight ${colors.primary}`}>비집고</span>
-          <span className={`ml-auto text-[10px] font-semibold ${colors.muted}`}>{SITE_DOMAIN}</span>
+          <span className={`text-[10.5px] font-extrabold tracking-tight ${colors.primary}`}>비집고</span>
+          <span className={`ml-auto text-[9.5px] font-semibold ${colors.muted} truncate`}>{SITE_DOMAIN}</span>
         </div>
       </div>
     </section>
