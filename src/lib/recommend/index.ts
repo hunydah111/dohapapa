@@ -1,4 +1,5 @@
 import { estimateBudget } from "@/lib/budget";
+import { isRegulated } from "@/lib/regulation";
 import {
   getCommuteMinutes,
   getCommuteProvider,
@@ -24,6 +25,7 @@ import type {
 } from "@/types/profile";
 import { DISCLAIMER } from "@/types/recommendation";
 import type {
+  BudgetEstimate,
   CandidateSignalKey,
   CandidateTier,
   CommuteLeg,
@@ -437,8 +439,28 @@ export async function recommendComplexes(
   opts: RecommendOptions = {},
 ): Promise<RecommendationResult> {
   // 1. 예산 추정
+  // **메인 budget(UI 노출용)** — 사용자가 시군구 1개 안 골라서 보수적 규제 fallback.
+  // 응답의 BudgetEstimate는 이 단일 값(추후 폼에 시군구 옵션 추가 시 사용자 선택 sgg로 교체).
   const budget = estimateBudget(profile);
   const { netPurchasePowerKrw } = budget;
+
+  // **단지별 budget 캐시** — 2025.10.15 대책 LTV·DSR이 시군구별로 다름. 같은 사용자도
+  // 강남 단지(규제 40%) vs 동탄 단지(비규제 70%)에서 살 수 있는 정도가 다르다. 단지마다
+  // estimateBudget 호출하면 1만 회 → 가격대(3구간) × 시군구(~80) ≈ 240 키로 캐시.
+  const sigunguBudgetCache = new Map<string, BudgetEstimate>();
+  const priceTierKey = (target: number): "S" | "M" | "L" =>
+    target <= 1_500_000_000 ? "S" : target <= 2_500_000_000 ? "M" : "L";
+  const budgetFor = (sigungu: string | null, target: number): BudgetEstimate => {
+    const key = `${sigungu ?? "_"}::${priceTierKey(target)}`;
+    let b = sigunguBudgetCache.get(key);
+    if (!b) {
+      b = estimateBudget(profile, { sigungu, targetPriceKrw: target });
+      sigunguBudgetCache.set(key, b);
+    }
+    return b;
+  };
+  // 사용자 단일(메인) npp도 캐시에 넣어 일관 사용(중복 호출 방지). 보수적 규제·target 미상.
+  sigunguBudgetCache.set("_::_default_", budget);
 
   // 2. 직장 목록 구성 — 존재하는 것만. 각 Workplace 가 commuteMode·maxCommuteMinutes 자체 보유
   const workplaces: Workplace[] = [
@@ -645,9 +667,14 @@ export async function recommendComplexes(
       });
       const commuteLegs = await Promise.all(legPromises);
 
+      // 단지별 budget — 그 시군구·가격대의 LTV·DSR로 사용자가 얼마나 살 수 있는지.
+      // 비규제 단지(인천·동탄·구리 등)는 LTV 70%로 더 많이 빌릴 수 있어 통과율↑.
+      const complexBudget = budgetFor(complex.sigungu, rep.medianKrw);
+      const complexNpp = complexBudget.netPurchasePowerKrw;
+
       // 하드 필터 — 가격은 예산 밴드 안, 통근은 허용시간의 COMMUTE_HARD_FACTOR 배 안
       const { lower: bandLower, upper: bandUpper } = bandBounds(
-        netPurchasePowerKrw,
+        complexNpp,
         dropLowerBand,
         budgetFlex,
       );
@@ -666,12 +693,12 @@ export async function recommendComplexes(
       // "예산 조금 넘는 후보"로 분류 — 가격만 문제고 나머지(지역·평수·통근)는 맞는 경우.
       const overBudgetOk =
         rep.medianKrw > bandUpper &&
-        rep.medianKrw <= netPurchasePowerKrw * OVER_BUDGET_FACTOR &&
+        rep.medianKrw <= complexNpp * OVER_BUDGET_FACTOR &&
         !commuteTooLong;
 
       // 신호별 점수
       const commuteResult = scoreCommute(commuteLegs, profile);
-      const budgetResult = scoreBudgetFit(rep.medianKrw, netPurchasePowerKrw);
+      const budgetResult = scoreBudgetFit(rep.medianKrw, complexNpp);
       const schoolResult = scoreSchool(
         {
           nearestElemSchoolM: complex.nearestElemSchoolM,
@@ -731,11 +758,20 @@ export async function recommendComplexes(
       const liquidityBase = Math.min(1, totalTransactions / 40);
       const stabilityBase = 1 - Math.min(1, rep.volatility / 0.25);
       const baselineBonus = Math.round(liquidityBase * 3 + stabilityBase * 2);
-      const totalScore = Math.min(
-        100,
-        baseTotalScore +
-          Math.round(Math.min(VIBE_BONUS_CAP, vibeBonus)) +
-          baselineBonus,
+
+      // 비규제 페널티 — 2025.10.15 대책 미지정 = 수요 압력·인프라 상대적 약함. LTV 70% 우대로
+      // 통과율↑ → 점수 -5로 결과 상위 쏠림 차단. 사용자가 *고를 권한*은 유지(라벨로 인지).
+      const isNonReg = !isRegulated(complex.sigungu);
+      const regulationPenalty = isNonReg ? -5 : 0;
+      const totalScore = Math.max(
+        0,
+        Math.min(
+          100,
+          baseTotalScore +
+            Math.round(Math.min(VIBE_BONUS_CAP, vibeBonus)) +
+            baselineBonus +
+            regulationPenalty,
+        ),
       );
 
       // 초품아 — 초등학교가 단지에서 직선 150m 이내 (전문가 패널: 100m 는 너무 좁음)

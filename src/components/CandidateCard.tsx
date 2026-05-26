@@ -227,19 +227,34 @@ export function CandidateCard({
             {candidate.sigungu}
           </span>
           {(() => {
-            // 2025.10.15 대책: 규제지역(서울25+경기12)은 동일 범위가 토허제 — 매수 시
-            // 사전허가 + 2년 실거주 의무. 카드에 작은 칩으로 사실만 표시(추천·평가 아님).
+            // 2025.10.15 대책 라벨 — 규제(토허제·사전허가·2년 실거주) vs 비규제(LTV 70%·DSR 완화).
+            // 비규제는 LTV 우대 +5점 페널티가 추천 점수에 동반(수요 압력·인프라 상대적 약함).
+            // 카피톤: 사실만, 평가·추천 아님.
             const reg = classifyRegulation(candidate.sigungu);
-            if (!reg.landUseRestricted) return null;
-            return (
-              <span
-                className="inline-flex items-center rounded-full bg-[#fff4ef] px-2 py-0.5 text-[10.5px] font-semibold"
-                style={{ color: "#c4521f" }}
-                title="2025.10.20~ 매수 시 사전허가 + 2년 실거주 의무"
-              >
-                토허제
-              </span>
-            );
+            if (reg.landUseRestricted) {
+              return (
+                <span
+                  className="inline-flex items-center rounded-full bg-[#fff4ef] px-2 py-0.5 text-[10.5px] font-semibold"
+                  style={{ color: "#c4521f" }}
+                  title="2025.10.20~ 매수 시 사전허가 + 2년 실거주 의무"
+                >
+                  토허제
+                </span>
+              );
+            }
+            // 비규제 — 자치구 코드가 알려진 수도권일 때만 표시(미상 시군구엔 라벨 안 함).
+            if (candidate.sigungu) {
+              return (
+                <span
+                  className="inline-flex items-center rounded-full bg-[#f3ece4] px-2 py-0.5 text-[10.5px] font-semibold"
+                  style={{ color: "#6e5b46" }}
+                  title="규제지역 미지정 — LTV 70% 적용, 정책 페널티 -5점"
+                >
+                  비규제
+                </span>
+              );
+            }
+            return null;
           })()}
           <span style={{ color: "#c7c7cc" }}>·</span>
           <span className="text-sm" style={{ color: "#6b6157" }}>

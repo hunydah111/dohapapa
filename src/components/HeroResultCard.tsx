@@ -278,16 +278,26 @@ export function HeroResultCard({
         {candidate.representativeArea}㎡
       </p>
       {(() => {
-        // 2025.10.15 대책 안내 — 규제지역(서울25+경기12)이 토허제. 사전허가·2년 실거주.
+        // 2025.10.15 대책 안내 — 규제(토허제·사전허가·2년 실거주) vs 비규제(LTV 70% 우대·페널티).
         // 카피톤: 사실만, 추천·평가 아님. 코랄 히어로 안에선 흰 반투명 박스로 절제.
         const reg = classifyRegulation(candidate.sigungu);
-        if (!reg.noticeLine) return null;
-        return (
-          <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/18 px-2.5 py-1 text-[11.5px] font-semibold text-white/95 backdrop-blur-sm">
-            <span aria-hidden="true">🛈</span>
-            {reg.noticeLine}
-          </p>
-        );
+        if (reg.noticeLine) {
+          return (
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/18 px-2.5 py-1 text-[11.5px] font-semibold text-white/95 backdrop-blur-sm">
+              <span aria-hidden="true">🛈</span>
+              {reg.noticeLine}
+            </p>
+          );
+        }
+        if (candidate.sigungu && !reg.regulated) {
+          return (
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 text-[11.5px] font-semibold text-white/85 backdrop-blur-sm">
+              <span aria-hidden="true">🛈</span>
+              비규제지역 · LTV 70% 적용·수요 압력 안정
+            </p>
+          );
+        }
+        return null;
       })()}
 
       {/* 핵심 스탯 뱃지 */}
