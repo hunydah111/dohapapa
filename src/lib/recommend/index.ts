@@ -439,9 +439,12 @@ export async function recommendComplexes(
   opts: RecommendOptions = {},
 ): Promise<RecommendationResult> {
   // 1. 예산 추정
-  // **메인 budget(UI 노출용)** — 사용자가 시군구 1개 안 골라서 보수적 규제 fallback.
-  // 응답의 BudgetEstimate는 이 단일 값(추후 폼에 시군구 옵션 추가 시 사용자 선택 sgg로 교체).
-  const budget = estimateBudget(profile);
+  // **메인 budget(UI 노출용)** — 사용자가 필수 지역을 1개만 골랐으면 그 시군구로 정확
+  // 추정(LTV·DSR 트랙 명확). 다중·미선택은 의도 모호라 보수적 규제 fallback. 응답의
+  // 단일 BudgetEstimate가 이 값으로 라이프스타일 칩·플랜 크로스링크에 일관 적용.
+  const requiredRegionsArr = profile.requiredRegions ?? [];
+  const budgetSigungu = requiredRegionsArr.length === 1 ? requiredRegionsArr[0] : null;
+  const budget = estimateBudget(profile, { sigungu: budgetSigungu });
   const { netPurchasePowerKrw } = budget;
 
   // **단지별 budget 캐시** — 2025.10.15 대책 LTV·DSR이 시군구별로 다름. 같은 사용자도

@@ -23,8 +23,12 @@ export function RequiredRegionPicker({
           (복수 선택)
         </span>
       </p>
-      <p className="mt-0.5 mb-2 text-[12px] leading-relaxed text-[#6b6157]">
+      <p className="mt-0.5 mb-1 text-[12px] leading-relaxed text-[#6b6157]">
         고른 지역의 단지만 보여줘요. 안 고르면 수도권 전체.
+      </p>
+      {/* 1곳만 골랐을 때 예산 추정도 그 시군구 LTV·DSR로 정확. 다중·미선택은 보수적 가정. */}
+      <p className="mt-0 mb-2 text-[11px] leading-relaxed text-[#c4521f]">
+        💡 1곳만 고르면 예산 추정도 그 동네 LTV로 정확해져요 (2025.10.15 대책 반영).
       </p>
       {/* 빠른 선택 (핫플 → 해당 구) */}
       <div className="mb-2 flex flex-wrap items-center gap-1.5">
