@@ -192,8 +192,9 @@ function planTargetKrw(s: SavedPlan): number {
 function planMonthsFor(s: SavedPlan, extraCashKrw = 0): number | null {
   const prof = planProfileFrom(s, extraCashKrw);
   const scen = regionScenarios(s.g);
-  const p = computePlan(estimateBudget(prof), prof, {
-    targetPriceKrw: planTargetKrw(s),
+  const target = planTargetKrw(s);
+  const p = computePlan(estimateBudget(prof, { targetPriceKrw: target }), prof, {
+    targetPriceKrw: target,
     monthlySavingKrw: manwon(s.s),
     monthlySideKrw: manwon(s.sd),
     appreciation: { down: scen.down.rateAnnual, flat: 0, up: s.u / 100 },
@@ -288,7 +289,10 @@ export function PlanExperience() {
     [incomeKrw, sideKrw, cashKrw, noHome, newlywed, newborn],
   );
 
-  const budget = useMemo(() => estimateBudget(profile), [profile]);
+  const budget = useMemo(
+    () => estimateBudget(profile, { targetPriceKrw: targetKrw }),
+    [profile, targetKrw],
+  );
 
   // 부업 절벽 경고 — 대출 한도가 실제로 줄어드는 경우(정책대출 활용 중)에만 노출.
   const sideWarn = computeSideWarn(profile, incomeKrw);
@@ -371,11 +375,13 @@ export function PlanExperience() {
   }
 
   // 각 티어의 '보합 기준' 도달 시점 — 카드에 띄워 "이 집이면 D−Xy, 한 칸 아래면 D−Yy" 체감.
+  // 티어마다 가격이 달라 LTV 캡(15/25억)이 다를 수 있어 티어별 budget을 계산.
   const tierMonths = useMemo(() => {
     const out: Partial<Record<TierKey, number | null>> = {};
     if (tiers) {
       for (const t of tiers) {
-        const p = computePlan(budget, profile, {
+        const tBudget = estimateBudget(profile, { targetPriceKrw: t.krw });
+        const p = computePlan(tBudget, profile, {
           targetPriceKrw: t.krw,
           monthlySavingKrw: saveKrw,
           monthlySideKrw: sideKrw,
@@ -385,7 +391,7 @@ export function PlanExperience() {
       }
     }
     return out;
-  }, [tiers, budget, profile, saveKrw, sideKrw, upPct, downRate]);
+  }, [tiers, profile, saveKrw, sideKrw, upPct, downRate]);
 
   return (
     <div className="flex flex-col gap-5">

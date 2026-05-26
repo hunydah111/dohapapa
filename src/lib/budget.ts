@@ -99,7 +99,10 @@ function estimateSimpleBudget(profile: CoupleProfile): BudgetEstimate {
   };
 }
 
-export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
+export function estimateBudget(
+  profile: CoupleProfile,
+  opts?: { targetPriceKrw?: number },
+): BudgetEstimate {
   // 간단 모드 — 가용 예산 직접 입력 시 대출 계산을 건너뛴다.
   if (profile.budgetMode === "simple") {
     return estimateSimpleBudget(profile);
@@ -253,14 +256,23 @@ export function estimateBudget(profile: CoupleProfile): BudgetEstimate {
     ltvLabel = "70% (생애최초·무주택)";
   }
 
-  // 규제지역 무주택/생애최초 주담대 실무 절대 상한(보수적 6억).
-  // ⚠️ 종전 로직은 가격대가 높을수록 한도가 6억→4억→2억으로 줄어드는 버그였음
-  //   (assumedPrice = 자기자본 + 대출capacity 라, 고소득·고자산일수록 assumedPrice 가 커져
-  //    오히려 한도가 2억으로 잘림 — 소득 3억·현금 8억이 2억으로 나오던 원인).
-  //   LTV 비율(assumedPrice × ltvRate)은 그대로 적용하고, 절대 상한은 가격 무관 단일값으로.
-  const bracketCap = 6 * HUNDRED_MILLION;
+  // 규제지역 LTV 절대 상한 — 실제 주택가(targetPriceKrw)가 주어지면 정확한 가격대별 캡
+  //   (≤15억 6억 / 15~25억 4억 / 25억↑ 2억)을 적용. 주택가 모르면(추천 엔진 등) 보수적
+  //   단일 6억(생애최초 우대 한도)로 폴백 — 종전 assumedPrice 기반 역전 버그(고소득→2억) 회피.
+  const targetPrice = opts?.targetPriceKrw;
+  const knownPrice = targetPrice !== undefined && targetPrice > 0;
+  let bracketCap: number;
+  if (knownPrice) {
+    if (targetPrice <= 15 * HUNDRED_MILLION) bracketCap = 6 * HUNDRED_MILLION;
+    else if (targetPrice <= 25 * HUNDRED_MILLION) bracketCap = 4 * HUNDRED_MILLION;
+    else bracketCap = 2 * HUNDRED_MILLION;
+  } else {
+    bracketCap = 6 * HUNDRED_MILLION;
+  }
 
-  const ltvCeiling = Math.min(assumedPrice * ltvRate, bracketCap);
+  // LTV 비율 적용 기준가도 타깃가 우선(정확) / 없으면 assumedPrice(보수).
+  const priceForLtv = knownPrice ? targetPrice : assumedPrice;
+  const ltvCeiling = Math.min(priceForLtv * ltvRate, bracketCap);
 
   // ── 6. 최종 대출 추정액 ──────────────────────────────────────────────────
   const loanEstimateKrw = Math.round(Math.min(finalLoanCapacity, ltvCeiling));

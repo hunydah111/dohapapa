@@ -57,6 +57,14 @@ const BOGEUMJARI_INCOME_LIMIT = 70_000_000;
 /** 보금자리론: 신혼 완화 8,500만 이하 */
 const BOGEUMJARI_NEWLYWED_INCOME_LIMIT = 85_000_000;
 
+/** 보금자리론: 자녀가산 소득 — 1자녀 8,000만 · 2자녀 9,000만 · 3자녀+ 1억. */
+const BOGEUMJARI_1CHILD_INCOME_LIMIT = 80_000_000;
+const BOGEUMJARI_2CHILD_INCOME_LIMIT = 90_000_000;
+const BOGEUMJARI_3CHILD_INCOME_LIMIT = 100_000_000;
+
+/** 보금자리론: 다자녀(2자녀+) 한도 — 4억(생애최초 4.2억과 별개, 유주택 다자녀 우대용). */
+const BOGEUMJARI_MULTICHILD_LOAN_LIMIT = 400_000_000;
+
 /** 디딤돌(신혼) 순자산 요건: 5.11억 이하 */
 const DIDIMDOL_NEWLYWED_NET_ASSET_LIMIT = 511_000_000;
 
@@ -222,17 +230,33 @@ function evaluateDidimdolGeneral(profile: CoupleProfile): PolicyLoanMatch {
  * MVP에서는 기본·신혼 2단계만 적용하고 reason 에 안내를 포함.
  */
 function evaluateBogeumjari(profile: CoupleProfile): PolicyLoanMatch {
-  const { householdIncomeKrwYear, isNewlywed, hasOwnedHomeBefore } = profile;
+  const {
+    householdIncomeKrwYear, isNewlywed, hasOwnedHomeBefore,
+    hasInfant, hasSchoolAgedChild, hasTwoOrMoreChildren, hasThreeOrMoreChildren,
+  } = profile;
 
-  // WHY 보금자리론은 유주택자도 신청 가능(1주택자 대환 용도 등) — 무주택 요건 없음.
-  // 단, 투기·투기과열지구 다주택자 제한이 있어 기존 주택 보유 이력만으로
-  // 일률 차단하지 않고 안내로 대체.
-  const incomeLimit = isNewlywed
-    ? BOGEUMJARI_NEWLYWED_INCOME_LIMIT
-    : BOGEUMJARI_INCOME_LIMIT;
+  // WHY 보금자리론은 유주택자도 신청 가능(1주택자 대환 등) — 무주택 요건 없음.
+  // 자녀 수 추정 (정확 카운트 없으면 보수적으로): 3+ > 2 > 1(영아·학령기 있으면) > 0.
+  const inferredChildren = hasThreeOrMoreChildren
+    ? 3
+    : hasTwoOrMoreChildren
+      ? 2
+      : hasInfant || hasSchoolAgedChild
+        ? 1
+        : 0;
+
+  // 소득요건 — 신혼·자녀가산 중 가장 높은 것 적용.
+  let incomeLimit = BOGEUMJARI_INCOME_LIMIT;
+  let limitLabel = "7,000만원";
+  const apply = (cap: number, label: string) => {
+    if (cap > incomeLimit) { incomeLimit = cap; limitLabel = label; }
+  };
+  if (isNewlywed) apply(BOGEUMJARI_NEWLYWED_INCOME_LIMIT, "8,500만원 (신혼)");
+  if (inferredChildren >= 3) apply(BOGEUMJARI_3CHILD_INCOME_LIMIT, "1억 (3자녀+)");
+  else if (inferredChildren === 2) apply(BOGEUMJARI_2CHILD_INCOME_LIMIT, "9,000만원 (2자녀)");
+  else if (inferredChildren === 1) apply(BOGEUMJARI_1CHILD_INCOME_LIMIT, "8,000만원 (1자녀)");
 
   if (householdIncomeKrwYear > incomeLimit) {
-    const limitLabel = isNewlywed ? "8,500만원 (신혼)" : "7,000만원";
     return {
       productName: "보금자리론",
       eligible: false,
@@ -240,15 +264,24 @@ function evaluateBogeumjari(profile: CoupleProfile): PolicyLoanMatch {
     };
   }
 
-  const loanLimit = !hasOwnedHomeBefore
-    ? BOGEUMJARI_FIRST_LOAN_LIMIT
-    : BOGEUMJARI_LOAN_LIMIT;
+  // 대출 한도 — 생애최초 4.2억 > 다자녀 4억 > 일반 3.6억.
+  let loanLimit: number;
+  let limitNote: string;
+  if (!hasOwnedHomeBefore) {
+    loanLimit = BOGEUMJARI_FIRST_LOAN_LIMIT;
+    limitNote = "생애최초 한도 4.2억";
+  } else if (inferredChildren >= 2) {
+    loanLimit = BOGEUMJARI_MULTICHILD_LOAN_LIMIT;
+    limitNote = "다자녀 한도 4억";
+  } else {
+    loanLimit = BOGEUMJARI_LOAN_LIMIT;
+    limitNote = "일반 한도 3.6억";
+  }
 
-  const conditionParts: string[] = [];
-  if (!hasOwnedHomeBefore) conditionParts.push("생애최초 한도 4.2억");
+  const conditionParts: string[] = [limitNote];
   if (isNewlywed) conditionParts.push("신혼 소득 완화 적용");
+  if (inferredChildren > 0) conditionParts.push(`${inferredChildren}자녀 가산 소득 ${limitLabel}`);
   conditionParts.push("주택가 요건 별도 적용 (6억 이하)");
-  conditionParts.push("자녀수별 소득 가산 별도 확인 필요");
 
   return {
     productName: "보금자리론",
