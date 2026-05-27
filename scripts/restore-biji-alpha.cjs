@@ -54,6 +54,16 @@ const LIST = [
         restored++;
       }
     }
+    // 3) weak alpha 클린업 — alpha 1-100 잔여 (외곽 anti-aliasing 약한 픽셀)는
+    // 부모 색과 blend되어 흰점/허일로 효과를 만듦. 강제 zero alpha로 제거.
+    let weakCleaned = 0;
+    for (let i = 0; i < w * h; i++) {
+      const a = data[i * 4 + 3];
+      if (a > 0 && a < 100) {
+        data[i * 4 + 3] = 0;
+        weakCleaned++;
+      }
+    }
 
     await sharp(data, { raw: { width: w, height: h, channels: 4 } })
       .png()
@@ -92,6 +102,7 @@ const LIST = [
     console.log(
       n.padEnd(22),
       "restored=" + restored.toString().padEnd(6),
+      "weakClean=" + weakCleaned.toString().padEnd(6),
       "holes=" + pct + "%",
       "corners=" + cornerA,
       ok ? "✅" : "⚠",
