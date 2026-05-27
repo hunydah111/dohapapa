@@ -138,7 +138,7 @@ const SCEN_INFO: Record<ScenarioKey, { label: string; hint: string }> = {
 function heroBeaver(months: number | null, basics: boolean): { src: string; word: string } {
   if (basics) return { src: "biji-wallet-empty", word: "저축시작,\n할수있어!" };
   if (months === null) return { src: "biji-think-cool", word: "동네 다시\n골라야겠는데" };
-  if (months <= 36) return { src: "biji-cheer-cocky", word: "끝까지\n가버리자~" };
+  if (months <= 36) return { src: "biji-cheer-cocky", word: "레고레고~" };
   if (months <= 84) return { src: "biji-running", word: "이대로\n쭉 ㄱㄱ" };
   return { src: "biji-clock-sigh", word: "오래걸려도\n포기X" };
 }
@@ -737,7 +737,7 @@ export function PlanExperience() {
           className="mt-3 inline-flex items-center gap-1 rounded-full border-2 border-coral-300 bg-white px-4 py-2 text-[13px] font-bold transition-colors hover:border-coral-500 hover:bg-coral-50"
           style={{ color: "#c4521f" }}
         >
-          {manualMode ? "← 동네로 고르기" : "직접 금액 입력 →"}
+          {manualMode ? "🏘️ 동네로 고르기" : "⌨️ 직접 금액 입력"}
         </button>
       </section>
 
