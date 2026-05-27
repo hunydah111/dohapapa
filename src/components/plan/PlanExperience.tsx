@@ -579,7 +579,7 @@ export function PlanExperience() {
                     </video>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={`/biji/${hero.src}.png?v=14`}
+                      src={`/biji/${hero.src}.png?v=15`}
                       alt="비집고 비지"
                       width={72}
                       height={72}
@@ -592,7 +592,7 @@ export function PlanExperience() {
               return (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={`/biji/${hero.src}.png?v=14`}
+                  src={`/biji/${hero.src}.png?v=15`}
                   alt="비집고 비지"
                   width={72}
                   height={72}

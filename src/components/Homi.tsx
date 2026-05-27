@@ -33,8 +33,8 @@ export type HomiMood =
 const BIJI_ASPECT = 0.9; // 레이아웃 시프트 방지용 힌트(실제 렌더는 width:auto)
 
 // ?v= 캐시버스트 — 새 표정 이미지 반영.
-// v14: connected component 알파 복원 + weak alpha 1-100 cleanup (외곽 흰점·눈 빨강 fix)
-const V = "?v=14";
+// v15: alpha 255 connected component 분석 → 외곽 noise dot 제거 (Recraft grain texture 잔여 해소)
+const V = "?v=15";
 const SRC: Record<HomiMood, string> = {
   smile: `/biji/biji-smile-wave.png${V}`,
   flustered: `/biji/biji-flustered.png${V}`,

@@ -64,6 +64,45 @@ const LIST = [
         weakCleaned++;
       }
     }
+    // 4) 외곽 노이즈 dot 제거 — Recraft 출력 grain texture가 alpha 255+회색으로 남음.
+    // alpha 255 픽셀의 connected component 분석 → 가장 큰 거(비지 본체)의 1% 미만은 노이즈.
+    const cc = new Int32Array(w * h);
+    const sizes = [0];
+    let ccId = 0;
+    for (let i = 0; i < w * h; i++) {
+      if (data[i * 4 + 3] >= 200 && cc[i] === 0) {
+        ccId++;
+        sizes.push(0);
+        const queue = [i];
+        cc[i] = ccId;
+        while (queue.length) {
+          const v = queue.pop();
+          sizes[ccId]++;
+          const x = v % w, y = (v / w) | 0;
+          const neigh = [[1,0],[-1,0],[0,1],[0,-1]];
+          for (const [dx, dy] of neigh) {
+            const nx = x + dx, ny = y + dy;
+            if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+            const nv = ny * w + nx;
+            if (cc[nv] !== 0) continue;
+            if (data[nv * 4 + 3] < 200) continue;
+            cc[nv] = ccId;
+            queue.push(nv);
+          }
+        }
+      }
+    }
+    let maxSize = 0;
+    for (let id = 1; id <= ccId; id++) if (sizes[id] > maxSize) maxSize = sizes[id];
+    const minKeep = maxSize * 0.01; // 비지 본체의 1% 이상만 보존
+    let dotsRemoved = 0;
+    for (let i = 0; i < w * h; i++) {
+      const id = cc[i];
+      if (id > 0 && sizes[id] < minKeep) {
+        data[i * 4 + 3] = 0;
+        dotsRemoved++;
+      }
+    }
 
     await sharp(data, { raw: { width: w, height: h, channels: 4 } })
       .png()
@@ -103,8 +142,8 @@ const LIST = [
       n.padEnd(22),
       "restored=" + restored.toString().padEnd(6),
       "weakClean=" + weakCleaned.toString().padEnd(6),
+      "dots=" + dotsRemoved.toString().padEnd(5),
       "holes=" + pct + "%",
-      "corners=" + cornerA,
       ok ? "✅" : "⚠",
     );
   }
