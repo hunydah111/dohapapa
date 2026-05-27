@@ -188,9 +188,15 @@ body {
   .biji-motion-video { display: none; }
   .biji-motion-fallback { display: block; }
 }
-/* (이전 mix-blend-mode: darken 제거 — 비지 본체 색까지 darken되어 배·볼이 빨강으로
-   왜곡되는 부작용. webm alpha 사용자 본체 영역에도 적용돼 영향. Safari mp4 폴백
-   흰박스는 별도 라운드 처리: JS canPlayType 분기 → PNG 폴백.) */
+/* video key 변경 시 re-mount → 새 element 첫 프레임 로드 사이 깜빡 방지. 부드러운 fade-in. */
+@keyframes biji-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.biji-motion-video, video.biji-running { animation: biji-fade-in 0.35s ease both; }
+@media (prefers-reduced-motion: reduce) {
+  .biji-motion-video, video.biji-running { animation: none; }
+}
 
 /* ── (구) 마스코트 호미 모션 ── */
 @keyframes homi-bob {
