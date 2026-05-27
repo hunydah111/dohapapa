@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/Card";
 import { Homi } from "@/components/Homi";
 import { MonthlyBurden } from "@/components/MonthlyBurden";
 import { POLICY_META, policyFreshness } from "@/lib/policyLoan";
-import { formatKrwHuman, formatManwon } from "@/lib/format";
+import { formatKrwHuman } from "@/lib/format";
 
 // "2026-05-25" → "2026.5.25"
 function fmtPolicyDate(iso: string): string {
@@ -36,9 +36,6 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
           <h2 className="text-lg font-bold" style={{ color: "#3a322c" }}>
             예산 분석
           </h2>
-          <p className="mt-0.5 text-sm" style={{ color: "#6b6157" }}>
-            공개 공식 기반 추정 · 실제 한도는 은행 심사 결과
-          </p>
         </div>
       </div>
 
@@ -143,20 +140,17 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
             >
               이 금액이 어떻게 나왔는지
             </p>
-            <ol className="flex flex-col gap-1">
+            <ul className="flex flex-col gap-1">
               {budget.loanReasonLines.map((line, i) => (
                 <li
                   key={i}
-                  className="flex gap-1.5 text-[11px] leading-relaxed"
+                  className="text-[11px] leading-relaxed"
                   style={{ color: "#f2603c" }}
                 >
-                  <span className="flex-shrink-0 tabular-nums font-semibold opacity-70">
-                    {i + 1}.
-                  </span>
-                  <span>{line}</span>
+                  {line}
                 </li>
               ))}
-            </ol>
+            </ul>
           </div>
         )}
 
@@ -191,30 +185,12 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
           실 매입가능 상한 (추정치)
         </p>
         {budget.netPurchasePowerKrw > 0 ? (
-          <>
-            <p
-              className="font-jua text-5xl tabular-nums tracking-tight"
-              style={{ color: "#b87914" }}
-            >
-              {formatKrwHuman(budget.netPurchasePowerKrw)}
-            </p>
-            {/* 안내 — 대출이 계산되는 상세 예산모드에서만(간단모드는 대출=0이라 생략). */}
-            {budget.loanEstimateKrw > 0 && (
-              <p className="mt-2 text-[13px] leading-relaxed" style={{ color: "#6b6157" }}>
-                🏠 이 가격대면{" "}
-                <span className="font-bold" style={{ color: "#3a322c" }}>
-                  {budget.appliedLoanType === "policy" && budget.appliedPolicyName
-                    ? budget.appliedPolicyName
-                    : "추정"}{" "}
-                  대출 {formatKrwHuman(budget.loanEstimateKrw)}
-                </span>
-                {" "}+ 자기자본 {formatKrwHuman(budget.totalEquityKrw)}로 닿음.
-                {budget.monthlyPaymentKrw > 0
-                  ? ` 월 약 ${formatManwon(budget.monthlyPaymentKrw)} 상환.`
-                  : ""}
-              </p>
-            )}
-          </>
+          <p
+            className="font-jua text-5xl tabular-nums tracking-tight"
+            style={{ color: "#b87914" }}
+          >
+            {formatKrwHuman(budget.netPurchasePowerKrw)}
+          </p>
         ) : (
           <>
             <p

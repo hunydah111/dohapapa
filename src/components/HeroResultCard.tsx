@@ -168,22 +168,14 @@ export function HeroResultCard({
         {candidate.representativeArea}㎡
       </p>
       {(() => {
-        // 2025.10.15 대책 안내 — 규제(토허제·사전허가·2년 실거주) vs 비규제(LTV 70% 우대·페널티).
-        // 카피톤: 사실만, 추천·평가 아님. 코랄 히어로 안에선 흰 반투명 박스로 절제.
+        // 2025.10.15 대책 안내 — 토허제만 사실 라벨로 노출(사전허가·2년 실거주 필수 안내).
+        // 비규제 라벨은 CandidateCard 단지 행에 동일 칩 있어 중복 → 히어로에선 생략.
         const reg = classifyRegulation(candidate.sigungu);
         if (reg.noticeLine) {
           return (
             <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/18 px-2.5 py-1 text-[11.5px] font-semibold text-white/95 backdrop-blur-sm">
               <span aria-hidden="true">🛈</span>
               {reg.noticeLine}
-            </p>
-          );
-        }
-        if (candidate.sigungu && !reg.regulated) {
-          return (
-            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 text-[11.5px] font-semibold text-white/85 backdrop-blur-sm">
-              <span aria-hidden="true">🛈</span>
-              비규제 · LTV +30%p (단, 인기는 미만)
             </p>
           );
         }
@@ -239,9 +231,6 @@ export function HeroResultCard({
 
       <p className="mt-2 text-[11px] leading-snug text-white/70">
         🦫 등급·동네만 공유됨 — 소득·자산·직장 정보는 안 담김.
-      </p>
-      <p className="mt-1 text-[11px] leading-snug text-white/60">
-        실거래가 기반 추정 정보 · 부동산 중개·투자자문이 아닙니다
       </p>
 
       {/* 브랜드 워터마크 — 이 카드를 캡쳐해 공유해도 출처가 따라가게(V4). */}

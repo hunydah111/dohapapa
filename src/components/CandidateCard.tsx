@@ -63,11 +63,6 @@ export function CandidateCard({
     candidate.complexName,
   )}`;
 
-  // 단지 매물이 0건일 때 폴백 — 동네(시군구+동)로 넓혀 네이버 부동산에서 보기.
-  const naverAreaUrl = `https://m.land.naver.com/search/result/${encodeURIComponent(
-    `${candidate.sigungu} ${candidate.dongName}`,
-  )}`;
-
   // 카카오맵 — 단지명+동으로 검색해 해당 단지 위치를 띄운다.
   // (link/map/이름,위도,경도 형식은 레거시 좌표 URL로 리다이렉트돼 기본 화면이 떠서 사용 안 함)
   const kakaoMapUrl = `https://map.kakao.com/?q=${encodeURIComponent(
@@ -141,16 +136,6 @@ export function CandidateCard({
           종합 {candidate.totalScore}점
         </span>
       </div>
-
-      {/* 비교 근거 — 왜 이 순위인지 (다른 두 후보 대비) */}
-      {candidate.rankReason && (
-        <p
-          className="text-xs leading-relaxed -mt-2"
-          style={{ color: "#6b6157" }}
-        >
-          {candidate.rankReason}
-        </p>
-      )}
 
       {/* 단지명 + 위치 + 시세 */}
       <div>
@@ -261,18 +246,20 @@ export function CandidateCard({
                 : `실거래 ${candidate.transactionCount}건·${candidate.lowDataConfidence ? "최근1년" : "최근6개월"}`}
           </span>
         </div>
-        <p className="mt-1 text-[11px] leading-snug" style={{ color: "#9a8f82" }}>
-          {candidate.priceEstimated
-            ? `${candidate.estimateBasis ?? "주변 시세"} 환산 추정 · 실거래 미확정`
-            : candidate.priceFromPresale
-              ? `분양권/입주권 ${candidate.transactionCount}건 기준`
-              : showPriceRange
-                ? `실거래 ${candidate.transactionCount}건 · 층·향 편차 큼(중앙 ${formatKrwHuman(candidate.medianPriceKrw)})`
-                : candidate.lowDataConfidence
-                  ? `최근 1년 ${candidate.transactionCount}건 · 거래 적음(참고용)`
-                  : `최근 6개월 실거래 ${candidate.transactionCount}건 중위값`}
-          {" · 국토부 공개데이터(실거래와 다를 수 있음)"}
-        </p>
+        {(candidate.priceEstimated ||
+          candidate.priceFromPresale ||
+          showPriceRange ||
+          candidate.lowDataConfidence) && (
+          <p className="mt-1 text-[11px] leading-snug" style={{ color: "#9a8f82" }}>
+            {candidate.priceEstimated
+              ? `${candidate.estimateBasis ?? "주변 시세"} 환산 추정 · 실거래 미확정`
+              : candidate.priceFromPresale
+                ? `분양권/입주권 ${candidate.transactionCount}건 기준`
+                : showPriceRange
+                  ? `실거래 ${candidate.transactionCount}건 · 층·향 편차 큼(중앙 ${formatKrwHuman(candidate.medianPriceKrw)})`
+                  : `최근 1년 ${candidate.transactionCount}건 · 거래 적음(참고용)`}
+          </p>
+        )}
       </div>
 
       {/* 리포트 — 왜 뽑혔는지 (따뜻한 코랄·골드 톤) */}
@@ -348,17 +335,6 @@ export function CandidateCard({
             clipRule="evenodd"
           />
         </svg>
-      </a>
-
-      {/* 매물 0건 폴백 — 단지에 매물이 없을 때 동네 전체로 넓혀 보기. */}
-      <a
-        href={naverAreaUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="-mt-1.5 block text-center text-xs font-medium underline decoration-dotted underline-offset-2 transition-colors hover:text-coral-700"
-        style={{ color: "#9a8f82" }}
-      >
-        매물 없으면 → {candidate.dongName} 동네로 한번 봐보자~
       </a>
 
       {/* 이 집 기준으로 플랜 — 추천 → 플랜 크로스링크 */}
