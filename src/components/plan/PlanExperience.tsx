@@ -554,8 +554,12 @@ export function PlanExperience() {
           <div className="flex w-[78px] shrink-0 flex-col items-center justify-end">
             {(() => {
               const hero = heroBeaver(selectedMonths, guide.tone === "needBasics");
-              // running 자리만 video — 자체 모션(다리 교차·팔 swing). reduce-motion 시 PNG 폴백.
-              if (hero.src === "biji-running") {
+              // 시크 비지 5장 모두 자체 모션 비디오 있음 — 자리에 따라 자동 video 분기.
+              const HAS_VIDEO = new Set([
+                "biji-running", "biji-cheer-cocky", "biji-shrug-sigh",
+                "biji-think-cool", "biji-clock-sigh",
+              ]);
+              if (HAS_VIDEO.has(hero.src)) {
                 return (
                   <>
                     <video
@@ -567,7 +571,7 @@ export function PlanExperience() {
                       width={72}
                       height={72}
                       className="biji-motion-video h-[72px] w-[72px] drop-shadow-md"
-                      aria-label="달리는 비지"
+                      aria-label="비집고 비지"
                     >
                       <source src={`/biji/${hero.src}.webm`} type="video/webm" />
                       <source src={`/biji/${hero.src}.mp4`} type="video/mp4" />
