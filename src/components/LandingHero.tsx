@@ -104,7 +104,7 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
           className="mt-2.5 flex w-full items-center justify-center rounded-2xl border-2 border-coral-300 bg-white px-4 py-3 text-[15px] font-bold transition-colors hover:border-coral-500"
           style={{ color: "#c4521f" }}
         >
-          내 집 마련 플랜 · D−몇 년인지 잡아보자 →
+          내집마련플랜 D-day 계산해보자 →
         </Link>
 
         {/* 신뢰 한 줄 (3줄 → 1줄 압축) — 가입·민감정보·데이터·정책 점검 한 호흡 */}
