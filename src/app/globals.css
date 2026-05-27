@@ -188,6 +188,9 @@ body {
   .biji-motion-video { display: none; }
   .biji-motion-fallback { display: block; }
 }
+/* Safari iOS 등 webm alpha 미지원 → mp4 폴백 흰배경 → 부모 색에 녹임.
+   webm alpha 받는 사용자엔 투명 영역이라 darken 무효 (안전). */
+.biji-motion-video, video.biji-running { mix-blend-mode: darken; }
 
 /* ── (구) 마스코트 호미 모션 ── */
 @keyframes homi-bob {

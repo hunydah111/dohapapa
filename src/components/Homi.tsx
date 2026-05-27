@@ -95,7 +95,7 @@ export function Homi({
         width={Math.round(size * BIJI_ASPECT)}
         height={size}
         style={{ height, width: "auto", maxWidth: "100%" }}
-        className={className}
+        className={`biji-running ${className}`}
         aria-label="비지 마스코트"
       >
         <source src={videoSrc.webm} type="video/webm" />

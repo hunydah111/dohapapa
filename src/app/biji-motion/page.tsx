@@ -28,7 +28,7 @@ export default function BijiMotionDemoPage() {
         preload="auto"
         width={280}
         height={280}
-        className="drop-shadow-2xl"
+        className="biji-running drop-shadow-2xl"
         style={{ borderRadius: 32, background: "rgba(255,255,255,0.08)" }}
         aria-label="달리는 비지 비디오"
       >
