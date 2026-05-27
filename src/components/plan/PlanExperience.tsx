@@ -652,10 +652,10 @@ export function PlanExperience() {
           </div>
         ) : null}
         <h2 className="mb-1 text-[15px] font-bold" style={{ color: "#3a2c1d" }}>
-          어떤 집을 그리세요?
+          어느 동네 원하세요?
         </h2>
         <p className="mb-3 text-[12px]" style={{ color: "#6e5b46" }}>
-          동네·평형을 고르고, 어느 정도 집을 목표로 할지 골라요. 평균이 아니라 <b>내가 그리는 집</b>으로.
+          동네·평형을 고르고, 어느 정도 집을 목표로 할지 골라요. 평균이 아니라 <b>내가 원하는 집</b>으로.
         </p>
 
         {!manualMode ? (
@@ -734,17 +734,17 @@ export function PlanExperience() {
         <button
           type="button"
           onClick={() => setManualMode((v) => !v)}
-          className="mt-3 text-[12px] font-semibold underline"
-          style={{ color: "#6e5b46" }}
+          className="mt-3 inline-flex items-center gap-1 rounded-full border-2 border-coral-300 bg-white px-4 py-2 text-[13px] font-bold transition-colors hover:border-coral-500 hover:bg-coral-50"
+          style={{ color: "#c4521f" }}
         >
-          {manualMode ? "동네로 고르기" : "직접 금액 입력"}
+          {manualMode ? "← 동네로 고르기" : "직접 금액 입력 →"}
         </button>
       </section>
 
       {/* 내 상황 */}
       <section className="rounded-3xl border border-[#e5e5ea] bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-[15px] font-bold" style={{ color: "#3a2c1d" }}>
-          내 상황
+          내 상황은 <span className="font-medium" style={{ color: "#9c8a72" }}>소득 / 예금 (대출한도 계산용)</span>
         </h2>
         <div className="grid grid-cols-2 gap-3">
           <NumField label="연 가구소득(만원)" value={income} onChange={setIncome} hint={unitHint(income)} />
