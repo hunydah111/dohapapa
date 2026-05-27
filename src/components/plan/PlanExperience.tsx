@@ -562,7 +562,10 @@ export function PlanExperience() {
               if (HAS_VIDEO.has(hero.src)) {
                 return (
                   <>
+                    {/* key={hero.src} — src 변경 시 <video> 강제 re-mount해 새 source 로드.
+                        (video 태그는 src 변경만으론 reload 안 함 — 시나리오별 모션 안 바뀜 원인.) */}
                     <video
+                      key={hero.src}
                       autoPlay
                       loop
                       muted

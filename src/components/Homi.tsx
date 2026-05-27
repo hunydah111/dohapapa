@@ -97,7 +97,9 @@ export function Homi({
   const videoSrc = size >= 60 ? VIDEO_SRC[mood] : undefined;
   if (videoSrc) {
     return (
+      // key={mood} — mood 변경 시 <video> 강제 re-mount (video는 src 변경만으론 reload X).
       <video
+        key={mood}
         autoPlay
         loop
         muted
