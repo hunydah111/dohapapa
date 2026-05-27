@@ -539,13 +539,13 @@ export function PlanExperience() {
                 </p>
                 <div className="mt-0.5 flex flex-wrap items-end gap-x-2 gap-y-0.5">
                   <span className="font-jua leading-none" style={{ fontSize: 42 }}>
-                    약 {formatDday(rollingSelected)}
+                    {rollingSelected !== null && rollingSelected > 0 ? "약 " : ""}{formatDday(rollingSelected)}
                   </span>
                   <DeltaCallout months={selectedMonths} />
                 </div>
                 {boostedMonths != null && boostedMonths < selectedMonths && (
                   <p className="mt-1.5 text-[13px]" style={{ color: "rgba(255,255,255,0.92)" }}>
-                    월 30만원 더 모으면 <b>약 {formatDday(boostedMonths)}</b>
+                    월 30만원 더 모으면 <b>{boostedMonths > 0 ? "약 " : ""}{formatDday(boostedMonths)}</b>
                   </p>
                 )}
               </>
