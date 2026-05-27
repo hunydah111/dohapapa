@@ -7,7 +7,7 @@ import { BijiCard } from "./BijiCard";
 import { classifyRegulation } from "@/lib/regulation";
 
 // 발견의 의외성 카피 — "이 조건에 이 동네가?" (회의: 재미=발견). 컴플라이언스: 투자권유 아님.
-// 톤: 위트 섞인 선배 모먼트 (v1.1) — "잡았어 = 발견, 추천 아님" 패턴.
+// 톤: 시크하고 유머러스한 선배 모먼트 (v1.5) — "잡았어 = 발견, 추천 아님" 패턴.
 function discoveryLine(c: ComplexCandidate): string {
   const popular = [
     "강남구",
@@ -20,19 +20,19 @@ function discoveryLine(c: ComplexCandidate): string {
     "과천시",
   ];
   const commute = c.commuteLegs.reduce((s, l) => s + l.minutes, 0);
-  if (popular.includes(c.sigungu)) return `${c.sigungu} 잡았어 — 의외지`;
-  if (commute > 0 && commute <= 35) return `통근 ${commute}분, 가깝네`;
-  return `${c.sigungu} ${c.dongName}, 알았어?`;
+  if (popular.includes(c.sigungu)) return `${c.sigungu}? 통장 좀 되네`;
+  if (commute > 0 && commute <= 35) return `통근 ${commute}분 컷`;
+  return `${c.sigungu} ${c.dongName} · 몰랐지?`;
 }
 
-// 결과 공개 히어로 카드 — "집 찾기 유형"(유형 비지 캐릭터) + 1순위 단지를 MBTI 결과 카드 톤으로.
+// 결과 공개 히어로 카드 — BijiCard 등급 + 1순위 단지 (시크·유머러스 톤).
+// 2026-05-27 v1.5: MBTI 클리셰(유형 칩·희귀도) 제거. homeType은 보조 공유 링크에서만.
 export function HeroResultCard({
   candidate,
   homeType,
   onShare,
   budgetTopPercent,
   budgetNetKrw,
-  typeRarityPercent,
 }: {
   candidate: ComplexCandidate;
   homeType: HomeType;
@@ -41,8 +41,6 @@ export function HeroResultCard({
   budgetTopPercent?: number | null;
   /** 추정 구매력(원) — 백분위 밴드 숫자 표시용. */
   budgetNetKrw?: number;
-  /** 이 유형이 전체 방문자 중 차지하는 % (표본 충분할 때만). null = 숨김. */
-  typeRarityPercent?: number | null;
 }) {
   // 유형 카드 공유 링크 — 프로필 없이 유형만(바이럴 안전). /s/{slug} 에 동적 OG 카드.
   const typeShareUrl = `${SITE_URL}/s/${homeType.slug}`;
@@ -81,19 +79,8 @@ export function HeroResultCard({
         style={{ background: "radial-gradient(circle, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 70%)" }}
       />
 
-      {/* ── 유형(homeType) — 칩 한 줄로 흡수. 진지 모드 폐기(2026-05-27 — 친구 지적 "전혀 필요 없음"). ── */}
-      <div className="flex flex-wrap items-center justify-center gap-1.5">
-        <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11.5px] font-semibold text-white/90 backdrop-blur-sm">
-          <span aria-hidden="true">{homeType.emoji}</span>
-          {homeType.name}
-        </span>
-        {typeRarityPercent != null && (
-          <span className="inline-flex items-center rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white/75 backdrop-blur-sm">
-            방문자 {typeRarityPercent}%
-            {typeRarityPercent <= 15 ? " · 희귀" : ""}
-          </span>
-        )}
-      </div>
+      {/* MBTI 클리셰(유형 칩·방문자 N%·희귀) 제거 (2026-05-27 v1.5 — 사용자 "촌스럽다" 지적).
+          정체성은 BijiCard 등급 하나로 일원화. homeType 시스템은 백엔드·보조 공유 링크에 보존. */}
 
       {/* ── 구매력 계급(BijiCard) — 전 구간 노출. 사용자 예산을 실거래가 분포에 줄 세움.
           최하위(isFlex=false)는 숫자 숨기고 응원 라벨만. ── */}

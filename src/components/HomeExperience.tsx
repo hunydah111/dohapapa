@@ -643,23 +643,8 @@ export function HomeExperience() {
     }
   }
 
-  // 유형 분포(줄세우기) — 전역 집계 1회 fetch. 표본 충분할 때만 희귀도 표시.
-  const [typeStats, setTypeStats] = useState<{
-    counts: Record<string, number>;
-    total: number;
-  } | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/type-stats")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j) => {
-        if (!cancelled && j) setTypeStats(j);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // 유형 분포(typeStats) fetch는 MBTI 클리셰 제거(v1.5)와 함께 폐기. /api/type-stats
+  // 엔드포인트 자체는 백엔드에 살아있어 다른 용도(예: 인기 차트) 재활용 가능.
 
   // 동네 분석 — 표시 후보 반경 1km 시설(배치 fetch). 카드에 인라인 주입.
   // 훅이라 early-return 앞에서 무조건 호출(후보 없으면 빈 입력 → no-op).
@@ -802,7 +787,7 @@ export function HomeExperience() {
         </div>
       )}
 
-      {/* 결과 공개 히어로 카드 — 집 찾기 유형 + 1순위 단지 */}
+      {/* 결과 공개 히어로 카드 — BijiCard 등급 + 1순위 단지 */}
       {result.candidates.length > 0 && (
         <HeroResultCard
           candidate={result.candidates[0]}
@@ -810,15 +795,6 @@ export function HomeExperience() {
           onShare={handleShare}
           budgetTopPercent={budgetTopPercent(result.budget.netPurchasePowerKrw)}
           budgetNetKrw={result.budget.netPurchasePowerKrw}
-          typeRarityPercent={
-            typeStats && typeStats.total >= 40
-              ? Math.round(
-                  ((typeStats.counts[getHomeType(state.profile).slug] ?? 0) /
-                    typeStats.total) *
-                    100,
-                )
-              : null
-          }
         />
       )}
 
