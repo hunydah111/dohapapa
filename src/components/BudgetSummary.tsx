@@ -37,7 +37,7 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
             예산 분석
           </h2>
           <p className="mt-0.5 text-sm" style={{ color: "#6b6157" }}>
-            공개 공식 기반 추정치입니다. 실제 한도는 금융기관 상담 결과에 따릅니다.
+            공개 공식 기반 추정 · 실제 한도는 은행 심사 결과
           </p>
         </div>
       </div>
@@ -69,14 +69,14 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
       {homeSaleNegative && (
         <div className="mb-5 rounded-2xl border border-red-300 bg-red-50 px-4 py-4">
           <p className="text-sm font-bold text-red-700 mb-1">
-            갈아타기 주의 — 순수령액이 음수입니다
+            갈아타기 위험 — 매도해도 적자
           </p>
           <p className="text-xs text-red-600 leading-relaxed">
-            기존 집을 매도해도 대출 잔금 · 양도세가 매도가보다 커서{" "}
+            기존 집 매도해도 잔금·양도세가 더 커서{" "}
             <span className="font-semibold">
               {formatKrwHuman(Math.abs(budget.homeSaleNetKrw))}
             </span>
-            를 추가로 부담해야 합니다. 갈아타기 전 전문가 상담을 권고합니다.
+            {" "}추가 부담 필요. 갈아타기 전 전문가 상담 필수.
           </p>
         </div>
       )}
@@ -198,19 +198,19 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
             >
               {formatKrwHuman(budget.netPurchasePowerKrw)}
             </p>
-            {/* 친절 안내 — 대출이 계산되는 상세 예산모드에서만(간단모드는 대출=0이라 생략). */}
+            {/* 안내 — 대출이 계산되는 상세 예산모드에서만(간단모드는 대출=0이라 생략). */}
             {budget.loanEstimateKrw > 0 && (
               <p className="mt-2 text-[13px] leading-relaxed" style={{ color: "#6b6157" }}>
-                🏠 이 가격대 집이면 회원님 조건엔{" "}
+                🏠 이 가격대면{" "}
                 <span className="font-bold" style={{ color: "#3a322c" }}>
                   {budget.appliedLoanType === "policy" && budget.appliedPolicyName
                     ? budget.appliedPolicyName
                     : "추정"}{" "}
                   대출 {formatKrwHuman(budget.loanEstimateKrw)}
                 </span>
-                까지 + 자기자본 {formatKrwHuman(budget.totalEquityKrw)}로 닿아요.
+                {" "}+ 자기자본 {formatKrwHuman(budget.totalEquityKrw)}로 닿음.
                 {budget.monthlyPaymentKrw > 0
-                  ? ` 월 약 ${formatManwon(budget.monthlyPaymentKrw)} 상환 추정.`
+                  ? ` 월 약 ${formatManwon(budget.monthlyPaymentKrw)} 상환.`
                   : ""}
               </p>
             )}
@@ -221,11 +221,10 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
               className="text-xl font-extrabold tracking-tight"
               style={{ color: "#3a322c" }}
             >
-              지금 조건으론 자금이 조금 더 필요해요
+              현금 좀 더 필요 — 우선 현금흐름 잡자~
             </p>
             <p className="mt-1.5 text-sm leading-relaxed" style={{ color: "#6b6157" }}>
-              정책대출 자격이나 보유·동원 자금을 더하면 가능성이 열려요 👇 아래
-              정책대출 안내를 보거나, 조건을 살짝 바꿔 다시 볼 수 있어요.
+              근데 정책대출 자격 보거나, 조건 살짝 바꾸면 가능 — 아래 안내 보자~
             </p>
           </>
         )}
@@ -265,7 +264,7 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
                 className="text-xs font-semibold"
                 style={{ color: "#9a8f82" }}
               >
-                지금 조건에선 어려운 상품
+                이 조건엔 자격 안 됨
               </p>
               {ineligibleLoans.map((loan) => (
                 <PolicyLoanCard
