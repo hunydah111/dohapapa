@@ -136,7 +136,7 @@ const SCEN_INFO: Record<ScenarioKey, { label: string; hint: string }> = {
 
 // 결과에 따라 반응하는 비버 — 시크 톤 변종(sigh/cool/cocky)으로 카피와 매치. 끝은 희망(멀어도 같이 세보자).
 function heroBeaver(months: number | null, basics: boolean): { src: string; word: string } {
-  if (basics) return { src: "biji-shrug-sigh", word: "출발선부터 잡자~" };
+  if (basics) return { src: "biji-wallet-empty", word: "저축시작,\n할수있어!" };
   if (months === null) return { src: "biji-think-cool", word: "동네·시나리오 바꿔보자~" };
   if (months <= 36) return { src: "biji-cheer-cocky", word: "거의 다 왔어 · 잘좀 하자" };
   if (months <= 84) return { src: "biji-running", word: "차근차근 잡자 · 이대로 가" };
@@ -557,7 +557,7 @@ export function PlanExperience() {
               // 시크 비지 5장 모두 자체 모션 비디오 있음 — 자리에 따라 자동 video 분기.
               const HAS_VIDEO = new Set([
                 "biji-running", "biji-cheer-cocky", "biji-shrug-sigh",
-                "biji-think-cool", "biji-clock-sigh",
+                "biji-think-cool", "biji-clock-sigh", "biji-wallet-empty",
               ]);
               if (HAS_VIDEO.has(hero.src)) {
                 return (
@@ -601,7 +601,7 @@ export function PlanExperience() {
               );
             })()}
             <span
-              className="mt-1 rounded-full bg-white/20 px-2 py-0.5 text-center text-[10px] font-semibold leading-tight"
+              className="mt-1 whitespace-pre-line rounded-2xl bg-white/20 px-2 py-1 text-center text-[10px] font-semibold leading-tight"
               style={{ backdropFilter: "blur(2px)" }}
             >
               {heroBeaver(selectedMonths, guide.tone === "needBasics").word}

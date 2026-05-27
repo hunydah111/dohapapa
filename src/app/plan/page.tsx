@@ -25,7 +25,8 @@ export default function PlanPage() {
           내 집 마련 플랜
         </h1>
         <p className="mt-1 text-sm" style={{ color: "#6b6157" }}>
-          내 돈으로 그 집, <b>언제쯤</b> 살 수 있을까 — 저축·부업·나라돈으로 당겨보세요.
+          내 돈으로 그 집, <b>언제쯤</b> 살 수 있을까
+          <br />— 저축·부업·대출로 앞당겨보기
         </p>
       </div>
 
