@@ -563,6 +563,7 @@ export function PlanExperience() {
                       loop
                       muted
                       playsInline
+                      preload="auto"
                       width={72}
                       height={72}
                       className="biji-motion-video h-[72px] w-[72px] drop-shadow-md"

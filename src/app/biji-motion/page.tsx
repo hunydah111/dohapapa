@@ -25,6 +25,7 @@ export default function BijiMotionDemoPage() {
         loop
         muted
         playsInline
+        preload="auto"
         width={280}
         height={280}
         className="drop-shadow-2xl"

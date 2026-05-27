@@ -62,6 +62,12 @@ const SRC: Record<HomiMood, string> = {
   binoculars: `/biji/biji-binoculars.png${V}`,
 };
 
+// 자체 모션 mp4가 있는 mood — 박힌 자리에서 PNG 대신 video로 렌더.
+// 작은 사이즈(<60px)는 모바일 트래픽 절약 위해 PNG 유지.
+const VIDEO_SRC: Partial<Record<HomiMood, string>> = {
+  running: `/biji/biji-running.mp4`,
+};
+
 export function Homi({
   mood = "smile",
   size = 120,
@@ -72,11 +78,31 @@ export function Homi({
   className?: string;
 }) {
   const src = SRC[mood] ?? SRC.smile;
-  // 달리기·만세는 통통 튀고, 나머지는 숨쉬기.
-  const anim = mood === "running" || mood === "cheer" ? "biji-hop" : "biji-breathe";
   // 반응형 높이 — 좁은 화면에선 약 78%까지 줄고, 넓은 화면에선 size 까지.
   const minH = Math.round(size * 0.78);
   const height = `clamp(${minH}px, ${Math.round(size * 0.55)}px + 9vw, ${size}px)`;
+  // 자체 모션 비디오 자리 — running 등. size>=60일 때만 (작은 마스코트엔 PNG 유지).
+  const videoSrc = size >= 60 ? VIDEO_SRC[mood] : undefined;
+  if (videoSrc) {
+    return (
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="auto"
+        width={Math.round(size * BIJI_ASPECT)}
+        height={size}
+        style={{ height, width: "auto", maxWidth: "100%" }}
+        className={className}
+        aria-label="비지 마스코트"
+      >
+        <source src={videoSrc} type="video/mp4" />
+      </video>
+    );
+  }
+  // 달리기·만세는 통통 튀고, 나머지는 숨쉬기. (video로 가는 running은 자체 모션이라 CSS hop X)
+  const anim = mood === "cheer" ? "biji-hop" : "biji-breathe";
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
