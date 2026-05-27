@@ -32,12 +32,16 @@ export default function BijiMotionDemoPage() {
         style={{ borderRadius: 32, background: "rgba(255,255,255,0.08)" }}
         aria-label="달리는 비지 비디오"
       >
+        <source src="/biji/biji-running.webm" type="video/webm" />
         <source src="/biji/biji-running.mp4" type="video/mp4" />
       </video>
+      <p className="text-[11px] text-white/60">
+        webm 305KB · mp4 폴백 555KB
+      </p>
 
       <div className="max-w-[280px] space-y-2 text-center text-[13px] leading-relaxed text-white/90">
         <p>
-          PixVerse 5.5 image-to-video · 652KB · 자동 재생 · 무음 · 무한 루프
+          PixVerse 5.5 image-to-video · webm 305KB · 자동 재생 · 무음 · 무한 루프
         </p>
         <p className="text-white/70">
           비디오 안 보이면 reduce-motion 끄고 새로고침.

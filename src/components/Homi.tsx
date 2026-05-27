@@ -62,10 +62,11 @@ const SRC: Record<HomiMood, string> = {
   binoculars: `/biji/biji-binoculars.png${V}`,
 };
 
-// 자체 모션 mp4가 있는 mood — 박힌 자리에서 PNG 대신 video로 렌더.
+// 자체 모션 비디오가 있는 mood — 박힌 자리에서 PNG 대신 video로 렌더.
 // 작은 사이즈(<60px)는 모바일 트래픽 절약 위해 PNG 유지.
-const VIDEO_SRC: Partial<Record<HomiMood, string>> = {
-  running: `/biji/biji-running.mp4`,
+// webm(VP9) 우선, mp4 폴백 (Safari iOS 일부 webm 미지원 대비).
+const VIDEO_SRC: Partial<Record<HomiMood, { webm: string; mp4: string }>> = {
+  running: { webm: `/biji/biji-running.webm`, mp4: `/biji/biji-running.mp4` },
 };
 
 export function Homi({
@@ -97,7 +98,8 @@ export function Homi({
         className={className}
         aria-label="비지 마스코트"
       >
-        <source src={videoSrc} type="video/mp4" />
+        <source src={videoSrc.webm} type="video/webm" />
+        <source src={videoSrc.mp4} type="video/mp4" />
       </video>
     );
   }

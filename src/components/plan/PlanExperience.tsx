@@ -569,6 +569,7 @@ export function PlanExperience() {
                       className="biji-motion-video h-[72px] w-[72px] drop-shadow-md"
                       aria-label="달리는 비지"
                     >
+                      <source src={`/biji/${hero.src}.webm`} type="video/webm" />
                       <source src={`/biji/${hero.src}.mp4`} type="video/mp4" />
                     </video>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
