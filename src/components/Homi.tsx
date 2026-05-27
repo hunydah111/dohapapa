@@ -62,23 +62,11 @@ const SRC: Record<HomiMood, string> = {
   binoculars: `/biji/biji-binoculars.png${V}`,
 };
 
-// 자체 모션 비디오가 있는 mood — 박힌 자리에서 PNG 대신 video로 렌더.
-// 작은 사이즈(<60px)는 모바일 트래픽 절약 위해 PNG 유지.
-// webm(VP9 alpha) 우선, mp4 폴백 (Safari iOS 일부 webm 미지원 대비 + mix-blend-mode 흰배경 처리).
-const VIDEO_SRC: Partial<Record<HomiMood, { webm: string; mp4: string }>> = {
-  smile:       { webm: `/biji/biji-smile-wave.webm`,   mp4: `/biji/biji-smile-wave.mp4` },
-  wave:        { webm: `/biji/biji-smile-wave.webm`,   mp4: `/biji/biji-smile-wave.mp4` },
-  cheer:       { webm: `/biji/biji-cheer-cocky.webm`,  mp4: `/biji/biji-cheer-cocky.mp4` },
-  running:     { webm: `/biji/biji-running.webm`,      mp4: `/biji/biji-running.mp4` },
-  crying:      { webm: `/biji/biji-crying-sigh.webm`,  mp4: `/biji/biji-crying-sigh.mp4` },
-  think:       { webm: `/biji/biji-think-cool.webm`,   mp4: `/biji/biji-think-cool.mp4` },
-  shrug:       { webm: `/biji/biji-shrug-sigh.webm`,   mp4: `/biji/biji-shrug-sigh.mp4` },
-  walletEmpty: { webm: `/biji/biji-wallet-empty.webm`, mp4: `/biji/biji-wallet-empty.mp4` },
-  key:         { webm: `/biji/biji-key.webm`,          mp4: `/biji/biji-key.mp4` },
-  car:         { webm: `/biji/biji-car.webm`,          mp4: `/biji/biji-car.mp4` },
-  transit:     { webm: `/biji/biji-transit.webm`,      mp4: `/biji/biji-transit.mp4` },
-  binoculars:  { webm: `/biji/biji-binoculars.webm`,   mp4: `/biji/biji-binoculars.mp4` },
-};
+// 자체 모션 비디오 — 임시 비활성화 (눈 흰 highlight + 외곽 흰 잔여 문제).
+// ffmpeg colorkey로는 비지 안 흰 영역과 외곽 흰배경 시맨틱 분리 불가능.
+// 다음 라운드: mp4→PNG seq→connected component 복원→webm 재합성으로 정확 알파 비디오.
+// 12장 mp4/webm 자산은 public/biji/에 보존됨 (재사용 대기).
+const VIDEO_SRC: Partial<Record<HomiMood, { webm: string; mp4: string }>> = {};
 
 export function Homi({
   mood = "smile",

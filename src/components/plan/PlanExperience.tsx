@@ -555,10 +555,8 @@ export function PlanExperience() {
             {(() => {
               const hero = heroBeaver(selectedMonths, guide.tone === "needBasics");
               // 시크 비지 5장 모두 자체 모션 비디오 있음 — 자리에 따라 자동 video 분기.
-              const HAS_VIDEO = new Set([
-                "biji-running", "biji-cheer-cocky", "biji-shrug-sigh",
-                "biji-think-cool", "biji-clock-sigh", "biji-wallet-empty",
-              ]);
+              // 임시 비활성화 — colorkey 알파 비디오 문제(눈 빨강·흰 잔여) 해결 라운드까지 PNG만.
+              const HAS_VIDEO = new Set<string>();
               if (HAS_VIDEO.has(hero.src)) {
                 return (
                   <>
