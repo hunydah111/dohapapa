@@ -235,7 +235,7 @@ function WorkplaceInput({
             state.query.length >= 2 &&
             state.results.length === 0 && (
               <p className="mt-2 text-[13px] text-amber-600 leading-snug">
-                결과가 없어요. 가게·회사명이 안 잡히면 도로명주소로 입력해 보세요
+                결과 없음 · 가게·회사명이 안 잡히면 도로명주소로
                 <br />
                 <span className="text-[#9a8f82]">
                   예: 서울 강남구 테헤란로 152, 강남역, 판교
@@ -869,7 +869,7 @@ export function ProfileForm({
               선호 평수
             </p>
             <p className="text-[12px] text-[#9a8f82] mb-3">
-              여러 개 골라도 돼요 (선택한 평수대만 보여드려요)
+              여러 개 가능 (선택한 평수대만 표시)
             </p>
             <div className="grid grid-cols-3 gap-2">
               {AREA_RANGE_ORDER.map((key) => {
@@ -935,10 +935,9 @@ export function ProfileForm({
                     </span>
                   </p>
                   <p className="mt-1 mb-4 text-[12px] leading-relaxed text-[#6b6157]">
-                    누를 때마다 한 스푼 → 두 스푼 → 듬뿍. 진해질수록 점수도
-                    커지고,{" "}
+                    누를 때마다 한 스푼 → 두 스푼 → 듬뿍. 진해질수록 점수↑,{" "}
                     <strong className="font-semibold">한강에 더 가까워야</strong>{" "}
-                    인정돼요.
+                    인정됨.
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {LOCATION_VIBE_ORDER.map((key) => {
@@ -1056,8 +1055,7 @@ export function ProfileForm({
             <strong className="font-semibold text-[#3a322c]">
               자동차는 카카오 길찾기, 대중교통은 ODsay 길찾기
             </strong>{" "}
-            기준 추정이에요. 결과 화면의 주요 단지에서 대중교통 실제 소요시간을
-            보여드려요.
+            기준 추정. 결과 화면의 주요 단지에서 대중교통 실제 소요시간 표시.
           </p>
 
           <div className="flex gap-3">
@@ -1199,7 +1197,7 @@ export function ProfileForm({
               <ToggleSwitch
                 checked={isNewlywed}
                 onChange={() => setIsNewlywed((v) => !v)}
-                label="혼인 7년 이내예요"
+                label="혼인 7년 이내"
                 description="신혼 특례 정책대출 요건 판정에 사용됩니다"
               />
             </div>
@@ -1213,8 +1211,8 @@ export function ProfileForm({
             {familyPolicyHints.length > 0 ? (
               <>
                 <p className="text-[13px] text-[#6b6157] leading-relaxed">
-                  지금까지 입력한 가족 구성 기준으로 아래 항목에 해당할 수 있어요.
-                  소득·순자산 요건은 다음 단계에서 확인합니다.
+                  지금까지 입력한 가족 구성 기준 — 아래 항목 해당 가능.
+                  소득·순자산 요건은 다음 단계에서 확인.
                 </p>
                 <ul className="flex flex-col gap-1.5 mt-0.5">
                   {familyPolicyHints.map((hint) => (
@@ -1232,8 +1230,8 @@ export function ProfileForm({
               </>
             ) : (
               <p className="text-[13px] text-[#6b6157] leading-relaxed">
-                다음 단계에서 소득·순자산을 입력하면 디딤돌·신생아 특례·보금자리론
-                등 정책대출 자격을 확인해 드려요.
+                다음 단계에서 소득·순자산 입력 — 디딤돌·신생아 특례·보금자리론 등
+                정책대출 자격 확인.
               </p>
             )}
           </div>
@@ -1254,10 +1252,10 @@ export function ProfileForm({
         <div className="flex flex-col gap-6">
           <div>
             <h2 className="text-[22px] font-bold text-[#3a322c] leading-snug">
-              예산을 알려주세요
+              예산 알려줘
             </h2>
             <p className="mt-1 text-[15px] text-[#6b6157]">
-              대출까지 계산해 얼마까지 살 수 있는지 알려드려요. 귀찮으면 접어서 예산만 넣어도 돼요
+              대출까지 계산해 얼마까지 가능한지 보여줌. 귀찮으면 접어서 예산만 입력 OK.
             </p>
           </div>
 
@@ -1308,7 +1306,7 @@ export function ProfileForm({
                 hint={
                   availableBudget
                     ? `${manwonHint(availableBudget)} — 현금+받을 대출 다 합친 총 동원 자금`
-                    : "현금에 받을 수 있는 대출까지 다 합친 '집 살 수 있는 총액'. 취득세만 빼고 계산해요."
+                    : "현금에 받을 수 있는 대출까지 다 합친 '집 살 수 있는 총액' · 취득세만 빼고 계산"
                 }
               />
             </div>
@@ -1412,7 +1410,7 @@ export function ProfileForm({
                 보유 주택 수
               </p>
               <p className="text-[12px] text-[#6b6157] mb-3">
-                생애최초·취득세 중과(2주택 8%·3주택+ 12%) 판정에 사용돼요.
+                생애최초·취득세 중과(2주택 8%·3주택+ 12%) 판정에 사용.
               </p>
               <Segmented
                 options={[
@@ -1435,7 +1433,7 @@ export function ProfileForm({
               hint={
                 additionalFunds
                   ? `${manwonHint(additionalFunds)} — 자기자본에 합산`
-                  : "전세보증금 회수·부모지원 등 추가로 끌어올 수 있는 돈. 자기자본에 합산돼요."
+                  : "전세보증금 회수·부모지원 등 추가로 끌어올 수 있는 돈 · 자기자본에 합산"
               }
             />
           </div>
@@ -1445,7 +1443,7 @@ export function ProfileForm({
             <ToggleSwitch
               checked={hasExistingHome}
               onChange={() => setHasExistingHome((v) => !v)}
-              label="기존 집을 팔아 자금을 마련해요"
+              label="기존 집 팔아 자금 마련"
               description="갈아타기 — 매도 예상가와 잔대출을 입력하면 순수령액을 계산합니다"
             />
 
@@ -1484,7 +1482,7 @@ export function ProfileForm({
                     <div className="flex-1">
                       <div className="flex items-center gap-1.5">
                         <p className="text-[14px] font-medium text-[#3a322c]">
-                          2년 이상 살면서 보유했어요
+                          2년 이상 거주·보유
                         </p>
                         <span
                           role="button"
@@ -1662,7 +1660,7 @@ export function ProfileForm({
                 열심히 찾는 중…
               </p>
               <p className="text-[12px]" style={{ color: "#9a5a1e" }}>
-                조건에 맞는 단지·예산을 계산하고 있어요
+                조건에 맞는 단지·예산 계산 중
               </p>
             </div>
           )}
