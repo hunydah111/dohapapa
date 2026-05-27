@@ -6,7 +6,8 @@ import { SITE_URL, SITE_DOMAIN } from "@/lib/site";
 import { BijiCard } from "./BijiCard";
 import { classifyRegulation } from "@/lib/regulation";
 
-// 발견의 의외성 카피 — "이 조건에 이 동네가?" (회의: 재미=발견). 컴플라이언스: 투자권유 아님, 가벼운 톤.
+// 발견의 의외성 카피 — "이 조건에 이 동네가?" (회의: 재미=발견). 컴플라이언스: 투자권유 아님.
+// 톤: 위트 섞인 선배 모먼트 (v1.1) — "잡았어 = 발견, 추천 아님" 패턴.
 function discoveryLine(c: ComplexCandidate): string {
   const popular = [
     "강남구",
@@ -19,9 +20,9 @@ function discoveryLine(c: ComplexCandidate): string {
     "과천시",
   ];
   const commute = c.commuteLegs.reduce((s, l) => s + l.minutes, 0);
-  if (popular.includes(c.sigungu)) return `${c.sigungu}가 내 조건에 잡혔어요`;
-  if (commute > 0 && commute <= 35) return `통근 ${commute}분, 생각보다 가깝죠?`;
-  return `${c.sigungu} ${c.dongName}, 이런 단지 있는 거 아셨어요?`;
+  if (popular.includes(c.sigungu)) return `${c.sigungu} 잡았어 — 의외지`;
+  if (commute > 0 && commute <= 35) return `통근 ${commute}분, 가깝네`;
+  return `${c.sigungu} ${c.dongName}, 알았어?`;
 }
 
 // 결과 공개 히어로 카드 — "집 찾기 유형"(유형 비지 캐릭터) + 1순위 단지를 MBTI 결과 카드 톤으로.
@@ -141,7 +142,7 @@ export function HeroResultCard({
 
       {/* ── 1순위 매칭 단지 ── */}
       <p className="text-[11px] font-semibold uppercase tracking-wider text-white/75">
-        이 유형에 맞는 1순위 내 집
+        조건에 맞는 1순위 단지 잡았어
       </p>
 
       {/* 의외성 카피 — 발견의 재미 */}
@@ -195,7 +196,7 @@ export function HeroResultCard({
           return (
             <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 text-[11.5px] font-semibold text-white/85 backdrop-blur-sm">
               <span aria-hidden="true">🛈</span>
-              비규제지역 · LTV 70% 적용·수요 압력 안정
+              비규제 · LTV +30%p (단, 인기는 미만)
             </p>
           );
         }
@@ -206,7 +207,7 @@ export function HeroResultCard({
       {gradeShareUrl ? (
         <div className="mt-4 flex flex-col items-start gap-2">
           <p className="text-[13px] font-bold text-amber-100">
-            친구는 무슨 비버일까? 👀 보내서 비교해봐요
+            친구는 무슨 비버? · 보내서 비교해보자~
           </p>
           <button
             type="button"

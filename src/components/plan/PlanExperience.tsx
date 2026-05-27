@@ -526,10 +526,10 @@ export function PlanExperience() {
             {selectedMonths === null ? (
               <>
                 <p className="font-jua mt-1.5 leading-tight" style={{ fontSize: 25 }}>
-                  지금 조건으론 시간이 걸려요
+                  이대로면 길어
                 </p>
                 <p className="mt-1.5 text-[13px]" style={{ color: "rgba(255,255,255,0.92)" }}>
-                  아래에서 동네를 한 칸 낮추거나 저축을 늘리면 길이 보여요.
+                  근데 동네 한 칸 내리거나 저축 늘리면 가능 — 보자~
                 </p>
               </>
             ) : (
@@ -1135,11 +1135,11 @@ function BasicsGuide() {
   return (
     <div className="mt-2 rounded-2xl bg-white/80 p-4">
       <p className="text-sm font-bold" style={{ color: "#3a2c1d" }}>
-        🌱 아직 출발선이에요
+        출발선. 우선 현금흐름 잡자~
       </p>
       <p className="mt-1.5 text-[12px] leading-relaxed" style={{ color: "#6e5b46" }}>
-        소득·현금·월 저축이 모두 0이라 아직 시점을 그릴 수 없어요. 아래 레버에서 <b>월 저축</b>을
-        올리거나 위에서 <b>소득·현금</b>을 채워보면 길이 보이기 시작해요.
+        소득·현금·월 저축이 모두 0이라 아직 시점 못 그려. 아래 <b>월 저축</b>을 올리거나
+        위에서 <b>소득·현금</b> 채워봐 — 너는 되는 애야.
       </p>
     </div>
   );
@@ -1157,7 +1157,7 @@ function HopelessGuide({
   return (
     <div className="mt-2 rounded-2xl bg-white/80 p-4">
       <p className="text-sm font-bold" style={{ color: "#3a2c1d" }}>
-        지금 페이스로는 시간이 걸려요 — 그래도 길은 있어요
+        이대로면 길어. 근데 옆 동네면 가능 — 보자~
       </p>
       <ul className="mt-2 flex flex-col gap-2.5">
         <li className="text-[12px] leading-relaxed" style={{ color: "#6e5b46" }}>

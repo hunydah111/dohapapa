@@ -72,7 +72,7 @@ describe("classifyRegulation 사용자 안내", () => {
     const r = classifyRegulation("강남구");
     expect(r.regulated).toBe(true);
     expect(r.landUseRestricted).toBe(true);
-    expect(r.noticeLine).toMatch(/토지거래허가/);
+    expect(r.noticeLine).toMatch(/토허제/);
     expect(r.noticeLine).toMatch(/2년 실거주/);
   });
 

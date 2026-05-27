@@ -73,7 +73,7 @@ export function classifyRegulation(sigungu: string | null | undefined): Regulati
   if (landUseRestricted) {
     // 토허제 + 규제 — 사전허가·2년 실거주 의무 안내(추정 아닌 사실).
     noticeLine =
-      "토지거래허가구역 · 매수 시 사전 허가가 필요하고 2년 실거주 의무가 있어요 (2025.10.20~ 계약 적용).";
+      "토허제 · 사전허가+2년 실거주 (잘 알아보자)";
   }
   return {
     sigungu: sigungu ?? null,

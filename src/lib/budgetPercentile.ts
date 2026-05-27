@@ -85,7 +85,7 @@ export interface BudgetTier {
 
 export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
   justin: {
-    slug: "justin", emoji: "🕺", label: "저스틴비버", drip: "취향껏 집짓는 비버", isFlex: true,
+    slug: "justin", emoji: "🕺", label: "저스틴비버", drip: "취향껏 잡는 포지션", isFlex: true,
     image: "/biji/tier/justin.png",
     theme: {
       cardBg: "linear-gradient(155deg, #3a2c1d 0%, #5a3520 55%, #fe7644 100%)",
@@ -96,7 +96,7 @@ export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
     },
   },
   fever: {
-    slug: "fever", emoji: "🔥", label: "피버", drip: "골라짓는 비버", isFlex: true,
+    slug: "fever", emoji: "🔥", label: "피버", drip: "골라잡는 포지션", isFlex: true,
     image: "/biji/tier/fever.png",
     theme: {
       cardBg: "linear-gradient(160deg, #fff4ef 0%, #ffb094 55%, #fe7644 100%)",
@@ -107,7 +107,7 @@ export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
     },
   },
   top: {
-    slug: "top", emoji: "🏆", label: "탑비버", drip: "잘나가는 비버", isFlex: true,
+    slug: "top", emoji: "🏆", label: "탑비버", drip: "탑 클래스", isFlex: true,
     image: "/biji/tier/top.png",
     theme: {
       cardBg: "linear-gradient(160deg, #fffdf8 0%, #f7ead0 55%, #e0a23a 100%)",
@@ -118,7 +118,7 @@ export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
     },
   },
   nan: {
-    slug: "nan", emoji: "😎", label: "난비버", drip: "알짜비버", isFlex: true,
+    slug: "nan", emoji: "😎", label: "난비버", drip: "알짜 라인", isFlex: true,
     image: "/biji/tier/nan.png",
     theme: {
       cardBg: "linear-gradient(160deg, #2c2116 0%, #4a3a28 55%, #6e5b46 100%)",
@@ -129,7 +129,7 @@ export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
     },
   },
   gukmin: {
-    slug: "gukmin", emoji: "🦫", label: "비버", drip: "국민비버", isFlex: false,
+    slug: "gukmin", emoji: "🦫", label: "비버", drip: "표준 라인 — 부업 한 칸 늘리자~", isFlex: false,
     image: "/biji/tier/gukmin.png",
     theme: {
       cardBg: "linear-gradient(160deg, #fffdf8 0%, #efe2cf 60%, #d9c5a4 100%)",
@@ -140,7 +140,7 @@ export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
     },
   },
   baby: {
-    slug: "baby", emoji: "🐣", label: "아기비버", drip: "집짓기 시작하는 비버 — 비지가 옆에서 응원", isFlex: false,
+    slug: "baby", emoji: "🐣", label: "아기비버", drip: "출발선 — 우선 현금흐름 잡자", isFlex: false,
     image: "/biji/tier/baby.png",
     theme: {
       cardBg: "linear-gradient(160deg, #fffdf8 0%, #ffe6dc 55%, #ffccb7 100%)",

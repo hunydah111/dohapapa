@@ -217,7 +217,7 @@ export function CandidateCard({
                 <span
                   className="inline-flex items-center rounded-full bg-[#f3ece4] px-2 py-0.5 text-[10.5px] font-semibold"
                   style={{ color: "#6e5b46" }}
-                  title="규제지역 미지정 — LTV 70% 적용, 정책 페널티 -5점"
+                  title="규제지역 미지정 — LTV 70% 적용, 단지 점수 −5(인기는 미만)"
                 >
                   비규제
                 </span>
@@ -283,7 +283,7 @@ export function CandidateCard({
         }}
       >
         <p className="text-[11px] font-bold mb-1.5" style={{ color: "#e8662f" }}>
-          선택 이유
+          골라낸 이유
         </p>
         <dl className="flex flex-col gap-1">
           {reasonRows.map((r) => (
@@ -358,7 +358,7 @@ export function CandidateCard({
         className="-mt-1.5 block text-center text-xs font-medium underline decoration-dotted underline-offset-2 transition-colors hover:text-coral-700"
         style={{ color: "#9a8f82" }}
       >
-        매물이 안 보이면 → {candidate.dongName} 동네 매물 둘러보기
+        매물 없으면 → {candidate.dongName} 동네로 한번 봐보자~
       </a>
 
       {/* 이 집 기준으로 플랜 — 추천 → 플랜 크로스링크 */}
@@ -376,7 +376,7 @@ export function CandidateCard({
         className="mt-1 block text-center text-xs font-semibold underline underline-offset-2 transition-colors hover:text-coral-700"
         style={{ color: "#9a5a1e" }}
       >
-        이 집 기준으로 내 집 마련 플랜 짜보기 →
+        이 집 기준 D−몇 년? 잡아보자 →
       </Link>
     </Card>
   );

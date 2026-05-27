@@ -73,6 +73,43 @@
   --space-block:     1.5rem;   /* 블록 내부 표준 */
 }
 
+/* ───────────────────────────────────────────────────────────────────────────
+   Tone Shift v1.1 — 야옹이 스티커톤 (2026-05-27 도입, 아직 활성화 X)
+   ───────────────────────────────────────────────────────────────────────────
+   비지 캐릭터 시안이 들어오면 아래 블록을 @theme inline 으로 옮기고 위 옛
+   토큰을 deprecated 처리하며 점진 마이그레이션. SKILL.md §10 참고.
+
+   결정: D1 코랄 완전 제거 · D2 한강 비지 재그리기 · D3 워드마크 Gmarket Sans
+   Bold · D4 3티어 잉크+패턴+"TIER I~III" · D5 BijiCard 6등급 잉크+ornament.
+
+   백업: tag pre-tone-shift / branch backup/before-tone-shift (커밋 8adaf04).
+   ───────────────────────────────────────────────────────────────────────────
+
+   --color-ink:        #1f2a55;    본문·헤딩·outline (잉크 네이비)
+   --color-ink-soft:   #3b4878;    보조 잉크
+   --color-paper:      #f4ead2;    페이지 배경 (아이보리)
+   --color-paper-card: #fbf4de;    카드 베이스
+   --color-shadow-tan: #c8b78d;    1mm offset shadow (선택)
+
+   --font-sans:    "Pretendard", -apple-system, sans-serif;
+   --font-heading: "Gmarket Sans Bold";    워드마크·메가 헤딩
+   --font-mono:    "JetBrains Mono";       "ESTD. 2024" 같은 코드라인
+
+   --outline-card: 1.5px solid var(--color-ink);
+   --shadow-card:  2px 2px 0 var(--color-shadow-tan);   또는 0 (사용자 결정)
+
+   --radius-card:  1rem;       24px → 16px 축소
+   --radius-block: 0.75rem;    16px → 12px
+
+   제거 대상 (deprecated 후 일소):
+   --color-accent (#fe7644 코랄) · --color-coral-* 스케일
+   --color-warm (#e0a23a 허니) · --color-warm-soft · --color-warm-text
+   --color-text-primary (#3a2c1d 우드 브라운)
+   --font-jua (Jua) · Gowun Dodum 본문
+   --shadow-card 종전값
+   --accent-home/result/plan (페일 액센트 → paper 단일로)
+   ─────────────────────────────────────────────────────────────────────────── */
+
 /* ── 베이스 ── */
 html,
 body {

@@ -63,12 +63,12 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
         />
       </div>
 
-      {/* 캐치프레이즈 — 시적 3줄, 정체성 핵심. 코랄은 "비집고" 한 곳에만 */}
+      {/* 캐치프레이즈 — 시크 위트 3줄. 사용자 핵심 인용 — 머리는 차갑게 / 비집고 / 통장은 뜨겁게 */}
       <p
         className="font-jua mx-auto mt-3 text-[15px] sm:text-[17px]"
         style={{ color: "#8a7d6e" }}
       >
-        내 통장으로
+        머리는 차갑게
       </p>
       <h1
         className="font-jua -mt-0.5 text-[3rem] leading-[1] tracking-tight sm:text-[3.6rem]"
@@ -80,23 +80,23 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
         className="font-jua mx-auto mt-0 text-[15px] sm:text-[17px]"
         style={{ color: "#8a7d6e" }}
       >
-        들어갈 집
+        통장은 뜨겁게
       </p>
 
-      {/* 기능 한 줄 — 무엇을 해주는지 3초 안에 */}
+      {/* 기능 한 줄 — 무엇을 해주는지 3초 안에 (정량 단정·위트 톤) */}
       <p
         className="mx-auto mt-4 max-w-sm text-[14px] leading-relaxed text-balance sm:text-[15px]"
         style={{ color: "#6b6157" }}
       >
-        수도권 아파트, 내 예산에 맞춰
+        수도권 아파트단지 1만 곳
         <br />
-        안정·균형·도전형으로 정리해 드려요
+        내 통장에 맞는 단지만 잡아줌
       </p>
 
       {/* 단일 메인 CTA — 한 화면 한 결정 (토스/Mercury 패턴) */}
       <div className="mx-auto mt-7 w-full max-w-sm">
         <Button onClick={onStart} fullWidth>
-          30초, 무료로 내 집 찾기 →
+          30초컷, 내 집 잡기 →
         </Button>
         {/* 비집고 두 축의 다른 한 쪽 — primary CTA 아래 풀너비 세컨더리 버튼(약화하되 또렷이 보이게) */}
         <Link
@@ -104,7 +104,7 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
           className="mt-2.5 flex w-full items-center justify-center rounded-2xl border-2 border-coral-300 bg-white px-4 py-3 text-[15px] font-bold transition-colors hover:border-coral-500"
           style={{ color: "#c4521f" }}
         >
-          내 집 마련 플랜 · 언제 살 수 있을까? →
+          내 집 마련 플랜 · D−몇 년인지 잡아보자 →
         </Link>
 
         {/* 신뢰 한 줄 (3줄 → 1줄 압축) — 가입·민감정보·데이터·정책 점검 한 호흡 */}
@@ -122,7 +122,7 @@ export function LandingHero({ onStart }: { onStart: () => void }) {
       {/* 예시 결과 미니카드 — 첫 fold 아래(스크롤 보상). 3티어 칩 통합 위치 */}
       <div className="mx-auto mt-10 w-full max-w-sm">
         <p className="mb-3 text-[12px] font-semibold" style={{ color: "#9a8f82" }}>
-          이런 결과를 받아요
+          이렇게 잡아줘
         </p>
         <div
           className="relative rounded-3xl bg-white p-5 text-left"

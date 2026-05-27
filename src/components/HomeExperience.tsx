@@ -887,10 +887,10 @@ export function HomeExperience() {
             <Homi mood="cheer" size={56} className="shrink-0" />
             <div>
               <h2 className="text-xl font-bold" style={{ color: "#3a322c" }}>
-                딱 맞는 집 찾았어요!
+                조건에 맞는 단지 잡았어
               </h2>
               <p className="mt-0.5 text-sm" style={{ color: "#6b6157" }}>
-                검토 {result.consideredComplexCount.toLocaleString()}개 중 상위{" "}
+                {result.consideredComplexCount.toLocaleString()}곳 중 상위{" "}
                 {result.candidates.length}곳
               </p>
             </div>
@@ -916,7 +916,7 @@ export function HomeExperience() {
             className="text-xl font-bold mb-2 text-center"
             style={{ color: "#3a322c" }}
           >
-            앗, 딱 맞는 집을 못 찾았어요 😅
+            앗, 이 조건엔 0건이네
           </h2>
           <p className="text-sm leading-relaxed mb-3" style={{ color: "#6b6157" }}>
             수도권{" "}
