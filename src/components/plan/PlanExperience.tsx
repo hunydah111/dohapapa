@@ -136,11 +136,11 @@ const SCEN_INFO: Record<ScenarioKey, { label: string; hint: string }> = {
 
 // 결과에 따라 반응하는 비버 — 끝은 희망(멀어도 같이 세보자).
 function heroBeaver(months: number | null, basics: boolean): { src: string; word: string } {
-  if (basics) return { src: "biji-shrug", word: "같이 시작해봐요" };
-  if (months === null) return { src: "biji-think", word: "동네·시나리오 바꿔볼까요?" };
-  if (months <= 36) return { src: "biji-cheer", word: "거의 다 왔어요!" };
-  if (months <= 84) return { src: "biji-running", word: "같이 차근차근 모아요" };
-  return { src: "biji-clock", word: "천천히, 같이 세어봐요" };
+  if (basics) return { src: "biji-shrug", word: "출발선부터 잡자~" };
+  if (months === null) return { src: "biji-think", word: "동네·시나리오 바꿔보자~" };
+  if (months <= 36) return { src: "biji-cheer", word: "거의 다 왔어 · 잘좀 하자" };
+  if (months <= 84) return { src: "biji-running", word: "차근차근 잡자 · 이대로 가" };
+  return { src: "biji-clock", word: "길긴 해 · 힘좀 내자~" };
 }
 
 // ── R3 재방문 — "살아있는 D-day": 저장된 플랜으로 경과월만큼 모았다면 시점 재계산 ──
@@ -584,12 +584,12 @@ export function PlanExperience() {
           />
           <div className="min-w-0">
             <p className="text-[12px]" style={{ color: "#6e5b46" }}>
-              지난번 저장한 플랜이에요 · 계획대로 <b>{revisit.months}개월</b> 모았다면
+              지난번 플랜이야 · 계획대로 <b>{revisit.months}개월</b> 모았다면
             </p>
             <p className="mt-0.5 text-sm font-bold" style={{ color: "#3a2c1d" }}>
               {formatDday(revisit.savedMonths)}{" "}
               <span style={{ color: "#9c8a72" }}>→</span>{" "}
-              <span style={{ color: "#fe7644" }}>{formatDday(revisit.advanced)}</span> 로 당겨졌어요 ▼
+              <span style={{ color: "#fe7644" }}>{formatDday(revisit.advanced)}</span> 로 당겨졌네 ▼
             </p>
           </div>
         </section>
@@ -664,9 +664,9 @@ export function PlanExperience() {
                   />
                 )}
                 <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#9c8a72" }}>
-                  동네 등급이 아니라 <b>내가 목표로 할 가격대</b>예요. 국토부 공개 실거래 예시 · 추정
+                  동네 등급 아님 · <b>내가 목표로 할 가격대</b>. 국토부 공개 실거래 예시 · 추정
                   {fmtMonth(cell?.asOf) ? ` · ${fmtMonth(cell?.asOf)} 기준` : FRESH_DATE ? ` · ${FRESH_DATE} 기준` : ""}
-                  {cell ? ` · ${cell.sampleCount}건` : ""}. 예시는 그 가격대 실거래 단지 중 하나이며 매수 권유가 아니에요.
+                  {cell ? ` · ${cell.sampleCount}건` : ""}. 예시는 그 가격대 실거래 단지 중 하나 · 매수 권유 아님.
                 </p>
               </>
             ) : (
@@ -680,7 +680,7 @@ export function PlanExperience() {
                   </span>
                 </div>
                 <p className="mt-0.5 text-[11px]" style={{ color: "#9c8a72" }}>
-                  표본이 적어 티어 없이 단일 추정치예요
+                  표본 적어 단일 추정만
                   {cell ? ` · 실거래 ${cell.sampleCount}건` : ""}
                   {fmtMonth(cell?.asOf) ? ` · ${fmtMonth(cell?.asOf)} 기준` : ""}
                 </p>
@@ -711,8 +711,8 @@ export function PlanExperience() {
           <NumField label="보유 현금(만원)" value={cash} onChange={setCash} hint={unitHint(cash)} />
         </div>
         <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#9c8a72" }}>
-          소득은 <b>대출 한도</b>(DSR), 현금은 <b>자기자본</b>을 정해요 — 이 둘이 “지금 살 수 있는
-          가격”의 출발선이에요. 아래 <b>월 저축</b>은 거기서부터 ‘모으는 속도’고요.
+          소득 = <b>대출 한도</b>(DSR) / 현금 = <b>자기자본</b> — 둘이 “지금 살 수 있는
+          가격”의 출발선. 아래 <b>월 저축</b>은 ‘모으는 속도’.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Chip
@@ -878,8 +878,8 @@ export function PlanExperience() {
         ) : null}
 
         <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#9c8a72" }}>
-          하락 −6%(직전 하락기 2022·부동산원) · 보합 0% · 상승(동네 10년 평균·KB). 예측이 아니라 과거
-          지표 + 가정이에요. 아래 저축을 늘리면 시점이 당겨져요 👇
+          하락 −6%(직전 하락기 2022·부동산원) · 보합 0% · 상승(동네 10년 평균·KB). 예측 아님 — 과거
+          지표 + 가정. 아래 저축 늘리면 시점 당겨짐 👇
         </p>
       </section>
 
@@ -1187,8 +1187,8 @@ function HopelessGuide({
         )}
       </ul>
       <p className="mt-2.5 text-[11px] leading-relaxed" style={{ color: "#9c8a72" }}>
-        조급해하지 않아도 돼요. 동네를 한 칸 낮추거나 저축을 조금만 늘려도 시점은 확 당겨집니다.
-        (예측이 아니라 과거 지표 + 가정 시나리오예요.)
+        조급할 필요 없음. 동네 한 칸 낮추거나 저축 조금만 늘려도 시점 확 당겨짐 — 잘좀 하자.
+        (예측 아님 — 과거 지표 + 가정 시나리오.)
       </p>
     </div>
   );
@@ -1290,7 +1290,7 @@ function DeltaCallout({ months }: { months: number | null }) {
       className="plan-delta text-[12px] font-bold"
       style={{ color: faster ? "#fff" : "rgba(255,255,255,0.8)" }}
     >
-      {faster ? "▼" : "▲"} {formatDday(Math.abs(delta.v))} {faster ? "당겨졌어요" : "늦춰졌어요"}
+      {faster ? "▼" : "▲"} {formatDday(Math.abs(delta.v))} {faster ? "당겨졌네" : "늦어졌네"}
     </span>
   );
 }
