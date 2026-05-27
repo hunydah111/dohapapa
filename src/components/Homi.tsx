@@ -34,7 +34,7 @@ const BIJI_ASPECT = 0.9; // 레이아웃 시프트 방지용 힌트(실제 렌�
 
 // ?v= 캐시버스트 — 새 표정 이미지 반영.
 // v15: alpha 255 connected component 분석 → 외곽 noise dot 제거 (Recraft grain texture 잔여 해소)
-const V = "?v=15";
+const V = "?v=16";
 const SRC: Record<HomiMood, string> = {
   smile: `/biji/biji-smile-wave.png${V}`,
   flustered: `/biji/biji-flustered.png${V}`,

@@ -103,6 +103,31 @@ const LIST = [
         dotsRemoved++;
       }
     }
+    // 5) 외곽 경계 anti-aliasing 페이드 픽셀 RGB → 외곽선 색(#3A1E0D)으로 교체.
+    // alpha 1-254 + 인접에 alpha 0 픽셀 있음 = 진짜 외곽 가장자리. 비지 안 alpha 페이드는
+    // 영향 X (인접 alpha 0 픽셀 없음). 부드러운 외곽선 유지 + 흰 잔여 제거.
+    let edgeRecolored = 0;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const p = (y * w + x) * 4;
+        const a = data[p + 3];
+        if (a > 0 && a < 255) {
+          let touchesZero = false;
+          const neigh = [[1,0],[-1,0],[0,1],[0,-1]];
+          for (const [dx, dy] of neigh) {
+            const nx = x + dx, ny = y + dy;
+            if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+            if (data[(ny * w + nx) * 4 + 3] === 0) { touchesZero = true; break; }
+          }
+          if (touchesZero) {
+            data[p] = 58;
+            data[p + 1] = 30;
+            data[p + 2] = 13;
+            edgeRecolored++;
+          }
+        }
+      }
+    }
 
     await sharp(data, { raw: { width: w, height: h, channels: 4 } })
       .png()
@@ -143,8 +168,8 @@ const LIST = [
       "restored=" + restored.toString().padEnd(6),
       "weakClean=" + weakCleaned.toString().padEnd(6),
       "dots=" + dotsRemoved.toString().padEnd(5),
+      "edge=" + edgeRecolored.toString().padEnd(5),
       "holes=" + pct + "%",
-      ok ? "✅" : "⚠",
     );
   }
 })().catch((e) => { console.error(e); process.exit(1); });
