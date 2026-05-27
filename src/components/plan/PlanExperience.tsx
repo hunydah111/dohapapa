@@ -983,17 +983,17 @@ export function PlanExperience() {
         </details>
       </section>
 
-      {/* 레버 */}
+      {/* 저축 레버 */}
       <section className="rounded-3xl border border-[#ecd9b3] bg-[#fdf6e7]/70 p-5">
         <h2 className="mb-1 text-[15px] font-bold" style={{ color: "#3a2c1d" }}>
-          레버 — 바꾸면 시점이 움직여요
+          저축 레버 — 바꾸면 시점이 움직여요
         </h2>
         <p className="mb-3 text-[11px]" style={{ color: "#9c8a72" }}>
           매달 더 모을수록 위 ‘내 집 마련 시점’이 당겨져요.
         </p>
         <div className="grid grid-cols-2 gap-3">
-          <NumField label="월 저축(만원)" value={saveStr} onChange={setSaveStr} hint={unitHint(saveStr)} />
-          <NumField label="월 부업·세전(만원)" value={sideStr} onChange={setSideStr} hint={unitHint(sideStr)} />
+          <NumField label="월 실제저축액(만원)" value={saveStr} onChange={setSaveStr} hint={unitHint(saveStr)} />
+          <NumField label="월 부업·세후(만원)" value={sideStr} onChange={setSideStr} hint={unitHint(sideStr)} />
         </div>
         {sideWarn && (
           <p
