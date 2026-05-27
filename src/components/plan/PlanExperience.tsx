@@ -134,13 +134,13 @@ const SCEN_INFO: Record<ScenarioKey, { label: string; hint: string }> = {
   up: { label: "상승", hint: "오를 때" },
 };
 
-// 결과에 따라 반응하는 비버 — 끝은 희망(멀어도 같이 세보자).
+// 결과에 따라 반응하는 비버 — 시크 톤 변종(sigh/cool/cocky)으로 카피와 매치. 끝은 희망(멀어도 같이 세보자).
 function heroBeaver(months: number | null, basics: boolean): { src: string; word: string } {
-  if (basics) return { src: "biji-shrug", word: "출발선부터 잡자~" };
-  if (months === null) return { src: "biji-think", word: "동네·시나리오 바꿔보자~" };
-  if (months <= 36) return { src: "biji-cheer", word: "거의 다 왔어 · 잘좀 하자" };
+  if (basics) return { src: "biji-shrug-sigh", word: "출발선부터 잡자~" };
+  if (months === null) return { src: "biji-think-cool", word: "동네·시나리오 바꿔보자~" };
+  if (months <= 36) return { src: "biji-cheer-cocky", word: "거의 다 왔어 · 잘좀 하자" };
   if (months <= 84) return { src: "biji-running", word: "차근차근 잡자 · 이대로 가" };
-  return { src: "biji-clock", word: "길긴 해 · 힘좀 내자~" };
+  return { src: "biji-clock-sigh", word: "길긴 해 · 힘좀 내자~" };
 }
 
 // ── R3 재방문 — "살아있는 D-day": 저장된 플랜으로 경과월만큼 모았다면 시점 재계산 ──
