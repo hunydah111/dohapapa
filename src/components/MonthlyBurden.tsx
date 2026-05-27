@@ -114,7 +114,7 @@ function BurdenSignal({ ratio }: { ratio: number }) {
         style={{ color: "#9a8f82" }}
       >
         일반적으로 <span className="font-semibold">30% 안팎</span>을 부담 경계로
-        참고해요(공식 단일 기준은 아님). {tone.label}.
+        참고만 (공식 단일 기준 아님). {tone.label}.
       </p>
     </div>
   );

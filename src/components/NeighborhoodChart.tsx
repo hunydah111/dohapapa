@@ -132,7 +132,7 @@ export function NeighborhoodChart() {
           })}
         </ul>
         <p className="mt-3 text-[11px] leading-relaxed" style={{ color: "#9a8f82" }}>
-          비집고에서 조건에 맞아 많이 뜬 수도권 동네 집계예요. 광고나 순위 보장이 아닙니다.
+          비집고에서 조건에 맞아 많이 뜬 수도권 동네 집계 · 광고·순위 보장 아님.
         </p>
       </div>
     </section>

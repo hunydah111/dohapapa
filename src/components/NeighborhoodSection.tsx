@@ -142,7 +142,7 @@ export function NeighborhoodInline({ data }: { data: NeighborhoodData }) {
   return (
     <div className="flex flex-col gap-3">
       <p className="text-xs font-semibold" style={{ color: "#9a8f82" }}>
-        동네 · 반경 1km 시설 수 기반 사실 정보예요 (추천·평가 아님)
+        동네 · 반경 1km 시설 수 기반 사실 (추천·평가 아님)
       </p>
       <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center">
         <NeighborhoodRadar scores={data.scores} />

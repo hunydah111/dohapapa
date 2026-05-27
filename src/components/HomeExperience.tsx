@@ -437,13 +437,13 @@ export function HomeExperience() {
       await navigator.clipboard.writeText(url);
       setShareToast(
         isGradeCard
-          ? "비버 등급 카드 링크 복사됨! 친구에게 보내보세요 🦫"
+          ? "비버 등급 카드 링크 복사됨 · 친구에게 보내보자~ 🦫"
           : isTypeCard
-            ? "유형 카드 링크 복사됨! 친구에게 보내보세요 🦫"
-            : "링크 복사됨 ⚠️ 소득·자산·직장 정보가 담겨 있어요 — 믿는 사람에게만 보내세요.",
+            ? "유형 카드 링크 복사됨 · 친구에게 보내보자~ 🦫"
+            : "링크 복사됨 ⚠️ 소득·자산·직장 정보 담겨있음 — 믿는 사람에게만",
       );
     } catch {
-      setShareToast("복사에 실패했어요. 주소창에서 직접 복사해주세요.");
+      setShareToast("복사 실패 — 주소창에서 직접 복사");
     }
     setTimeout(() => setShareToast(null), 3500);
   }
@@ -454,10 +454,10 @@ export function HomeExperience() {
     try {
       await navigator.clipboard.writeText(window.location.href);
       setShareToast(
-        "🔖 링크 복사됨 — 메모·즐겨찾기에 붙여두면 다음에 폼 없이 바로 다시 봐요 (내 정보가 담긴 링크라 공개는 신중히)",
+        "🔖 링크 복사됨 — 메모·즐겨찾기에 붙여두면 폼 없이 바로 다시 보기 (내 정보 담긴 링크라 공개는 신중히)",
       );
     } catch {
-      setShareToast("복사에 실패했어요 — 주소창의 링크를 직접 저장해주세요.");
+      setShareToast("복사 실패 — 주소창 링크 직접 저장");
     }
     setTimeout(() => setShareToast(null), 4500);
   }
@@ -701,7 +701,7 @@ export function HomeExperience() {
                   지난번 검색 조건으로 이어보기
                 </span>
                 <span className="truncate text-[12px] text-coral-700">
-                  {resumeLabel(resumePrefs)} · 민감정보는 다시 입력해요
+                  {resumeLabel(resumePrefs)} · 민감정보는 다시 입력
                 </span>
               </span>
               <span className="shrink-0 rounded-full bg-white px-3 py-1.5 text-[12px] font-bold text-coral-700 shadow-sm">
@@ -872,7 +872,7 @@ export function HomeExperience() {
             🔖 이 결과 저장해두기
           </span>
           <span className="text-[12px] text-coral-700">
-            다음에 폼 없이 이 링크로 바로 다시 봐요
+            다음에 폼 없이 이 링크로 바로 다시 보기
           </span>
         </span>
         <span className="shrink-0 rounded-full bg-white px-3 py-1.5 text-[12px] font-bold text-coral-700 shadow-sm">
@@ -923,10 +923,10 @@ export function HomeExperience() {
             <span className="font-semibold" style={{ color: "#3a322c" }}>
               {result.consideredComplexCount.toLocaleString("ko-KR")}곳
             </span>
-            을 살펴봤는데 조건이 살짝 타이트했나봐요!
+            살펴봤는데 조건이 살짝 타이트하네.
             {result.relaxationSuggestions.length > 0
-              ? " 아래처럼 살짝만 풀면 바로 나와요 👇"
-              : " 한두 가지만 크게 풀어볼까요?"}
+              ? " 아래처럼 살짝만 풀면 바로 나옴 👇"
+              : " 한두 가지만 크게 풀어보자~"}
           </p>
           {result.emptyReason && (
             <p className="mb-5 rounded-2xl bg-amber-50 px-4 py-3 text-[13px] leading-relaxed text-amber-900">
@@ -994,7 +994,7 @@ export function HomeExperience() {
                 <li className="flex gap-2">
                   <span className="flex-shrink-0">·</span>
                   <span>
-                    <strong>예산이 빡빡함</strong> — 보유 현금·소득을 다시 보거나, 정책대출 자격 충족 시 한도가 크게 늘어요
+                    <strong>예산이 빡빡함</strong> — 보유 현금·소득을 다시 보거나, 정책대출 자격 충족 시 한도 크게 늘어남
                   </span>
                 </li>
                 <li className="flex gap-2">
@@ -1036,7 +1036,7 @@ export function HomeExperience() {
               위치 한눈에 보기
             </h2>
             <p className="mt-0.5 text-sm" style={{ color: "#6b6157" }}>
-              조건에 맞는 단지 {result.candidates.length}곳과 직장 위치예요
+              조건에 맞는 단지 {result.candidates.length}곳과 직장 위치
             </p>
           </div>
           <MiniMap

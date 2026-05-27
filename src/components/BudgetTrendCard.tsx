@@ -55,7 +55,7 @@ export function BudgetTrendCard({
         </span>
       </p>
       <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#9a8f82" }}>
-        과거 실거래 추세예요 · 미래 예측이 아닙니다 · 다음에 또 확인해보세요
+        과거 실거래 추세 · 미래 예측 아님 · 다음에 또 보자~
       </p>
     </section>
   );

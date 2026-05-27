@@ -73,8 +73,7 @@ export function BudgetPreview({ budget }: { budget: BudgetEstimate }) {
       )}
 
       <p className="text-[11px] leading-relaxed text-[#9a8f82]">
-        공개된 DSR·LTV 공식 기반 추정치예요. 항목별 상세 내역은 마지막 단계 후
-        결과 화면에서 확인할 수 있어요.
+        공개 DSR·LTV 공식 기반 추정. 항목별 상세는 마지막 단계 후 결과 화면에서.
       </p>
     </div>
   );

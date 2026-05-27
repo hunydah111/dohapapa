@@ -739,10 +739,10 @@ export function PlanExperience() {
         {existingMode && (
           <div className="mt-3 rounded-2xl border border-[#ecd9b3] bg-[#fdf6e7]/60 p-4">
             <p className="text-[12px] font-bold" style={{ color: "#3a2c1d" }}>
-              지금 사는 집 정보 — 매도 순수령액이 새 집 자기자본에 합산돼요
+              지금 사는 집 정보 — 매도 순수령액이 새 집 자기자본에 합산
             </p>
             <p className="mt-1 text-[11px] leading-relaxed" style={{ color: "#9a5a1e" }}>
-              <b>양도세</b>는 매도가·취득가·보유기간으로 달라져요. 취득가를 입력하면 정확해지고,
+              <b>양도세</b>는 매도가·취득가·보유기간으로 달라짐. 취득가 입력하면 정확해짐,
               모르면 보수적으로 매도가의 약 6%로 잡아요. 모두 추정 · 실 세액은 세무사 상담.
             </p>
             <div className="mt-3 grid grid-cols-2 gap-3">
@@ -800,7 +800,7 @@ export function PlanExperience() {
                 </p>
                 {homeSaleNetKrw < 0 && (
                   <p className="mt-1 text-[11px] font-bold" style={{ color: "#c4521f" }}>
-                    ⚠️ 매도가 − 잔금 − 양도세가 음수예요 — 자기자본이 줄어드는 상황. 매도 타이밍·잔금
+                    ⚠️ 매도가 − 잔금 − 양도세가 음수 — 자기자본 줄어듦. 매도 타이밍·잔금
                     정리 우선 고려.
                   </p>
                 )}
@@ -938,7 +938,7 @@ export function PlanExperience() {
           )}
           <p className="mt-1 text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>
             여기서 <b>월 {formatKrwHuman(plan.monthlyAccumKrw)}</b>씩 모아 목표까지 부족한{" "}
-            <b>{eok(plan.gapKrw)}</b>을 따라잡는 게 위 그래프예요. 모두 추정.
+            <b>{eok(plan.gapKrw)}</b>을 따라잡는 게 위 그래프. 모두 추정.
           </p>
         </details>
       </section>
@@ -960,16 +960,16 @@ export function PlanExperience() {
             className="mt-2 rounded-xl px-3 py-2 text-[11px] leading-relaxed"
             style={{ background: "#fdf4e3", color: "#9a5a1e" }}
           >
-            💡 부업도 부부합산 소득에 잡혀요.{" "}
+            💡 부업도 부부합산 소득에 잡힘.{" "}
             {sideWarn.keepMan > 0 ? (
               <>
-                <b>월 {sideWarn.keepMan}만</b>까지는 <b>{sideWarn.lost.join("·")}</b> 자격이 유지되지만,
-                그 이상이면 소득요건을 넘겨 정책대출 한도가 줄 수 있어요.
+                <b>월 {sideWarn.keepMan}만</b>까지는 <b>{sideWarn.lost.join("·")}</b> 자격 유지,
+                그 이상이면 소득요건 초과 — 정책대출 한도 줄 수 있음.
               </>
             ) : (
               <>
-                부업을 더하면 소득이 늘어 <b>{sideWarn.lost.join("·")}</b> 소득요건을 넘겨 정책대출
-                한도가 줄 수 있어요.
+                부업 더하면 소득 늘어 <b>{sideWarn.lost.join("·")}</b> 소득요건 초과 — 정책대출
+                한도 줄 수 있음.
               </>
             )}{" "}
             추정이며 실제 자격은 기관 확인.
@@ -1034,7 +1034,7 @@ export function PlanExperience() {
           )}
         </div>
         <p className="mt-2 text-[11px]" style={{ color: "#9c8a72" }}>
-          소득·현금 포함 <b>이 기기에만</b> 저장돼요 · 서버로 보내지 않아요.
+          소득·현금 포함 <b>이 기기에만</b> 저장 · 서버 전송 X.
         </p>
       </section>
 

@@ -237,7 +237,7 @@ export function PlanRaceChart({
       >
         <b style={{ color: COLOR.power }}>굵은 선</b> = 내가 모으는 돈(대출 포함) ·{" "}
         <span style={{ color: dark ? "rgba(255,255,255,0.7)" : COLOR.price }}>회색 선</span> = 집값(
-        {FOCUS_LABEL[focus]}). 둘이 만나는 <b style={{ color: COLOR.power }}>●</b>이 살 수 있는 때예요.
+        {FOCUS_LABEL[focus]}). 둘이 만나는 <b style={{ color: COLOR.power }}>●</b>이 살 수 있는 때.
       </p>
 
       <button

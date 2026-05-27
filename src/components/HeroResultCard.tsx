@@ -251,7 +251,7 @@ export function HeroResultCard({
       )}
 
       <p className="mt-2 text-[11px] leading-snug text-white/70">
-        🦫 등급·동네만 공유돼요 — 소득·자산·직장 정보는 안 담깁니다.
+        🦫 등급·동네만 공유됨 — 소득·자산·직장 정보는 안 담김.
       </p>
       <p className="mt-1 text-[11px] leading-snug text-white/60">
         실거래가 기반 추정 정보 · 부동산 중개·투자자문이 아닙니다
