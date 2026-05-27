@@ -17,9 +17,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { type } = await params;
   const ht = getHomeTypeBySlug(type);
-  if (!ht) return { title: "비집고 — 내 통장으로 살 집 찾기" };
+  if (!ht) return { title: "비집고 — 내 통장으로 비집고 들어갈 집" };
   const title = `나의 집 찾기 유형: ${ht.name}`;
-  const description = `${ht.tagline} — 비집고에서 내 통장으로 살 수 있는 집을 찾아보세요.`;
+  const description = `${ht.tagline} — 비집고에서 내 통장으로 비집고 들어갈 집 잡기.`;
   return {
     title: `${title} | 비집고`,
     description,

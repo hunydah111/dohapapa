@@ -100,7 +100,7 @@ export default async function Image({
             {name}
           </div>
           <div style={{ fontSize: 38, marginTop: 22, color: primary }}>
-            {`내 예산이면 ${region}까지`}
+            {`내 통장으로 ${region}까지`}
           </div>
           <div style={{ fontSize: 28, marginTop: 14, color: muted }}>
             {`"${tier.drip}"`}

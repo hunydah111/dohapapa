@@ -25,10 +25,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { grade, region: rawRegion } = await params;
   const tier = getTierBySlug(grade);
-  if (!tier) return { title: "비집고 — 내 통장으로 살 집 찾기" };
+  if (!tier) return { title: "비집고 — 내 통장으로 비집고 들어갈 집" };
   const region = safeRegion(rawRegion);
-  const title = `나는 ${tier.label} — 내 예산이면 ${region}까지`;
-  const description = `${tier.drip} — 비집고에서 내 통장으로 살 수 있는 집을 찾아보세요.`;
+  const title = `나는 ${tier.label} — 내 통장으로 ${region}까지`;
+  const description = `${tier.drip} — 비집고에서 내 통장으로 비집고 들어갈 집 잡기.`;
   const path = `/s/b/${grade}/${encodeURIComponent(region)}`;
   return {
     title: `${title} | 비집고`,
@@ -62,7 +62,7 @@ export default async function Page({
       </div>
 
       <p className="text-[17px] font-semibold leading-relaxed" style={{ color: "#3a322c" }}>
-        내 예산이면 {region}까지 닿아요
+        내 통장으로 {region}까지 닿음
       </p>
       <p className="text-[14px] leading-relaxed" style={{ color: "#6b6157" }}>
         “{tier.drip}”
@@ -79,10 +79,10 @@ export default async function Page({
         나도 내 비버 찾기 →
       </Link>
       <p className="text-[12px]" style={{ color: "#9a8f82" }}>
-        등급·동네만 담겨요 (소득·자산·직장 X) · 국토부 공개 실거래가 · 무료
+        등급·동네만 담김 (소득·자산·직장 X) · 국토부 공개 실거래가 · 무료
       </p>
       <p className="text-[11px]" style={{ color: "#b3a99c" }}>
-        실거래가 기반 추정 · 미래가치 예측이나 부동산 중개·투자자문이 아닙니다
+        실거래가 기반 추정 · 미래가치 예측 X · 부동산 중개·투자자문 아님
       </p>
     </main>
   );

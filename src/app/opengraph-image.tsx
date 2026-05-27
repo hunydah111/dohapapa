@@ -14,7 +14,7 @@ const ALT = "비집고 — 내 돈으로 살 집 어디까지?";
 // og:image URL에 버전 경로(/opengraph-image/<id>)를 박는다. 카카오·페북·폰 로컬은 이미지 URL
 // 글자 단위로 캐싱하므로, 디자인을 바꾸면 OG_VERSION을 올려 "한 번도 본 적 없는 새 URL"로 강제
 // 교체 → 모든 캐시 계층이 새로 긁어간다. (카카오 OG 디버거 캐시 초기화로도 안 풀릴 때의 확실한 우회)
-const OG_VERSION = "3";
+const OG_VERSION = "4";
 
 export function generateImageMetadata() {
   return [
@@ -82,15 +82,15 @@ export default async function Image() {
             alt=""
           />
           <div style={{ display: "flex", flexDirection: "column", flex: 1, marginLeft: 32 }}>
-            <div style={{ fontSize: 90, color: "#3a322c", lineHeight: 1.12 }}>내 돈으로</div>
-            <div style={{ fontSize: 90, color: "#3a322c", lineHeight: 1.12 }}>살 집 어디까지?</div>
+            <div style={{ fontSize: 90, color: "#3a322c", lineHeight: 1.12 }}>머리는 차갑게</div>
+            <div style={{ fontSize: 90, color: "#3a322c", lineHeight: 1.12 }}>통장은 뜨겁게</div>
             <div style={{ display: "flex", flexDirection: "row", gap: 14, marginTop: 26 }}>
               {chip("안정형", "#e0a23a")}
               {chip("균형형", "#fe7644")}
               {chip("도전형", "#3a322c")}
             </div>
             <div style={{ fontSize: 34, color: "#6b6157", marginTop: 26 }}>
-              소득·자산만 넣으면 30초에 정리 · 무료
+              수도권 아파트단지 1만 곳 · 30초컷
             </div>
           </div>
         </div>

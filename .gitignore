@@ -56,3 +56,9 @@ prisma/_dump.json
 # 초기 기획 잡문서 — 정식 아키텍처 문서(docs/architecture.md 등)와 달리
 # 버전 관리 대상이 아닌 일회성 브리핑 초안.
 docs/ppt-style-brief.md
+
+# shot.cjs / shot-result.cjs 가 작업 루트에 떨구는 임시 스크린샷
+shot-*.png
+
+# 비집고와 무관한 별도 프로젝트 — 같은 작업 폴더에 있지만 저장소엔 X
+tennis-contact-simulator/
