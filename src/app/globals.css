@@ -182,6 +182,13 @@ body {
   .biji-breathe, .biji-blink, .biji-compass, .biji-tail, .biji-hop, .biji-pop-in, .fade-in-up, .plan-delta { animation: none; }
 }
 
+/* ── 비디오 모션 비지 (자체 motion mp4 + PNG 폴백) — reduce-motion 시 폴백만 ── */
+.biji-motion-fallback { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .biji-motion-video { display: none; }
+  .biji-motion-fallback { display: block; }
+}
+
 /* ── (구) 마스코트 호미 모션 ── */
 @keyframes homi-bob {
   0%, 100% { transform: translateY(0); }

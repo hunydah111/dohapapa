@@ -552,15 +552,48 @@ export function PlanExperience() {
             )}
           </div>
           <div className="flex w-[78px] shrink-0 flex-col items-center justify-end">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`/biji/${heroBeaver(selectedMonths, guide.tone === "needBasics").src}.png`}
-              alt="비집고 비지"
-              width={72}
-              height={72}
-              className="h-[72px] w-[72px] drop-shadow-md"
-              draggable={false}
-            />
+            {(() => {
+              const hero = heroBeaver(selectedMonths, guide.tone === "needBasics");
+              // running 자리만 video — 자체 모션(다리 교차·팔 swing). reduce-motion 시 PNG 폴백.
+              if (hero.src === "biji-running") {
+                return (
+                  <>
+                    <video
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      width={72}
+                      height={72}
+                      className="biji-motion-video h-[72px] w-[72px] drop-shadow-md"
+                      aria-label="달리는 비지"
+                    >
+                      <source src={`/biji/${hero.src}.mp4`} type="video/mp4" />
+                    </video>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`/biji/${hero.src}.png`}
+                      alt="비집고 비지"
+                      width={72}
+                      height={72}
+                      className="biji-motion-fallback h-[72px] w-[72px] drop-shadow-md"
+                      draggable={false}
+                    />
+                  </>
+                );
+              }
+              return (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={`/biji/${hero.src}.png`}
+                  alt="비집고 비지"
+                  width={72}
+                  height={72}
+                  className="h-[72px] w-[72px] drop-shadow-md"
+                  draggable={false}
+                />
+              );
+            })()}
             <span
               className="mt-1 rounded-full bg-white/20 px-2 py-0.5 text-center text-[10px] font-semibold leading-tight"
               style={{ backdropFilter: "blur(2px)" }}
