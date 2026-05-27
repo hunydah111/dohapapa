@@ -579,7 +579,7 @@ export function PlanExperience() {
             src="/biji/biji-compare.png"
             alt=""
             aria-hidden
-            className="h-14 w-14 shrink-0"
+            className="h-14 w-auto shrink-0"
             draggable={false}
           />
           <div className="min-w-0">
@@ -824,7 +824,7 @@ export function PlanExperience() {
             src="/biji/biji-talk.png"
             alt=""
             aria-hidden
-            className="h-11 w-11 shrink-0"
+            className="h-11 w-auto shrink-0"
             draggable={false}
           />
           <p className="text-xs font-medium" style={{ color: "#6e5b46" }}>
@@ -900,7 +900,7 @@ export function PlanExperience() {
             src="/biji/biji-point-up.png"
             alt=""
             aria-hidden
-            className="h-12 w-12 drop-shadow"
+            className="h-12 w-auto drop-shadow"
             draggable={false}
           />
         </div>
@@ -1002,7 +1002,7 @@ export function PlanExperience() {
             src="/biji/biji-calendar.png"
             alt=""
             aria-hidden
-            className="h-14 w-14 shrink-0"
+            className="h-14 w-auto shrink-0"
             draggable={false}
           />
           <div className="min-w-0">
