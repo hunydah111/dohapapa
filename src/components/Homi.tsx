@@ -35,11 +35,11 @@ const BIJI_ASPECT = 0.9; // 레이아웃 시프트 방지용 힌트(실제 렌�
 // ?v= 캐시버스트 — 새 표정 이미지 반영. (v12: cheer 하단·측면 투명 패딩 — 꼬리 잘림 해소)
 const V = "?v=12";
 const SRC: Record<HomiMood, string> = {
-  smile: `/biji/biji-smile.png${V}`,
+  smile: `/biji/biji-smile-wave.png${V}`,
   flustered: `/biji/biji-flustered.png${V}`,
   angry: `/biji/biji-angry.png${V}`,
   running: `/biji/biji-running.png${V}`,
-  crying: `/biji/biji-crying.png${V}`,
+  crying: `/biji/biji-crying-sigh.png${V}`,
   think: `/biji/biji-think.png${V}`,
   cheer: `/biji/biji-cheer.png${V}`,
   thumbsup: `/biji/biji-thumbsup.png${V}`,
@@ -56,7 +56,7 @@ const SRC: Record<HomiMood, string> = {
   share: `/biji/biji-share.png${V}`,
   river: `/biji/biji-river.png${V}`,
   tree: `/biji/biji-tree.png${V}`,
-  wave: `/biji/biji-wave.png${V}`,
+  wave: `/biji/biji-smile-wave.png${V}`,
   key: `/biji/biji-key.png${V}`,
   blueprint: `/biji/biji-blueprint.png${V}`,
   binoculars: `/biji/biji-binoculars.png${V}`,
