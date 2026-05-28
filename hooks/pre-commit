@@ -18,25 +18,17 @@ echo ""
 echo "▶ tier 이미지 변경 감지 → 통합 파이프라인 실행 (npm run biji:tier)…"
 echo ""
 
-if ! OUT=$(npm run biji:tier 2>&1); then
-  echo "$OUT"
+# 스크립트가 ⚠️ 있을 때 exit 1 신호 — 그걸로 commit 차단 판단.
+# (이전엔 stdout grep "⚠️ "이 요약줄 "⚠️ 0건 경고"에서 false positive 났음)
+if npm run biji:tier; then
+  # 파이프라인이 png 재생성/수정했으면 다시 stage
+  git add public/biji/tier/*.png 2>/dev/null || true
   echo ""
-  echo "❌ 파이프라인 실행 실패 — commit 차단."
-  echo "   직접 실행: npm run biji:tier"
+  echo "✅ tier 이미지 검증 + auto-add 완료"
+  exit 0
+else
+  echo ""
+  echo "❌ tier 이미지 검증 경고/실패 — commit 차단됨."
+  echo "   위 로그의 ⚠️  항목 확인 후 원본 이미지 정정 또는 강제 우회(--no-verify) 결정."
   exit 1
 fi
-
-echo "$OUT" | tail -20
-
-if echo "$OUT" | grep -qE '⚠️ '; then
-  echo ""
-  echo "❌ tier 이미지 검증 경고 — commit 차단됨."
-  echo "   위 로그의 ⚠️ 항목 확인 후 원본 이미지 정정 또는 강제 우회(--no-verify) 결정."
-  exit 1
-fi
-
-# 파이프라인이 png 재생성/수정했으면 다시 stage
-git add public/biji/tier/*.png 2>/dev/null || true
-echo ""
-echo "✅ tier 이미지 검증 + auto-add 완료"
-exit 0

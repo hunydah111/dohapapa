@@ -64,17 +64,11 @@ function bgFloodFill(data, w, h) {
 
 function verify(data, w, h, slug) {
   const warnings = [];
-  // 1) 4개 코너 픽셀이 순백인지
-  const corners = [
-    [0, 0], [w - 1, 0], [0, h - 1], [w - 1, h - 1],
-  ];
-  for (const [x, y] of corners) {
-    const p = (y * w + x) * 4;
-    if (data[p] !== 255 || data[p + 1] !== 255 || data[p + 2] !== 255) {
-      warnings.push(`코너(${x},${y}) 순백 X (rgb ${data[p]},${data[p + 1]},${data[p + 2]})`);
-    }
-  }
-  // 2) 가장자리 영역(상하 5%·좌우 5%) 샘플링 — light gray 클러스터 검출
+  // 코너 픽셀 순백 검사는 제거 — queen 같이 스포트라이트가 코너까지 닿는 의도된 디자인이
+  // 있어서 strict 검사는 false positive. 가장자리 영역 light gray (회색 톤) 잔존 검사만
+  // 유지 — 진짜 "체커·halo 잔여" 노이즈만 잡고 의도된 색 광원은 통과.
+
+  // 가장자리 영역(상하 5%·좌우 5%) 샘플링 — light gray 클러스터(회색 톤) 검출
   let bgSamples = 0, lightGray = 0;
   const edgeY = Math.max(1, Math.floor(h * 0.05));
   const edgeX = Math.max(1, Math.floor(w * 0.05));
@@ -152,4 +146,6 @@ function classifyOutput(filename) {
     }
   }
   console.log(`\n완료: ✅ ${ok}건 통과 · ⚠️ ${warn}건 경고`);
+  // exit code로 hook에 신호 — 경고 있으면 non-zero (commit 차단), 없으면 0 (통과)
+  if (warn > 0) process.exit(1);
 })().catch((e) => { console.error(e); process.exit(1); });
