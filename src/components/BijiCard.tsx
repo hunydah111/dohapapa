@@ -169,7 +169,7 @@ export function BijiCard({
         {/* 비지 — 카드 영역 풀로 채움(원본 jpg 정사각 그대로). drop-shadow 제거 (흰 배경에 그림자 어색). */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={`${tier.image}?v=3`}
+          src={`${tier.image}?v=4`}
           alt={`${tier.label} 비지`}
           className="biji-breathe absolute inset-0 h-full w-full select-none"
           style={{ objectFit: "contain" }}
