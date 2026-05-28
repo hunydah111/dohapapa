@@ -154,18 +154,22 @@ export function computePlan(
   const years: number[] = [];
   const affordable: number[] = [];
   const price: Record<ScenarioKey, number[]> = { down: [], flat: [], up: [] };
-  for (let y = 0; y <= horizon; y++) {
-    years.push(y);
+  // 0.25년 step — 복리·기하 증가 곡선을 부드럽게 그리려고 dense sampling.
+  // 직선이면 step 1로도 충분하지만 복리 시 곡선 자연스러움.
+  const STEP = 0.25;
+  for (let y = 0; y <= horizon + 0.001; y += STEP) {
+    const yr = Math.min(y, horizon);
+    years.push(yr);
     if (interestAnnual > 0) {
-      const equityFV = equity * Math.pow(1 + interestAnnual, y);
+      const equityFV = equity * Math.pow(1 + interestAnnual, yr);
       const savingFV =
-        monthlyAccum * 12 * ((Math.pow(1 + interestAnnual, y) - 1) / interestAnnual);
+        monthlyAccum * 12 * ((Math.pow(1 + interestAnnual, yr) - 1) / interestAnnual);
       affordable.push(equityFV + savingFV + loan - acq);
     } else {
-      affordable.push(equity + monthlyAccum * 12 * y + loan - acq);
+      affordable.push(equity + monthlyAccum * 12 * yr + loan - acq);
     }
     for (const key of ["down", "flat", "up"] as ScenarioKey[]) {
-      price[key].push(target * Math.pow(1 + rates[key], y));
+      price[key].push(target * Math.pow(1 + rates[key], yr));
     }
   }
 

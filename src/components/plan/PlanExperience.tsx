@@ -1160,6 +1160,10 @@ export function PlanExperience() {
             <p className="mt-0.5 text-[12px] leading-relaxed" style={{ color: "#6e5b46" }}>
               지금 저장해두면, 한 달 뒤 다시 왔을 때 그동안 계획대로 모은 만큼 D-day가 당겨져 보여요.
             </p>
+            <p className="mt-1.5 text-[11px] leading-relaxed" style={{ color: "#9c8a72" }}>
+              💾 <b>이 브라우저에만</b> 저장돼요 (서버 X · 회원가입 X). 같은 기기·같은 브라우저로
+              bijigo.kr/plan 다시 오시면 자동 복원.
+            </p>
           </div>
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
