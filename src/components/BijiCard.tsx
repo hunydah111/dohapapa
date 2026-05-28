@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import type { BudgetTier, BijiOrnament } from "@/lib/budgetPercentile";
 import { pickTierImage } from "@/lib/budgetPercentile";
 import { composeBijiName } from "@/lib/bijiName";
@@ -147,8 +150,18 @@ export function BijiCard({
   const colors = textColors(tier);
   const name = composeBijiName(sigungu ?? null, tier);
   const meta = [sigungu, dongName, areaM2 ? `전용 ${areaM2}㎡` : null].filter(Boolean).join(" · ");
-  // 시군구 시드로 결정적 픽 — 동일 지역은 항상 같은 변주 비지 (gukmin 3장 array에서).
-  const imageUrl = pickTierImage(tier.image, sigungu ?? null);
+  // 시군구 시드 결정적 초기값 — 동일 지역은 항상 같은 변주 (SSR/CSR 일치).
+  // 사용자가 비지 탭하면 array의 다음 변주로 사이클 (이스터에그).
+  const imageList = Array.isArray(tier.image) ? tier.image : null;
+  const [imageIndex, setImageIndex] = useState(() => {
+    if (!imageList) return 0;
+    const initial = pickTierImage(tier.image, sigungu ?? null);
+    const idx = imageList.indexOf(initial);
+    return idx >= 0 ? idx : 0;
+  });
+  const imageUrl = imageList ? imageList[imageIndex] : (tier.image as string);
+  const canCycle = imageList !== null && imageList.length > 1;
+  const handleCycle = canCycle ? () => setImageIndex((i) => (i + 1) % imageList.length) : undefined;
 
   return (
     <section
@@ -171,12 +184,16 @@ export function BijiCard({
           </span>
         </div>
 
-        {/* 비지 — 카드 영역 풀로 채움(원본 jpg 정사각 그대로). drop-shadow 제거 (흰 배경에 그림자 어색). */}
+        {/* 비지 — 카드 영역 풀로 채움(원본 jpg 정사각 그대로). drop-shadow 제거 (흰 배경에 그림자 어색).
+            array 변주(baby·gukmin)는 탭/클릭하면 다음 변주로 사이클 — 이스터에그.
+            key={imageIndex}로 swap 시 biji-pop-in 애니메이션 재트리거. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
+          key={imageIndex}
           src={`${imageUrl}?v=4`}
           alt={`${tier.label} 비지`}
-          className="biji-breathe absolute inset-0 h-full w-full select-none"
+          onClick={handleCycle}
+          className={`biji-pop-in absolute inset-0 h-full w-full select-none ${canCycle ? "cursor-pointer active:scale-95 transition-transform" : ""}`}
           style={{ objectFit: "contain" }}
           draggable={false}
         />
