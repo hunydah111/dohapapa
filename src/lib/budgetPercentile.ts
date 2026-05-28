@@ -99,7 +99,7 @@ export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
       textTone: "dark",
       glow: "radial-gradient(circle at 50% 0%, rgba(255,200,120,0.55) 0%, rgba(255,200,120,0) 60%)",
       ornament: "stars",
-      accent: "#9a5a1e",
+      accent: "#909296", // 실버 — 라벨 텍스트 + 별 ornament 색 (Freddie 마이크 실버 톤과 호응)
     },
   },
   rain: {

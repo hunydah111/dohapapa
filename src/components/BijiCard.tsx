@@ -11,7 +11,9 @@ import { SITE_DOMAIN } from "@/lib/site";
 
 // 카드 모서리에 등급별 미세 장식. pointer-events none. 본체(비지)는 안 가림.
 function Ornament({ kind, accent }: { kind: BijiOrnament; accent: string }) {
-  const common = "pointer-events-none absolute inset-0 h-full w-full";
+  // z-10 — 비지 이미지(흰 polaroid)가 SVG를 가리는 문제 해소. 별·하트·음표 등 corner deco가
+  // 비지 위에 떠보이게 (Freddie 머리 옆 별빛 같은 floating decoration).
+  const common = "pointer-events-none absolute inset-0 h-full w-full z-10";
   switch (kind) {
     case "gold-stars":
       // queen — 무대 스포트라이트 큰 별 + 작은 반짝
