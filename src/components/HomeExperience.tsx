@@ -738,8 +738,9 @@ export function HomeExperience() {
   if (state === null && !started) {
     return (
       <>
-        {/* 재방문 이어보기(R2) — 저장된 검색 취향이 있으면 폼 미리채워 시작 제안 */}
-        {resumePrefs && (
+        {/* 재방문 이어보기(R2) — 저장된 검색 취향이 있으면 폼 미리채워 시작 제안.
+            친구 비교 URL(?f=) 진입 시엔 숨김 — 사용자는 친구 보고 온 의도라 이어보기는 노이즈. */}
+        {!friendTag && resumePrefs && (
           <div className="mx-auto mb-4 flex w-full max-w-md items-center gap-2 rounded-2xl border border-[#ecd9b3] bg-[#fdf6e7] px-3 py-2.5">
             <button
               type="button"
