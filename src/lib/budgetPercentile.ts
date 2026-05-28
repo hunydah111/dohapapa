@@ -91,13 +91,13 @@ export interface BudgetTier {
 export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
   queen: {
     slug: "queen", emoji: "🎤", label: "퀸비버", drip: "갈라쇼 라인 — 최정상", isFlex: true,
-    image: "/biji/tier/queen.png",
+    image: "/biji/tier/queen.png?v=2",
     theme: {
-      // Bohemian Rhapsody 흰 수트가 다크 배경에 먹히는 문제 → 밝은 cream→amber→gold로 전환.
-      // 흰 수트가 cream 위에서 또렷이 떠보이고, gold 빔(이미지)이 카드 gold 액센트와 자연 연결.
-      cardBg: "linear-gradient(160deg, #fffaef 0%, #fde6b8 50%, #f0a040 100%)",
+      // 흰 수트가 cream 배경에도 먹히는 문제 → 더 진한 peach→amber→deep gold로 전환.
+      // 흰 수트는 카드의 가장 밝은 요소가 되어 명확히 떠보임. 다크 톤(rain)과도 시각 대비.
+      cardBg: "linear-gradient(160deg, #ffe2b8 0%, #f7b878 50%, #e88a3a 100%)",
       textTone: "dark",
-      glow: "radial-gradient(circle at 50% 0%, rgba(240,160,64,0.55) 0%, rgba(240,160,64,0) 60%)",
+      glow: "radial-gradient(circle at 50% 0%, rgba(255,200,120,0.55) 0%, rgba(255,200,120,0) 60%)",
       ornament: "stars",
       accent: "#9a5a1e",
     },
