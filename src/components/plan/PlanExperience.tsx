@@ -1138,7 +1138,7 @@ export function PlanExperience() {
           className="px-4 py-2.5 text-center text-[12px] font-semibold"
           style={{ background: "#fff4ef", color: "#9a5a1e" }}
         >
-          원하는 집 입주할 때까지 비지가 응원할게! 🔑
+          응원할게 🔑
         </p>
       </section>
 
