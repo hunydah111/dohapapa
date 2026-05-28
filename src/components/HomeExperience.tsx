@@ -833,9 +833,10 @@ export function HomeExperience() {
         </div>
       </div>
 
-      {/* 재검색(완화 적용) 진행 토스트 — 호미가 다시 두리번 */}
+      {/* 재검색(완화 적용) 진행 토스트 — 호미가 다시 두리번.
+          shareToast와 stack: 공유 토스트(bottom-6)가 액션 결과로 더 중요해 아래, 진행 토스트는 위로. */}
       {reanalyzing && (
-        <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
+        <div className="fixed inset-x-0 bottom-20 z-50 flex justify-center px-4">
           <div className="flex items-center gap-2 rounded-full bg-coral-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg">
             <Homi mood="running" size={30} />
             다시 찾는 중…
