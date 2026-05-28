@@ -2,17 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTierBySlug } from "@/lib/budgetPercentile";
-import { isKnownSigungu } from "@/lib/molit";
+import { isKnownSigungu, normalizeSigungu } from "@/lib/molit";
 import { BijiCard } from "@/components/BijiCard";
 
 // 비버 등급 공유 링크 진입 페이지 — "나는 ○○비버! 내 예산이면 △△구까지" + "나도 찾기" CTA.
 // 담기는 것: 등급(6단계) + 시군구 1개뿐. 소득·자산·직장 없음 — 바이럴 안전.
 
-/** region 파라미터를 안전하게 디코드·검증. 알려진 시군구가 아니면 '수도권'으로 폴백. */
+/** region 파라미터를 안전하게 디코드·검증·정규화. 알려진 시군구가 아니면 '수도권'으로 폴백.
+ *  단축 라벨("원미구")이 들어오면 풀네임("부천시 원미구")로 정규화 — 화면 표시는 풀네임 그대로,
+ *  composeBijiName이 다시 짧게 잘라서 보여줌. */
 function safeRegion(raw: string): string {
   try {
     const decoded = decodeURIComponent(raw);
-    return isKnownSigungu(decoded) ? decoded : "수도권";
+    return isKnownSigungu(decoded) ? normalizeSigungu(decoded) : "수도권";
   } catch {
     return "수도권";
   }

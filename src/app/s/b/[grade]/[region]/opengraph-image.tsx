@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { getTierBySlug, BEAVER_TIERS, pickTierImage } from "@/lib/budgetPercentile";
 import { composeBijiName } from "@/lib/bijiName";
-import { isKnownSigungu } from "@/lib/molit";
+import { isKnownSigungu, normalizeSigungu } from "@/lib/molit";
 import { SITE_DOMAIN } from "@/lib/site";
 
 // 비버 등급 공유카드(1200×630) — 등급별 테마 통째.
@@ -25,7 +25,7 @@ export default async function Image({
   let region = "수도권";
   try {
     const decoded = decodeURIComponent(rawRegion);
-    if (isKnownSigungu(decoded)) region = decoded;
+    if (isKnownSigungu(decoded)) region = normalizeSigungu(decoded);
   } catch {
     /* 잘못된 인코딩 — '수도권' 폴백 */
   }

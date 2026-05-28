@@ -58,9 +58,34 @@ const CODE_TO_GU: Record<string, string> = Object.fromEntries(
 // 알려진 시군구 이름 집합 — 공유 카드(/s/b/[grade]/[region]) 의 region 화이트리스트 검증용.
 export const SIGUNGU_NAMES: ReadonlySet<string> = new Set(Object.keys(LAWD_CODES));
 
-/** 수도권 72개 시군구 중 하나인지. 공유카드 region 검증(쓰레기/주입 카드 방지). */
+// 단축 라벨("원미구") → 풀네임("부천시 원미구") 매핑.
+// 사용자가 직접 단축 URL을 만들거나 외부 링크가 단축형일 때 정상 매칭되게.
+// 충돌 케이스(예: 중구·동구·서구는 서울·인천 둘 다)는 제외 — 모호한 경우 정규화 X.
+const SHORT_TO_FULL: Record<string, string> = (() => {
+  const buckets: Record<string, string[]> = {};
+  for (const full of Object.keys(LAWD_CODES)) {
+    const parts = full.split(/\s+/);
+    if (parts.length < 2) continue; // 이미 단일 토큰
+    const short = parts[parts.length - 1];
+    if (!buckets[short]) buckets[short] = [];
+    buckets[short].push(full);
+  }
+  const out: Record<string, string> = {};
+  for (const [short, fulls] of Object.entries(buckets)) {
+    if (fulls.length === 1) out[short] = fulls[0]; // 충돌 없는 것만
+  }
+  return out;
+})();
+
+/** 수도권 시군구 중 하나인지 — 풀네임 또는 단축 라벨 둘 다 인식. */
 export function isKnownSigungu(name: string): boolean {
-  return SIGUNGU_NAMES.has(name);
+  return SIGUNGU_NAMES.has(name) || name in SHORT_TO_FULL;
+}
+
+/** 단축 라벨이면 풀네임으로 정규화, 이미 풀네임이면 그대로, 매칭 없으면 그대로 반환. */
+export function normalizeSigungu(name: string): string {
+  if (SIGUNGU_NAMES.has(name)) return name;
+  return SHORT_TO_FULL[name] ?? name;
 }
 
 // ---------------------------------------------------------------------------
