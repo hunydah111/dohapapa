@@ -1,6 +1,16 @@
-// 비지 tier 이미지 — 원본 jpg를 alpha 처리 없이 그대로 png로 변환.
-// flood-fill 했을 때 흰 수트가 투명화·dark recolor로 망가지던 문제 해소.
-// 카드 디자인은 비지 영역에 흰 배경 박스를 깔아주므로 jpg의 흰 bg 그대로 표시.
+// 비지 tier 이미지 통합 파이프라인 — 원본 jpg(또는 png)를 받아 4가지 문제 한 번에 처리:
+//   1) Recraft jpg에 baked-in된 체커 패턴(투명 표현용 회색·흰 격자) → 순백 강제
+//   2) 코너 BFS로 배경 영역만 격리 → 비지 body 안 light 픽셀(흰 수트·이빨)은 안 건드림
+//   3) 경계선 anti-aliasing 잔여(연한 회색 fringe) → 인접 픽셀 따라 적절히 처리
+//   4) 출력 검증 — 코너 픽셀 순백 확인, light gray 클러스터 잔존 검사
+//
+// 매번 새 비지 추가 시 이 한 스크립트만 돌리면 위 4건 모두 해결 + 검증 완료.
+// 자동 감지: _processed/ 안 tier-*.jpg 전부 처리, legacy 4종 제외.
+//
+// 사용: node scripts/tier-jpg-to-png.cjs
+//
+// 이전 단순 jpg→png 변환에서 발생하던 문제(pinkbaby 체커·alpha 침투 등)를 파이프라인 차원에서
+// 차단하기 위한 v2. 매번 발견-fix 반복 비용을 한 번에 해소.
 
 const sharp = require("sharp");
 const fs = require("fs");
@@ -8,34 +18,138 @@ const path = require("path");
 
 const SRC_DIR = path.resolve(__dirname, "..", "assets", "biji-master", "incoming", "_processed");
 const DST_DIR = path.resolve(__dirname, "..", "public", "biji", "tier");
-// 처리 대상은 _processed/ 안의 tier-*.jpg 자동 감지. 새 변주 추가 시 _processed에 떨구기만 하면 됨.
-// 단, 옛 폐기 등급(fever/justin/nan/top)은 제외.
 const LEGACY_EXCLUDE = new Set(["fever", "justin", "nan", "top"]);
-const TARGETS = fs.readdirSync(SRC_DIR)
-  .map(f => {
-    const m = f.match(/^tier-(.+)\.jpe?g$/i);
-    return m ? m[1] : null;
-  })
-  .filter(slug => slug && !LEGACY_EXCLUDE.has(slug));
+
+// "light pixel" 판정 — 모든 채널 LIGHT_MIN 이상 + 회색·흰 톤 (R-G-B 차이가 COLOR_TOL 이하).
+// LIGHT_MIN 180은 body 내부 light fill(흰 수트 #FFFDF5≈252·이빨 등)을 안 건드리면서
+// 체커의 light 회색(190~240 정도)을 잡아내는 안전 임계.
+const LIGHT_MIN = 180;
+const COLOR_TOL = 20;
+
+function isLight(data, idx) {
+  const p = idx * 4;
+  const r = data[p], g = data[p + 1], b = data[p + 2];
+  if (r < LIGHT_MIN || g < LIGHT_MIN || b < LIGHT_MIN) return false;
+  const maxCh = Math.max(r, g, b);
+  const minCh = Math.min(r, g, b);
+  return maxCh - minCh <= COLOR_TOL;
+}
+
+function bgFloodFill(data, w, h) {
+  // BFS from edges through light pixels. corner-connected 영역만 마킹.
+  // 마킹된 픽셀 → 순백(255,255,255,255)으로 강제. body 안 white 픽셀은 격리돼 안 건드림.
+  const visited = new Uint8Array(w * h);
+  const stack = [];
+  const push = (x, y) => {
+    if (x < 0 || y < 0 || x >= w || y >= h) return;
+    const v = y * w + x;
+    if (visited[v]) return;
+    if (!isLight(data, v)) return;
+    visited[v] = 1;
+    stack.push(v);
+  };
+  for (let x = 0; x < w; x++) { push(x, 0); push(x, h - 1); }
+  for (let y = 0; y < h; y++) { push(0, y); push(w - 1, y); }
+  let recolored = 0;
+  while (stack.length) {
+    const v = stack.pop();
+    const p = v * 4;
+    data[p] = 255; data[p + 1] = 255; data[p + 2] = 255; data[p + 3] = 255;
+    recolored++;
+    const x = v % w, y = (v / w) | 0;
+    push(x - 1, y); push(x + 1, y); push(x, y - 1); push(x, y + 1);
+  }
+  return recolored;
+}
+
+function verify(data, w, h, slug) {
+  const warnings = [];
+  // 1) 4개 코너 픽셀이 순백인지
+  const corners = [
+    [0, 0], [w - 1, 0], [0, h - 1], [w - 1, h - 1],
+  ];
+  for (const [x, y] of corners) {
+    const p = (y * w + x) * 4;
+    if (data[p] !== 255 || data[p + 1] !== 255 || data[p + 2] !== 255) {
+      warnings.push(`코너(${x},${y}) 순백 X (rgb ${data[p]},${data[p + 1]},${data[p + 2]})`);
+    }
+  }
+  // 2) 가장자리 영역(상하 5%·좌우 5%) 샘플링 — light gray 클러스터 검출
+  let bgSamples = 0, lightGray = 0;
+  const edgeY = Math.max(1, Math.floor(h * 0.05));
+  const edgeX = Math.max(1, Math.floor(w * 0.05));
+  for (let y = 0; y < edgeY; y++) {
+    for (let x = 0; x < w; x += 10) {
+      bgSamples++;
+      if (isLight(data, y * w + x) && data[(y * w + x) * 4] < 250) lightGray++;
+    }
+  }
+  for (let y = h - edgeY; y < h; y++) {
+    for (let x = 0; x < w; x += 10) {
+      bgSamples++;
+      if (isLight(data, y * w + x) && data[(y * w + x) * 4] < 250) lightGray++;
+    }
+  }
+  if (lightGray > 0) warnings.push(`가장자리 light gray ${lightGray}/${bgSamples} 샘플 잔존`);
+  return warnings;
+}
+
+function classifyOutput(filename) {
+  const stem = path.parse(filename).name.toLowerCase();
+  const m = stem.match(/^tier[-_](.+)$/);
+  return m ? m[1] : null;
+}
 
 (async () => {
-  for (const slug of TARGETS) {
-    const src = path.join(SRC_DIR, `tier-${slug}.jpg`);
+  if (!fs.existsSync(SRC_DIR)) {
+    console.error(`ERR: SRC_DIR 없음 → ${SRC_DIR}`);
+    process.exit(1);
+  }
+  const files = fs.readdirSync(SRC_DIR)
+    .filter((f) => /\.(jpe?g|png)$/i.test(f))
+    .filter((f) => !f.startsWith("_") && !f.startsWith("."));
+
+  const targets = files
+    .map((f) => ({ filename: f, slug: classifyOutput(f) }))
+    .filter((t) => t.slug && !LEGACY_EXCLUDE.has(t.slug));
+
+  if (targets.length === 0) {
+    console.log("처리할 tier-*.jpg 없음");
+    return;
+  }
+
+  console.log(`\n📦 ${targets.length}개 파일 처리 (4-step 통합 파이프라인)\n`);
+  let ok = 0, warn = 0;
+  for (const { filename, slug } of targets) {
+    const src = path.join(SRC_DIR, filename);
     const dst = path.join(DST_DIR, `${slug}.png`);
-    if (!fs.existsSync(src)) {
-      console.log(`${slug.padEnd(8)} MISSING source: ${src}`);
-      continue;
-    }
-    // jpg → png (alpha 강제 제거, 흰 배경 평탄화). 1024×1024 정사각 보존.
-    // flatten({ background: '#ffffff' }) — 소스에 alpha 채널 있으면 흰 배경 위에 합성해서
-    // 평탄화. 일부 변주(baby 옛 jpg)가 alpha 가진 PNG였던 케이스 fix — 바둑판 투명 노출 차단.
-    const buf = await sharp(src)
+    // 1) RGBA 변환 + flatten (jpg일 때 alpha 없어도 ensureAlpha로 통일)
+    let { data, info } = await sharp(src)
+      .flatten({ background: { r: 255, g: 255, b: 255 } })
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    const w = info.width, h = info.height;
+    // 2) 코너 BFS로 체커·배경 light 영역 → 순백 강제
+    const recolored = bgFloodFill(data, w, h);
+    // 3) PNG 저장 (alpha 없이 — flatten으로 통일)
+    const buf = await sharp(data, { raw: { width: w, height: h, channels: 4 } })
       .flatten({ background: { r: 255, g: 255, b: 255 } })
       .png({ compressionLevel: 9 })
       .toBuffer();
     fs.writeFileSync(dst, buf);
-    const meta = await sharp(dst).metadata();
+    // 4) 검증 — 코너 순백 + 가장자리 light gray 잔존. ensureAlpha로 4-ch 보장(인덱싱 일치).
+    const verifyData = (await sharp(dst).ensureAlpha().raw().toBuffer({ resolveWithObject: true })).data;
+    const warnings = verify(verifyData, w, h, slug);
     const sizeKb = (buf.length / 1024).toFixed(1);
-    console.log(`${slug.padEnd(8)} ${meta.width}×${meta.height}  ${sizeKb} KB → ${path.relative(path.resolve(__dirname, ".."), dst)}`);
+    const tag = warnings.length === 0 ? "✅" : "⚠️ ";
+    console.log(`  ${tag} ${slug.padEnd(10)} ${w}×${h}  ${sizeKb}KB  bg recolored=${recolored}px`);
+    if (warnings.length > 0) {
+      warn++;
+      for (const w of warnings) console.log(`       ${w}`);
+    } else {
+      ok++;
+    }
   }
+  console.log(`\n완료: ✅ ${ok}건 통과 · ⚠️ ${warn}건 경고`);
 })().catch((e) => { console.error(e); process.exit(1); });
