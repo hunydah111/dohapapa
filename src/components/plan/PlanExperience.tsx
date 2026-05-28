@@ -1129,8 +1129,8 @@ export function PlanExperience() {
       <section className="overflow-hidden rounded-3xl border border-coral-100 shadow-sm">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/biji/biji-newhome.png"
-          alt="열쇠 들고 새 아파트 앞에 선 비지"
+          src="/biji/biji-newhome.png?v=2"
+          alt="입주 후 한강 뷰를 바라보는 비지 뒷모습"
           className="block w-full"
           draggable={false}
         />
