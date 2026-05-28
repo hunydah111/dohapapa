@@ -482,6 +482,9 @@ export function ProfileForm({
       setWpA((prev) => ({ ...prev, results: [] }));
       return;
     }
+    // 디바운스 대기(0.3s) 동안에도 "검색 중" 유지 — 그 갭에 loading=false라 "결과 없음"이
+    // 먼저 깜빡이던 문제(빨리 타이핑 시 "강남역인데 결과 없음?" 오해) 차단.
+    setWpA((prev) => (prev.loading ? prev : { ...prev, loading: true }));
     debounceARef.current = setTimeout(() => {
       fetchGeocode(
         wpA.query,
@@ -502,6 +505,8 @@ export function ProfileForm({
       setWpB((prev) => ({ ...prev, results: [] }));
       return;
     }
+    // 디바운스 대기 동안 "검색 중" 유지 — "결과 없음" 선노출 차단 (직장 A와 동일).
+    setWpB((prev) => (prev.loading ? prev : { ...prev, loading: true }));
     debounceBRef.current = setTimeout(() => {
       fetchGeocode(
         wpB.query,
@@ -1658,7 +1663,7 @@ export function ProfileForm({
               무엇을 중요하게 볼까요?
             </h2>
             <p className="mt-1 text-[15px] text-[#6b6157]">
-              세 조건의 중요도가 분석 가중치에 반영됩니다
+              {isRetired ? "세" : "네"} 조건의 중요도가 분석 가중치에 반영됩니다
             </p>
           </div>
 
@@ -1669,7 +1674,7 @@ export function ProfileForm({
               const hints: Record<PriorityKey, string> = {
                 commute: "직장별 자동차·대중교통 통근 시간 기준",
                 school: "초등학교 도보 거리 기준 (중·고·학업성취도·학원가 미반영)",
-                buildingAge: "준공년도 — 신축일수록 가점",
+                buildingAge: "연식은 이미 실거래가에 반영돼 있어 별도 가중치를 적용하지 않아요 (참고용)",
                 largeComplex: "최근 거래량 기준 — 대단지·인기 단지일수록 가점",
               };
               return (
