@@ -493,6 +493,23 @@ export function HomeExperience() {
     window.scrollTo({ top: 0 });
   }
 
+  // 결과 화면에서 폰 하드웨어 뒤로가기 → handleBack 호출 (사이트 이탈 차단).
+  // ProfileForm 내부의 popstate handler는 historyActive=false라 결과 단계에서 비활성.
+  // 그 단계 가드는 여기서 1개 sentinel pushState로 뒤로가기 1번을 흡수해 handleBack 호출.
+  // 결과 unmount(state=null) 시 cleanup에서 listener 자동 제거 → ProfileForm 가드 다시 활성.
+  const handleBackRef = useRef(handleBack);
+  useEffect(() => {
+    handleBackRef.current = handleBack;
+  });
+  const hasResult = state !== null;
+  useEffect(() => {
+    if (!hasResult) return;
+    window.history.pushState(null, "");
+    const onPop = () => handleBackRef.current();
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [hasResult]);
+
   async function handleReanalyze() {
     if (!state) return;
     setReanalyzing(true);
