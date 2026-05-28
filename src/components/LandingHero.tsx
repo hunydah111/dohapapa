@@ -155,6 +155,14 @@ export function LandingHero({
           국토부 공개 실거래
           {FRESH_DATE ? ` ${FRESH_DATE}` : ""} · 정책 {POLICY_VERIFIED_SHORT} 점검
         </p>
+        {/* 비지 도감 — 소심한 discovery link (도감 페이지로 유도) */}
+        <Link
+          href="/biji"
+          className="mx-auto mt-3 inline-block text-[11.5px] font-semibold underline-offset-2 hover:underline"
+          style={{ color: "#b89a6a" }}
+        >
+          비지 11종 도감 보기 →
+        </Link>
       </div>
 
       {/* 예시 결과 미니카드 — 첫 fold 아래(스크롤 보상). 3티어 칩 통합 위치 */}
