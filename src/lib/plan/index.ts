@@ -28,6 +28,11 @@ export interface PlanInput {
   appreciation?: { down: number; flat: number; up: number };
   /** 차트 지평을 맞출 헤드라인 시나리오(사용자 선택). 미지정 시 보합. */
   headlineKey?: ScenarioKey;
+  /**
+   * 연 복리 이자율(소수). 지정 시 현금 자산은 (1+r)^t, 월 저축은 annuity FV로 복리.
+   * 미지정/0이면 단순 누적(기존 룰).
+   */
+  interestRateAnnual?: number;
 }
 
 export interface PlanScenario {
@@ -80,10 +85,18 @@ function crossingMonths(
   acq: number,
   target: number,
   rateAnnual: number,
+  interestAnnual: number = 0,
 ): number | null {
   const rMonthly = Math.pow(1 + rateAnnual, 1 / 12) - 1;
+  const rInt = interestAnnual > 0 ? Math.pow(1 + interestAnnual, 1 / 12) - 1 : 0;
   for (let m = 0; m <= MAX_MONTHS; m++) {
-    const affordable = equity + monthlyAccum * m + loan - acq;
+    // 현금 FV: 이자 적용 시 (1+r)^m. 월 저축 FV: annuity (월말 입금).
+    const equityFV = rInt > 0 ? equity * Math.pow(1 + rInt, m) : equity;
+    const savingFV =
+      rInt > 0
+        ? monthlyAccum * ((Math.pow(1 + rInt, m) - 1) / rInt)
+        : monthlyAccum * m;
+    const affordable = equityFV + savingFV + loan - acq;
     const price = target * Math.pow(1 + rMonthly, m);
     if (affordable >= price) return m;
   }
@@ -113,11 +126,12 @@ export function computePlan(
     up: appr.up,
   };
 
+  const interestAnnual = Math.max(0, input.interestRateAnnual ?? 0);
   const scenarios: PlanScenario[] = (["down", "flat", "up"] as ScenarioKey[]).map(
     (key) => ({
       key,
       rateAnnual: rates[key],
-      months: crossingMonths(equity, monthlyAccum, loan, acq, target, rates[key]),
+      months: crossingMonths(equity, monthlyAccum, loan, acq, target, rates[key], interestAnnual),
     }),
   );
 
@@ -142,7 +156,14 @@ export function computePlan(
   const price: Record<ScenarioKey, number[]> = { down: [], flat: [], up: [] };
   for (let y = 0; y <= horizon; y++) {
     years.push(y);
-    affordable.push(equity + monthlyAccum * 12 * y + loan - acq);
+    if (interestAnnual > 0) {
+      const equityFV = equity * Math.pow(1 + interestAnnual, y);
+      const savingFV =
+        monthlyAccum * 12 * ((Math.pow(1 + interestAnnual, y) - 1) / interestAnnual);
+      affordable.push(equityFV + savingFV + loan - acq);
+    } else {
+      affordable.push(equity + monthlyAccum * 12 * y + loan - acq);
+    }
     for (const key of ["down", "flat", "up"] as ScenarioKey[]) {
       price[key].push(target * Math.pow(1 + rates[key], y));
     }

@@ -283,6 +283,10 @@ export function PlanExperience() {
   const [sideStr, setSideStr] = useState("0");
   const [upPct, setUpPct] = useState(() => defaultUpPct(DEFAULT_SGG));
   const [scenarioKey, setScenarioKey] = useState<ScenarioKey>("flat");
+  // 복리 이자 가정 — 현금자산은 (1+r)^t, 월저축은 annuity FV로 복리.
+  const [interestOn, setInterestOn] = useState(false);
+  const [interestPct, setInterestPct] = useState(5);
+  const interestRateAnnual = interestOn ? interestPct / 100 : undefined;
 
   // 무거운 재계산은 디바운스된 값으로(타이핑 부드럽게). 입력칸 표시·미리보기는 즉시.
   const incomeKrw = useDebounced(manwon(income));
@@ -379,8 +383,9 @@ export function PlanExperience() {
         monthlySideKrw: sideKrw,
         appreciation: { down: downRate, flat: 0, up: upPct / 100 },
         headlineKey: scenarioKey,
+        interestRateAnnual,
       }),
-    [budget, profile, targetKrw, saveKrw, sideKrw, upPct, downRate, scenarioKey],
+    [budget, profile, targetKrw, saveKrw, sideKrw, upPct, downRate, scenarioKey, interestRateAnnual],
   );
 
   const guide = useMemo(() => planGuidance(plan), [plan]);
@@ -394,9 +399,10 @@ export function PlanExperience() {
       monthlySideKrw: sideKrw,
       appreciation: { down: downRate, flat: 0, up: upPct / 100 },
       headlineKey: scenarioKey,
+      interestRateAnnual,
     });
     return p.scenarios.find((s) => s.key === scenarioKey)!.months;
-  }, [budget, profile, targetKrw, saveKrw, sideKrw, upPct, downRate, scenarioKey]);
+  }, [budget, profile, targetKrw, saveKrw, sideKrw, upPct, downRate, scenarioKey, interestRateAnnual]);
 
   const rollingSelected = useRollingMonths(selectedMonths);
   const tierLabel = manualMode ? "직접 입력" : (selectedTier?.label ?? "");
@@ -1045,6 +1051,55 @@ export function PlanExperience() {
             추정이며 실제 자격은 기관 확인.
           </p>
         )}
+
+        {/* 복리 이자 가정 — 모은 돈+매달 저축이 은행 이자로 늘어남 */}
+        <div className="mt-3 rounded-2xl border border-[#e0d3bf] bg-white/70 p-3">
+          <label className="flex cursor-pointer items-center gap-2 text-[13px]">
+            <input
+              type="checkbox"
+              checked={interestOn}
+              onChange={(e) => setInterestOn(e.target.checked)}
+              className="h-4 w-4 accent-coral-600"
+            />
+            <span className="font-semibold" style={{ color: "#3a2c1d" }}>
+              💰 복리 이자 적용
+            </span>
+            <span className="text-[11px]" style={{ color: "#9c8a72" }}>
+              모은 돈+매달 저축에 이자
+            </span>
+          </label>
+          {interestOn && (
+            <>
+              <div className="mt-2.5 flex items-center gap-2">
+                <span className="text-[12px]" style={{ color: "#6e5b46" }}>연</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={20}
+                  step={0.5}
+                  value={interestPct}
+                  onChange={(e) => setInterestPct(Math.max(0, Math.min(20, parseFloat(e.target.value) || 0)))}
+                  className="w-16 rounded-md border border-[#e0d3bf] bg-white px-2 py-1 text-right text-[13px] tabular-nums font-semibold"
+                  style={{ color: "#3a2c1d" }}
+                />
+                <span className="text-[12px]" style={{ color: "#6e5b46" }}>% 복리</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={10}
+                  step={0.5}
+                  value={Math.min(interestPct, 10)}
+                  onChange={(e) => setInterestPct(parseFloat(e.target.value))}
+                  className="flex-1 accent-coral-600"
+                  aria-label="복리 이자율"
+                />
+              </div>
+              <p className="mt-1 text-[10.5px] leading-relaxed" style={{ color: "#9c8a72" }}>
+                기본 5% — 은행 예금 이자 가정. 모은 돈은 (1+r)<sup>t</sup>, 월 저축은 적금처럼 매달 이자가 붙어요.
+              </p>
+            </>
+          )}
+        </div>
       </section>
 
       {/* 도달의 모습 — 비지가 새 집 앞에서 (끝은 희망) */}
