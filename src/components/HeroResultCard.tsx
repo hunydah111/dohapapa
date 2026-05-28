@@ -70,14 +70,8 @@ export function HeroResultCard({
   return (
     <section
       className="relative overflow-hidden rounded-3xl px-5 py-5 text-white"
-      style={{ background: "linear-gradient(135deg, #fe7644 0%, #d24f24 100%)" }}
+      style={{ background: "#fe7644" }}
     >
-      {/* 장식 글로우 */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full"
-        style={{ background: "radial-gradient(circle, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 70%)" }}
-      />
 
       {/* MBTI 클리셰(유형 칩·방문자 N%·희귀) 제거 (2026-05-27 v1.5 — 사용자 "촌스럽다" 지적).
           정체성은 BijiCard 등급 하나로 일원화. homeType 시스템은 백엔드·보조 공유 링크에 보존. */}
