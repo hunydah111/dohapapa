@@ -33,6 +33,11 @@ import {
 } from "@/types/profile";
 import type { RecommendationResult } from "@/types/recommendation";
 import type { SearchPrefs } from "@/lib/searchPrefs";
+import {
+  loadWorkplaces,
+  saveWorkplaces,
+  clearWorkplaces,
+} from "@/lib/workplacePrefs";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { Segmented } from "@/components/ui/Segmented";
@@ -366,6 +371,36 @@ export function ProfileForm({
   );
   const [modeA, setModeA] = useState<CommuteMode>(DEFAULT_COMMUTE_MODE);
   const [modeB, setModeB] = useState<CommuteMode>(DEFAULT_COMMUTE_MODE);
+  const [hasSavedWorkplaces, setHasSavedWorkplaces] = useState(false);
+
+  // 마운트 시 저장된 직장 자동 복원 — 재입력 편의. 이 기기 localStorage 만.
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    const saved = loadWorkplaces();
+    if (!saved) return;
+    if (saved.workplaceA) {
+      setWpA({
+        selected: saved.workplaceA,
+        query: saved.workplaceA.label,
+        results: [],
+        loading: false,
+      });
+      setModeA(saved.modeA);
+      setMaxCommuteA(String(saved.maxCommuteA));
+    }
+    if (saved.workplaceB) {
+      setWpB({
+        selected: saved.workplaceB,
+        query: saved.workplaceB.label,
+        results: [],
+        loading: false,
+      });
+      setModeB(saved.modeB);
+      setMaxCommuteB(String(saved.maxCommuteB));
+    }
+    setHasSavedWorkplaces(true);
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // ── Step 3: 가족 ────────────────────────────────────────────
   // 자녀 신호는 boolean 3개로 단순화 — 학교 데이터가 초등 거리뿐이라 정밀한
@@ -765,6 +800,18 @@ export function ProfileForm({
       }
 
       const result = (await res.json()) as RecommendationResult;
+      // 직장 자동 저장 — 재입력 편의. profile에 직장 있을 때만.
+      if (profile.workplaceA || profile.workplaceB) {
+        saveWorkplaces({
+          workplaceA: profile.workplaceA ?? null,
+          workplaceB: profile.workplaceB ?? null,
+          modeA,
+          modeB,
+          maxCommuteA: parseInt(maxCommuteA, 10) || DEFAULT_MAX_COMMUTE_MIN,
+          maxCommuteB: parseInt(maxCommuteB, 10) || DEFAULT_MAX_COMMUTE_MIN,
+        });
+        setHasSavedWorkplaces(true);
+      }
       onResult(result, profile);
     } catch {
       setSubmitError(
@@ -1016,6 +1063,22 @@ export function ProfileForm({
                 ? "두 분의 직장을 모두 입력해 주세요"
                 : "직장명이나 주소를 검색하세요"}
             </p>
+            {hasSavedWorkplaces && (
+              <p className="mt-2 inline-flex items-center gap-2 rounded-full bg-[#f3ece4] px-3 py-1 text-[11.5px]" style={{ color: "#6b6157" }}>
+                💾 이 기기에 저장된 직장 자동 복원
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearWorkplaces();
+                    setHasSavedWorkplaces(false);
+                  }}
+                  className="font-semibold underline underline-offset-2"
+                  style={{ color: "#c4521f" }}
+                >
+                  지우기
+                </button>
+              </p>
+            )}
           </div>
 
           <WorkplaceInput
