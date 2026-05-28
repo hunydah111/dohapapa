@@ -40,20 +40,25 @@ export function budgetTopPercent(budgetKrw: number): number | null {
 }
 
 // ── 구매력 계급도 ("비버 빌드" 컨셉) ─────────────────────────────────────────
-// 상위 X% → 재미있는 등급. 위는 비현실 플렉스로 띄우고, 아래는 '짓는 중'으로 절대 안 깐다.
+// 상위 X% → 호감형 셀럽 패러디 5등급. 위는 비현실 플렉스로 띄우고, 아래는 '짓는 중'으로 절대 안 깐다.
 // 컴플라이언스: '구매력=지을 수 있는 집 규모' 비유일 뿐, 자산가치·미래가치·투자권유 아님.
 // isFlex=false(그 이하)면 "상위 N%" 숫자를 숨겨 박탈감을 차단한다.
+//
+// 라인업 (2026-05-28 사용자 확정 — 셀럽 패러디 + 한국 정서):
+//   queen  → 프레디 머큐리 (보헤미안 랩소디 흰 수트 + 반쪽 마이크 스탠드)
+//   rain   → 가수 비 (깡 — 가죽 자켓 + 까만 선글라스 + 바닥 leg-sweep)
+//   bieber → 저스틴 비버 (2010 리즈 시절 — 사이드 스윕 헤어 + 하늘색 셔츠 + 목걸이)
+//   gukmin → 비버 (오리지널)
+//   baby   → 아기비버 (오리지널)
 export type BeaverTierSlug =
-  | "justin"
-  | "fever"
-  | "top"
-  | "nan"
+  | "queen"
+  | "rain"
+  | "bieber"
   | "gukmin"
   | "baby";
 
-// 트레이딩 카드(BijiCard) 등급별 시각 차별화 — 비지 자세·소품·표정이 달라도 카드 자체가
-// 등급 무드를 살려주면 6마리가 "같은 시리즈"로 보임. 우디 팔레트 안에서만 변주(SKILL.md §7
-// 보라/네온 금지 룰). 다크 카드(textTone=light)는 락스타·엘비스 컨셉, 라이트는 친근 컨셉.
+// 트레이딩 카드(BijiCard) 등급별 시각 차별화. 우디 팔레트 안에서 변주
+// (SKILL.md §7 보라/네온 금지 룰). 다크 카드(textTone=light)는 락스타·무대 컨셉, 라이트는 친근 컨셉.
 export type BijiOrnament = "stars" | "flames" | "gold-stars" | "notes" | "confetti" | "hearts";
 export interface BeaverTierTheme {
   /** 카드 배경 — CSS background 값(linear-gradient). */
@@ -84,48 +89,40 @@ export interface BudgetTier {
 }
 
 export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
-  justin: {
-    slug: "justin", emoji: "🕺", label: "저스틴비버", drip: "취향껏 잡는 포지션", isFlex: true,
-    image: "/biji/tier/justin.png",
+  queen: {
+    slug: "queen", emoji: "🎤", label: "퀸비버", drip: "갈라쇼 라인 — 최정상", isFlex: true,
+    image: "/biji/tier/queen.png",
     theme: {
-      cardBg: "linear-gradient(155deg, #3a2c1d 0%, #5a3520 55%, #fe7644 100%)",
+      // Bohemian Rhapsody 흰 수트 + 무대 스포트라이트 골드 — 깊은 black-gold 그라데이션
+      cardBg: "linear-gradient(160deg, #1f1610 0%, #3a2820 50%, #e0a23a 100%)",
       textTone: "light",
-      glow: "radial-gradient(circle at 80% 0%, rgba(224,162,58,0.55) 0%, rgba(224,162,58,0) 60%)",
-      ornament: "gold-stars",
-      accent: "#e0a23a",
-    },
-  },
-  fever: {
-    slug: "fever", emoji: "🔥", label: "피버", drip: "골라잡는 포지션", isFlex: true,
-    image: "/biji/tier/fever.png",
-    theme: {
-      cardBg: "linear-gradient(160deg, #fff4ef 0%, #ffb094 55%, #fe7644 100%)",
-      textTone: "dark",
-      glow: "radial-gradient(circle at 75% 10%, rgba(254,118,68,0.45) 0%, rgba(254,118,68,0) 65%)",
-      ornament: "flames",
-      accent: "#c4521f",
-    },
-  },
-  top: {
-    slug: "top", emoji: "🏆", label: "탑비버", drip: "탑 클래스", isFlex: true,
-    image: "/biji/tier/top.png",
-    theme: {
-      cardBg: "linear-gradient(160deg, #fffdf8 0%, #f7ead0 55%, #e0a23a 100%)",
-      textTone: "dark",
-      glow: "radial-gradient(circle at 50% 0%, rgba(224,162,58,0.45) 0%, rgba(224,162,58,0) 65%)",
+      glow: "radial-gradient(circle at 50% 0%, rgba(224,162,58,0.6) 0%, rgba(224,162,58,0) 60%)",
       ornament: "stars",
-      accent: "#9a5a1e",
+      accent: "#e0a23a",
     },
   },
-  nan: {
-    slug: "nan", emoji: "😎", label: "난비버", drip: "알짜 라인", isFlex: true,
-    image: "/biji/tier/nan.png",
+  rain: {
+    slug: "rain", emoji: "🕶️", label: "비 버", drip: "1일 1비집고 — 슈퍼 라인", isFlex: true,
+    image: "/biji/tier/rain.png",
     theme: {
-      cardBg: "linear-gradient(160deg, #2c2116 0%, #4a3a28 55%, #6e5b46 100%)",
+      // 깡 noir — 검정 가죽 자켓 + 골드 체인. 깊은 black + 따뜻한 우디 base.
+      cardBg: "linear-gradient(155deg, #14100c 0%, #2c2218 50%, #5a4838 100%)",
       textTone: "light",
-      glow: "radial-gradient(circle at 20% 15%, rgba(224,162,58,0.45) 0%, rgba(224,162,58,0) 60%)",
-      ornament: "notes",
+      glow: "radial-gradient(circle at 80% 10%, rgba(224,162,58,0.4) 0%, rgba(224,162,58,0) 65%)",
+      ornament: "flames",
       accent: "#e0a23a",
+    },
+  },
+  bieber: {
+    slug: "bieber", emoji: "🎤", label: "저스틴비버", drip: "글로벌 — 인기 라인", isFlex: true,
+    image: "/biji/tier/bieber.png",
+    theme: {
+      // 2010 리즈 시절 매거진 화보 — 하늘색 데님 셔츠 분위기, 청량 + 따뜻 미디엄
+      cardBg: "linear-gradient(160deg, #f6faff 0%, #d8e8f4 55%, #a8c8e0 100%)",
+      textTone: "dark",
+      glow: "radial-gradient(circle at 50% 0%, rgba(168,200,224,0.5) 0%, rgba(168,200,224,0) 65%)",
+      ornament: "hearts",
+      accent: "#4a7ba8",
     },
   },
   gukmin: {
@@ -153,15 +150,29 @@ export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
 };
 
 export function budgetTier(topPercent: number): BudgetTier {
-  if (topPercent <= 1) return BEAVER_TIERS.justin;
-  if (topPercent <= 10) return BEAVER_TIERS.fever;
-  if (topPercent <= 30) return BEAVER_TIERS.top;
-  if (topPercent <= 50) return BEAVER_TIERS.nan;
+  // 5단계 — 옛 6단계(justin/fever/top/nan/gukmin/baby)에서 nan(50%) 경계를 흡수하고
+  // 셀럽 패러디 3종(queen/rain/bieber)으로 상위 1·10·30% 슬롯 재정의. 중위 30~70%는 gukmin이 단일 흡수.
+  if (topPercent <= 1) return BEAVER_TIERS.queen;
+  if (topPercent <= 10) return BEAVER_TIERS.rain;
+  if (topPercent <= 30) return BEAVER_TIERS.bieber;
   if (topPercent <= 70) return BEAVER_TIERS.gukmin;
   return BEAVER_TIERS.baby;
 }
 
-/** 슬러그로 등급 조회 (공유 OG·페이지용). 없으면 null. */
+// 옛 슬러그(justin/fever/top/nan) → 새 슬러그 매핑. 옛 공유 URL(/s/b/justin/...)이
+// 404나지 않게 가장 가까운 새 등급으로 폴백. 박탈감 차단 룰 유지.
+const LEGACY_SLUG_ALIAS: Record<string, BeaverTierSlug> = {
+  justin: "bieber", // 옛 락스타 저스틴 → 새 진짜 저스틴 비버(리즈 시절)
+  fever:  "queen",  // 옛 피버 → 새 퀸비버(최상위 톤)
+  top:    "bieber", // 옛 탑비버 → 비슷한 상위 라인(bieber)
+  nan:    "gukmin", // 옛 난비버(엘비스) → 중위 비버
+};
+
+/** 슬러그로 등급 조회 (공유 OG·페이지용). 옛 슬러그면 alias 통해 새 등급으로 폴백. 없으면 null. */
 export function getTierBySlug(slug: string): BudgetTier | null {
-  return (BEAVER_TIERS as Record<string, BudgetTier>)[slug] ?? null;
+  const direct = (BEAVER_TIERS as Record<string, BudgetTier>)[slug];
+  if (direct) return direct;
+  const aliased = LEGACY_SLUG_ALIAS[slug];
+  if (aliased) return BEAVER_TIERS[aliased];
+  return null;
 }

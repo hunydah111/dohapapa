@@ -14,7 +14,7 @@ function Ornament({ kind, accent }: { kind: BijiOrnament; accent: string }) {
   const common = "pointer-events-none absolute inset-0 h-full w-full";
   switch (kind) {
     case "gold-stars":
-      // justin — 락스타: 큰 별 + 작은 반짝
+      // queen — 무대 스포트라이트 큰 별 + 작은 반짝
       return (
         <svg aria-hidden="true" viewBox="0 0 320 224" preserveAspectRatio="xMidYMid slice" className={common}>
           <g fill={accent}>
@@ -27,7 +27,7 @@ function Ornament({ kind, accent }: { kind: BijiOrnament; accent: string }) {
         </svg>
       );
     case "stars":
-      // top — 골드 별 흩뿌림
+      // (legacy/예비) — 골드 별 흩뿌림
       return (
         <svg aria-hidden="true" viewBox="0 0 320 224" preserveAspectRatio="xMidYMid slice" className={common}>
           <g fill={accent}>
@@ -39,7 +39,7 @@ function Ornament({ kind, accent }: { kind: BijiOrnament; accent: string }) {
         </svg>
       );
     case "flames":
-      // fever — 작은 불꽃 점 (배경에 따뜻한 점)
+      // rain — noir 점 (따뜻한 골드 점)
       return (
         <svg aria-hidden="true" viewBox="0 0 320 224" preserveAspectRatio="xMidYMid slice" className={common}>
           <g fill={accent}>
@@ -52,7 +52,7 @@ function Ornament({ kind, accent }: { kind: BijiOrnament; accent: string }) {
         </svg>
       );
     case "notes":
-      // nan — 음표 (엘비스)
+      // (legacy/예비) — 음표 (엘비스)
       return (
         <svg aria-hidden="true" viewBox="0 0 320 224" preserveAspectRatio="xMidYMid slice" className={common}>
           <g fill={accent} opacity="0.85">
@@ -88,7 +88,7 @@ function Ornament({ kind, accent }: { kind: BijiOrnament; accent: string }) {
         </svg>
       );
     case "hearts":
-      // baby — 작은 하트
+      // bieber/baby — 작은 하트 (teen heartthrob / 아기)
       return (
         <svg aria-hidden="true" viewBox="0 0 320 224" preserveAspectRatio="xMidYMid slice" className={common}>
           <g fill={accent} opacity="0.55">
