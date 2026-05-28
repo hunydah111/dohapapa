@@ -93,16 +93,17 @@ export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
     slug: "queen", emoji: "🎤", label: "퀸비버", drip: "갈라쇼 라인 — 최정상", isFlex: true,
     image: "/biji/tier/queen.png",
     theme: {
-      // Bohemian Rhapsody 흰 수트 + 무대 스포트라이트 골드 — 깊은 black-gold 그라데이션
-      cardBg: "linear-gradient(160deg, #1f1610 0%, #3a2820 50%, #e0a23a 100%)",
-      textTone: "light",
-      glow: "radial-gradient(circle at 50% 0%, rgba(224,162,58,0.6) 0%, rgba(224,162,58,0) 60%)",
+      // Bohemian Rhapsody 흰 수트가 다크 배경에 먹히는 문제 → 밝은 cream→amber→gold로 전환.
+      // 흰 수트가 cream 위에서 또렷이 떠보이고, gold 빔(이미지)이 카드 gold 액센트와 자연 연결.
+      cardBg: "linear-gradient(160deg, #fffaef 0%, #fde6b8 50%, #f0a040 100%)",
+      textTone: "dark",
+      glow: "radial-gradient(circle at 50% 0%, rgba(240,160,64,0.55) 0%, rgba(240,160,64,0) 60%)",
       ornament: "stars",
-      accent: "#e0a23a",
+      accent: "#9a5a1e",
     },
   },
   rain: {
-    slug: "rain", emoji: "🕶️", label: "비 버", drip: "1일 1비집고 — 슈퍼 라인", isFlex: true,
+    slug: "rain", emoji: "🕶️", label: "비  버", drip: "1일 1비집고 — 슈퍼 라인", isFlex: true,
     image: "/biji/tier/rain.png",
     theme: {
       // 깡 noir — 검정 가죽 자켓 + 골드 체인. 깊은 black + 따뜻한 우디 base.
