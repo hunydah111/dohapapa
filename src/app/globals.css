@@ -155,11 +155,13 @@ body {
   0%, 100% { transform: translateY(0) rotate(-2deg); }
   50% { transform: translateY(-7px) rotate(2deg); }
 }
-/* 1회성 등장 — 첫 화면에서 비지가 통통 튀어 들어옴(래퍼에 적용, 내부 숨쉬기와 독립) */
+/* 1회성 등장 — 첫 화면에서 비지가 통통 튀어 들어옴(래퍼에 적용, 내부 숨쉬기와 독립).
+   #4 진화 빛 — 진입/cycle 시 살짝 brightness flash로 "변신" 느낌 (이브이 진화 빛 오마주, 절제 톤). */
 @keyframes biji-popin {
-  0%   { transform: scale(0.7) translateY(12px); opacity: 0; }
-  60%  { transform: scale(1.05) translateY(0); opacity: 1; }
-  100% { transform: scale(1) translateY(0); opacity: 1; }
+  0%   { transform: scale(0.7) translateY(12px); opacity: 0; filter: brightness(1.6) saturate(1.2); }
+  40%  { filter: brightness(1.3) saturate(1.1); }
+  60%  { transform: scale(1.05) translateY(0); opacity: 1; filter: brightness(1.1); }
+  100% { transform: scale(1) translateY(0); opacity: 1; filter: brightness(1) saturate(1); }
 }
 .biji-breathe { animation: biji-breathe 3s ease-in-out infinite; transform-origin: 50% 100%; }
 .biji-blink   { animation: biji-blink 4.5s ease-in-out infinite; transform-origin: center; }
