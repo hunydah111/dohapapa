@@ -132,9 +132,9 @@ export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
   },
   gukmin: {
     slug: "gukmin", emoji: "🦫", label: "비버", drip: "표준 라인 — 부업 한 칸 늘리자~", isFlex: false,
-    // 가장 많은 비버류라 시각 단조 차단 — 시군구 시드로 결정적 랜덤 픽 (강남구→grass, 송파구→leaf 등 일관).
-    // 추후 tier-norm.png 추가하면 4장으로 확장 (gukmin v2 프롬프트로 생성 예정).
+    // 가장 많은 비버류라 시각 단조 차단 — 시군구 시드로 결정적 랜덤 픽 4장 (norm/blossom/grass/leaf).
     image: [
+      "/biji/tier/norm.png",
       "/biji/tier/blossom.png",
       "/biji/tier/grass.png",
       "/biji/tier/leaf.png",
@@ -149,7 +149,12 @@ export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
   },
   baby: {
     slug: "baby", emoji: "🐣", label: "아기비버", drip: "출발선 — 우선 현금흐름 잡자", isFlex: false,
-    image: "/biji/tier/baby.png",
+    // 3장 변주 (기존 baby + pinkbaby + bluebaby) — 시군구 시드 결정적 픽.
+    image: [
+      "/biji/tier/baby.png",
+      "/biji/tier/pinkbaby.png",
+      "/biji/tier/bluebaby.png",
+    ],
     theme: {
       cardBg: "linear-gradient(160deg, #fffdf8 0%, #ffe6dc 55%, #ffccb7 100%)",
       textTone: "dark",
