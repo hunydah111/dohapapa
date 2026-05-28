@@ -1,8 +1,10 @@
 // 트레이딩 카드용 합성 이름 — 자연어 형태 "동네 등급비버".
-// 예: "강남구 퀸비버", "송파구 비 버", "분당구 저스틴비버".
+// 예: "강남구 퀸비버", "송파구 비  버", "분당구 저스틴비버", "광명시 비버", "구로구 아기비버".
 // 1자 줄임은 인지 안 돼서 자연어로 — 짧은 시군구 라벨 + 등급 풀라벨.
-// 컴플라이언스: 박탈감 차단 — isFlex=false(gukmin·baby) 등급은 시군구를 안 붙이고 라벨 그대로.
-// 부동산 동네 줄세우기 느낌 X.
+//
+// 2026-05-28: 모든 등급에 시군구 prefix 적용 (사용자 요청: 일관성). 박탈감 차단은
+// isFlex 플래그를 "상위 N% 숫자 표시"에만 한정 (HeroResultCard.tsx). 시군구는
+// 동네 정체성·소속감이지 줄세우기가 아니므로 박탈감 룰 영향 X.
 
 import type { BudgetTier } from "./budgetPercentile";
 
@@ -23,11 +25,10 @@ export function sigunguShortLabel(sigungu: string | null | undefined): string {
 }
 
 /**
- * 동네+등급 합성 이름. isFlex=false면 시군구 안 붙이고 라벨 그대로(박탈감 차단).
+ * 동네+등급 합성 이름 "시군구 등급". 모든 등급에 적용.
  * sigungu가 없거나 키 추출 실패 시 라벨 폴백.
  */
 export function composeBijiName(sigungu: string | null | undefined, tier: BudgetTier): string {
-  if (!tier.isFlex) return tier.label;
   const short = sigunguShortLabel(sigungu);
   if (!short) return tier.label;
   return `${short} ${tier.label}`;

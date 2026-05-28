@@ -35,9 +35,10 @@ describe("composeBijiName", () => {
     expect(composeBijiName("구로구", BEAVER_TIERS.rain)).toBe("구로구 비  버");
   });
 
-  it("isFlex=false 등급(국민·아기)은 합성 안 함 — 박탈감 차단", () => {
-    expect(composeBijiName("광명시", BEAVER_TIERS.gukmin)).toBe(BEAVER_TIERS.gukmin.label);
-    expect(composeBijiName("강남구", BEAVER_TIERS.baby)).toBe(BEAVER_TIERS.baby.label);
+  it("모든 등급에 시군구 prefix 적용 (gukmin·baby 포함, 일관성)", () => {
+    expect(composeBijiName("광명시", BEAVER_TIERS.gukmin)).toBe("광명시 비버");
+    expect(composeBijiName("강남구", BEAVER_TIERS.baby)).toBe("강남구 아기비버");
+    expect(composeBijiName("성남시 분당구", BEAVER_TIERS.gukmin)).toBe("분당구 비버");
   });
 
   it("시군구 없으면 라벨로 폴백", () => {
