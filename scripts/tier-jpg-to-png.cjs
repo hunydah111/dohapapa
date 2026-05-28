@@ -26,9 +26,13 @@ const TARGETS = fs.readdirSync(SRC_DIR)
       console.log(`${slug.padEnd(8)} MISSING source: ${src}`);
       continue;
     }
-    // jpg → png (alpha 없음, 흰 배경 그대로). 1024×1024 정사각 보존.
-    // sharp는 png 변환 시 원본 해상도 유지. resize 안 하면 Recraft 1024×1024 그대로.
-    const buf = await sharp(src).png({ compressionLevel: 9 }).toBuffer();
+    // jpg → png (alpha 강제 제거, 흰 배경 평탄화). 1024×1024 정사각 보존.
+    // flatten({ background: '#ffffff' }) — 소스에 alpha 채널 있으면 흰 배경 위에 합성해서
+    // 평탄화. 일부 변주(baby 옛 jpg)가 alpha 가진 PNG였던 케이스 fix — 바둑판 투명 노출 차단.
+    const buf = await sharp(src)
+      .flatten({ background: { r: 255, g: 255, b: 255 } })
+      .png({ compressionLevel: 9 })
+      .toBuffer();
     fs.writeFileSync(dst, buf);
     const meta = await sharp(dst).metadata();
     const sizeKb = (buf.length / 1024).toFixed(1);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { BudgetTier, BijiOrnament } from "@/lib/budgetPercentile";
 import { pickTierImage } from "@/lib/budgetPercentile";
 import { composeBijiName } from "@/lib/bijiName";
@@ -162,6 +162,16 @@ export function BijiCard({
   const imageUrl = imageList ? imageList[imageIndex] : (tier.image as string);
   const canCycle = imageList !== null && imageList.length > 1;
   const handleCycle = canCycle ? () => setImageIndex((i) => (i + 1) % imageList.length) : undefined;
+
+  // 변주 preload — array 등급은 mount 시 나머지 변주 백그라운드 fetch.
+  // 첫 탭 시 캐시 미스로 발생하던 렉 해소. 화질 동일 (같은 HD 이미지 미리 받아둠).
+  useEffect(() => {
+    if (!imageList) return;
+    imageList.forEach((url) => {
+      const img = new globalThis.Image();
+      img.src = `${url}?v=4`;
+    });
+  }, [imageList]);
 
   return (
     <section
