@@ -69,8 +69,10 @@ export interface BeaverTierTheme {
   glow: string;
   /** 장식 패턴 — 비지 등급 특색과 매칭. */
   ornament: BijiOrnament;
-  /** 핵심 액센트(이름·테두리). */
+  /** 핵심 액센트(테두리·코너 별). */
   accent: string;
+  /** 큰 이름 텍스트 색 override (옵션 — 미지정 시 textTone에 따라 자동). */
+  nameColor?: string;
 }
 
 export interface BudgetTier {
@@ -93,13 +95,14 @@ export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
     slug: "queen", emoji: "🎤", label: "퀸비버", drip: "갈라쇼 라인 — 최정상", isFlex: true,
     image: "/biji/tier/queen.png",
     theme: {
-      // 흰 수트가 cream 배경에도 먹히는 문제 → 더 진한 peach→amber→deep gold로 전환.
-      // 흰 수트는 카드의 가장 밝은 요소가 되어 명확히 떠보임. 다크 톤(rain)과도 시각 대비.
-      cardBg: "linear-gradient(160deg, #ffe2b8 0%, #f7b878 50%, #e88a3a 100%)",
+      // 실버 그라데이션 — 갈라쇼/럭셔리 메탈 톤. Freddie 마이크·체인 실버 톤과 호응.
+      // 라벨 텍스트는 dark charcoal로 silver bg 위 가독 OK (별도 nameColor override).
+      cardBg: "linear-gradient(160deg, #f4f6f8 0%, #c8ccd0 50%, #8a8d93 100%)",
       textTone: "dark",
-      glow: "radial-gradient(circle at 50% 0%, rgba(255,200,120,0.55) 0%, rgba(255,200,120,0) 60%)",
+      glow: "radial-gradient(circle at 50% 0%, rgba(200,204,208,0.55) 0%, rgba(200,204,208,0) 60%)",
       ornament: "stars",
-      accent: "#909296", // 실버 — 라벨 텍스트 + 별 ornament 색 (Freddie 마이크 실버 톤과 호응)
+      accent: "#909296", // 실버 — corner 별 ornament 색
+      nameColor: "#2c2c30", // dark charcoal — silver bg 위 큰 이름 가독성
     },
   },
   rain: {

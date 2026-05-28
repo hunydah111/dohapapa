@@ -187,7 +187,7 @@ export function BijiCard({
             className={`font-jua leading-[1.05] ${colors.primary} truncate`}
             style={{
               fontSize: name.length >= 8 ? "1.2rem" : name.length >= 6 ? "1.45rem" : "1.75rem",
-              color: tier.theme.textTone === "dark" ? tier.theme.accent : undefined,
+              color: tier.theme.nameColor ?? (tier.theme.textTone === "dark" ? tier.theme.accent : undefined),
             }}
             title={name}
           >
