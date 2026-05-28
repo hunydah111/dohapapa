@@ -992,8 +992,38 @@ export function PlanExperience() {
           매달 더 모을수록 위 ‘내 집 마련 시점’이 당겨져요.
         </p>
         <div className="grid grid-cols-2 gap-3">
-          <NumField label="월 실제저축액(만원)" value={saveStr} onChange={setSaveStr} hint={unitHint(saveStr)} />
-          <NumField label="월 부업·세후(만원)" value={sideStr} onChange={setSideStr} hint={unitHint(sideStr)} />
+          <div>
+            <NumField label="월 실제저축액(만원)" value={saveStr} onChange={setSaveStr} hint={unitHint(saveStr)} />
+            <input
+              type="range"
+              min={0}
+              max={3000}
+              step={10}
+              value={Math.min(parseFloat(saveStr) || 0, 3000)}
+              onChange={(e) => setSaveStr(e.target.value)}
+              className="mt-2 w-full accent-coral-600"
+              aria-label="월 실제저축액 슬라이더"
+            />
+            <div className="flex justify-between text-[10px]" style={{ color: "#9c8a72" }}>
+              <span>0</span><span>3,000만</span>
+            </div>
+          </div>
+          <div>
+            <NumField label="월 부업·세후(만원)" value={sideStr} onChange={setSideStr} hint={unitHint(sideStr)} />
+            <input
+              type="range"
+              min={0}
+              max={1000}
+              step={10}
+              value={Math.min(parseFloat(sideStr) || 0, 1000)}
+              onChange={(e) => setSideStr(e.target.value)}
+              className="mt-2 w-full accent-coral-600"
+              aria-label="월 부업 슬라이더"
+            />
+            <div className="flex justify-between text-[10px]" style={{ color: "#9c8a72" }}>
+              <span>0</span><span>1,000만</span>
+            </div>
+          </div>
         </div>
         {sideWarn && (
           <p
