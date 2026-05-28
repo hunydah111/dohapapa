@@ -178,8 +178,31 @@ body {
   100% { opacity: 0; transform: translateY(-9px); }
 }
 .plan-delta { animation: plan-delta 1.5s ease both; }
+
+/* 셀럽 비지 탭 반응 — queen 콧수염 wiggle / rain 선글라스 shine / bieber 헤어 flip.
+   key 재마운트로 매 탭 재생. 단일 이미지 등급(queen/rain/bieber)만 사용. */
+@keyframes biji-tap-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-2.5deg); }
+  60% { transform: rotate(2.5deg); }
+  80% { transform: rotate(-1deg); }
+}
+@keyframes biji-tap-shine {
+  0%, 100% { filter: brightness(1) saturate(1); }
+  50% { filter: brightness(1.18) saturate(1.2); }
+}
+@keyframes biji-tap-flip {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+  30% { transform: translateY(-3px) rotate(-3deg) scale(1.02); }
+  70% { transform: translateY(-1px) rotate(2deg) scale(1.01); }
+}
+.biji-tap-wiggle { animation: biji-tap-wiggle 0.45s ease-out; transform-origin: 50% 60%; }
+.biji-tap-shine  { animation: biji-tap-shine 0.5s ease-out; }
+.biji-tap-flip   { animation: biji-tap-flip 0.5s ease-out; transform-origin: 50% 30%; }
+
 @media (prefers-reduced-motion: reduce) {
-  .biji-breathe, .biji-blink, .biji-compass, .biji-tail, .biji-hop, .biji-pop-in, .fade-in-up, .plan-delta { animation: none; }
+  .biji-breathe, .biji-blink, .biji-compass, .biji-tail, .biji-hop, .biji-pop-in, .fade-in-up, .plan-delta,
+  .biji-tap-wiggle, .biji-tap-shine, .biji-tap-flip { animation: none; }
 }
 
 /* ── 비디오 모션 비지 (자체 motion mp4 + PNG 폴백) — reduce-motion 시 폴백만 ── */

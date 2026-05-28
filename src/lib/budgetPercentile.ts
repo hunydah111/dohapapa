@@ -74,6 +74,9 @@ export interface BeaverTierTheme {
   accent: string;
   /** 큰 이름 텍스트 색 override (옵션 — 미지정 시 textTone에 따라 자동). */
   nameColor?: string;
+  /** 단일 이미지 등급의 탭 반응 애니메이션 CSS 클래스 (이스터에그).
+   *  array 변주 등급은 cycle이 우선, 이 필드는 무시됨. */
+  tapAnimation?: "biji-tap-wiggle" | "biji-tap-shine" | "biji-tap-flip";
 }
 
 export interface BudgetTier {
@@ -105,6 +108,7 @@ export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
       ornament: "stars",
       accent: "#909296", // 실버 — corner 별 ornament 색
       nameColor: "#2c2c30", // dark charcoal — silver bg 위 큰 이름 가독성
+      tapAnimation: "biji-tap-wiggle", // 콧수염 흔드는 듯한 살짝 회전
     },
   },
   rain: {
@@ -117,6 +121,7 @@ export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
       glow: "radial-gradient(circle at 80% 10%, rgba(224,162,58,0.4) 0%, rgba(224,162,58,0) 65%)",
       ornament: "flames",
       accent: "#e0a23a",
+      tapAnimation: "biji-tap-shine", // 선글라스 반짝 — brightness/saturate flash
     },
   },
   bieber: {
@@ -129,6 +134,7 @@ export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
       glow: "radial-gradient(circle at 50% 0%, rgba(168,200,224,0.5) 0%, rgba(168,200,224,0) 65%)",
       ornament: "hearts",
       accent: "#4a7ba8",
+      tapAnimation: "biji-tap-flip", // 헤어 한 번 휘날리는 듯한 살짝 기울기
     },
   },
   gukmin: {

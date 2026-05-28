@@ -163,15 +163,27 @@ export function BijiCard({
   const canCycle = imageList !== null && imageList.length > 1;
   const handleCycle = canCycle ? () => setImageIndex((i) => (i + 1) % imageList.length) : undefined;
 
-  // 변주 preload — array 등급은 mount 시 나머지 변주 백그라운드 fetch.
-  // 첫 탭 시 캐시 미스로 발생하던 렉 해소. 화질 동일 (같은 HD 이미지 미리 받아둠).
+  // 변주 preload — array 등급은 mount 후 ~2.5초 deferred fetch.
+  // 첫 paint 우선·모바일 3G 통신비 부담 ↓. 화질 동일 (같은 HD 이미지 미리 받아둠).
+  // 사용자가 탭하기 전에 충분히 적재됨 — 보통 탭은 결과 보고 몇 초 후라 자연스러움.
   useEffect(() => {
     if (!imageList) return;
-    imageList.forEach((url) => {
-      const img = new globalThis.Image();
-      img.src = `${url}?v=4`;
-    });
+    const handle = window.setTimeout(() => {
+      imageList.forEach((url) => {
+        const img = new globalThis.Image();
+        img.src = `${url}?v=4`;
+      });
+    }, 2500);
+    return () => window.clearTimeout(handle);
   }, [imageList]);
+
+  // 단일 이미지 등급(queen/rain/bieber)의 탭 반응 — key 재마운트로 애니메이션 재생.
+  const [tapCount, setTapCount] = useState(0);
+  const tapAnim = !canCycle ? tier.theme.tapAnimation : undefined;
+  const handleSingleTap = tapAnim ? () => setTapCount((c) => c + 1) : undefined;
+  const handleTap = handleCycle ?? handleSingleTap;
+  const imgKey = canCycle ? `cycle-${imageIndex}` : `tap-${tapCount}`;
+  const imgInteractive = handleTap !== undefined;
 
   return (
     <section
@@ -194,16 +206,17 @@ export function BijiCard({
           </span>
         </div>
 
-        {/* 비지 — 카드 영역 풀로 채움(원본 jpg 정사각 그대로). drop-shadow 제거 (흰 배경에 그림자 어색).
-            array 변주(baby·gukmin)는 탭/클릭하면 다음 변주로 사이클 — 이스터에그.
-            key={imageIndex}로 swap 시 biji-pop-in 애니메이션 재트리거. */}
+        {/* 비지 — 카드 영역 풀로 채움. 이스터에그:
+            - array 변주(baby·gukmin): 탭하면 다음 변주로 사이클 (biji-pop-in 재트리거)
+            - 단일 등급(queen/rain/bieber): 탭하면 tapAnimation 재생 (콧수염 흔들·반짝·헤어 휘날림)
+            key 변화로 매 탭마다 애니메이션 재트리거. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          key={imageIndex}
+          key={imgKey}
           src={`${imageUrl}?v=4`}
           alt={`${tier.label} 비지`}
-          onClick={handleCycle}
-          className={`biji-pop-in absolute inset-0 h-full w-full select-none ${canCycle ? "cursor-pointer active:scale-95 transition-transform" : ""}`}
+          onClick={handleTap}
+          className={`${canCycle ? "biji-pop-in" : tapAnim ?? ""} absolute inset-0 h-full w-full select-none ${imgInteractive ? "cursor-pointer active:scale-95 transition-transform" : ""}`}
           style={{ objectFit: "contain" }}
           draggable={false}
         />
