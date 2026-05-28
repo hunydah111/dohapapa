@@ -287,6 +287,8 @@ export function PlanExperience() {
   const [interestOn, setInterestOn] = useState(false);
   const [interestPct, setInterestPct] = useState(5);
   const interestRateAnnual = interestOn ? interestPct / 100 : undefined;
+  // 이스터에그: 차트 배경색 5단계 순환 (다크 → 핑크 → 노랑 → 흰 → 초록). 우상단 작은 점.
+  const [chartBgIdx, setChartBgIdx] = useState(0);
 
   // 무거운 재계산은 디바운스된 값으로(타이핑 부드럽게). 입력칸 표시·미리보기는 즉시.
   const incomeKrw = useDebounced(manwon(income));
@@ -929,28 +931,47 @@ export function PlanExperience() {
         </p>
       </section>
 
-      {/* 경주 차트 — 따뜻한 다크 클라이맥스(코랄선이 빛남) */}
-      <section
-        className="rounded-3xl p-4 text-white"
-        style={{
-          background: "linear-gradient(165deg,#3a2c1d 0%,#2c2116 100%)",
-          boxShadow: "0 12px 30px -14px rgba(44,33,22,0.6)",
-        }}
-      >
-        <div className="mb-1.5 flex items-center justify-between">
-          <p className="text-[12px] font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>
-            저축 vs 집값 경주
-          </p>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/biji/biji-point-up.png"
-            alt=""
-            aria-hidden
-            className="h-12 w-auto drop-shadow"
-            draggable={false}
-          />
-        </div>
-        <PlanRaceChart result={plan} focus={scenarioKey} dark />
+      {/* 경주 차트 — 따뜻한 다크 클라이맥스(코랄선이 빛남). 우상단 작은 점은 배경색 이스터에그(5단계). */}
+      {(() => {
+        const BG_THEMES = [
+          { bg: "linear-gradient(165deg,#3a2c1d 0%,#2c2116 100%)", dark: true,  text: "rgba(255,255,255,0.7)", titleColor: "white", dotColor: "rgba(255,255,255,0.4)" },
+          { bg: "linear-gradient(165deg,#fce7f3 0%,#fbcfe8 100%)", dark: false, text: "#a8336a", titleColor: "#831843", dotColor: "rgba(131,24,67,0.35)" },
+          { bg: "linear-gradient(165deg,#fef9c3 0%,#fef08a 100%)", dark: false, text: "#854d0e", titleColor: "#713f12", dotColor: "rgba(113,63,18,0.35)" },
+          { bg: "#ffffff",                                        dark: false, text: "#6e5b46", titleColor: "#3a2c1d", dotColor: "rgba(58,44,29,0.3)"  },
+          { bg: "linear-gradient(165deg,#d1fae5 0%,#a7f3d0 100%)", dark: false, text: "#047857", titleColor: "#064e3b", dotColor: "rgba(6,78,59,0.35)" },
+        ];
+        const t = BG_THEMES[chartBgIdx];
+        return (
+          <section
+            className="relative rounded-3xl p-4"
+            style={{
+              background: t.bg,
+              color: t.titleColor,
+              boxShadow: "0 12px 30px -14px rgba(44,33,22,0.6)",
+            }}
+          >
+            {/* 이스터에그 토글 — 작은 점 (우상단). 클릭 시 배경색 순환. */}
+            <button
+              type="button"
+              onClick={() => setChartBgIdx((i) => (i + 1) % BG_THEMES.length)}
+              className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full opacity-60 transition-opacity hover:opacity-100"
+              style={{ background: t.dotColor }}
+              aria-label="차트 배경색 변경"
+            />
+            <div className="mb-1.5 flex items-center justify-between">
+              <p className="text-[12px] font-semibold" style={{ color: t.text }}>
+                저축 vs 집값 경주
+              </p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/biji/biji-point-up.png"
+                alt=""
+                aria-hidden
+                className="h-12 w-auto drop-shadow"
+                draggable={false}
+              />
+            </div>
+            <PlanRaceChart result={plan} focus={scenarioKey} dark={t.dark} />
         <details className="mt-3 rounded-2xl bg-white/10 p-3 [&_summary::-webkit-details-marker]:hidden">
           <summary className="flex cursor-pointer list-none items-baseline justify-between">
             <span className="text-[12px] font-semibold text-white">
@@ -987,7 +1008,9 @@ export function PlanExperience() {
             <b>{eok(plan.gapKrw)}</b>을 따라잡는 게 위 그래프. 모두 추정.
           </p>
         </details>
-      </section>
+          </section>
+        );
+      })()}
 
       {/* 저축 레버 */}
       <section className="rounded-3xl border border-[#ecd9b3] bg-[#fdf6e7]/70 p-5">
