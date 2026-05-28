@@ -154,26 +154,25 @@ export function BijiCard({
       {/* 코너 글로우 — 등급별 무드. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ background: tier.theme.glow }} />
 
-      {/* 비지 영역 (상단 65%) — bottom 정렬. 상단 헤더 패딩 18%로 머리 위 데코 보존. */}
-      <div className="absolute inset-x-0 top-0 h-[65%] overflow-hidden">
+      {/* 비지 영역 (상단 65%) — 흰 배경 박스 (Polaroid 풍). 원본 jpg의 흰 bg 자연 블렌딩 +
+          비지 안 흰 영역(수트·이빨)이 카드 컬러 그라데이션과 충돌하던 문제 해소. */}
+      <div className="absolute inset-x-0 top-0 h-[65%] overflow-hidden bg-white">
         <Ornament kind={tier.theme.ornament} accent={tier.theme.accent} />
 
-        {/* 등급 라벨 캡 — 상단 우측 */}
+        {/* 등급 라벨 캡 — 상단 우측. 흰 배경 위라 textTone 무관하게 다크 칩 고정. */}
         <div className="absolute right-4 top-3 z-10">
-          <span
-            className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ${colors.chipBg} backdrop-blur-sm`}
-          >
+          <span className="inline-flex items-center rounded-full bg-[rgba(70,48,24,0.08)] px-2.5 py-1 text-[11px] font-bold text-[#3a2c1d] backdrop-blur-sm">
             {tier.label}
           </span>
         </div>
 
-        {/* 비지 — bottom 정렬, 상단 18% 여백, 폭 86% */}
+        {/* 비지 — 카드 영역 풀로 채움(원본 jpg 정사각 그대로). drop-shadow 제거 (흰 배경에 그림자 어색). */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={`${tier.image}?v=1`}
+          src={`${tier.image}?v=3`}
           alt={`${tier.label} 비지`}
-          className="biji-breathe absolute bottom-0 left-1/2 h-[82%] w-auto -translate-x-1/2 select-none drop-shadow-[0_6px_16px_rgba(0,0,0,0.18)]"
-          style={{ objectFit: "contain", objectPosition: "bottom" }}
+          className="biji-breathe absolute inset-0 h-full w-full select-none"
+          style={{ objectFit: "contain" }}
           draggable={false}
         />
       </div>

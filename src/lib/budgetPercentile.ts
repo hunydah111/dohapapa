@@ -91,7 +91,7 @@ export interface BudgetTier {
 export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
   queen: {
     slug: "queen", emoji: "🎤", label: "퀸비버", drip: "갈라쇼 라인 — 최정상", isFlex: true,
-    image: "/biji/tier/queen.png?v=2",
+    image: "/biji/tier/queen.png",
     theme: {
       // 흰 수트가 cream 배경에도 먹히는 문제 → 더 진한 peach→amber→deep gold로 전환.
       // 흰 수트는 카드의 가장 밝은 요소가 되어 명확히 떠보임. 다크 톤(rain)과도 시각 대비.
