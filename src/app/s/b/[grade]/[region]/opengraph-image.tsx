@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { getTierBySlug, BEAVER_TIERS } from "@/lib/budgetPercentile";
+import { getTierBySlug, BEAVER_TIERS, pickTierImage } from "@/lib/budgetPercentile";
 import { composeBijiName } from "@/lib/bijiName";
 import { isKnownSigungu } from "@/lib/molit";
 import { SITE_DOMAIN } from "@/lib/site";
@@ -31,8 +31,10 @@ export default async function Image({
   }
 
   const font = await readFile(join(process.cwd(), "assets/BlackHanSans-Regular.ttf"));
+  // tier.image가 array면 region 시드로 결정적 픽 — 같은 공유 URL은 항상 같은 비지.
+  const tierImagePath = pickTierImage(tier.image, region === "수도권" ? null : region);
   const beaverBuf = await readFile(
-    join(process.cwd(), "public", tier.image.replace(/^\//, "")),
+    join(process.cwd(), "public", tierImagePath.replace(/^\//, "")),
   );
   const beaver = `data:image/png;base64,${beaverBuf.toString("base64")}`;
 

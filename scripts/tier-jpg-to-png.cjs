@@ -8,7 +8,15 @@ const path = require("path");
 
 const SRC_DIR = path.resolve(__dirname, "..", "assets", "biji-master", "incoming", "_processed");
 const DST_DIR = path.resolve(__dirname, "..", "public", "biji", "tier");
-const TARGETS = ["queen", "rain", "bieber"];
+// 처리 대상은 _processed/ 안의 tier-*.jpg 자동 감지. 새 변주 추가 시 _processed에 떨구기만 하면 됨.
+// 단, 옛 폐기 등급(fever/justin/nan/top)은 제외.
+const LEGACY_EXCLUDE = new Set(["fever", "justin", "nan", "top"]);
+const TARGETS = fs.readdirSync(SRC_DIR)
+  .map(f => {
+    const m = f.match(/^tier-(.+)\.jpe?g$/i);
+    return m ? m[1] : null;
+  })
+  .filter(slug => slug && !LEGACY_EXCLUDE.has(slug));
 
 (async () => {
   for (const slug of TARGETS) {

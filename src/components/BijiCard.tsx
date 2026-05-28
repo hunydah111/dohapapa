@@ -1,4 +1,5 @@
 import type { BudgetTier, BijiOrnament } from "@/lib/budgetPercentile";
+import { pickTierImage } from "@/lib/budgetPercentile";
 import { composeBijiName } from "@/lib/bijiName";
 import { SITE_DOMAIN } from "@/lib/site";
 
@@ -146,6 +147,8 @@ export function BijiCard({
   const colors = textColors(tier);
   const name = composeBijiName(sigungu ?? null, tier);
   const meta = [sigungu, dongName, areaM2 ? `전용 ${areaM2}㎡` : null].filter(Boolean).join(" · ");
+  // 시군구 시드로 결정적 픽 — 동일 지역은 항상 같은 변주 비지 (gukmin 3장 array에서).
+  const imageUrl = pickTierImage(tier.image, sigungu ?? null);
 
   return (
     <section
@@ -171,7 +174,7 @@ export function BijiCard({
         {/* 비지 — 카드 영역 풀로 채움(원본 jpg 정사각 그대로). drop-shadow 제거 (흰 배경에 그림자 어색). */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={`${tier.image}?v=4`}
+          src={`${imageUrl}?v=4`}
           alt={`${tier.label} 비지`}
           className="biji-breathe absolute inset-0 h-full w-full select-none"
           style={{ objectFit: "contain" }}

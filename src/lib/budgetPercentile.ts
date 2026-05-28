@@ -84,8 +84,9 @@ export interface BudgetTier {
   drip: string;
   /** true면 "상위 N%" 노출, false(최하위)면 숫자 숨김. */
   isFlex: boolean;
-  /** 공유 OG·카드용 비버 이미지 (public/biji/tier/…). 등급별 무드. */
-  image: string;
+  /** 공유 OG·카드용 비버 이미지 (public/biji/tier/…). 등급별 무드.
+   *  배열이면 시드(시군구)로 결정적 랜덤 픽 — 동일 지역은 항상 같은 비지로 일관성 유지. */
+  image: string | string[];
   /** 트레이딩 카드 시각 테마. */
   theme: BeaverTierTheme;
 }
@@ -131,7 +132,13 @@ export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
   },
   gukmin: {
     slug: "gukmin", emoji: "🦫", label: "비버", drip: "표준 라인 — 부업 한 칸 늘리자~", isFlex: false,
-    image: "/biji/tier/gukmin.png",
+    // 가장 많은 비버류라 시각 단조 차단 — 시군구 시드로 결정적 랜덤 픽 (강남구→grass, 송파구→leaf 등 일관).
+    // 추후 tier-norm.png 추가하면 4장으로 확장 (gukmin v2 프롬프트로 생성 예정).
+    image: [
+      "/biji/tier/blossom.png",
+      "/biji/tier/grass.png",
+      "/biji/tier/leaf.png",
+    ],
     theme: {
       cardBg: "linear-gradient(160deg, #fffdf8 0%, #efe2cf 60%, #d9c5a4 100%)",
       textTone: "dark",
@@ -179,4 +186,22 @@ export function getTierBySlug(slug: string): BudgetTier | null {
   const aliased = LEGACY_SLUG_ALIAS[slug];
   if (aliased) return BEAVER_TIERS[aliased];
   return null;
+}
+
+// 문자열 결정적 해시 — 시군구 같은 시드로 array 변주 픽.
+function djb2Hash(s: string): number {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h) ^ s.charCodeAt(i);
+  return Math.abs(h);
+}
+
+/**
+ * tier.image가 array면 시드(시군구) 기반 결정적 픽, 단일 string이면 그대로.
+ * 시드 없거나 빈 array면 첫 번째 폴백. SSR/CSR 동일 결과 (hydration safe).
+ */
+export function pickTierImage(image: string | string[], seed?: string | null): string {
+  if (typeof image === "string") return image;
+  if (image.length === 0) return "";
+  if (image.length === 1 || !seed) return image[0];
+  return image[djb2Hash(seed) % image.length];
 }
