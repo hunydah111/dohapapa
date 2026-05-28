@@ -29,10 +29,10 @@ describe("sigunguShortLabel", () => {
 describe("composeBijiName", () => {
   it("flex 등급은 '동네 등급비버' 자연어 형태 (구·시·군 보존)", () => {
     expect(composeBijiName("강남구", BEAVER_TIERS.queen)).toBe("강남구 퀸비버");
-    expect(composeBijiName("성남시 분당구", BEAVER_TIERS.rain)).toBe("분당구 비  버");
+    expect(composeBijiName("성남시 분당구", BEAVER_TIERS.rain)).toBe("분당구 비  버");
     expect(composeBijiName("수원시 영통구", BEAVER_TIERS.bieber)).toBe("영통구 저스틴비버");
     expect(composeBijiName("광명시", BEAVER_TIERS.queen)).toBe("광명시 퀸비버");
-    expect(composeBijiName("구로구", BEAVER_TIERS.rain)).toBe("구로구 비  버");
+    expect(composeBijiName("구로구", BEAVER_TIERS.rain)).toBe("구로구 비  버");
   });
 
   it("isFlex=false 등급(국민·아기)은 합성 안 함 — 박탈감 차단", () => {

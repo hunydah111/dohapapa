@@ -103,7 +103,7 @@ export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
     },
   },
   rain: {
-    slug: "rain", emoji: "🕶️", label: "비  버", drip: "1일 1비집고 — 슈퍼 라인", isFlex: true,
+    slug: "rain", emoji: "🕶️", label: "비  버", drip: "1일 1비집고 — 슈퍼 라인", isFlex: true,
     image: "/biji/tier/rain.png",
     theme: {
       // 깡 noir — 검정 가죽 자켓 + 골드 체인. 깊은 black + 따뜻한 우디 base.
