@@ -1422,8 +1422,8 @@ export function ProfileForm({
               suffix="만원"
               hint={
                 seedMoney
-                  ? `${manwonHint(seedMoney)} — 이번 집 살 때 넣을 현금(종잣돈)`
-                  : "이번 집 구매에 넣을 현금(종잣돈) — 계약금·잔금 재원. 구매력 계산에 사용"
+                  ? `${manwonHint(seedMoney)} — 이번 집에 넣을 종잣돈 (예적금+팔 주식·자사주 현금화분 포함)`
+                  : "이번 집에 넣을 종잣돈 — 예적금 + 팔 주식·자사주·청약통장 등 현금화해 끌어올 돈(계약금·잔금 재원). 구매력 계산에 사용"
               }
             />
 

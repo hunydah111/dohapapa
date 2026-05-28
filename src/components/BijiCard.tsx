@@ -161,7 +161,6 @@ export function BijiCard({
   });
   const imageUrl = imageList ? imageList[imageIndex] : (tier.image as string);
   const canCycle = imageList !== null && imageList.length > 1;
-  const handleCycle = canCycle ? () => setImageIndex((i) => (i + 1) % imageList.length) : undefined;
 
   // 변주 preload — array 등급은 mount 후 ~2.5초 deferred fetch.
   // 첫 paint 우선·모바일 3G 통신비 부담 ↓. 화질 동일 (같은 HD 이미지 미리 받아둠).

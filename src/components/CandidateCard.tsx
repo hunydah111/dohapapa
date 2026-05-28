@@ -48,6 +48,15 @@ export function CandidateCard({
 }) {
   const tier = TIER_CONFIG[candidate.tier];
 
+  // 예산 밴드 밖(상한 초과)에서 보충된 후보 — 빈 화면 방지로 메인 티어에 올라온 케이스.
+  // budgetFit reason("예산 대비 N% 초과 (범위 외)")에서 초과율을 뽑아 상단 칩에 실제 배율을
+  // 박는다. "도전형" 제목이 예산 한참 초과 단지(예: +92%)를 과포장하지 않도록, 천장 초과 사실을
+  // 스캔 가능하게 — 초과율을 그대로 노출해 +12%는 약하게·+92%는 강하게 자동 스케일된다.
+  const overBudgetPct = (() => {
+    const m = candidate.reasoning.budgetFit?.match(/(\d+)% 초과 \(범위 외\)/);
+    return m ? Number(m[1]) : null;
+  })();
+
   // 가격 편차가 클 때(신축 입주장 등 같은 평형이 층·향 따라 크게 벌어짐)는 단일가가
   // 거짓 정밀이라 "31~36억" 범위로 정직하게 표시한다. ±12%↑ 벌어질 때만.
   const showPriceRange =
@@ -108,6 +117,14 @@ export function CandidateCard({
         >
           {RANK_LABELS[rank] ?? `${rank}위`}
         </span>
+        {overBudgetPct != null && (
+          <span
+            className="inline-flex items-center rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700 ring-1 ring-rose-200"
+            title="추정 구매력(현금+대출−취득세)을 넘는 가격대 — 예산 안에 맞는 단지가 부족해 함께 보여드립니다"
+          >
+            예산 {overBudgetPct}% 초과
+          </span>
+        )}
         {candidate.priceEstimated ? (
           <span
             className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 ring-1 ring-amber-200"

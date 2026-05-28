@@ -105,7 +105,7 @@ export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
       cardBg: "linear-gradient(160deg, #f4f6f8 0%, #c8ccd0 50%, #8a8d93 100%)",
       textTone: "dark",
       glow: "radial-gradient(circle at 50% 0%, rgba(200,204,208,0.55) 0%, rgba(200,204,208,0) 60%)",
-      ornament: "stars",
+      ornament: "gold-stars", // 무대 스포트라이트 큰 별 — 최정상 갈라쇼 무드
       accent: "#909296", // 실버 — corner 별 ornament 색
       nameColor: "#2c2c30", // dark charcoal — silver bg 위 큰 이름 가독성
       tapAnimation: "biji-tap-wiggle", // 콧수염 흔드는 듯한 살짝 회전
