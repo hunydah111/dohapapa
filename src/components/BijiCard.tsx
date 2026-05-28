@@ -181,7 +181,56 @@ export function BijiCard({
   const [tapCount, setTapCount] = useState(0);
   const tapAnim = !canCycle ? tier.theme.tapAnimation : undefined;
   const handleSingleTap = tapAnim ? () => setTapCount((c) => c + 1) : undefined;
-  const handleTap = handleCycle ?? handleSingleTap;
+
+  // 처음 보는 비지 발견 알림 — array cycle 시 본 적 없는 변주면 ✨ toast (2.5s).
+  // localStorage "biji-seen-variants" 에 URL 누적 (최대 50개), 모든 array 등급 공용.
+  const [discovered, setDiscovered] = useState(false);
+  const SEEN_KEY = "biji-seen-variants";
+  // 마운트 시 초기 변주를 seen 목록에 추가 (첫 화면 비지는 "본" 것으로 간주, cycle 시 알림 X).
+  useEffect(() => {
+    if (!imageList) return;
+    try {
+      const raw = localStorage.getItem(SEEN_KEY);
+      const seen: string[] = raw ? JSON.parse(raw) : [];
+      const initialUrl = imageList[imageIndex];
+      if (!seen.includes(initialUrl)) {
+        seen.push(initialUrl);
+        localStorage.setItem(SEEN_KEY, JSON.stringify(seen.slice(-50)));
+      }
+    } catch {
+      /* localStorage 비활성 (시크릿 모드 등) — 조용히 무시 */
+    }
+    // 초기값만 한 번 — imageIndex deps 제외 (cycle 시는 handleCycle 안에서 처리)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [imageList]);
+  // 발견 알림 자동 사라짐
+  useEffect(() => {
+    if (!discovered) return;
+    const t = window.setTimeout(() => setDiscovered(false), 2500);
+    return () => window.clearTimeout(t);
+  }, [discovered]);
+
+  // canCycle 케이스에 발견 체크 추가 — handleCycle 재정의
+  const handleCycleWithDiscovery = canCycle
+    ? () => {
+        const nextIdx = (imageIndex + 1) % imageList.length;
+        const nextUrl = imageList[nextIdx];
+        try {
+          const raw = localStorage.getItem(SEEN_KEY);
+          const seen: string[] = raw ? JSON.parse(raw) : [];
+          if (!seen.includes(nextUrl)) {
+            seen.push(nextUrl);
+            localStorage.setItem(SEEN_KEY, JSON.stringify(seen.slice(-50)));
+            setDiscovered(true);
+          }
+        } catch {
+          /* localStorage 비활성 시 발견 알림만 skip */
+        }
+        setImageIndex(nextIdx);
+      }
+    : undefined;
+
+  const handleTap = handleCycleWithDiscovery ?? handleSingleTap;
   const imgKey = canCycle ? `cycle-${imageIndex}` : `tap-${tapCount}`;
   const imgInteractive = handleTap !== undefined;
 
@@ -193,6 +242,13 @@ export function BijiCard({
     >
       {/* 코너 글로우 — 등급별 무드. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ background: tier.theme.glow }} />
+
+      {/* 처음 보는 비지 발견 알림 — array cycle 시 본 적 없는 변주면 ✨ toast (2.5s 후 fade). */}
+      {discovered && (
+        <div className="pointer-events-none absolute left-1/2 top-3 z-30 -translate-x-1/2 rounded-full bg-amber-300 px-3 py-1 text-[10.5px] font-extrabold text-coral-800 shadow-lg biji-pop-in">
+          ✨ 처음 보는 비지!
+        </div>
+      )}
 
       {/* 비지 영역 (상단 65%) — 흰 배경 박스 (Polaroid 풍). 원본 jpg의 흰 bg 자연 블렌딩 +
           비지 안 흰 영역(수트·이빨)이 카드 컬러 그라데이션과 충돌하던 문제 해소. */}
