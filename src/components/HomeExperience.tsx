@@ -25,6 +25,9 @@ import { TextField } from "@/components/ui/TextField";
 import { Card } from "@/components/ui/Card";
 import { formatKrwHuman } from "@/lib/format";
 import { SHARE_PARAM, encodeProfile, decodeProfile } from "@/lib/shareLink";
+import { readFriendFromLocation, buildFriendUrl, type FriendTag } from "@/lib/friendShare";
+import { budgetTier } from "@/lib/budgetPercentile";
+import { SITE_URL } from "@/lib/site";
 import {
   saveSearchPrefs,
   loadSearchPrefs,
@@ -131,6 +134,14 @@ export function HomeExperience() {
   const [resumePrefs, setResumePrefs] = useState<SearchPrefs | null>(null);
   const [resumeInit, setResumeInit] = useState<SearchPrefs | undefined>(undefined);
   const [shareToast, setShareToast] = useState<string | null>(null);
+  // 친구가 비교용으로 보낸 비지 태그 — ?f={slug}.{시군구} URL 파라미터.
+  // 마운트 시 한 번 읽고, LandingHero 배너 + HeroResultCard 비교 카드에서 사용.
+  // window 접근이라 SSR 시 null → client mount 시 URL 읽기 (의도적 set-state-in-effect).
+  const [friendTag, setFriendTag] = useState<FriendTag | null>(null);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setFriendTag(readFriendFromLocation());
+  }, []);
 
   // 조건 수정 패널 상태
   const [panelOpen, setPanelOpen] = useState(false);
@@ -480,6 +491,44 @@ export function HomeExperience() {
     window.history.replaceState(null, "", url.toString());
   }
 
+  // 친구한테 보내기 — 자기 결과를 친구 비교용 URL로 인코딩해 공유.
+  // 자기 비지 정체성(tier slug + sigungu)만 URL에 담음 — 소득·자산·직장 전혀 X.
+  // 친구가 그 URL 열면 LandingHero 배너 + 친구 검색 완료 시 비교 카드 노출.
+  async function handleShareFriend() {
+    if (!state) return;
+    const result = state.result;
+    if (!result.candidates[0]) return;
+    const topPct = budgetTopPercent(result.budget.netPurchasePowerKrw);
+    if (topPct == null) {
+      setShareToast("백분위 데이터 부족 — 다른 시간에 다시 시도");
+      setTimeout(() => setShareToast(null), 3000);
+      return;
+    }
+    const tier = budgetTier(topPct);
+    const sigungu = result.candidates[0].sigungu;
+    const friendUrl = buildFriendUrl(SITE_URL, tier, sigungu);
+    const shareData = {
+      title: `친구야 너도 비지 찾아봐! ${sigungu} ${tier.label}`,
+      text: "비집고에서 내 비지 찾고 너랑 비교해보자~",
+      url: friendUrl,
+    };
+    if (typeof navigator.share === "function") {
+      try { await navigator.share(shareData); return; }
+      catch (err) {
+        if ((err as DOMException)?.name !== "AbortError") {
+          // 폴백 — 클립보드 복사
+        } else return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(friendUrl);
+      setShareToast("친구 비교 링크 복사됨 — 카톡에 붙여넣기");
+    } catch {
+      setShareToast("링크 복사 실패 — 주소창 링크 직접 보내기");
+    }
+    setTimeout(() => setShareToast(null), 4000);
+  }
+
   // 결과 → 폼으로 돌아가기 (입력 보존). 폼은 결과 뒤에서 언마운트되지 않고 숨겨져 있어
   // state 만 비우면 입력 30여 개가 그대로 복원된다. handleRestart 와 달리 started 는
   // 유지 → 랜딩이 아니라 폼으로 복귀.
@@ -725,6 +774,7 @@ export function HomeExperience() {
             setStarted(true);
             window.scrollTo({ top: 0 });
           }}
+          friendTag={friendTag}
         />
       </>
     );
@@ -810,6 +860,8 @@ export function HomeExperience() {
           candidate={result.candidates[0]}
           homeType={getHomeType(state.profile)}
           onShare={handleShare}
+          onShareFriend={handleShareFriend}
+          friendTag={friendTag}
           budgetTopPercent={budgetTopPercent(result.budget.netPurchasePowerKrw)}
           budgetNetKrw={result.budget.netPurchasePowerKrw}
         />

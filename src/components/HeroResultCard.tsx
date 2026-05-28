@@ -4,6 +4,9 @@ import { formatKrwHuman } from "@/lib/format";
 import { budgetTier } from "@/lib/budgetPercentile";
 import { SITE_URL, SITE_DOMAIN } from "@/lib/site";
 import { BijiCard } from "./BijiCard";
+import { composeBijiName } from "@/lib/bijiName";
+import { pickTierImage } from "@/lib/budgetPercentile";
+import type { FriendTag } from "@/lib/friendShare";
 import { classifyRegulation } from "@/lib/regulation";
 
 // 발견의 의외성 카피 — "이 조건에 이 동네가?" (회의: 재미=발견). 컴플라이언스: 투자권유 아님.
@@ -31,17 +34,25 @@ export function HeroResultCard({
   candidate,
   homeType,
   onShare,
+  onShareFriend,
+  friendTag,
   budgetTopPercent,
   budgetNetKrw,
 }: {
   candidate: ComplexCandidate;
   homeType: HomeType;
   onShare: (url?: string) => void;
+  /** 친구한테 보내기 — 자기 결과를 친구 비교 링크로 인코딩해 공유. */
+  onShareFriend?: () => void;
+  /** 친구가 비교용으로 보낸 비지 (URL ?f=). 있으면 결과 위에 비교 카드 노출. */
+  friendTag?: FriendTag | null;
   /** 추정 구매력이 닿는 상위 % (작을수록 강함). 유리할 때(≤50)만 표시. null = 숨김. */
   budgetTopPercent?: number | null;
   /** 추정 구매력(원) — 백분위 밴드 숫자 표시용. */
   budgetNetKrw?: number;
 }) {
+  const friendName = friendTag ? composeBijiName(friendTag.sigungu, friendTag.tier) : null;
+  const friendImage = friendTag ? pickTierImage(friendTag.tier.image, friendTag.sigungu) : null;
   // 유형 카드 공유 링크 — 프로필 없이 유형만(바이럴 안전). /s/{slug} 에 동적 OG 카드.
   const typeShareUrl = `${SITE_URL}/s/${homeType.slug}`;
   // 비버 등급 공유 링크 — 등급+시군구만(소득·자산·직장 X). /s/b/{grade}/{region} 동적 OG 카드.
@@ -72,6 +83,28 @@ export function HeroResultCard({
       className="relative overflow-hidden rounded-3xl px-5 py-5 text-white"
       style={{ background: "#fe7644" }}
     >
+
+      {/* 친구 비교 — URL ?f= 친구 비지 있을 때만. 자기 카드 위에 친구 비지 미니로 노출. */}
+      {friendTag && friendName && friendImage && (
+        <div className="mb-3 flex items-center gap-3 rounded-2xl bg-white/15 px-3 py-2.5 backdrop-blur-sm">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`${friendImage}?v=4`}
+            alt={`친구의 비지: ${friendName}`}
+            className="h-12 w-12 shrink-0 rounded-lg bg-white object-contain ring-1 ring-white/40"
+            draggable={false}
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-100">👬 친구 비지</p>
+            <p className="mt-0.5 truncate text-[14px] font-extrabold text-white" title={friendName}>
+              {friendName}
+            </p>
+          </div>
+          <p className="shrink-0 rounded-full bg-amber-200/30 px-2 py-0.5 text-[10.5px] font-bold text-amber-100">
+            VS
+          </p>
+        </div>
+      )}
 
       {/* MBTI 클리셰(유형 칩·방문자 N%·희귀) 제거 (2026-05-27 v1.5 — 사용자 "촌스럽다" 지적).
           정체성은 BijiCard 등급 하나로 일원화. homeType 시스템은 백엔드·보조 공유 링크에 보존. */}
@@ -176,12 +209,29 @@ export function HeroResultCard({
         return null;
       })()}
 
-      {/* 공유 — 비버 등급 카드가 주(主), 유형 카드는 보조. 둘 다 소득·자산 미포함(바이럴 안전). */}
+      {/* 공유 — 친구 비교 보내기가 주(主), 비버 등급 카드는 보조. 모두 소득·자산 미포함(바이럴 안전). */}
       {gradeShareUrl ? (
         <div className="mt-4 flex flex-col items-start gap-2">
           <p className="text-[13px] font-bold text-amber-100">
-            친구는 무슨 비버? · 보내서 비교해보자~
+            친구는 무슨 비버? · 보내서 비지 옆에 나란히
           </p>
+          {onShareFriend && (
+            <button
+              type="button"
+              onClick={onShareFriend}
+              className="inline-flex items-center gap-2 rounded-full bg-amber-200 px-5 py-2.5 text-sm font-bold text-coral-800 shadow-lg transition-transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-white/70"
+            >
+              👬 친구한테 보내고 비교
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="h-4 w-4"
+              >
+                <path d="M13 4.5a2.5 2.5 0 11.702 1.737L6.97 9.604a2.518 2.518 0 010 .792l6.733 3.367a2.5 2.5 0 11-.671 1.341l-6.733-3.367a2.5 2.5 0 110-3.475l6.733-3.366A2.52 2.52 0 0113 4.5z" />
+              </svg>
+            </button>
+          )}
           <button
             type="button"
             onClick={() => onShare(gradeShareUrl)}

@@ -5,6 +5,9 @@ import { NeighborhoodChart } from "@/components/NeighborhoodChart";
 import { PopularComplexChart } from "@/components/PopularComplexChart";
 import dataMeta from "@/data/dataMeta.json";
 import { POLICY_META } from "@/lib/policyLoan";
+import type { FriendTag } from "@/lib/friendShare";
+import { composeBijiName } from "@/lib/bijiName";
+import { pickTierImage } from "@/lib/budgetPercentile";
 
 // 최근 실거래 반영일 — "2026-05-20" → "2026.5.20". 매일 크론이 dataMeta.json 을 갱신.
 const FRESH_DATE: string | null = (() => {
@@ -35,9 +38,43 @@ function MiniBadge({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function LandingHero({ onStart }: { onStart: () => void }) {
+export function LandingHero({
+  onStart,
+  friendTag,
+}: {
+  onStart: () => void;
+  friendTag?: FriendTag | null;
+}) {
+  const friendName = friendTag ? composeBijiName(friendTag.sigungu, friendTag.tier) : null;
+  const friendImage = friendTag
+    ? pickTierImage(friendTag.tier.image, friendTag.sigungu)
+    : null;
+
   return (
     <section className="relative px-1 pt-6 pb-4 text-center sm:pt-10">
+      {/* 친구 비교 배너 — URL ?f= 친구 비지 있을 때만. 친구가 너랑 비교하자고 보낸 링크임을
+          1초 안에 인지시키는 funnel 진입 hook. */}
+      {friendTag && friendName && friendImage && (
+        <div className="biji-pop-in relative mx-auto mb-5 flex max-w-sm items-center gap-3 rounded-2xl border-2 border-coral-300 bg-coral-50 p-3 text-left shadow-sm">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`${friendImage}?v=4`}
+            alt={`친구의 비지: ${friendName}`}
+            className="h-14 w-14 shrink-0 rounded-xl bg-white object-contain ring-1 ring-coral-200"
+            draggable={false}
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-semibold text-coral-700">👬 친구가 너랑 비교하재</p>
+            <p className="mt-0.5 truncate text-[15px] font-bold text-[#3a2c1d]" title={friendName}>
+              {friendName}
+            </p>
+            <p className="mt-0.5 text-[11px] leading-snug text-[#8a7d6e]">
+              너도 30초컷 검색 끝내면 비지 옆에 나란히!
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* 페이지별 페일 액센트 — 한강 위쪽으로 부드러운 코랄 wash (Mercury 패턴) */}
       <div
         aria-hidden
