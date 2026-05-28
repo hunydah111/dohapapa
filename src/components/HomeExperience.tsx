@@ -866,6 +866,7 @@ export function HomeExperience() {
           friendTag={friendTag}
           budgetTopPercent={budgetTopPercent(result.budget.netPurchasePowerKrw)}
           budgetNetKrw={result.budget.netPurchasePowerKrw}
+          bijiDistribution={result.bijiDistribution}
         />
       )}
 

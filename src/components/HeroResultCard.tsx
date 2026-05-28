@@ -38,6 +38,7 @@ export function HeroResultCard({
   friendTag,
   budgetTopPercent,
   budgetNetKrw,
+  bijiDistribution,
 }: {
   candidate: ComplexCandidate;
   homeType: HomeType;
@@ -50,6 +51,15 @@ export function HeroResultCard({
   budgetTopPercent?: number | null;
   /** 추정 구매력(원) — 백분위 밴드 숫자 표시용. */
   budgetNetKrw?: number;
+  /** 동네 비지 분포 — top 후보 시군구 매칭자의 등급 분포 (MIN 미만이면 생략). */
+  bijiDistribution?: {
+    sigungu: string;
+    total: number;
+    topSlug: string | null;
+    topLabel: string | null;
+    topPercent: number | null;
+    viewerPercent: number | null;
+  };
 }) {
   const friendName = friendTag ? composeBijiName(friendTag.sigungu, friendTag.tier) : null;
   const friendImage = friendTag ? pickTierImage(friendTag.tier.image, friendTag.sigungu) : null;
@@ -147,6 +157,25 @@ export function HeroResultCard({
               <p className="mt-1 px-2 text-center text-[11px] leading-relaxed text-white/50">
                 국토부 실거래가 기반 추정 · 미래가치 예측 아님
               </p>
+              {/* 동네 비지 분포 — MIN 충족 시만. 본인 등급과 top 비교해 위트 톤 차등. */}
+              {bijiDistribution?.topLabel && bijiDistribution.topPercent != null && (() => {
+                const t = budgetTier(budgetTopPercent ?? 100);
+                const sgg = bijiDistribution.sigungu;
+                const top = bijiDistribution.topLabel;
+                const topPct = bijiDistribution.topPercent;
+                const meIsTop = bijiDistribution.topSlug === t.slug;
+                const mePct = bijiDistribution.viewerPercent ?? 0;
+                return (
+                  <p className="mt-2 px-2 text-center text-[11.5px] leading-relaxed text-white/85">
+                    {meIsTop
+                      ? <>🏆 <b className="text-amber-100">{sgg}에서 가장 흔한 비지가 너야!</b> ({t.label} {topPct}%)</>
+                      : mePct >= 15
+                        ? <>{sgg} 매칭 중 흔한 건 <b className="text-amber-100">{top} ({topPct}%)</b> · 너 같은 {t.label}은 {mePct}%</>
+                        : <>✨ <b className="text-amber-100">{sgg}에서 너는 희귀해</b> ({t.label} {mePct}%) · 흔한 건 {top} ({topPct}%)</>
+                    }
+                  </p>
+                );
+              })()}
             </div>
           );
         })()}

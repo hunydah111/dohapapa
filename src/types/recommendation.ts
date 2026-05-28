@@ -271,6 +271,15 @@ export interface RecommendationResult {
   };
   /** 0건일 때, 어떤 추가 조건(하드)이 결과를 좁혔는지 지목하는 안내. 평소엔 없음. */
   emptyReason?: string;
+  /** 동네 비지 분포 통계 — top 후보 시군구 매칭자의 등급 분포 (MIN_TOTAL 미만이면 생략). */
+  bijiDistribution?: {
+    sigungu: string;
+    total: number;
+    topSlug: string | null;
+    topLabel: string | null;
+    topPercent: number | null;
+    viewerPercent: number | null;
+  };
   /** 필수 면책 고지. */
   disclaimer: string;
 }

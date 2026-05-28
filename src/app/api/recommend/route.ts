@@ -6,6 +6,8 @@ import { getHomeType } from "@/lib/homeType";
 import { incrementTypeCount } from "@/lib/typeStats";
 import { recordNeighborhoods } from "@/lib/neighborhoodChart";
 import { recordPopularComplexes } from "@/lib/popularComplexChart";
+import { recordBijiDistribution, getBijiDistribution } from "@/lib/bijiDistribution";
+import { budgetTier, budgetTopPercent } from "@/lib/budgetPercentile";
 
 export const runtime = "nodejs";
 
@@ -212,6 +214,14 @@ export async function POST(req: Request): Promise<Response> {
           dongName: c.dongName,
         })),
       );
+      // 동네 비지 분포 — top 후보 시군구 + 사용자 등급 누적. 분포 조회는 record 직후라
+      // 사용자 본인 카운트도 표시 분포에 포함됨 (자연스러움).
+      const topPct = budgetTopPercent(result.budget.netPurchasePowerKrw);
+      if (topPct != null && src.length > 0) {
+        const tier = budgetTier(topPct);
+        await recordBijiDistribution(src[0].sigungu, tier.slug);
+        result.bijiDistribution = await getBijiDistribution(src[0].sigungu, tier.slug);
+      }
     }
 
     return Response.json(result);
