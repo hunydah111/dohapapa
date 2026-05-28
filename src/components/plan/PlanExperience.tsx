@@ -556,6 +556,27 @@ export function PlanExperience() {
                     월 30만원 더 모으면 <b>{boostedMonths > 0 ? "약 " : ""}{formatDday(boostedMonths)}</b>
                   </p>
                 )}
+                {/* 목표 달성률 progress bar — 추정 구매력 ÷ 목표가. 동기부여. */}
+                {targetKrw > 0 && budget.netPurchasePowerKrw > 0 && (() => {
+                  const pct = Math.min(100, Math.round((budget.netPurchasePowerKrw / targetKrw) * 100));
+                  return (
+                    <div className="mt-2.5">
+                      <div className="flex items-center justify-between text-[11px]" style={{ color: "rgba(255,255,255,0.9)" }}>
+                        <span>지금 살 수 있는 가격 / 목표가</span>
+                        <span className="font-jua text-[13px]" style={{ color: "#fff8e8" }}>{pct}%</span>
+                      </div>
+                      <div className="mt-1 h-2 overflow-hidden rounded-full bg-white/15">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{
+                            width: `${pct}%`,
+                            background: pct >= 100 ? "#a8e6a3" : "#ffd596",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })()}
               </>
             )}
           </div>
