@@ -98,7 +98,20 @@ function personas(): { name: string; p: CoupleProfile }[] {
   add(`edge/초고예산 50억(simple)`, { ...base(), householdType: "dualIncome", budgetMode: "simple", availableBudgetKrw: 50e8, requiredRegions: ["강남구"], workplaceA: wp("강남역", "car", 40), workplaceB: wp("성수역", "car", 40) });
   add(`edge/detailed 소득0 현금0`, { ...base(), householdType: "single", householdIncomeKrwYear: 0, seedMoneyKrw: 0, netAssetsKrw: 0, workplaceA: wp("여의도", "car", 30) });
 
-  return out.slice(0, 44);
+  // ── 추가 엣지 (no_empty_results 룰 사각지대 점검) ──────────────
+  // 사용자 메모리 [[feedback-no-empty-results]]: 어떤 조건에서도 막다른 빈 화면 금지
+  add(`edge/simple 예산 0원`, { ...base(), householdType: "single", budgetMode: "simple", availableBudgetKrw: 0, workplaceA: wp("광화문", "transit", 30) });
+  add(`edge/dual 소득0 현금0 통근30`, { ...base(), householdType: "dualIncome", householdIncomeKrwYear: 0, seedMoneyKrw: 0, netAssetsKrw: 0, workplaceA: wp("강남역", "car", 30), workplaceB: wp("판교역", "car", 30) });
+  add(`edge/모든 우선순위 5(최대)`, { ...base(), householdType: "dualIncome", priorities: { commute: 5, school: 5, buildingAge: 5, largeComplex: 5 }, householdIncomeKrwYear: 8e7, seedMoneyKrw: 2e8, netAssetsKrw: 4e8, workplaceA: wp("강남역", "car", 30), workplaceB: wp("성수역", "car", 30) });
+  add(`edge/가평군 단일 강제 + 부유`, { ...base(), householdType: "dualIncome", requiredRegions: ["가평군"], budgetMode: "simple", availableBudgetKrw: 30e8, workplaceA: wp("강남역", "car", 100), workplaceB: wp("판교역", "car", 100) });
+  add(`edge/강남만 통근10분 부부 자차`, { ...base(), householdType: "dualIncome", requiredRegions: ["강남구"], budgetMode: "simple", availableBudgetKrw: 15e8, workplaceA: wp("강남역", "car", 10), workplaceB: wp("강남역", "car", 10) });
+  add(`edge/retired 소득0 현금0`, { ...base(), householdType: "retired", householdIncomeKrwYear: 0, seedMoneyKrw: 0, netAssetsKrw: 0, budgetMode: "simple", availableBudgetKrw: 0 });
+  add(`edge/4인가족 모든옵션 yes 좁은예산`, { ...base(), householdType: "dualIncome", hasSchoolAgedChild: true, hasInfant: true, hasTwoOrMoreChildren: true, hasThreeOrMoreChildren: true, isExpectingChild: true, isNewlywed: true, budgetMode: "simple", availableBudgetKrw: 4e8, preferredAreaRanges: ["over45"], workplaceA: wp("강남역", "transit", 40), workplaceB: wp("성수역", "transit", 40) });
+  add(`edge/평수1+시군구1+통근20 교집합`, { ...base(), householdType: "single", budgetMode: "simple", availableBudgetKrw: 8e8, preferredAreaRanges: ["under18"], requiredRegions: ["연천군"], workplaceA: wp("광화문", "transit", 20) });
+  add(`edge/단일가구 외곽 큰평형 작은예산`, { ...base(), householdType: "single", budgetMode: "simple", availableBudgetKrw: 3e8, preferredAreaRanges: ["over45"], requiredRegions: ["가평군"], workplaceA: wp("강남역", "transit", 90) });
+  add(`edge/대출만빠짐 단일가구`, { ...base(), householdType: "single", householdIncomeKrwYear: 5e7, seedMoneyKrw: 0, netAssetsKrw: 0, existingLoanMonthlyKrw: 1000000, workplaceA: wp("여의도", "car", 40) });
+
+  return out.slice(0, 60);
 }
 
 // 클라이언트(수정본) 완화 적용 로직 — broken-promise 검증용
