@@ -13,6 +13,7 @@
     "smoke": "node scripts/smoke.cjs",
     "biji:restore": "node scripts/restore-biji-alpha.cjs",
     "biji:tier": "node scripts/tier-jpg-to-png.cjs",
+    "hooks:install": "cp hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit && echo '✅ pre-commit hook installed'",
     "test": "vitest run",
     "test:watch": "vitest",
     "db:generate": "prisma generate",

@@ -1,0 +1,42 @@
+#!/bin/sh
+# tier 이미지 (public/biji/tier/*.png · assets/biji-master/incoming/_processed/tier-*.jpg)
+# 변경 시 통합 파이프라인 자동 실행 + 검증. 경고 있으면 commit 차단.
+#
+# 발동: 캐릭터/이모지 자산 commit 시 자동. 사용자 수동 검증 0.
+# 우회: git commit --no-verify (의도적 skip만)
+
+set -e
+
+CHANGED_PNG=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^public/biji/tier/.*\.png$' || true)
+CHANGED_JPG=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^assets/biji-master/incoming/_processed/tier-.*\.jpe?g$' || true)
+
+if [ -z "$CHANGED_PNG" ] && [ -z "$CHANGED_JPG" ]; then
+  exit 0
+fi
+
+echo ""
+echo "▶ tier 이미지 변경 감지 → 통합 파이프라인 실행 (npm run biji:tier)…"
+echo ""
+
+if ! OUT=$(npm run biji:tier 2>&1); then
+  echo "$OUT"
+  echo ""
+  echo "❌ 파이프라인 실행 실패 — commit 차단."
+  echo "   직접 실행: npm run biji:tier"
+  exit 1
+fi
+
+echo "$OUT" | tail -20
+
+if echo "$OUT" | grep -qE '⚠️ '; then
+  echo ""
+  echo "❌ tier 이미지 검증 경고 — commit 차단됨."
+  echo "   위 로그의 ⚠️ 항목 확인 후 원본 이미지 정정 또는 강제 우회(--no-verify) 결정."
+  exit 1
+fi
+
+# 파이프라인이 png 재생성/수정했으면 다시 stage
+git add public/biji/tier/*.png 2>/dev/null || true
+echo ""
+echo "✅ tier 이미지 검증 + auto-add 완료"
+exit 0
