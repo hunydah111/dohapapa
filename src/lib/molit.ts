@@ -58,34 +58,62 @@ const CODE_TO_GU: Record<string, string> = Object.fromEntries(
 // 알려진 시군구 이름 집합 — 공유 카드(/s/b/[grade]/[region]) 의 region 화이트리스트 검증용.
 export const SIGUNGU_NAMES: ReadonlySet<string> = new Set(Object.keys(LAWD_CODES));
 
-// 단축 라벨("원미구") → 풀네임("부천시 원미구") 매핑.
-// 사용자가 직접 단축 URL을 만들거나 외부 링크가 단축형일 때 정상 매칭되게.
-// 충돌 케이스(예: 중구·동구·서구는 서울·인천 둘 다)는 제외 — 모호한 경우 정규화 X.
-const SHORT_TO_FULL: Record<string, string> = (() => {
-  const buckets: Record<string, string[]> = {};
+// 단축형·명시 접두형·공백제거형 → 풀네임 정규화 매핑.
+// 사용자가 어떤 형식으로 입력해도(원미구·서울 중구·인천중구·부천시원미구) 다 매칭.
+// 충돌 케이스(중구는 서울·인천 둘 다 있음)는 *명시 접두형*으로 분기 — "서울중구" → "중구"(서울),
+// "인천중구" → "인천 중구"(인천). 단순 "중구"는 LAWD 직접 등록된 서울 중구로 폴백.
+const ALIASES: Record<string, string> = (() => {
+  const out: Record<string, string> = {};
+  // 1) 공백 있는 풀네임 → 단축 마지막 토큰 + 공백제거 + 명시 접두형 alias
+  //    예: "부천시 원미구" → "원미구", "부천시원미구", "부천 원미구"
   for (const full of Object.keys(LAWD_CODES)) {
     const parts = full.split(/\s+/);
-    if (parts.length < 2) continue; // 이미 단일 토큰
+    if (parts.length < 2) continue;
+    const noSpace = full.replace(/\s+/g, ""); // "부천시원미구"
+    if (!(noSpace in out) && !SIGUNGU_NAMES.has(noSpace)) out[noSpace] = full;
+    // 마지막 토큰(단축형) — 충돌 시 첫 매핑 우선(insertion order는 LAWD_CODES 순)
     const short = parts[parts.length - 1];
-    if (!buckets[short]) buckets[short] = [];
-    buckets[short].push(full);
+    if (!(short in out) && !SIGUNGU_NAMES.has(short)) out[short] = full;
+    // 첫 토큰 + 마지막 토큰 (예: "부천 원미구") — 시 접두 단축형
+    if (parts.length >= 2 && parts[0].length >= 2) {
+      const cityShort = parts[0].replace(/(시|특별시|광역시)$/, "");
+      const altSpaced = `${cityShort} ${short}`;
+      const altNoSpace = `${cityShort}${short}`;
+      if (!(altSpaced in out) && !SIGUNGU_NAMES.has(altSpaced)) out[altSpaced] = full;
+      if (!(altNoSpace in out) && !SIGUNGU_NAMES.has(altNoSpace)) out[altNoSpace] = full;
+    }
   }
-  const out: Record<string, string> = {};
-  for (const [short, fulls] of Object.entries(buckets)) {
-    if (fulls.length === 1) out[short] = fulls[0]; // 충돌 없는 것만
+  // 2) 서울 단일 토큰 시군구 → "서울 X" / "서울X" 명시 접두형도 추가 (중구 충돌 disambig 등)
+  const SEOUL_GU = [
+    "종로구", "중구", "용산구", "성동구", "광진구", "동대문구", "중랑구", "성북구",
+    "강북구", "도봉구", "노원구", "은평구", "서대문구", "마포구", "양천구", "강서구",
+    "구로구", "금천구", "영등포구", "동작구", "관악구", "서초구", "강남구", "송파구", "강동구",
+  ];
+  for (const gu of SEOUL_GU) {
+    if (!LAWD_CODES[gu]) continue;
+    const altSpaced = `서울 ${gu}`;
+    const altNoSpace = `서울${gu}`;
+    if (!(altSpaced in out) && !SIGUNGU_NAMES.has(altSpaced)) out[altSpaced] = gu;
+    if (!(altNoSpace in out) && !SIGUNGU_NAMES.has(altNoSpace)) out[altNoSpace] = gu;
+  }
+  // 3) 인천 풀네임 ("인천 중구") → 공백제거 alias ("인천중구")
+  for (const full of Object.keys(LAWD_CODES)) {
+    if (!full.startsWith("인천 ")) continue;
+    const noSpace = full.replace(/\s+/g, "");
+    if (!(noSpace in out) && !SIGUNGU_NAMES.has(noSpace)) out[noSpace] = full;
   }
   return out;
 })();
 
-/** 수도권 시군구 중 하나인지 — 풀네임 또는 단축 라벨 둘 다 인식. */
+/** 수도권 시군구 중 하나인지 — 풀네임·단축형·명시 접두형·공백제거형 모두 인식. */
 export function isKnownSigungu(name: string): boolean {
-  return SIGUNGU_NAMES.has(name) || name in SHORT_TO_FULL;
+  return SIGUNGU_NAMES.has(name) || name in ALIASES;
 }
 
-/** 단축 라벨이면 풀네임으로 정규화, 이미 풀네임이면 그대로, 매칭 없으면 그대로 반환. */
+/** 어떤 형식이든 풀네임("부천시 원미구")으로 정규화. 매칭 없으면 그대로. */
 export function normalizeSigungu(name: string): string {
   if (SIGUNGU_NAMES.has(name)) return name;
-  return SHORT_TO_FULL[name] ?? name;
+  return ALIASES[name] ?? name;
 }
 
 // ---------------------------------------------------------------------------

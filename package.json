@@ -12,6 +12,7 @@
     "og:check": "node scripts/og-check.mjs",
     "smoke": "node scripts/smoke.cjs",
     "biji:restore": "node scripts/restore-biji-alpha.cjs",
+    "biji:tier": "node scripts/tier-jpg-to-png.cjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "db:generate": "prisma generate",
