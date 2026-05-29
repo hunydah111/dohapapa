@@ -23,6 +23,8 @@ import {
   type PlanGuidance,
 } from "@/lib/plan";
 import { PlanRaceChart } from "@/components/plan/PlanRaceChart";
+import { TrajectorySection } from "@/components/plan/TrajectorySection";
+import { buildLadder } from "@/lib/plan/trajectory";
 import { formatKrwHuman } from "@/lib/format";
 import regionPrices from "@/data/regionPrices.json";
 import dataMeta from "@/data/dataMeta.json";
@@ -391,6 +393,20 @@ export function PlanExperience() {
   );
 
   const guide = useMemo(() => planGuidance(plan), [plan]);
+
+  // 동네 사다리 — 사용자가 고른 시나리오(하락/보합/상승) 그대로 재사용(단일 진실).
+  // ~72 시군구 × computePlan이라 디바운스된 입력으로만 재계산.
+  const ladder = useMemo(
+    () =>
+      buildLadder(profile, {
+        band,
+        monthlySavingKrw: saveKrw,
+        monthlySideKrw: sideKrw,
+        scenarioKey,
+        interestRateAnnual,
+      }),
+    [profile, band, saveKrw, sideKrw, scenarioKey, interestRateAnnual],
+  );
 
   // 선택 시나리오의 도달 시점 + "월 30만 더" 시뮬(행동 유도).
   const selectedMonths = plan.scenarios.find((s) => s.key === scenarioKey)!.months;
@@ -1032,6 +1048,9 @@ export function PlanExperience() {
           </section>
         );
       })()}
+
+      {/* 동네 사다리 — "지금 어디" 가 아니라 "시간이 갈수록 어디로 올라가나" (트라젝토리 #1) */}
+      <TrajectorySection ladder={ladder} monthlySavingKrw={saveKrw} />
 
       {/* 저축 레버 */}
       <section className="rounded-3xl border border-[#ecd9b3] bg-[#fdf6e7]/70 p-5">
