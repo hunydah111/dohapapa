@@ -15,7 +15,7 @@ interface Hit {
   buildYear: number | null;
   repArea: number;
   repPriceKrw: number;
-  areas: { area: number; priceKrw: number }[];
+  areas: { area: number; priceKrw: number; count: number; lowConf: boolean }[];
 }
 
 export function QuickComplexCheck() {
@@ -156,27 +156,41 @@ export function QuickComplexCheck() {
                   key={a.area}
                   type="button"
                   onClick={() => setAreaIdx(i)}
-                  className={`rounded-full px-3 py-1 text-[12.5px] font-semibold transition-colors ${
+                  title={a.lowConf ? `실거래 ${a.count}건 · 참고용` : `실거래 ${a.count}건`}
+                  className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[12.5px] font-semibold transition-colors ${
                     i === areaIdx
                       ? "bg-coral-600 text-white"
                       : "bg-[#f3ece4] text-[#6e5b46] hover:bg-[#ecd9b3]"
                   }`}
                 >
                   {a.area}㎡
+                  {a.lowConf && (
+                    <span
+                      aria-hidden
+                      className="h-1.5 w-1.5 rounded-full"
+                      style={{ background: i === areaIdx ? "rgba(255,255,255,0.7)" : "#d8a23a" }}
+                    />
+                  )}
                 </button>
               ))}
             </div>
           )}
 
           {/* 시세 */}
-          <div className="flex items-baseline gap-2">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
             <span className="font-jua text-[26px] tabular-nums tracking-tight" style={{ color: "#b87914" }}>
               {formatKrwHuman(priceKrw)}
             </span>
             <span className="text-[12px]" style={{ color: "#9c8a72" }}>
-              전용 {area?.area ?? selected.repArea}㎡ · 실거래 추정
+              전용 {area?.area ?? selected.repArea}㎡ · 실거래 {area?.count ?? 0}건 추정
             </span>
           </div>
+          {/* 신뢰도 캐비엇 — 거래 적은 평형의 단일거래 fluke를 굵은 숫자로 오인하지 않게(정직성). */}
+          {area?.lowConf && (
+            <p className="-mt-1.5 text-[11.5px] leading-snug" style={{ color: "#c2731a" }}>
+              ⚠️ 이 평형은 최근 실거래가 적어요(참고용) — 표본 많은 평형이나 아래 정밀 플랜으로 확인을 권해요.
+            </p>
+          )}
 
           {/* 예산 단답 */}
           <div className="rounded-2xl bg-[#fdf6e7] px-3.5 py-3">

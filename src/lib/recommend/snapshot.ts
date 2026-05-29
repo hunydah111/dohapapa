@@ -81,8 +81,10 @@ export interface ComplexNameHit {
   /** 대표(표본 가장 두꺼운) 평형 면적·추정가. */
   repArea: number;
   repPriceKrw: number;
-  /** 평형별(작은→큰) 추정가 — 위젯에서 평형 선택용. */
-  areas: { area: number; priceKrw: number }[];
+  /** 평형별(작은→큰) 추정가 — 위젯에서 평형 선택용. count·lowConf로 신뢰도 표식.
+   *  스냅샷의 절반 이상이 거래 ≤3건이라(감사 2026-05-29), 단일거래 fluke를 굵은 숫자로
+   *  보여주지 않도록 신뢰도를 함께 노출한다(price-first 정직성). */
+  areas: { area: number; priceKrw: number; count: number; lowConf: boolean }[];
 }
 
 /** 단지명 부분일치 검색(공백 무시). 앞쪽·짧은 이름 우선. 가격 있는 평형만. */
@@ -103,7 +105,13 @@ export function searchComplexesByName(q: string, limit = 6): ComplexNameHit[] {
     const rep = [...priced].sort((a, b) => (b.count ?? 0) - (a.count ?? 0))[0];
     const areas = [...priced]
       .sort((a, b) => a.area - b.area)
-      .map((m) => ({ area: Math.round(m.area), priceKrw: m.medianKrw }));
+      .map((m) => ({
+        area: Math.round(m.area),
+        priceKrw: m.medianKrw,
+        count: m.count ?? 0,
+        // 거래 ≤3건이거나 엔진이 저신뢰로 표시한 평형 — "참고용" 캐비엇.
+        lowConf: (m.count ?? 0) <= 3 || !!m.lowConfidence || !!m.sparse,
+      }));
     return {
       id: c.id,
       name: c.name,
