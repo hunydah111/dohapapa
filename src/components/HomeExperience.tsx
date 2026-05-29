@@ -16,6 +16,7 @@ import { CandidateCard } from "./CandidateCard";
 import { HeroResultCard } from "./HeroResultCard";
 import { BudgetTrendCard } from "./BudgetTrendCard";
 import { LandingHero } from "./LandingHero";
+import { QuickComplexCheck } from "./QuickComplexCheck";
 import { Homi } from "./Homi";
 import { RequiredRegionPicker } from "./RequiredRegionPicker";
 import { getHomeType } from "@/lib/homeType";
@@ -777,6 +778,10 @@ export function HomeExperience() {
           }}
           friendTag={friendTag}
         />
+        {/* 역방향 진입(#4) — 풀 폼 전, 관심 단지 단답으로 깔때기 입구 확장. */}
+        <div className="mt-6">
+          <QuickComplexCheck />
+        </div>
       </>
     );
   }

@@ -70,6 +70,53 @@ export function snapshotGeneratedAt(): string {
   return load().generatedAt;
 }
 
+// ── 역방향 진입(단지명 단답 검색) ─────────────────────────────────────────────
+// "관심 단지 하나 검색 → 내 예산으로 살 수 있어?" 가벼운 진입 깔때기(#4). 스냅샷만 사용(DB 0).
+export interface ComplexNameHit {
+  id: string;
+  name: string;
+  sigungu: string;
+  dongName: string;
+  buildYear: number | null;
+  /** 대표(표본 가장 두꺼운) 평형 면적·추정가. */
+  repArea: number;
+  repPriceKrw: number;
+  /** 평형별(작은→큰) 추정가 — 위젯에서 평형 선택용. */
+  areas: { area: number; priceKrw: number }[];
+}
+
+/** 단지명 부분일치 검색(공백 무시). 앞쪽·짧은 이름 우선. 가격 있는 평형만. */
+export function searchComplexesByName(q: string, limit = 6): ComplexNameHit[] {
+  const query = (q ?? "").trim().replace(/\s+/g, "");
+  if (query.length < 2) return [];
+  const scored: { c: SnapshotComplex; score: number }[] = [];
+  for (const c of load().complexes) {
+    if (!c.medians?.some((m) => m.medianKrw > 0)) continue;
+    const name = c.name.replace(/\s+/g, "");
+    const idx = name.indexOf(query);
+    if (idx < 0) continue;
+    scored.push({ c, score: idx * 1000 + name.length }); // 앞 매칭·짧은 이름 우선
+  }
+  scored.sort((a, b) => a.score - b.score);
+  return scored.slice(0, limit).map(({ c }) => {
+    const priced = c.medians.filter((m) => m.medianKrw > 0);
+    const rep = [...priced].sort((a, b) => (b.count ?? 0) - (a.count ?? 0))[0];
+    const areas = [...priced]
+      .sort((a, b) => a.area - b.area)
+      .map((m) => ({ area: Math.round(m.area), priceKrw: m.medianKrw }));
+    return {
+      id: c.id,
+      name: c.name,
+      sigungu: c.sigungu,
+      dongName: c.dongName,
+      buildYear: c.buildYear,
+      repArea: Math.round(rep.area),
+      repPriceKrw: rep.medianKrw,
+      areas,
+    };
+  });
+}
+
 /** 스냅샷이 비었는지(미생성·로드 실패). 비면 추천 결과가 빈다. */
 export function isSnapshotEmpty(): boolean {
   return load().complexes.length === 0;
