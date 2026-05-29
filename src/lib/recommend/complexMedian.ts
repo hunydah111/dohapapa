@@ -48,6 +48,12 @@ export interface AreaMedian {
   /** 추정 근거 문구(예: "인근 3개 단지 시세 환산"). estimated 일 때만. */
   estimateBasis?: string;
   /**
+   * 단일거래 outlier로 ㎡당이 비정상이라(lowConfidence), 같은 단지 신뢰 평형들의
+   * 면적→가격 보간으로 가격을 *대체*한 경우 true. (flagLowConfidence는 플래그만,
+   * 이쪽은 가격 교정.) 단일거래 fluke·면적-가격 역전을 데이터 추가 없이 완화한다.
+   */
+  imputed?: boolean;
+  /**
    * 이 평형의 거래가 대부분 분양권/입주권(등기 전 권리 거래)인 경우 true.
    * 매매(소유권 이전)와 권리 상태가 달라 UI 에 "분양권 거래"로 구분 표시한다.
    */
@@ -266,6 +272,54 @@ export function flagLowConfidence(medians: AreaMedian[]): void {
   }
 }
 
+/**
+ * 단일거래 outlier 교정 — flagLowConfidence가 ㎡당 비정상으로 표시한 희박 평형의 가격을,
+ * 같은 단지 신뢰 평형(≥CROSS_RELIABLE_COUNT건)들의 (면적→가격) 선형보간으로 대체한다.
+ * 신뢰 평형이 2개 이상일 때만 동작. 면적-총가격 역전·단일거래 fluke를 데이터 추가 없이 완화.
+ * lowConfidence 플래그는 유지(여전히 "참고용"·rep 평형 제외 대상).
+ */
+export function imputeFromReliable(medians: AreaMedian[]): void {
+  const reliable = medians
+    .filter((m) => m.count >= CROSS_RELIABLE_COUNT && m.area > 0 && m.medianKrw > 0)
+    .sort((a, b) => a.area - b.area);
+  if (reliable.length < 2) return;
+
+  const predict = (area: number): number => {
+    if (area <= reliable[0].area) {
+      const [p0, p1] = reliable;
+      const slope = (p1.medianKrw - p0.medianKrw) / (p1.area - p0.area);
+      // 최소 평형 아래로 외삽 — 신뢰 최저가를 넘지 않게(작은 평형이 더 비싸지 않게) + 양수.
+      return Math.max(0, Math.min(p0.medianKrw, p0.medianKrw - slope * (p0.area - area)));
+    }
+    const hiIdx = reliable.findIndex((r) => r.area >= area);
+    if (hiIdx === -1) {
+      const p0 = reliable[reliable.length - 2];
+      const p1 = reliable[reliable.length - 1];
+      const slope = (p1.medianKrw - p0.medianKrw) / (p1.area - p0.area);
+      // 최대 평형 위로 외삽 — 신뢰 최고가 이상(큰 평형이 더 싸지 않게).
+      return Math.max(p1.medianKrw, p1.medianKrw + slope * (area - p1.area));
+    }
+    const hi = reliable[hiIdx];
+    const lo = reliable[hiIdx - 1] ?? hi;
+    if (hi.area === lo.area) return hi.medianKrw;
+    const t = (area - lo.area) / (hi.area - lo.area);
+    return Math.round(lo.medianKrw + t * (hi.medianKrw - lo.medianKrw));
+  };
+
+  for (const m of medians) {
+    if (!m.lowConfidence || m.count >= CROSS_RELIABLE_COUNT) continue;
+    if (m.area <= 0 || m.medianKrw <= 0) continue;
+    const pred = predict(m.area);
+    if (pred <= 0) continue;
+    const scale = pred / m.medianKrw;
+    m.medianKrw = Math.round(pred);
+    m.priceLow = Math.round(m.priceLow * scale);
+    m.priceHigh = Math.round(m.priceHigh * scale);
+    m.imputed = true;
+    m.estimateBasis = "단지 내 신뢰 평형 면적 환산";
+  }
+}
+
 /** 거래 원본 행 — DB(Prisma) 든 SQLite 든 같은 모양으로 normalize 해 넘긴다. */
 export interface RawTxRow {
   complexId: string;
@@ -367,6 +421,7 @@ export function mediansFromGrouped(
       });
     }
     flagLowConfidence(medians);
+    imputeFromReliable(medians); // 플래그된 단일거래 outlier를 신뢰 평형 면적보간으로 교정
     result.set(
       complexId,
       medians.sort((a, b) => b.count - a.count),
