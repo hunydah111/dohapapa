@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { formatKrwHuman } from "@/lib/format";
+import { formatKrwHuman, formatEok } from "@/lib/format";
 
 // 역방향 진입(#4) — "관심 단지 하나 → 내 예산으로 닿아?" 가벼운 단답. 깔때기 입구 확장:
 // 풀 5단계 폼 전에 단지명만으로 시세를 즉답하고, "정밀 플랜"으로 유도한다.
@@ -15,7 +15,14 @@ interface Hit {
   buildYear: number | null;
   repArea: number;
   repPriceKrw: number;
-  areas: { area: number; priceKrw: number; count: number; lowConf: boolean }[];
+  areas: {
+    area: number;
+    priceKrw: number;
+    priceLowKrw: number;
+    priceHighKrw: number;
+    count: number;
+    lowConf: boolean;
+  }[];
 }
 
 export function QuickComplexCheck() {
@@ -176,15 +183,38 @@ export function QuickComplexCheck() {
             </div>
           )}
 
-          {/* 시세 */}
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-            <span className="font-jua text-[26px] tabular-nums tracking-tight" style={{ color: "#b87914" }}>
-              {formatKrwHuman(priceKrw)}
-            </span>
-            <span className="text-[12px]" style={{ color: "#9c8a72" }}>
-              전용 {area?.area ?? selected.repArea}㎡ · 실거래 {area?.count ?? 0}건 추정
-            </span>
-          </div>
+          {/* 시세 — thin 평형은 점가격(false precision) 대신 범위/추정어려움으로(A1'). */}
+          {area && area.count <= 1 ? (
+            // 거래 1건 — 시세를 한 숫자로 못 박음. 약한 참고값만.
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[16px] font-bold" style={{ color: "#9c8a72" }}>
+                약 {formatEok(priceKrw)}{" "}
+                <span className="text-[12px] font-medium">· 시세 추정 어려움</span>
+              </span>
+              <span className="text-[12px]" style={{ color: "#9c8a72" }}>
+                전용 {area.area}㎡ · 실거래 {area.count}건뿐
+              </span>
+            </div>
+          ) : area && area.count <= 3 && area.priceHighKrw > area.priceLowKrw ? (
+            // 거래 2~3건 — 점가격 대신 실거래 범위로 정직하게.
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <span className="font-jua text-[22px] tabular-nums tracking-tight" style={{ color: "#b87914" }}>
+                {formatEok(area.priceLowKrw)}~{formatEok(area.priceHighKrw)}
+              </span>
+              <span className="text-[12px]" style={{ color: "#9c8a72" }}>
+                전용 {area.area}㎡ · 실거래 {area.count}건 (범위)
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <span className="font-jua text-[26px] tabular-nums tracking-tight" style={{ color: "#b87914" }}>
+                {formatKrwHuman(priceKrw)}
+              </span>
+              <span className="text-[12px]" style={{ color: "#9c8a72" }}>
+                전용 {area?.area ?? selected.repArea}㎡ · 실거래 {area?.count ?? 0}건 추정
+              </span>
+            </div>
+          )}
           {/* 신뢰도 캐비엇 — 거래 적은 평형의 단일거래 fluke를 굵은 숫자로 오인하지 않게(정직성). */}
           {area?.lowConf && (
             <p className="-mt-1.5 text-[11.5px] leading-snug" style={{ color: "#c2731a" }}>
