@@ -19,6 +19,15 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
   const eligibleLoans = budget.policyLoanMatches.filter((m) => m.eligible);
   const ineligibleLoans = budget.policyLoanMatches.filter((m) => !m.eligible);
 
+  // D3 결론 1개 강조 — 나열 대신 "당신 케이스 = OO 가능성 높음". 엔진이 이미 최선 정책을
+  // 골라 예산에 적용하므로(appliedPolicyName) 그게 결론. 없으면 적격 첫 번째. 나머지는 접음.
+  // 컴플라이언스: "확정" 아니라 "가능성 높음" + 면책 동반(아래 시뮬레이션 안내).
+  const appliedName =
+    budget.appliedLoanType === "policy" ? budget.appliedPolicyName : null;
+  const conclusionLoan =
+    eligibleLoans.find((m) => m.productName === appliedName) ?? eligibleLoans[0] ?? null;
+  const restEligible = eligibleLoans.filter((m) => m !== conclusionLoan);
+
   // 예산 상황별 비지 — 빠듯/음수면 빈 지갑, 아니면 계산기(분석).
   const budgetMood =
     budget.netPurchasePowerKrw <= 0 ||
@@ -224,32 +233,48 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
               )}
           </div>
 
-          {/* 적격 상품 */}
-          {eligibleLoans.length > 0 && (
+          {conclusionLoan ? (
+            /* 결론 1개 강조 + 나머지 접기 (D3) */
             <div className="flex flex-col gap-2 mb-3">
-              {eligibleLoans.map((loan) => (
-                <PolicyLoanCard key={loan.productName} loan={loan} eligible />
-              ))}
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                <p className="mb-0.5 text-xs font-bold text-emerald-700">
+                  당신 케이스 → {conclusionLoan.productName} 가능성 높음
+                </p>
+                <p className="text-[12px] leading-snug" style={{ color: "#3a322c" }}>
+                  {conclusionLoan.reason}
+                </p>
+              </div>
+              {(restEligible.length > 0 || ineligibleLoans.length > 0) && (
+                <details className="rounded-2xl bg-[#f7f3ec] px-3 py-2 [&_summary::-webkit-details-marker]:hidden">
+                  <summary
+                    className="cursor-pointer list-none text-xs font-semibold"
+                    style={{ color: "#6b6157" }}
+                  >
+                    다른 정책 자격 자세히 ▾ ({restEligible.length + ineligibleLoans.length})
+                  </summary>
+                  <div className="mt-2 flex flex-col gap-2">
+                    {restEligible.map((loan) => (
+                      <PolicyLoanCard key={loan.productName} loan={loan} eligible />
+                    ))}
+                    {ineligibleLoans.map((loan) => (
+                      <PolicyLoanCard key={loan.productName} loan={loan} eligible={false} />
+                    ))}
+                  </div>
+                </details>
+              )}
             </div>
-          )}
-
-          {/* 미적격 상품 */}
-          {ineligibleLoans.length > 0 && (
-            <div className="flex flex-col gap-2 mb-3">
-              <p
-                className="text-xs font-semibold"
-                style={{ color: "#9a8f82" }}
-              >
-                이 조건엔 자격 안 됨
-              </p>
-              {ineligibleLoans.map((loan) => (
-                <PolicyLoanCard
-                  key={loan.productName}
-                  loan={loan}
-                  eligible={false}
-                />
-              ))}
-            </div>
+          ) : (
+            /* 적격 없음 — 거짓 결론 만들지 않고 미적격 나열 그대로 */
+            ineligibleLoans.length > 0 && (
+              <div className="flex flex-col gap-2 mb-3">
+                <p className="text-xs font-semibold" style={{ color: "#9a8f82" }}>
+                  이 조건엔 자격 안 됨
+                </p>
+                {ineligibleLoans.map((loan) => (
+                  <PolicyLoanCard key={loan.productName} loan={loan} eligible={false} />
+                ))}
+              </div>
+            )
           )}
 
           {/* 컴플라이언스 안내 */}

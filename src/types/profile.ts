@@ -71,7 +71,9 @@ export interface AreaRange {
 }
 
 export const AREA_RANGES: Record<AreaRangeKey, AreaRange> = {
-  under18: { label: "18평 이하", minM2: 0, maxM2: 46 },
+  // 하한 25㎡ — 그 미만(12~24㎡)은 오피스텔·도시형생활주택·원룸류라 '아파트 추천'에 부적합.
+  // (감사 2026-05-29: <20㎡ 376건. 광운대역현대프라힐스 18㎡가 톱에 뜨던 문제 차단.)
+  under18: { label: "18평 이하", minM2: 25, maxM2: 46 },
   p19_25: { label: "19~25평", minM2: 46, maxM2: 62 },
   p26_31: { label: "26~31평", minM2: 62, maxM2: 78 },
   p32_35: { label: "32~35평", minM2: 78, maxM2: 89 },
