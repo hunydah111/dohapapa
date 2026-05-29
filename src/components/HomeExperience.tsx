@@ -789,6 +789,14 @@ export function HomeExperience() {
   let resultView: ReactNode = null;
   if (state !== null) {
     const { result } = state;
+    // 결과 페이지가 매우 길어(구매력→정책→시세→단지3→27곳→완화) "스크롤 끝없음" 호소(H그룹).
+    // 핵심 답(구매력·1순위 단지·통근)을 sticky 요약 바로 상단에 고정해 어디로 스크롤해도 보이게.
+    const summaryTop = result.candidates[0] ?? null;
+    const summaryCommute = summaryTop
+      ? summaryTop.commuteLegs
+          .map((l) => (l.mode === "transit" ? "대중교통" : `${l.minutes}분`))
+          .join("·")
+      : "";
     resultView = (
       <div className="flex flex-col gap-8">
         {/* 좌상단 ← 이전: 폼으로 복귀(입력 보존) */}
@@ -832,6 +840,36 @@ export function HomeExperience() {
           </Button>
         </div>
       </div>
+
+      {/* sticky 요약 바 — 구매력 / 1순위 단지 / 통근. 긴 결과를 스크롤해도 핵심 답이 상단 고정.
+          토스트(z-50)보다 아래, 일반 카드보다 위(z-30). 반투명+blur로 밑 콘텐츠 비쳐도 가독 유지. */}
+      {summaryTop && (
+        <div className="sticky top-0 z-30 -mt-2 flex items-stretch divide-x divide-[#ecd9b3] overflow-hidden rounded-2xl border border-[#ecd9b3] bg-[#fdf6e7]/95 shadow-sm backdrop-blur-sm">
+          <div className="flex shrink-0 flex-col px-3.5 py-2">
+            <span className="text-[10px] font-medium text-[#9a8f82]">구매력</span>
+            <span className="text-[13px] font-bold tabular-nums text-[#3a322c]">
+              {formatKrwHuman(result.budget.netPurchasePowerKrw)}
+            </span>
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col px-3.5 py-2">
+            <span className="text-[10px] font-medium text-[#9a8f82]">1순위 단지</span>
+            <span className="truncate text-[13px] font-bold text-[#3a322c]">
+              {summaryTop.complexName}{" "}
+              <span className="font-semibold text-[#b87914]">
+                {formatKrwHuman(summaryTop.medianPriceKrw)}
+              </span>
+            </span>
+          </div>
+          {summaryCommute && (
+            <div className="flex shrink-0 flex-col px-3.5 py-2">
+              <span className="text-[10px] font-medium text-[#9a8f82]">통근</span>
+              <span className="whitespace-nowrap text-[13px] font-semibold tabular-nums text-[#3a322c]">
+                {summaryCommute}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 재검색(완화 적용) 진행 토스트 — 호미가 다시 두리번.
           shareToast와 stack: 공유 토스트(bottom-6)가 액션 결과로 더 중요해 아래, 진행 토스트는 위로. */}
