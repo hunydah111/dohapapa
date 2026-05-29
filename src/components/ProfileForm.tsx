@@ -756,9 +756,16 @@ export function ProfileForm({
     ? (parseFloat(seedMoney) || 0) > 0 || (parseFloat(householdIncome) || 0) > 0
     : (parseFloat(availableBudget) || 0) > 0;
 
+  // 단일 필수지역이면 그 시군구 LTV로 미리보기(엔진 budgetSigungu와 동일) — 비규제(동탄·인천 등)
+  // 사용자가 4단계 미리보기에서 보수적 규제 폴백으로 과소추정되고 결과와 어긋나던 것 해소.
   const previewBudget = useMemo(
-    () => (canPreviewBudget ? estimateBudget(buildProfile()) : null),
-    [canPreviewBudget, buildProfile],
+    () =>
+      canPreviewBudget
+        ? estimateBudget(buildProfile(), {
+            sigungu: requiredRegions.length === 1 ? requiredRegions[0] : undefined,
+          })
+        : null,
+    [canPreviewBudget, buildProfile, requiredRegions],
   );
 
   // ── Step 3 정책대출 예비 힌트 ────────────────────────────────
