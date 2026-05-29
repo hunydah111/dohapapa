@@ -101,6 +101,23 @@ export function CandidateCard({
     reasonRows.push({ label: "단지", value: candidate.reasoning.largeComplex });
   }
 
+  // "근데 이건 주의해" — 장점만 나열하는 도구보다 단점도 말하는 도구가 신뢰받는다(부동산처럼
+  // 큰 결정일수록). 스냅샷 데이터만으로 솔직·hedged하게. 이미 상단 배지로 노출되는 항목
+  // (추정·분양권·거래적음·토허제·예산초과)은 중복이라 제외 — 억지 단점은 만들지 않고 없으면 숨김.
+  const cautions: string[] = [];
+  if (candidate.buildYear && candidate.buildYear <= 2005) {
+    cautions.push(`${candidate.buildYear}년 준공 — 세대당 주차·노후 설비는 현장 확인`);
+  }
+  // 자차 통근이 한도의 90%↑(범위 내지만 빠듯). 대중교통 분은 mock 추정이라 제외.
+  const tightLeg = candidate.commuteLegs.find(
+    (l) => l.mode === "car" && l.withinLimit && l.minutes >= l.maxCommuteMinutes * 0.9,
+  );
+  if (tightLeg) {
+    cautions.push(
+      `${tightLeg.workplaceLabel} 통근이 한도(${tightLeg.maxCommuteMinutes}분)에 가까워요`,
+    );
+  }
+
   return (
     <Card compact className="flex flex-col gap-2.5">
       {/* 상단 행: 티어 + 순위 + 신뢰 배지(추정·분양권·실거래적음) + 종합점수.
@@ -303,6 +320,17 @@ export function CandidateCard({
               </dd>
             </div>
           ))}
+          {/* 솔직한 주의 한 줄 — "왜"와 짝. 있을 때만(억지 단점 X). */}
+          {cautions.length > 0 && (
+            <div className="mt-1 flex gap-2 border-t border-[rgba(232,102,47,0.12)] pt-1.5 text-[13px] leading-snug">
+              <dt className="w-12 flex-shrink-0 font-semibold" style={{ color: "#c2731a" }}>
+                주의
+              </dt>
+              <dd className="flex-1" style={{ color: "#7a5a2a" }}>
+                {cautions.join(" · ")}
+              </dd>
+            </div>
+          )}
         </dl>
       </div>
 
