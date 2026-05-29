@@ -95,13 +95,18 @@ export interface ComplexNameHit {
   }[];
 }
 
-/** 단지명 부분일치 검색(공백 무시). 앞쪽·짧은 이름 우선. 가격 있는 평형만. */
+// 아파트 평형 하한 — AREA_RANGES.under18 minM2와 동일(E3). 그 미만(12~24㎡)은 오피스텔·
+// 도시형생활주택·원룸류라 '아파트 검색'서 제외(스코프 필터, 가격 프록시 아님 — A6).
+const MIN_APT_AREA = 25;
+const isAptBand = (m: AreaMedian): boolean => m.medianKrw > 0 && m.area >= MIN_APT_AREA;
+
+/** 단지명 부분일치 검색(공백 무시). 앞쪽·짧은 이름 우선. 가격 있는 아파트 평형(≥25㎡)만. */
 export function searchComplexesByName(q: string, limit = 6): ComplexNameHit[] {
   const query = (q ?? "").trim().replace(/\s+/g, "");
   if (query.length < 2) return [];
   const scored: { c: SnapshotComplex; score: number }[] = [];
   for (const c of load().complexes) {
-    if (!c.medians?.some((m) => m.medianKrw > 0)) continue;
+    if (!c.medians?.some(isAptBand)) continue; // 아파트 평형(≥25㎡) 하나도 없으면 제외
     const name = c.name.replace(/\s+/g, "");
     const idx = name.indexOf(query);
     if (idx < 0) continue;
@@ -109,7 +114,7 @@ export function searchComplexesByName(q: string, limit = 6): ComplexNameHit[] {
   }
   scored.sort((a, b) => a.score - b.score);
   return scored.slice(0, limit).map(({ c }) => {
-    const priced = c.medians.filter((m) => m.medianKrw > 0);
+    const priced = c.medians.filter(isAptBand);
     const rep = [...priced].sort((a, b) => (b.count ?? 0) - (a.count ?? 0))[0];
     const areas = [...priced]
       .sort((a, b) => a.area - b.area)
