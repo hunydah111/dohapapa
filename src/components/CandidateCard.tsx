@@ -101,14 +101,11 @@ export function CandidateCard({
     reasonRows.push({ label: "단지", value: candidate.reasoning.largeComplex });
   }
 
-  // "근데 이건 주의해" — 장점만 나열하는 도구보다 단점도 말하는 도구가 신뢰받는다(부동산처럼
-  // 큰 결정일수록). 스냅샷 데이터만으로 솔직·hedged하게. 이미 상단 배지로 노출되는 항목
-  // (추정·분양권·거래적음·토허제·예산초과)은 중복이라 제외 — 억지 단점은 만들지 않고 없으면 숨김.
+  // "근데 이건 주의해" — 단, 검증된 사실만. 연식→주차 같은 *추론*은 금지(실거래가가 이미
+  // 연식을 반영한다는 price-first 원칙·buildingAge 중립화와 충돌, 데이터 없는 FUD).
+  // 검증된 사실 1개만 둔다: 자차 통근이 사용자가 정한 한도의 90%↑(범위 내지만 빠듯) — 측정된
+  // 통근시간 vs 사용자 한도라 추론이 아니라 사실. 대중교통 분은 mock 추정이라 제외. 없으면 숨김.
   const cautions: string[] = [];
-  if (candidate.buildYear && candidate.buildYear <= 2005) {
-    cautions.push(`${candidate.buildYear}년 준공 — 세대당 주차·노후 설비는 현장 확인`);
-  }
-  // 자차 통근이 한도의 90%↑(범위 내지만 빠듯). 대중교통 분은 mock 추정이라 제외.
   const tightLeg = candidate.commuteLegs.find(
     (l) => l.mode === "car" && l.withinLimit && l.minutes >= l.maxCommuteMinutes * 0.9,
   );
