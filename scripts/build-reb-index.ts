@@ -1,89 +1,115 @@
-// A5 — 한국부동산원 R-ONE 시군구별 아파트 실거래가격지수 → src/data/rebIndex.json 굽기.
-// 결과: 시군구 → { rateAnnual(최근 추세 연환산), asOf }. priceScenarios.upRateFor 가 읽어
-// KB 권역 일괄(서울5/경기3) 대신 시군구 실측 추세를 쓴다(없으면 폴백, 빈 파일=현재 동작).
+// A5 — 한국부동산원 R-ONE 시군구별 아파트 매매지수(A_2024_00180, 분기) → src/data/rebIndex.json.
+// 결과: 시군구 → { rateAnnual(장기 CAGR), asOf }. priceScenarios.upRateFor 가 읽어 KB 권역
+// 일괄(서울5/경기3) 대신 시군구별 실측 장기 상승률을 "상승 시나리오"에 쓴다(없으면 폴백).
 //
-// 사용:
-//   1) reb.or.kr/r-one 에서 무료 인증키 발급 → .env.local 에 REB_API_KEY=...
-//   2) 통계표ID 확인:  npx tsx --env-file=.env.local scripts/build-reb-index.ts --list | grep 실거래가격지수
-//   3) 굽기:          npx tsx --env-file=.env.local scripts/build-reb-index.ts --statbl=<ID> --cycle=QY
+// 사용:  npx tsx --env-file=.env.local scripts/build-reb-index.ts   (또는 npm run reb:build)
+//        npm run reb:list   → 통계표 목록(STATBL_ID 확인용)
 //
-// ⚠️ STATBL_ID(아파트 실거래가격지수 시군구 매매)는 키 발급 후 --list 로 확인해 확정.
-//    (sample 키로는 API가 ERROR-290 거부 — 실 검증은 키 필요. 그전엔 빈 rebIndex로 폴백.)
+// 매핑: CLS_FULLNM("경기>안양시>만안구","서울>종로구","인천>중구") → 우리 LAWD_CODES 키.
+//   서울/경기 = 구 토큰 join, 인천 중구/동구/서구만 "인천 " 접두(LAWD 키 규칙). 수도권 외 제외.
+// 상승률: 최근 ~10년(40분기) CAGR, clamp [1%, 12%] — "상승" 시나리오는 장기 업사이드라 1년 노이즈
+//   대신 장기 추세, 음수/과열 방지 가드.
 
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { LAWD_CODES } from "@/lib/molit";
 
 const BASE = "https://www.reb.or.kr/r-one/openapi";
 const KEY = process.env.REB_API_KEY ?? "";
+const STATBL = arg("statbl") ?? "A_2024_00180"; // (분기) 시군구별 매매지수_아파트
+const CYCLE = arg("cycle") ?? "QY";
+const CAGR_QUARTERS = 40; // 최대 소급 분기(~10년)
+const RATE_MIN = 0.01;
+const RATE_MAX = 0.12;
 
-const arg = (k: string): string | undefined =>
-  process.argv.find((a) => a.startsWith(`--${k}=`))?.split("=").slice(1).join("=");
-const has = (k: string): boolean => process.argv.includes(`--${k}`);
+function arg(k: string): string | undefined {
+  return process.argv.find((a) => a.startsWith(`--${k}=`))?.split("=").slice(1).join("=");
+}
+const LAWD = new Set(Object.keys(LAWD_CODES));
 
-async function getJson(url: string): Promise<unknown> {
+/** CLS_FULLNM("경기>안양시>만안구") → 우리 LAWD 키. 수도권 아니거나 미매칭이면 null. */
+function toLawdKey(fullnm: string): string | null {
+  const parts = (fullnm ?? "").split(">").map((s) => s.trim()).filter(Boolean);
+  if (parts.length < 2) return null;
+  const sido = parts[0];
+  const rest = parts.slice(1);
+  let key: string;
+  if (sido === "서울" || sido === "경기") key = rest.join(" ");
+  else if (sido === "인천") {
+    const tail = rest.join(" ");
+    key = ["중구", "동구", "서구"].includes(tail) ? `인천 ${tail}` : tail;
+  } else return null; // 수도권 외(부산·대전 등) 제외
+  return LAWD.has(key) ? key : null;
+}
+
+async function getJson(url: string): Promise<Record<string, unknown>> {
   const res = await fetch(url, { cache: "no-store" });
-  return res.json();
+  return (await res.json()) as Record<string, unknown>;
 }
 
 async function listTables() {
-  // 통계표 목록 — 실거래가격지수 STATBL_ID 찾기용.
-  const url = `${BASE}/SttsApiTbl.do?KEY=${KEY}&Type=json&pIndex=1&pSize=1000`;
-  const data = (await getJson(url)) as Record<string, unknown>;
-  console.log(JSON.stringify(data, null, 2).slice(0, 4000));
+  const d = await getJson(`${BASE}/SttsApiTbl.do?KEY=${KEY}&Type=json&pIndex=1&pSize=1000`);
+  const rows = ((d.SttsApiTbl as unknown[])?.[1] as { row?: Record<string, unknown>[] })?.row ?? [];
+  for (const r of rows) {
+    if (/매매지수|매매가격지수/.test(String(r.STATBL_NM)))
+      console.log(`${r.STATBL_ID} | ${r.DTACYCLE_CD} | ${r.STATBL_NM}`);
+  }
 }
 
-async function build(statblId: string, cycle: string) {
-  // 페이지네이션으로 전체 행 수집(시군구 × 기간).
+async function build() {
+  // 페이지네이션 — 시군구 × 분기 전체.
   const rows: Record<string, unknown>[] = [];
-  for (let p = 1; p <= 50; p++) {
-    const url = `${BASE}/SttsApiTblData.do?KEY=${KEY}&STATBL_ID=${statblId}&DTACYCLE_CD=${cycle}&Type=json&pIndex=${p}&pSize=1000`;
-    const data = (await getJson(url)) as Record<string, unknown>;
-    const block = (data.SttsApiTblData as unknown[])?.[1] as { row?: Record<string, unknown>[] } | undefined;
-    const batch = block?.row ?? [];
+  for (let p = 1; p <= 30; p++) {
+    const d = await getJson(
+      `${BASE}/SttsApiTblData.do?KEY=${KEY}&STATBL_ID=${STATBL}&DTACYCLE_CD=${CYCLE}&Type=json&pIndex=${p}&pSize=1000`,
+    );
+    const batch = ((d.SttsApiTblData as unknown[])?.[1] as { row?: Record<string, unknown>[] })?.row ?? [];
     if (batch.length === 0) break;
     rows.push(...batch);
   }
-  // 시군구별 최신 vs 1년 전 지수 → 연환산 상승률. (필드명은 응답 확인 후 조정: CLS_NM=지역,
-  // WRTTIME_IDTFR_ID=기간, DTA_VAL=지수값. 확정 전까지 best-effort.)
-  const byRegion = new Map<string, { time: string; val: number }[]>();
+
+  // 시군구 키 → [{time, val}]
+  const series = new Map<string, { time: string; val: number }[]>();
   for (const r of rows) {
-    const region = String(r.CLS_NM ?? r.UI_NM ?? "").trim();
+    const key = toLawdKey(String(r.CLS_FULLNM ?? ""));
+    if (!key) continue;
     const time = String(r.WRTTIME_IDTFR_ID ?? "");
-    const val = Number(r.DTA_VAL ?? r.DATA_VALUE);
-    if (!region || !time || !Number.isFinite(val)) continue;
-    const arr = byRegion.get(region) ?? [];
+    const val = Number(r.DTA_VAL);
+    if (!time || !Number.isFinite(val) || val <= 0) continue;
+    const arr = series.get(key) ?? [];
     arr.push({ time, val });
-    byRegion.set(region, arr);
+    series.set(key, arr);
   }
+
   const regions: Record<string, { rateAnnual: number; asOf: string }> = {};
-  for (const [region, series] of byRegion) {
-    series.sort((a, b) => a.time.localeCompare(b.time));
-    if (series.length < 2) continue;
-    const latest = series[series.length - 1];
-    // 4분기 전(≈1년) 또는 가용한 가장 먼 점.
-    const prior = series[Math.max(0, series.length - 5)];
-    if (!(prior.val > 0)) continue;
-    const yrs = Math.max(0.25, (series.length - 1 - Math.max(0, series.length - 5)) / 4);
-    const rateAnnual = Math.pow(latest.val / prior.val, 1 / yrs) - 1;
-    regions[region] = { rateAnnual: Math.round(rateAnnual * 1e4) / 1e4, asOf: latest.time };
+  for (const [key, s] of series) {
+    s.sort((a, b) => a.time.localeCompare(b.time));
+    if (s.length < 8) continue; // 2년 미만 표본 제외
+    const latest = s[s.length - 1];
+    const old = s[Math.max(0, s.length - 1 - CAGR_QUARTERS)];
+    const quarters = s.length - 1 - Math.max(0, s.length - 1 - CAGR_QUARTERS);
+    const years = quarters / 4;
+    if (years <= 0 || old.val <= 0) continue;
+    const cagr = Math.pow(latest.val / old.val, 1 / years) - 1;
+    const rate = Math.min(RATE_MAX, Math.max(RATE_MIN, cagr));
+    regions[key] = { rateAnnual: Math.round(rate * 1e4) / 1e4, asOf: latest.time };
   }
-  const out = { generatedAt: new Date().toISOString(), source: `R-ONE ${statblId}`, regions };
-  const path = resolve(process.cwd(), "src/data/rebIndex.json");
-  writeFileSync(path, JSON.stringify(out, null, 2), "utf8");
-  console.log(`rebIndex.json 생성: 시군구 ${Object.keys(regions).length}개 (${statblId})`);
+
+  const out = {
+    generatedAt: new Date().toISOString(),
+    source: `한국부동산원 R-ONE ${STATBL} (${CYCLE}) · ${CAGR_QUARTERS / 4}년 CAGR clamp[${RATE_MIN},${RATE_MAX}]`,
+    regions,
+  };
+  writeFileSync(resolve(process.cwd(), "src/data/rebIndex.json"), JSON.stringify(out, null, 2), "utf8");
+  console.log(`rebIndex.json 생성: 수도권 시군구 ${Object.keys(regions).length}개 (전체 행 ${rows.length})`);
 }
 
 async function main() {
   if (!KEY) {
-    console.error("REB_API_KEY 없음 — reb.or.kr/r-one 무료 인증키 발급 후 .env.local 에 추가하세요.");
+    console.error("REB_API_KEY 없음 — .env.local 에 추가하세요.");
     process.exit(1);
   }
-  if (has("list")) return listTables();
-  const statbl = arg("statbl");
-  if (!statbl) {
-    console.error("--statbl=<STATBL_ID> 필요. 먼저 --list 로 '아파트 실거래가격지수 시군구 매매' ID 확인.");
-    process.exit(1);
-  }
-  await build(statbl, arg("cycle") ?? "QY");
+  if (process.argv.includes("--list")) return listTables();
+  await build();
 }
 main().catch((e) => { console.error(e); process.exit(1); });

@@ -18,7 +18,7 @@
 | A2 | **공시가격 앵커(저거래 단지 thin 평형 메우기)** | 미구현. 무료 per-평형 오픈API 없음(codef 유료) + 벌크CSV 1500만건 매칭 fuzzy | 데이터 | 상 — 모든 평형 희박한 저거래 단지 bulk 해결(레버3 본체) | before/after 단조성%·의심역전 |
 | A3 | **cross-complex 이웃 환산 (단조 가드 추가 재시도)** | 2026-05-29 시도→되돌림(단지내 역전 양산, 의심역전 113→201). 단조 가드 붙이면 재시도 여지 | 효ort/모델 | 중 — 가드 없으면 순손해(증명됨). 신중 | audit 게이트(의심역전 ≤200) |
 | A4 | **거래 윈도우 6/12→24~36개월 확대 + 시점보정** | trendIndex가 ~13개월치뿐(`priceScenarios.ts`)이라 더 넓히면 시점보정 안 된 낡은 가격 혼입 → trendIndex 확장과 묶여야 | 데이터 | 상 — 표본 두께 3~4배(57.5% 희박 직접 완화) | 희박표본 비율·count 분포 |
-| A5 | 추세지수 R-ONE 시군구 정밀화 — **통합 완료·데이터 대기** | `priceScenarios.upRateFor`가 rebIndex.json(시군구별 R-ONE 추세) 우선·없으면 KB 폴백. 빈 파일 커밋(=현재 동작 무변). **남은 것: REB_API_KEY 발급(reb.or.kr/r-one 무료) → `npm run reb:list`로 STATBL_ID 확인 → `npm run reb:build`.** sample키 거부라 키 필수 | 외부의존 | 중 | priceScenarios 테스트 4(override+폴백) |
+| A5 | ~~추세지수 R-ONE 시군구 정밀화~~ ✅ **완료·라이브** — R-ONE `A_2024_00180`(분기 시군구별 매매지수_아파트)에서 **수도권 72 시군구 10년 CAGR**(clamp 1~12%) 구워 rebIndex.json. KB 일괄(서울5/경기3)→시군구별 실측(강남11.4·노원7.8·인천중구1.4·평택1). R-ONE 없는 시군구는 KB 폴백. 트라젝토리·플랜 상승 시나리오·슬라이더 기본값 전부 정밀화. 갱신: `npm run reb:build` | 외부의존 | 중 | priceScenarios 4 + plan 1 테스트, 스팟체크 |
 | A6 | ~~면적 오라벨/도시형 분리~~ ✅ **완료** — searchComplexesByName이 <25㎡ 밴드 제외(isAptBand), 순수 초소형 단지(오피스텔·도시형)는 검색서 제외. 검증: 종로중흥(17·19㎡)·포레스트힐시티(14~22㎡) hits 0, 헬리오 정상 | 효ort | 소 | API 검증됨 |
 
 ## B. 통근 정확도 (외부 API 비용 핵심 — [[feedback-api-cost]])

@@ -166,25 +166,27 @@ describe("planGuidance — 끝은 희망", () => {
     expect(g.neededMonthlyKrw).toBe(Math.ceil(plan.gapKrw / (g.neededYears * 12)));
   });
 
-  it("(scenario anchors) 서울/경기 상승률 분리 + 출처·하락 공통", () => {
+  it("(scenario anchors) 하락·보합 공통 불변 + up은 R-ONE 실측/KB 폴백 (A5)", () => {
     expect(isSeoul("강남구")).toBe(true);
     expect(isSeoul("광명시")).toBe(false);
 
     const seoul = regionScenarios("강남구");
     const gg = regionScenarios("광명시");
-    expect(seoul.up.rateAnnual).toBeCloseTo(0.05);
-    expect(gg.up.rateAnnual).toBeCloseTo(0.03);
-    expect(seoul.up.basis).toContain("서울");
-    expect(gg.up.basis).toContain("경기");
-    // 하락·보합은 권역 공통
+    // 하락·보합은 권역 공통(R-ONE 무관, 불변)
     for (const s of [seoul, gg]) {
       expect(s.down.rateAnnual).toBeCloseTo(-0.06);
       expect(s.flat.rateAnnual).toBe(0);
-      expect(s.up.source).toContain("KB");
       expect(s.down.source).toContain("부동산원");
     }
-    expect(defaultUpPct("강남구")).toBe(5);
-    expect(defaultUpPct("광명시")).toBe(3);
+    // up: A5 — rebIndex(R-ONE) 있으면 시군구 실측(clamp 1~12%)·출처 R-ONE, 없으면 KB 권역 폴백.
+    // (override/폴백 분기·서울5·경기3 폴백 자체는 priceScenarios.test.ts 가 검증.)
+    for (const s of [seoul, gg]) {
+      expect(s.up.rateAnnual).toBeGreaterThanOrEqual(0.01);
+      expect(s.up.rateAnnual).toBeLessThanOrEqual(0.12);
+      expect(s.up.source === "한국부동산원 R-ONE" || s.up.source.includes("KB")).toBe(true);
+    }
+    // defaultUpPct == up.rateAnnual×100 (동일 소스)
+    expect(defaultUpPct("강남구")).toBeCloseTo(seoul.up.rateAnnual * 100);
     expect(DEFAULT_APPRECIATION.down).toBeCloseTo(-0.06);
   });
 });
