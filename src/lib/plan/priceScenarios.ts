@@ -7,10 +7,18 @@
 //  - 하락 = 한국부동산원 전국주택가격동향조사 직전 하락기(2022) 수도권 −6.5% → 보수 −6%.
 //  - 보합 = 0%(보수 기준선).
 // 앱은 수도권 전용이므로 전국(+2.4%)이 아니라 서울/경기 값을 쓴다.
-// ⚠️ 후속: 한국부동산원 R-ONE 시군구 실거래가격지수로 권역별 정밀화(API 키 확인 후).
+// A5(2026-05-29): R-ONE 시군구 실거래가격지수 통합 완료 — rebIndex.json 채워지면 시군구별
+// 실측 추세 우선, 비면 위 KB 권역 폴백. 데이터 적재는 `npm run reb:build`(REB_API_KEY 필요).
 
 import type { ScenarioKey } from "./index";
 import { SEOUL_GU } from "@/types/profile";
+import rebIndex from "@/data/rebIndex.json";
+
+// A5: 한국부동산원 R-ONE 시군구별 실거래가격지수에서 구운 연 상승률(소수). 있으면 권역 일괄
+// KB CAGR 대신 *시군구별 실측 추세*를 쓴다. 비어 있으면(미적재) 기존 KB 권역값으로 폴백 →
+// 빈 상태=현재 동작 무변. build-reb-index.ts 가 채운다(REB_API_KEY 필요).
+interface RebEntry { rateAnnual: number; asOf?: string }
+const REB = rebIndex as { generatedAt: string; source: string; regions: Record<string, RebEntry> };
 
 export interface ScenarioAnchor {
   key: ScenarioKey;
@@ -31,9 +39,20 @@ const DOWN = -0.06;
 const SRC_UP = "KB부동산 · 2025.9";
 const SRC_DOWN = "한국부동산원 · 2022";
 
-/** 해당 동네(시군구)의 시나리오 앵커. 서울/경기에 따라 상승률이 다르다. */
+/** 시군구 상승률(연, 소수) — R-ONE(rebIndex) 구워졌으면 시군구 실측, 아니면 KB 권역 폴백.
+ *  순수 함수(테스트용 export). 빈 rebIndex면 fromReb=false → 기존 동작. */
+export function upRateFor(sgg: string): { rateAnnual: number; fromReb: boolean; asOf?: string } {
+  const reb = REB.regions[sgg];
+  if (reb && Number.isFinite(reb.rateAnnual)) {
+    return { rateAnnual: reb.rateAnnual, fromReb: true, asOf: reb.asOf };
+  }
+  return { rateAnnual: isSeoul(sgg) ? UP_SEOUL : UP_GYEONGGI, fromReb: false };
+}
+
+/** 해당 동네(시군구)의 시나리오 앵커. 상승률은 R-ONE 시군구 실측 우선, 없으면 KB 권역. */
 export function regionScenarios(sgg: string): Record<ScenarioKey, ScenarioAnchor> {
   const seoul = isSeoul(sgg);
+  const up = upRateFor(sgg);
   return {
     down: {
       key: "down",
@@ -52,16 +71,18 @@ export function regionScenarios(sgg: string): Record<ScenarioKey, ScenarioAnchor
     up: {
       key: "up",
       label: "상승",
-      rateAnnual: seoul ? UP_SEOUL : UP_GYEONGGI,
-      basis: `${seoul ? "서울" : "경기"} 아파트 최근 10년 연평균`,
-      source: SRC_UP,
+      rateAnnual: up.rateAnnual,
+      basis: up.fromReb
+        ? `${sgg} 실거래가격지수 추세${up.asOf ? ` (${up.asOf})` : ""}`
+        : `${seoul ? "서울" : "경기"} 아파트 최근 10년 연평균`,
+      source: up.fromReb ? "한국부동산원 R-ONE" : SRC_UP,
     },
   };
 }
 
-/** 슬라이더 '상승' 기본값(%) — 동네 권역 앵커. */
+/** 슬라이더 '상승' 기본값(%) — R-ONE 시군구 실측 우선, 없으면 KB 권역. */
 export function defaultUpPct(sgg: string): number {
-  return (isSeoul(sgg) ? UP_SEOUL : UP_GYEONGGI) * 100;
+  return upRateFor(sgg).rateAnnual * 100;
 }
 
 /** computePlan 폴백 기본값(수도권 일반: 경기 상승률 사용). */
