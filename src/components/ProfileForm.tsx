@@ -299,6 +299,12 @@ function WorkplaceInput({
             placeholder="60"
             suffix="분"
           />
+          <p className="mt-1.5 text-[12px] leading-snug text-[#9a8f82]">
+            {mode === "transit"
+              ? "보통 40~60분(도보·환승 포함)을 많이 골라요."
+              : "보통 30~50분을 많이 골라요."}{" "}
+            길게 잡을수록 후보는 넓지만 매일 출퇴근 부담이 커져요.
+          </p>
         </div>
       </div>
     </div>
