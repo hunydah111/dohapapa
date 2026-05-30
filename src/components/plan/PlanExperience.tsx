@@ -19,6 +19,7 @@ import {
   planGuidance,
   regionScenarios,
   defaultUpPct,
+  upRateFor,
   type ScenarioKey,
   type PlanGuidance,
 } from "@/lib/plan";
@@ -62,6 +63,12 @@ const bandsOf = (sgg: string): AreaRangeKey[] =>
   AREA_RANGE_ORDER.filter((k) => REGIONS[sgg]?.[k]);
 const pickBand = (sgg: string): AreaRangeKey =>
   REGIONS[sgg]?.["p32_35"] ? "p32_35" : (bandsOf(sgg)[0] ?? "p32_35");
+
+// "202601"(YYYY+분기) → "2026 1분기"
+const fmtQuarter = (s?: string): string => {
+  if (!s || s.length < 5) return "";
+  return `${s.slice(0, 4)} ${Number(s.slice(4))}분기`;
+};
 
 // "2026-05" → "2026.5"
 const fmtMonth = (s?: string): string | null => {
@@ -951,7 +958,12 @@ export function PlanExperience() {
               </button>
             ))}
             <span className="text-[11px]" style={{ color: "#9c8a72" }}>
-              · 동네 10년 평균 ≈ +{Math.round(defaultUpPct(sgg))}%(KB)
+              {(() => {
+                const m = upRateFor(sgg);
+                return m.fromReb
+                  ? `· ${sgg} 추세 ≈ +${Math.round(defaultUpPct(sgg))}% (R-ONE 실거래지수${m.asOf ? ` ${fmtQuarter(m.asOf)}` : ""})`
+                  : `· 동네 10년 평균 ≈ +${Math.round(defaultUpPct(sgg))}% (KB)`;
+              })()}
             </span>
           </div>
         )}
@@ -963,8 +975,8 @@ export function PlanExperience() {
         ) : null}
 
         <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#9c8a72" }}>
-          하락 −6%(직전 하락기 2022·부동산원) · 보합 0% · 상승(동네 10년 평균·KB). 예측 아님 — 과거
-          지표 + 가정. 아래 저축 늘리면 시점 당겨짐 👇
+          하락 −6%(직전 하락기 2022·부동산원) · 보합 0% · 상승(동네별 R-ONE 실거래가격지수, 없으면 KB
+          10년평균). 예측 아님 — 과거 지표 + 가정. 아래 저축 늘리면 시점 당겨짐 👇
         </p>
       </section>
 

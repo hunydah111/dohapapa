@@ -71,6 +71,7 @@ export {
   regionScenarios,
   isSeoul,
   defaultUpPct,
+  upRateFor,
 } from "./priceScenarios";
 export type { ScenarioAnchor } from "./priceScenarios";
 
