@@ -1,9 +1,9 @@
 // 정책대출 자격 판정 모듈.
 //
 // 컴플라이언스: 자격 가능성 안내까지만 — 특정 은행 상품 연결·비교 금지.
-// 주택가 요건(예: 디딤돌 5억 이하, 보금자리론 6억 이하)은 예산 추정 시점에서
-// 매수 희망 주택의 가격을 알 수 없으므로 이 모듈에서 판정하지 않는다.
-// 판정 결과 reason 에 "주택가 요건 별도 적용" 을 명시해 사용자가 인지하도록 함.
+// 주택가 요건(신생아 9억·신혼 6억·일반 5억·보금 6억): D2(2026-05) — 매수 희망가
+// (targetPriceKrw)를 알면 자격 게이트로 적용한다(초과 시 부적격). 모르면 종전대로
+// reason 에 "주택가 요건 별도 적용"만 안내(예산 추정 시점엔 매수가 미상일 수 있음).
 //
 // 2025~2026 현행 기준으로 작성. 제도 변경 시 상수를 갱신할 것.
 
@@ -83,6 +83,41 @@ const BOGEUMJARI_LOAN_LIMIT = 360_000_000;
 /** 보금자리론 생애최초 한도 (원) */
 const BOGEUMJARI_FIRST_LOAN_LIMIT = 420_000_000;
 
+// ── 주택가격 상한 (원, 수도권 2025~2026) ──────────────────────────────────
+// D2: 매수 희망가(targetPriceKrw)를 알 때 자격 게이트로 적용. 모르면 reason 안내만(현행).
+const SHINSEONA_PRICE_LIMIT = 900_000_000; // 신생아 특례 9억
+const DIDIMDOL_NEWLYWED_PRICE_LIMIT = 600_000_000; // 디딤돌(신혼) 6억
+const DIDIMDOL_GENERAL_PRICE_LIMIT = 500_000_000; // 디딤돌(일반) 5억
+const BOGEUMJARI_PRICE_LIMIT = 600_000_000; // 보금자리론 6억
+
+const eok = (krw: number): string => {
+  const v = krw / 100_000_000;
+  return Number.isInteger(v) ? `${v}억` : `${v.toFixed(1)}억`;
+};
+
+/** 주택가 초과면 부적격 결과, 아니면 null. target 미상이면 게이트 미적용(null). */
+function priceFail(
+  product: string,
+  target: number | undefined,
+  limitKrw: number,
+): PolicyLoanMatch | null {
+  if (target != null && target > limitKrw) {
+    return {
+      productName: product,
+      eligible: false,
+      reason: `주택가 ${eok(target)} 초과 (기준: ${eok(limitKrw)} 이하)`,
+    };
+  }
+  return null;
+}
+
+/** 적격 시 reason 의 주택가 절 — target 알고 충족이면 확인 문구, 미상이면 '별도 적용'. */
+function priceClause(target: number | undefined, limitKrw: number): string {
+  return target != null
+    ? `주택가 ${eok(target)} ≤ ${eok(limitKrw)} 충족`
+    : `주택가 요건 별도 적용 (${eok(limitKrw)} 이하)`;
+}
+
 // ── 판정 함수 ─────────────────────────────────────────────────────────────
 
 /**
@@ -92,7 +127,7 @@ const BOGEUMJARI_FIRST_LOAN_LIMIT = 420_000_000;
  * 폼은 이 의미 그대로 "출산 2년 이내(만 2세 이하)" 로 묻는다. 실제 자격은
  * 출생일 기준 최종 판정되므로 reason 에 출생일 확인 안내를 포함한다.
  */
-function evaluateShinseona(profile: CoupleProfile): PolicyLoanMatch {
+function evaluateShinseona(profile: CoupleProfile, targetPriceKrw?: number): PolicyLoanMatch {
   const { householdIncomeKrwYear, hasOwnedHomeBefore, hasInfant } = profile;
 
   // WHY 무주택 요건 확인: 신생아 특례 디딤돌은 무주택 세대주만 신청 가능
@@ -120,11 +155,13 @@ function evaluateShinseona(profile: CoupleProfile): PolicyLoanMatch {
     };
   }
 
+  const pf = priceFail("신생아 특례 디딤돌", targetPriceKrw, SHINSEONA_PRICE_LIMIT);
+  if (pf) return pf;
+
   return {
     productName: "신생아 특례 디딤돌",
     eligible: true,
-    reason:
-      "출산 2년 이내 자녀 + 무주택 + 합산 소득 2억 이하 — 정확한 출생일 기준 자격은 주택금융공사 확인 (주택가 9억 이하 요건 별도)",
+    reason: `출산 2년 이내 자녀 + 무주택 + 합산 소득 2억 이하 — 정확한 출생일 기준 자격은 주택금융공사 확인 (${priceClause(targetPriceKrw, SHINSEONA_PRICE_LIMIT)})`,
     loanLimitKrw: SHINSEONA_LOAN_LIMIT,
     rateMin: 1.8,
     rateMax: 4.5,
@@ -136,7 +173,7 @@ function evaluateShinseona(profile: CoupleProfile): PolicyLoanMatch {
  *
  * WHY 신혼 요건 명시: isNewlywed 필드는 혼인 7년 이내 기준으로 사용자가 직접 입력.
  */
-function evaluateDidimdolNewlywed(profile: CoupleProfile): PolicyLoanMatch {
+function evaluateDidimdolNewlywed(profile: CoupleProfile, targetPriceKrw?: number): PolicyLoanMatch {
   const { householdIncomeKrwYear, hasOwnedHomeBefore, isNewlywed, netAssetsKrw } = profile;
 
   if (!isNewlywed) {
@@ -171,11 +208,13 @@ function evaluateDidimdolNewlywed(profile: CoupleProfile): PolicyLoanMatch {
     };
   }
 
+  const pf = priceFail("디딤돌(신혼)", targetPriceKrw, DIDIMDOL_NEWLYWED_PRICE_LIMIT);
+  if (pf) return pf;
+
   return {
     productName: "디딤돌(신혼)",
     eligible: true,
-    reason:
-      "신혼 + 무주택 + 합산 소득 8,500만원 이하 + 순자산 5.11억 이하 — 주택가 요건 별도 적용 (6억 이하)",
+    reason: `신혼 + 무주택 + 합산 소득 8,500만원 이하 + 순자산 5.11억 이하 — ${priceClause(targetPriceKrw, DIDIMDOL_NEWLYWED_PRICE_LIMIT)}`,
     loanLimitKrw: DIDIMDOL_NEWLYWED_LOAN_LIMIT,
     rateMin: 2.85,
     rateMax: 4.15,
@@ -187,7 +226,7 @@ function evaluateDidimdolNewlywed(profile: CoupleProfile): PolicyLoanMatch {
  *
  * WHY 생애최초·2자녀 완화: 두 조건 중 하나라도 해당하면 소득 기준 7,000만으로 완화.
  */
-function evaluateDidimdolGeneral(profile: CoupleProfile): PolicyLoanMatch {
+function evaluateDidimdolGeneral(profile: CoupleProfile, targetPriceKrw?: number): PolicyLoanMatch {
   const { householdIncomeKrwYear, hasOwnedHomeBefore } = profile;
 
   if (hasOwnedHomeBefore) {
@@ -211,11 +250,13 @@ function evaluateDidimdolGeneral(profile: CoupleProfile): PolicyLoanMatch {
     };
   }
 
+  const pf = priceFail("디딤돌(일반)", targetPriceKrw, DIDIMDOL_GENERAL_PRICE_LIMIT);
+  if (pf) return pf;
+
   return {
     productName: "디딤돌(일반)",
     eligible: true,
-    reason:
-      "생애최초 + 무주택 + 합산 소득 기준 충족 — 주택가 요건 별도 적용 (5억 이하), 한도 생애최초 2.4억",
+    reason: `생애최초 + 무주택 + 합산 소득 기준 충족 — ${priceClause(targetPriceKrw, DIDIMDOL_GENERAL_PRICE_LIMIT)}, 한도 생애최초 2.4억`,
     loanLimitKrw: DIDIMDOL_GENERAL_FIRST_LOAN_LIMIT,
     rateMin: 2.85,
     rateMax: 4.15,
@@ -229,7 +270,7 @@ function evaluateDidimdolGeneral(profile: CoupleProfile): PolicyLoanMatch {
  * 소득 경계값 근처에서 유불리를 크게 바꿀 수 있으나, 제도 변경이 잦아
  * MVP에서는 기본·신혼 2단계만 적용하고 reason 에 안내를 포함.
  */
-function evaluateBogeumjari(profile: CoupleProfile): PolicyLoanMatch {
+function evaluateBogeumjari(profile: CoupleProfile, targetPriceKrw?: number): PolicyLoanMatch {
   const {
     householdIncomeKrwYear, isNewlywed, hasOwnedHomeBefore,
     hasInfant, hasSchoolAgedChild, hasTwoOrMoreChildren, hasThreeOrMoreChildren,
@@ -278,10 +319,13 @@ function evaluateBogeumjari(profile: CoupleProfile): PolicyLoanMatch {
     limitNote = "일반 한도 3.6억";
   }
 
+  const pf = priceFail("보금자리론", targetPriceKrw, BOGEUMJARI_PRICE_LIMIT);
+  if (pf) return pf;
+
   const conditionParts: string[] = [limitNote];
   if (isNewlywed) conditionParts.push("신혼 소득 완화 적용");
   if (inferredChildren > 0) conditionParts.push(`${inferredChildren}자녀 가산 소득 ${limitLabel}`);
-  conditionParts.push("주택가 요건 별도 적용 (6억 이하)");
+  conditionParts.push(priceClause(targetPriceKrw, BOGEUMJARI_PRICE_LIMIT));
 
   return {
     productName: "보금자리론",
@@ -301,11 +345,15 @@ function evaluateBogeumjari(profile: CoupleProfile): PolicyLoanMatch {
  * WHY 판정 순서: 한도 큰 순(신생아 특례 → 신혼 → 일반 → 보금자리론)으로 정렬해
  * budget.ts 에서 "한도 최대" 상품을 쉽게 고를 수 있도록 한다.
  */
-export function evaluatePolicyLoans(profile: CoupleProfile): PolicyLoanMatch[] {
+export function evaluatePolicyLoans(
+  profile: CoupleProfile,
+  opts?: { targetPriceKrw?: number },
+): PolicyLoanMatch[] {
+  const t = opts?.targetPriceKrw;
   return [
-    evaluateShinseona(profile),
-    evaluateDidimdolNewlywed(profile),
-    evaluateDidimdolGeneral(profile),
-    evaluateBogeumjari(profile),
+    evaluateShinseona(profile, t),
+    evaluateDidimdolNewlywed(profile, t),
+    evaluateDidimdolGeneral(profile, t),
+    evaluateBogeumjari(profile, t),
   ];
 }

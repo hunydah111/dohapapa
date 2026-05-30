@@ -195,7 +195,10 @@ export function estimateBudget(
   // ── 4. 정책대출 자격 판정 ────────────────────────────────────────────────
   // WHY 정책대출 우선 검토: 디딤돌·신생아 특례는 일반 대출보다 금리가 낮고
   // 한도가 크기 때문에, 적격이면 일반 DSR 한도와 비교해 유리한 쪽을 채택.
-  const policyLoanMatches = evaluatePolicyLoans(profile);
+  // D2: 매수 희망가를 알면 정책대출 주택가 요건을 자격 게이트로 적용(모르면 reason 안내만).
+  const policyLoanMatches = evaluatePolicyLoans(profile, {
+    targetPriceKrw: opts?.targetPriceKrw,
+  });
 
   const eligiblePolicies = policyLoanMatches.filter(
     (m) => m.eligible && m.loanLimitKrw !== undefined,

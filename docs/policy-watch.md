@@ -10,7 +10,7 @@
 
 기준 시점: **POLICY_META.lastVerified = 2026-05-26** · 반영: 2025.6.28 개정(디딤돌 한도) + 2025.10.16 스트레스 DSR 3단계 수도권 +3.0%p
 
-> ⚠️ 주택가격 요건은 현재 **코드 계산에 미반영**(예산 추정 시점엔 매수 희망가 미상) — `policyLoan.ts`의 reason 문자열에만 안내. 그래도 정확해야 하므로 함께 점검.
+> ✅ 주택가격 요건(신생아 9억·신혼 6억·일반 5억·보금 6억): **D2(2026-05-31) — 매수 희망가(targetPriceKrw) 알 때 자격 게이트로 반영**(`evaluatePolicyLoans(profile, {targetPriceKrw})`). 매수가 미상이면 종전대로 reason 안내만. 상수 갱신 시 `policyLoan.ts` SHINSEONA/DIDIMDOL_*/BOGEUMJARI_PRICE_LIMIT 함께 점검.
 
 ---
 
