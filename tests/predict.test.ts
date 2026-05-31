@@ -4,7 +4,8 @@ import {
   scoreRound,
   playableCells,
   peerKeyOf,
-  backtestRound,
+  regimeRound,
+  REGIMES,
 } from "@/lib/game/predict";
 import { ALL_SCOPE } from "@/lib/recommend/trendIndex";
 
@@ -63,17 +64,24 @@ describe("scoreRound (실데이터)", () => {
   });
 });
 
-describe("backtestRound (복기 출제, 결정적)", () => {
-  it("같은 seed면 같은 라운드", () => {
-    const a = backtestRound(42);
-    const b = backtestRound(42);
-    expect(a.cellKey).toBe(b.cellKey);
-    expect(a.fromMonth).toBe(b.fromMonth);
-    expect(a.toMonth).toBe(b.toMonth);
+describe("REGIMES / regimeRound (명명 국면 출제)", () => {
+  it("3개 국면, 유효한 from<to 기간", () => {
+    expect(REGIMES).toHaveLength(3);
+    for (const r of REGIMES) {
+      expect(r.from < r.to).toBe(true);
+      expect(r.label.length).toBeGreaterThan(0);
+    }
   });
-  it("출제된 라운드는 채점 가능", () => {
-    const round = backtestRound(7);
-    const r = scoreRound({ ...round, pick: "UP" });
+  it("같은 seed·국면이면 같은 라운드 + 그 국면 기간 사용", () => {
+    const reg = REGIMES[1];
+    const a = regimeRound(reg, 42);
+    const b = regimeRound(reg, 42);
+    expect(a.cellKey).toBe(b.cellKey);
+    expect(a.fromMonth).toBe(reg.from);
+    expect(a.toMonth).toBe(reg.to);
+  });
+  it("출제 라운드는 채점 가능", () => {
+    const r = scoreRound({ ...regimeRound(REGIMES[0], 7), pick: "UP" });
     expect(r.resolvable).toBe(true);
   });
 });

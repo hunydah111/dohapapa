@@ -5,11 +5,13 @@ import Link from "next/link";
 import {
   playableCells,
   scoreRound,
-  backtestRound,
+  regimeRound,
   liveRound,
+  REGIMES,
   type Pick,
   type Round,
   type RoundResult,
+  type Regime,
 } from "@/lib/game/predict";
 import { trendLatestMonth } from "@/lib/recommend/trendIndex";
 import { SITE_URL } from "@/lib/site";
@@ -60,6 +62,7 @@ function load(): PlayState {
 
 export function PlayExperience() {
   const [st, setSt] = useState<PlayState>(FRESH);
+  const [regime, setRegime] = useState<Regime>(REGIMES[0]);
   const [round, setRound] = useState<Round & { sigungu: string; tier: string }>();
   const [result, setResult] = useState<RoundResult | null>(null);
   const [resolvedMsg, setResolvedMsg] = useState<string | null>(null);
@@ -70,10 +73,14 @@ export function PlayExperience() {
     const c = cells.current.find((x) => x.key === key);
     return { sigungu: c?.sigungu ?? key.split("|")[0], tier: key.split("|")[1] };
   };
-  const newBacktest = (seed: number) => {
-    const r = backtestRound(seed);
+  const newRound = (reg: Regime, seed: number) => {
+    const r = regimeRound(reg, seed);
     setRound({ ...r, ...cellMeta(r.cellKey) });
     setResult(null);
+  };
+  const chooseRegime = (reg: Regime) => {
+    setRegime(reg);
+    newRound(reg, st.seed);
   };
 
   // 마운트: 저장 복원 + 대기 라이브 예측 채점(다음 갱신 도래분) + 첫 복기 출제.
@@ -106,7 +113,7 @@ export function PlayExperience() {
     };
     setSt(merged);
     if (resolved > 0) setResolvedMsg(`📣 지난 예측 ${resolved}건 발표 — 적중 ${dCorrect}`);
-    newBacktest(merged.seed);
+    newRound(REGIMES[0], merged.seed);
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 
@@ -123,7 +130,7 @@ export function PlayExperience() {
   const guess = (pick: Pick) => {
     if (!round || result) return;
     const r = scoreRound({ ...round, pick });
-    if (!r.resolvable) { newBacktest(st.seed + 1); return; } // 무효면 새 라운드
+    if (!r.resolvable) { newRound(regime, st.seed + 1); return; } // 무효면 새 라운드
     setResult(r);
     const correct = !!r.correct;
     const streak = correct ? st.streak + 1 : 0;
@@ -137,7 +144,7 @@ export function PlayExperience() {
       seed: st.seed + 1,
     });
   };
-  const next = () => newBacktest(st.seed);
+  const next = () => newRound(regime, st.seed);
 
   // 라이브 예측 — 미래 1개월, 대기열에 저장(다음 갱신 때 발표).
   const betLive = (pick: Pick) => {
@@ -176,10 +183,28 @@ export function PlayExperience() {
         <div className="rounded-2xl bg-emerald-50 px-4 py-2.5 text-[13px] font-semibold text-emerald-700">{resolvedMsg}</div>
       )}
 
-      {/* 라운드 카드 (복기) */}
+      {/* 국면 선택 — 의미있는 시장 시기 3종 */}
+      <div className="flex gap-1.5">
+        {REGIMES.map((r) => (
+          <button
+            key={r.id}
+            onClick={() => chooseRegime(r)}
+            className={`flex-1 rounded-2xl px-2 py-2 text-[11.5px] font-bold leading-tight transition-colors ${
+              regime.id === r.id ? "bg-coral-600 text-white" : "bg-[#f3ece4] text-[#6e5b46] hover:bg-[#ecd9b3]"
+            }`}
+          >
+            {r.label}
+            <br />
+            <span className="text-[10px] font-medium opacity-80">{r.short}</span>
+          </button>
+        ))}
+      </div>
+      <p className="-mt-2 text-[11.5px] leading-snug" style={{ color: "#9a8f82" }}>📍 {regime.desc}</p>
+
+      {/* 라운드 카드 */}
       {round && (
         <div className="rounded-3xl border border-[#ecd9b3] bg-[#fffdf8] p-5 shadow-sm">
-          <p className="text-[12px]" style={{ color: "#9a8f82" }}>복기 · {fmtPeriod(round.fromMonth, round.toMonth)}</p>
+          <p className="text-[12px]" style={{ color: "#9a8f82" }}>{regime.label} · {fmtPeriod(round.fromMonth, round.toMonth)}</p>
           <p className="mt-1 text-[20px] font-extrabold" style={{ color: "#3a2c1d" }}>
             {round.sigungu} <span className="text-[15px] font-bold" style={{ color: "#b08948" }}>{TIER_LABEL[round.tier]}</span>
           </p>

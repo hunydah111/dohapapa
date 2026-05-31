@@ -5,7 +5,6 @@
 
 import {
   ALL_SCOPE,
-  trendMonths,
   trendSeriesKeys,
   getTrendSeries,
   trendLatestMonth,
@@ -107,35 +106,31 @@ function hash(n: number): number {
   return (h ^ (h >>> 16)) >>> 0;
 }
 
-const BACKTEST_HORIZON = 3; // 복기 윈도우 3개월 — 1개월은 ±0.0% 노이즈라 결정적 라운드 위해 키움
+// 명명된 시장 국면(복기 시기 선택) — 실데이터 분석으로 끊은 3국면(docs/prediction-game-spec.md).
+// 국면을 알면 맞히는 = 진짜 촉. trendIndex(2025-04~2026-05)가 3국면 다 커버.
+export interface Regime {
+  id: string;
+  label: string;
+  short: string;
+  desc: string;
+  from: string;
+  to: string;
+}
+export const REGIMES: Regime[] = [
+  { id: "high25", label: "고가 상승기", short: "25.6~10", desc: "30억+ 초고가가 폭등 주도, 저가 소외", from: "2025-06", to: "2025-10" },
+  { id: "mid25", label: "중위가 키맞추기", short: "25.11~26.2", desc: "고가 숨고름, 중가가 따라 상승", from: "2025-11", to: "2026-02" },
+  { id: "low26", label: "고가 조정·저가 강세기", short: "26.3~5", desc: "고가 꺾이고 저가가 상대 강세", from: "2026-03", to: "2026-05" },
+];
 
-/** 복기 라운드 출제 — seed로 결정적. 채점 가능한 (셀, 과거 from→to) 보장. */
-export function backtestRound(seed: number): Round {
+/** 국면 라운드 출제 — 그 국면 기간(from→to) 안에서 채점 가능한 셀을 seed로 결정적 선택. */
+export function regimeRound(regime: Regime, seed: number): Round {
   const cells = playableCells();
-  const months = trendMonths();
-  // 채점 가능한 조합을 찾을 때까지 seed 변주(유한 시도, 결정적).
   for (let i = 0; i < 64; i++) {
-    const h = hash(seed * 1000 + i);
-    const cell = cells[h % cells.length];
-    // toMonth = horizon 이후 ~ 최신. fromMonth = toMonth - horizon.
-    const maxToIdx = months.length - 1;
-    const minToIdx = BACKTEST_HORIZON;
-    const span = maxToIdx - minToIdx + 1;
-    const toIdx = minToIdx + ((hash(h) % span + span) % span);
-    const fromIdx = toIdx - BACKTEST_HORIZON;
-    const round: Round = {
-      cellKey: cell.key,
-      fromMonth: months[fromIdx],
-      toMonth: months[toIdx],
-    };
+    const cell = cells[hash(seed * 1000 + i) % cells.length];
+    const round: Round = { cellKey: cell.key, fromMonth: regime.from, toMonth: regime.to };
     if (scoreRound({ ...round, pick: "UP" }).resolvable) return round;
   }
-  // 폴백(거의 안 옴): 첫 셀 + 마지막 두 달.
-  return {
-    cellKey: cells[0]?.key ?? "",
-    fromMonth: months[months.length - 2] ?? "",
-    toMonth: months[months.length - 1] ?? "",
-  };
+  return { cellKey: cells[0]?.key ?? "", fromMonth: regime.from, toMonth: regime.to };
 }
 
 const LIVE_HORIZON_MONTHS = 1; // 라이브 예측 기본 1개월(빠른 resolve). 스펙서 조정 가능.
