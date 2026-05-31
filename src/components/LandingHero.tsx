@@ -168,7 +168,7 @@ export function LandingHero({
           <span className="text-[20px]" aria-hidden>🎯</span>
           <span className="flex flex-col items-start leading-tight">
             <span className="text-[10.5px] font-bold" style={{ color: "#d98a5a" }}>
-              데일리 · 동네가 시장 이길까?
+              7문제 시세 감각 테스트 · 동네가 시장 이길까?
             </span>
             <span className="text-[15px] font-extrabold" style={{ color: "#e8662f" }}>
               내 부동산 촉, 몇 단?

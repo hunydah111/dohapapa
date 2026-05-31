@@ -6,6 +6,9 @@ import {
   peerKeyOf,
   regimeRound,
   REGIMES,
+  setGrade,
+  topPerformer,
+  SET_SIZE,
 } from "@/lib/game/predict";
 import { ALL_SCOPE } from "@/lib/recommend/trendIndex";
 
@@ -85,5 +88,33 @@ describe("REGIMES / regimeRound (명명 국면 출제)", () => {
   it("출제 라운드는 채점 가능", () => {
     const r = scoreRound({ ...regimeRound(REGIMES[0], 7), pick: "UP" });
     expect(r.resolvable).toBe(true);
+  });
+});
+
+describe("setGrade (7문제 세트 등급)", () => {
+  it("7=촉신, 0~3=촉린이, 경계 단조", () => {
+    expect(setGrade(7).label).toBe("촉신");
+    expect(setGrade(6).label).toBe("촉고수");
+    expect(setGrade(5).label).toBe("촉상수");
+    expect(setGrade(4).label).toBe("촉중수");
+    expect(setGrade(3).label).toBe("촉린이");
+    expect(setGrade(0).label).toBe("촉린이");
+  });
+  it("image 경로 = id 기반(자산 폴백 키)", () => {
+    expect(setGrade(7).image).toBe("/biji/chok/god.png");
+    expect(SET_SIZE).toBe(7);
+  });
+});
+
+describe("topPerformer (그 기간 최고 상승 시군구 — 납득용)", () => {
+  it("국면① high tier 최고 상승지가 존재하고 peer(수도권)는 제외", () => {
+    const reg = REGIMES[0]; // 고가 상승기
+    const top = topPerformer("high", reg.from, reg.to);
+    expect(top).not.toBeNull();
+    expect(top!.sigungu).not.toBe("수도권");
+    expect(Number.isFinite(top!.pct)).toBe(true);
+  });
+  it("결측 기간이면 null", () => {
+    expect(topPerformer("high", "1999-01", "1999-02")).toBeNull();
   });
 });

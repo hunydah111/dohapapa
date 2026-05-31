@@ -143,6 +143,49 @@ export function liveRound(seed: number): Round {
   return { cellKey: cell?.key ?? "", fromMonth: latest, toMonth: addMonths(latest, LIVE_HORIZON_MONTHS) };
 }
 
+// ── 세트(7문제) → 등급 결과 ───────────────────────────────────────────────
+/** 한 판 = 이만큼 문제(쭉 무한 출제 대신 끊어서 결과·공유). */
+export const SET_SIZE = 7;
+
+export interface Grade {
+  id: string;
+  label: string;
+  emoji: string;
+  blurb: string;
+  /** 등급 비지 이미지 경로(없으면 emoji 폴백). 자산: public/biji/chok/<id>.png */
+  image: string;
+}
+/** 세트 적중 수(0~SET_SIZE) → 등급. 7=촉신. 자산 파일명 = id. */
+export function setGrade(correct: number): Grade {
+  const g = (id: string, label: string, emoji: string, blurb: string): Grade => ({
+    id, label, emoji, blurb, image: `/biji/chok/${id}.png`,
+  });
+  if (correct >= 7) return g("god", "촉신", "🏆", "실거래가를 꿰뚫는 눈");
+  if (correct >= 6) return g("master", "촉고수", "🔥", "시장을 거의 다 읽었다");
+  if (correct >= 5) return g("pro", "촉상수", "😎", "감이 제대로 섰다");
+  if (correct >= 4) return g("mid", "촉중수", "🙂", "반은 넘겼다");
+  return g("rookie", "촉린이", "🐣", "이제 막 감 잡는 중");
+}
+
+/** 같은 가격대(tier)에서 그 기간 가장 많이 오른 시군구 — "왜 졌나" 납득용. 없으면 null. */
+export function topPerformer(
+  tier: string,
+  fromMonth: string,
+  toMonth: string,
+): { sigungu: string; pct: number } | null {
+  let best: { sigungu: string; pct: number } | null = null;
+  for (const key of trendSeriesKeys()) {
+    const [scope, t] = key.split("|");
+    if (!scope || t !== tier || scope === ALL_SCOPE) continue;
+    const from = valueAt(key, fromMonth);
+    const to = valueAt(key, toMonth);
+    if (!(from > 0) || !(to > 0)) continue;
+    const p = to / from - 1;
+    if (!best || p > best.pct) best = { sigungu: scope, pct: p };
+  }
+  return best;
+}
+
 /** "YYYY-MM" + n개월. */
 export function addMonths(month: string, n: number): string {
   const [y, m] = month.split("-").map(Number);
