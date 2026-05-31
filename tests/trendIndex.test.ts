@@ -7,10 +7,12 @@ import {
 } from "@/lib/recommend/trendIndex";
 
 describe("tierOf — 가격대 분류", () => {
-  it("저가 <10억, 중가 10~30억, 초고가 ≥30억", () => {
+  it("4단: <10억 low · 10~20억 mid1 · 20~30억 mid2 · ≥30억 high", () => {
     expect(tierOf(9_900_000_000 / 10)).toBe("low"); // 9.9억
-    expect(tierOf(1_000_000_000)).toBe("mid"); // 10억 (경계 포함 mid)
-    expect(tierOf(2_999_000_000)).toBe("mid"); // 29.99억
+    expect(tierOf(1_000_000_000)).toBe("mid1"); // 10억 (경계 포함 mid1)
+    expect(tierOf(1_900_000_000)).toBe("mid1"); // 19억
+    expect(tierOf(2_000_000_000)).toBe("mid2"); // 20억 (경계 포함 mid2)
+    expect(tierOf(2_999_000_000)).toBe("mid2"); // 29.99억
     expect(tierOf(3_000_000_000)).toBe("high"); // 30억 (경계 포함 high)
     expect(tierOf(5_000_000_000)).toBe("high");
   });

@@ -53,7 +53,9 @@ describe("playableCells", () => {
 
 describe("scoreRound (실데이터)", () => {
   it("알려진 셀+기간은 채점 가능, correct는 outperform과 일관", () => {
-    const r = scoreRound({ cellKey: "종로구|low", fromMonth: "2025-04", toMonth: "2026-05", pick: "UP" });
+    // trendIndex 범위(2025-05~2026-05) 내 기간 사용. 셀은 playable 첫 셀로(데이터 보장).
+    const cell = playableCells()[0].key;
+    const r = scoreRound({ cellKey: cell, fromMonth: "2025-06", toMonth: "2026-05", pick: "UP" });
     expect(r.resolvable).toBe(true);
     expect(r.correct).toBe(r.outperform); // pick=UP이므로 correct === outperform
   });

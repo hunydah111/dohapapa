@@ -15,7 +15,9 @@
 
 import rawData from "@/data/trendIndex.json";
 
-export type PriceTier = "low" | "mid" | "high";
+// 4단(2026-05-31): mid(10~30억)가 게임·시점보정에 너무 넓어 10억대/20억대로 분할.
+// low <10억 · mid1 10~20억(10억대) · mid2 20~30억(20억대) · high 30억+.
+export type PriceTier = "low" | "mid1" | "mid2" | "high";
 
 export interface TrendSeries {
   /** month("YYYY-MM") → 연쇄 지수값(시리즈 첫 달 = 100). 모든 month 채워짐(거래 없는 달은 carry-forward). */
@@ -37,8 +39,9 @@ const data = rawData as TrendIndexData;
 /** 전체(수도권) 폴백 scope 라벨 — 빌드 스크립트와 공유. */
 export const ALL_SCOPE = "수도권";
 
-// 가격대 경계 (원). 사용자 도메인: 초고가 30억+, 중가 10~30억, 저가 10억 미만.
+// 가격대 경계 (원). 4단: <10억 / 10~20억 / 20~30억 / 30억+.
 export const TIER_LOW_MAX = 1_000_000_000; // 10억
+export const TIER_MID_SPLIT = 2_000_000_000; // 20억 — mid1/mid2 분할점
 export const TIER_HIGH_MIN = 3_000_000_000; // 30억
 
 // 브리지 계수 클램프 — 1년 보정이라도 ±폭 제한(이상치·표본오차로 인한 폭주 방지).
@@ -46,9 +49,10 @@ const BRIDGE_MIN = 0.8;
 const BRIDGE_MAX = 1.25;
 
 export function tierOf(priceKrw: number): PriceTier {
-  if (priceKrw < TIER_LOW_MAX) return "low";
-  if (priceKrw >= TIER_HIGH_MIN) return "high";
-  return "mid";
+  if (priceKrw < TIER_LOW_MAX) return "low"; // <10억
+  if (priceKrw < TIER_MID_SPLIT) return "mid1"; // 10~20억
+  if (priceKrw < TIER_HIGH_MIN) return "mid2"; // 20~30억
+  return "high"; // 30억+
 }
 
 /** 지수가 비었는지(미생성). 비면 모든 보정 ×1. */

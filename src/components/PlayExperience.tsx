@@ -20,7 +20,12 @@ import { SITE_URL } from "@/lib/site";
 // 복기(과거 즉시채점)로 재미 즉검증 + 라이브(미래 예측, 다음 갱신 때 발표). 줄세우기=촉(실력)뿐.
 // No-PII: 점수·연승·대기예측 전부 localStorage. 컴플라이언스: 시세 감각 게임·예측/자문 아님.
 
-const TIER_LABEL: Record<string, string> = { low: "10억 미만", mid: "10~30억", high: "30억+" };
+const TIER_LABEL: Record<string, string> = {
+  low: "10억 미만",
+  mid1: "10억대",
+  mid2: "20억대",
+  high: "30억 이상",
+};
 const STORE_KEY = "biji-play";
 
 const fmtPeriod = (from: string, to: string): string => {
@@ -206,10 +211,10 @@ export function PlayExperience() {
         <div className="rounded-3xl border border-[#ecd9b3] bg-[#fffdf8] p-5 shadow-sm">
           <p className="text-[12px]" style={{ color: "#9a8f82" }}>{regime.label} · {fmtPeriod(round.fromMonth, round.toMonth)}</p>
           <p className="mt-1 text-[20px] font-extrabold" style={{ color: "#3a2c1d" }}>
-            {round.sigungu} <span className="text-[15px] font-bold" style={{ color: "#b08948" }}>{TIER_LABEL[round.tier]}</span>
+            {round.sigungu} 내의 <span className="text-[15px] font-bold" style={{ color: "#b08948" }}>{TIER_LABEL[round.tier]}</span>
           </p>
           <p className="mt-1 text-[14px] leading-snug" style={{ color: "#6e5b46" }}>
-            이 동네가 <b>같은 가격대 평균(시장)</b>보다 더 올랐을까?
+            이 동네 이 가격대가 <b>같은 가격대 평균(시장)</b>보다 더 올랐을까?
           </p>
 
           {!result ? (

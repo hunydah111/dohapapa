@@ -13,11 +13,23 @@ import path from "node:path";
 const prisma = new PrismaClient();
 
 async function main(): Promise<void> {
-  const agg = await prisma.transaction.aggregate({
-    _max: { dealDate: true },
-    _count: true,
-  });
-  const latest = agg._max.dealDate;
+  // Neon(기본) 또는 로컬 dev.db(--from-sqlite=) — Neon 쿼터 우회.
+  const sqliteArg = process.argv.find((a) => a.startsWith("--from-sqlite="));
+  let latest: Date | null;
+  let count: number;
+  if (sqliteArg) {
+    const { DatabaseSync } = await import("node:sqlite");
+    const sdb = new DatabaseSync(sqliteArg.slice("--from-sqlite=".length), { readOnly: true }) as unknown as {
+      prepare: (s: string) => { get: (...p: unknown[]) => Record<string, unknown> };
+    };
+    const r = sdb.prepare(`SELECT MAX(dealDate) mx, COUNT(*) c FROM "Transaction"`).get();
+    latest = r.mx ? new Date(Number(r.mx)) : null;
+    count = Number(r.c);
+  } else {
+    const agg = await prisma.transaction.aggregate({ _max: { dealDate: true }, _count: true });
+    latest = agg._max.dealDate;
+    count = agg._count;
+  }
   // YYYY-MM-DD (KST 기준 로컬). 워크플로 TZ=Asia/Seoul 가정.
   const latestDealDate = latest
     ? `${latest.getFullYear()}-${String(latest.getMonth() + 1).padStart(2, "0")}-${String(latest.getDate()).padStart(2, "0")}`
@@ -26,13 +38,13 @@ async function main(): Promise<void> {
   const meta = {
     generatedAt: new Date().toISOString(),
     latestDealDate,
-    txCount: agg._count,
+    txCount: count,
   };
 
   const out = path.resolve("src/data/dataMeta.json");
   writeFileSync(out, JSON.stringify(meta, null, 2) + "\n");
   console.log(
-    `dataMeta 작성: 최근 실거래 ${latestDealDate ?? "없음"}, 거래 ${agg._count.toLocaleString()}건 → ${out}`,
+    `dataMeta 작성: 최근 실거래 ${latestDealDate ?? "없음"}, 거래 ${count.toLocaleString()}건 → ${out}`,
   );
 }
 

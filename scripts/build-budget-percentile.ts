@@ -19,15 +19,27 @@ async function main() {
   const since = new Date();
   since.setMonth(since.getMonth() - LOOKBACK_MONTHS);
 
-  const txs = await db.transaction.findMany({
-    where: { dealDate: { gte: since } },
-    select: { priceKrw: true },
-  });
+  // Neon(기본) 또는 로컬 dev.db(--from-sqlite=) — Neon 쿼터 우회.
+  const sqliteArg = process.argv.find((a) => a.startsWith("--from-sqlite="));
+  let rawPrices: number[];
+  if (sqliteArg) {
+    const { DatabaseSync } = await import("node:sqlite");
+    const sdb = new DatabaseSync(sqliteArg.slice("--from-sqlite=".length), { readOnly: true }) as unknown as {
+      prepare: (s: string) => { all: (...p: unknown[]) => Record<string, unknown>[] };
+    };
+    rawPrices = sdb
+      .prepare(`SELECT priceKrw FROM "Transaction" WHERE dealDate >= ?`)
+      .all(since.getTime())
+      .map((r) => Number(r.priceKrw));
+  } else {
+    const txs = await db.transaction.findMany({
+      where: { dealDate: { gte: since } },
+      select: { priceKrw: true },
+    });
+    rawPrices = txs.map((t) => Number(t.priceKrw));
+  }
 
-  const prices = txs
-    .map((t) => Number(t.priceKrw))
-    .filter((p) => p > 0)
-    .sort((a, b) => a - b);
+  const prices = rawPrices.filter((p) => p > 0).sort((a, b) => a - b);
 
   // 백분위 0~100 각 지점의 가격(원). p% 지점 = 그 가격 이하 거래가 p%.
   const percentiles: number[] = [];

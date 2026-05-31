@@ -20,7 +20,7 @@ import {
 const LOOKBACK_MONTHS = 13;
 const MIN_PAIRS = 5; // 인접월 매칭쌍이 이만큼은 돼야 추세 신뢰
 const MIN_RELIABLE_MONTHS = 3; // 시군구×tier 시리즈는 신뢰월이 이만큼일 때만 emit(아니면 수도권 폴백)
-const TIERS: PriceTier[] = ["low", "mid", "high"];
+const TIERS: PriceTier[] = ["low", "mid1", "mid2", "high"];
 
 function monthKey(d: Date): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
@@ -38,19 +38,58 @@ interface Cell {
   byMonth: Map<string, number[]>; // month → 거래가들(원)
 }
 
+interface TxRow { complexId: string; area: number; priceKrw: number; dealDate: Date }
+
+// Neon(기본) 또는 로컬 dev.db(--from-sqlite=) 에서 단지·거래를 읽는다 — Neon 쿼터 우회.
+async function load(since: Date): Promise<{
+  complexes: { id: string; sigungu: string }[];
+  txs: TxRow[];
+}> {
+  const sqliteArg = process.argv.find((a) => a.startsWith("--from-sqlite="));
+  if (sqliteArg) {
+    const path = sqliteArg.slice("--from-sqlite=".length);
+    const { DatabaseSync } = await import("node:sqlite");
+    const sdb = new DatabaseSync(path, { readOnly: true }) as unknown as {
+      prepare: (s: string) => { all: (...p: unknown[]) => Record<string, unknown>[] };
+      close: () => void;
+    };
+    const complexes = sdb
+      .prepare("SELECT id, sigungu FROM Complex")
+      .all()
+      .map((r) => ({ id: String(r.id), sigungu: String(r.sigungu) }));
+    const txs = sdb
+      .prepare(`SELECT complexId, area, priceKrw, dealDate FROM "Transaction" WHERE dealDate >= ?`)
+      .all(since.getTime())
+      .map((r) => ({
+        complexId: String(r.complexId),
+        area: Number(r.area),
+        priceKrw: Number(r.priceKrw),
+        dealDate: new Date(Number(r.dealDate)),
+      }));
+    sdb.close();
+    return { complexes, txs };
+  }
+  const complexes = await db.complex.findMany({ select: { id: true, sigungu: true } });
+  const txs = (
+    await db.transaction.findMany({
+      where: { dealDate: { gte: since } },
+      select: { complexId: true, area: true, priceKrw: true, dealDate: true },
+    })
+  ).map((t) => ({
+    complexId: t.complexId,
+    area: t.area,
+    priceKrw: Number(t.priceKrw),
+    dealDate: t.dealDate,
+  }));
+  return { complexes, txs };
+}
+
 async function main() {
   const since = new Date();
   since.setMonth(since.getMonth() - LOOKBACK_MONTHS);
 
-  const complexes = await db.complex.findMany({
-    select: { id: true, sigungu: true },
-  });
+  const { complexes, txs } = await load(since);
   const sigunguById = new Map(complexes.map((c) => [c.id, c.sigungu]));
-
-  const txs = await db.transaction.findMany({
-    where: { dealDate: { gte: since } },
-    select: { complexId: true, area: true, priceKrw: true, dealDate: true },
-  });
 
   // (단지×평형) 셀로 묶는다.
   const cells = new Map<string, Cell>();
@@ -64,7 +103,7 @@ async function main() {
     monthSet.add(month);
     let cell = cells.get(key);
     if (!cell) {
-      cell = { sigungu, tier: "mid", byMonth: new Map() };
+      cell = { sigungu, tier: "mid1", byMonth: new Map() }; // 기본값 — 아래서 tierOf(중위)로 재할당
       cells.set(key, cell);
     }
     const arr = cell.byMonth.get(month) ?? cell.byMonth.set(month, []).get(month)!;
