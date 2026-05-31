@@ -124,10 +124,14 @@ export interface Regime {
   from: string;
   to: string;
 }
+// 경계는 임의가 아니라 수도권 tier별 지수(trendIndex) 흐름이 실제로 바뀌는 지점으로 잡음.
+// 누적 변동(검증): rally24 low+3.1/mid2+13.1/high+14.1 · high25 low+1.6/mid2+18.4/high+19.7
+//   · mid25 low+3.7/mid1+12.0/high+3.9 · low26 low+0.9/mid2-4.7/high-2.9. (build 시점 재확인)
 export const REGIMES: Regime[] = [
-  { id: "high25", label: "고가 상승기", short: "25.6~10", desc: "30억+ 초고가가 폭등 주도, 저가 소외", from: "2025-06", to: "2025-10" },
-  { id: "mid25", label: "중위가 키맞추기", short: "25.11~26.2", desc: "고가 숨고름, 중가가 따라 상승", from: "2025-11", to: "2026-02" },
-  { id: "low26", label: "고가 조정·저가 강세기", short: "26.3~5", desc: "고가 꺾이고 저가가 상대 강세", from: "2026-03", to: "2026-05" },
+  { id: "rally24", label: "회복 랠리", short: "24.2~8", desc: "침체 후 반등 — 중·고가가 동반 상승, 저가는 소외", from: "2024-02", to: "2024-08" },
+  { id: "high25", label: "고가 폭등기", short: "25.2~7", desc: "초고가가 단독 폭등(+20%), 저가는 거의 제자리", from: "2025-02", to: "2025-07" },
+  { id: "mid25", label: "중가 키맞추기", short: "25.8~26.1", desc: "고가 정점·횡보, 소외됐던 중가가 따라잡기", from: "2025-08", to: "2026-01" },
+  { id: "low26", label: "고가조정·저가강세", short: "26.2~5", desc: "고가·중상가 꺾이고 저가가 상대 강세", from: "2026-02", to: "2026-05" },
 ];
 
 /** 국면 라운드 출제 — 그 국면 기간(from→to) 안에서 채점 가능한 셀을 seed로 결정적 선택. */

@@ -76,8 +76,8 @@ describe("scoreRound (실데이터)", () => {
 });
 
 describe("REGIMES / regimeRound (명명 국면 출제)", () => {
-  it("3개 국면, 유효한 from<to 기간", () => {
-    expect(REGIMES).toHaveLength(3);
+  it("4개 데이터기반 국면, 유효한 from<to 기간", () => {
+    expect(REGIMES).toHaveLength(4);
     for (const r of REGIMES) {
       expect(r.from < r.to).toBe(true);
       expect(r.label.length).toBeGreaterThan(0);

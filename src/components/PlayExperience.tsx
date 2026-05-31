@@ -239,12 +239,12 @@ export function PlayExperience() {
       {/* ── 진행 중: 국면 선택 + 라운드 카드 ── */}
       {!setDone && (
         <>
-          <div className="flex gap-1.5">
+          <div className="grid grid-cols-2 gap-1.5">
             {REGIMES.map((r) => (
               <button
                 key={r.id}
                 onClick={() => chooseRegime(r)}
-                className={`flex-1 rounded-2xl px-2 py-2 text-[11.5px] font-bold leading-tight transition-colors ${
+                className={`rounded-2xl px-2 py-2 text-[12px] font-bold leading-tight transition-colors ${
                   regime.id === r.id ? "bg-coral-600 text-white" : "bg-[#f3ece4] text-[#6e5b46] hover:bg-[#ecd9b3]"
                 }`}
               >
