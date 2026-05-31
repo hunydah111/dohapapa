@@ -119,6 +119,29 @@ DIMENSIONS:
 - character proportions, palette, outline weight MUST match reference image EXACTLY
 ```
 
+## 5.5. 포즈·비율 붕괴 방지 (v2, 필수 — 2026-05-31 학습)
+
+**사고:** 트로피를 머리 위로 드는 등 **큰 포즈 변경**을 시키니, 모델이 몸을 "자연스럽게 설 수 있는"
+길쭉한 일반 마스코트 체형으로 **재구성** → 초치비 비율(키≈1.9 머리, 머리=상반신 절반) 붕괴.
+얼굴·색은 맞았지만 키 ≈2.7로 늘어나고 머리가 작아짐. (스크린샷: 이상비버.png)
+
+**원인:** ① 팔 들기/서기 같은 포즈 변경 = 모델이 몸 전체 재작도 ② 비율을 **숫자(1:0.86)로만**
+박으면 모델이 못 따름 — 시각 reference만 따라감 → 포즈 앵커가 풀리면 비율도 풀림.
+
+**필수 규칙 (모든 비지 생성 프롬프트에 적용):**
+1. **포즈 변경 최소화** — 머리 위로 팔 들기·서는 자세 재구성 금지. **소품은 가슴 앞에서** 들기.
+   팔은 "짧게 굽히기"만, 늘리지 말 것. 한쪽 팔만 바꾸고 반대 팔·다리·스탠스는 baseline 유지.
+2. **"reference를 베이스로 깔고 표정·소품만 얹어라" 가드를 프롬프트 맨 앞에.** 표현:
+   *"Use the attached image as the EXACT base. Redraw THIS SAME beaver in THE SAME pose — only
+   change the face and add ONE prop. Do NOT make the body taller/slimmer/upright, do NOT elongate
+   torso/legs, do NOT shrink the head."*
+3. **비율은 숫자 대신 그림 묘사** — *"머리가 거대하고 상반신 절반을 채움, 키는 머리 약 2개,
+   몸은 머리 밑 작고 동그란 덩어리, 팔 짧음."* (숫자는 보조로만)
+4. 한 프롬프트 = 변경 하나(표정+소품 1세트). 화질 2K·사방 12% 흰여백·발밑 그림자만·글로우 가장자리 번짐 금지.
+5. **god 1장 먼저 검증 → OK면 나머지.** (포즈 큰 등급부터 테스트)
+
+→ 검증된 템플릿: `prompts/02-chok-grades.md` v2. 새 등급/포즈는 이 v2 구조 복사해서 씀.
+
 ## 6. 프롬프트 작성 공식 (Nano Banana 5블록)
 
 ```
