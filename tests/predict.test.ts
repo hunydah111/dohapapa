@@ -30,6 +30,12 @@ describe("judge (순수 채점)", () => {
   it("동률 = 무효 라운드(resolvable=false)", () => {
     expect(judge(100, 103, 100, 103, "UP").resolvable).toBe(false);
   });
+  it("접전(데드존 1%p 미만) = 무효 — 노이즈로 단정 안 함", () => {
+    // cell +3.0% vs peer +3.5% = 0.5%p 격차 < 1%p → 무효
+    expect(judge(100, 103, 100, 103.5, "UP").resolvable).toBe(false);
+    // 1%p 이상 벌어지면 채점 가능
+    expect(judge(100, 105, 100, 103, "UP").resolvable).toBe(true);
+  });
   it("결측·0이하 = 무효", () => {
     expect(judge(0, 105, 100, 103, "UP").resolvable).toBe(false);
     expect(judge(100, 105, null as unknown as number, 103, "UP").resolvable).toBe(false);

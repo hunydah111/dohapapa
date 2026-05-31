@@ -287,6 +287,9 @@ export function PlayExperience() {
                   </p>
                   <p className="text-[13px]" style={{ color: "#6e5b46" }}>
                     {round.sigungu} <b>{pct(result.cellPct)}</b> vs 시장 {pct(result.peerPct)} → {result.outperform ? "아웃퍼폼" : "언더퍼폼"}
+                    {result.cellPct != null && result.peerPct != null && (
+                      <span style={{ color: "#9a8f82" }}> (격차 {pct(Math.abs(result.cellPct - result.peerPct))})</span>
+                    )}
                   </p>
                   {/* 납득 — 그때 가장 많이 오른 곳 */}
                   {(() => {

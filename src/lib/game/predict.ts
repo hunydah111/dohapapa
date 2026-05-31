@@ -16,6 +16,14 @@ export type Pick = "UP" | "DOWN";
 /** 출제 가능 셀에 필요한 최소 개월 수(히스토리 짧으면 복기 풀 부족). */
 const MIN_MONTHS = 6;
 
+/**
+ * 접전 데드존 — 셀과 peer의 변동률 격차가 이보다 작으면 "사실상 비김"으로 보고 무효(resolvable=false).
+ * 월 단위로 끊은 지수라 미세한 격차(노이즈·몇 주 차이로 따라잡는 동네)는 UP/DOWN 단정이 동전던지기에
+ * 가까워 촉을 측정 못 한다. 데이터(국면×tier 격차분포)상 1.0%p 미만이 그 노이즈 군집 → 출제 제외.
+ * regimeRound가 무효 라운드를 재추첨하므로, 자동으로 "격차 확실한 동네"만 출제된다.
+ */
+export const DEAD_ZONE = 0.01;
+
 export interface PlayCell {
   /** `${시군구}|${tier}`. */
   key: string;
@@ -60,7 +68,7 @@ export function judge(
   if (!ok) return { resolvable: false };
   const cellPct = cellTo / cellFrom - 1;
   const peerPct = peerTo / peerFrom - 1;
-  if (cellPct === peerPct) return { resolvable: false }; // 동률 = 무효
+  if (Math.abs(cellPct - peerPct) < DEAD_ZONE) return { resolvable: false }; // 접전(노이즈) = 무효
   const outperform = cellPct > peerPct;
   const correct = (pick === "UP") === outperform;
   return { resolvable: true, outperform, correct, cellPct, peerPct };
