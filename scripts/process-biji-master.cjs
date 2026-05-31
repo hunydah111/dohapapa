@@ -5,6 +5,7 @@
 //   3) 파일명 규칙으로 출력 경로 결정:
 //      - tier-{slug}.{jpg|png}      → public/biji/tier/{slug}.png
 //      - accessory-{slug}.{jpg|png} → public/biji/accessory/{slug}.png
+//      - chok-{slug}.{jpg|png}      → public/biji/chok/{slug}.png  (촉 게임 등급)
 //      - 그 외                       → assets/biji-master/processed/{name}.png
 //   4) 처리된 원본은 assets/biji-master/incoming/_processed/ 로 이동
 //
@@ -45,6 +46,13 @@ function classifyOutput(filename) {
     const outDir = path.join(ROOT, "public", "biji", "accessory");
     fs.mkdirSync(outDir, { recursive: true });
     return { outPath: path.join(outDir, `${accMatch[1]}.png`), category: "accessory", slug: accMatch[1] };
+  }
+  // chok-god.jpg → public/biji/chok/god.png (촉 게임 등급)
+  const chokMatch = stem.match(/^chok[-_](.+)$/);
+  if (chokMatch) {
+    const outDir = path.join(ROOT, "public", "biji", "chok");
+    fs.mkdirSync(outDir, { recursive: true });
+    return { outPath: path.join(outDir, `${chokMatch[1]}.png`), category: "chok", slug: chokMatch[1] };
   }
   // baseline 또는 그 외 → fallback
   return { outPath: path.join(FALLBACK_OUT, `${stem}.png`), category: "misc", slug: stem };
