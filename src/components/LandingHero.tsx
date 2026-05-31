@@ -155,13 +155,13 @@ export function LandingHero({
           국토부 공개 실거래
           {FRESH_DATE ? ` ${FRESH_DATE}` : ""} · 정책 {POLICY_VERIFIED_SHORT} 점검
         </p>
-        {/* 부동산 촉 게임 — 데일리 훅(놀이 entry) */}
+        {/* 부동산 촉 — 데일리 훅(시세 감각 entry) */}
         <Link
           href="/play"
           className="mx-auto mt-4 flex w-full max-w-xs items-center justify-center gap-1.5 rounded-2xl bg-[#fff4ef] px-4 py-2.5 text-[13px] font-bold transition-colors hover:bg-[#ffe9df]"
           style={{ color: "#e8662f" }}
         >
-          🎯 부동산 촉 게임 — 내 동네가 시장 이길까?
+          🎯 내 부동산 촉, 몇 단? — 동네가 시장 이길까?
         </Link>
         {/* 비지 도감 — 소심한 discovery link (도감 페이지로 유도) */}
         <Link

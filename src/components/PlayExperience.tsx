@@ -164,7 +164,7 @@ export function PlayExperience() {
     const url = `${SITE_URL}/play`;
     const text = `내 부동산 촉 ${dan(st.correct)}단 (적중 ${st.correct}/${st.played}) — 너도 동네가 시장 이길지 맞혀봐 👀`;
     try {
-      if (navigator.share) await navigator.share({ title: "부동산 촉 게임", text, url });
+      if (navigator.share) await navigator.share({ title: "부동산 촉 테스트", text, url });
       else { await navigator.clipboard.writeText(`${text}\n${url}`); setToast("링크 복사됨 — 카톡에 붙여넣기"); setTimeout(() => setToast(null), 2500); }
     } catch { /* 취소 무시 */ }
   };
@@ -251,7 +251,7 @@ export function PlayExperience() {
       <button onClick={share} className="rounded-2xl bg-amber-300 py-3 text-[15px] font-bold text-coral-900">📤 내 촉 자랑 / 친구 도발</button>
 
       <p className="text-[11px] leading-relaxed" style={{ color: "#b3a99c" }}>
-        시세 감각 게임 · 미래가치 예측·투자권유 아님 · 국토부 공개 실거래 기반 (시군구×가격대) 지수.
+        시세 감각 테스트 · 미래가치 예측·투자권유 아님 · 국토부 공개 실거래 기반 (시군구×가격대) 지수.
         실제 돈 거래 없음.
       </p>
 
