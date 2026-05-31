@@ -1,185 +1,147 @@
-# 02 — 촉 게임 등급 5종 프롬프트 (Chok Grades)
+# 02 — 촉 게임 등급 5종 프롬프트 (Chok Grades) — v2
 
-**용도:** /play "부동산 촉" 결과화면 등급 비지 5장. 7문제 중 적중 수로 등급 부여 → 결과 카드 흰 원(80×80) 안에 노출.
+**용도:** /play "부동산 촉" 결과화면 등급 비지 5장. id = god/master/pro/mid/rookie.
 
-**근거:** `src/lib/game/predict.ts`의 `setGrade()`. 파일명(id) = god/master/pro/mid/rookie.
+## ⚠️ v2 수정 이유 (v1 실패 분석)
+v1은 비율이 **전혀 다르게** 나옴(이상비버.png): baseline은 머리가 절반인 초치비(키≈1.9 머리),
+결과는 키≈2.7로 **쭉 늘어나고 머리 작아진 꼿꼿한 마스코트** 체형. 얼굴·색은 맞았음.
+- **원인**: "두 팔 머리 위로 들어 트로피" 같은 **큰 포즈 변경**. 이미지 모델은 팔 들기/서기를
+  그리라 하면 몸을 "자연스럽게 설 수 있는" 길쭉한 비율로 **재구성**, reference 치비 비율을 버림.
+  + 비율을 숫자(1:0.86)로만 박아서 모델이 못 따름(시각 reference만 따라감).
+- **v2 해법**: ①포즈 변경 최소화(머리 위 금지·소품은 가슴 앞) ②"reference를 베이스로 깔고
+  표정·소품만 얹어라 / 몸 길게·꼿꼿·머리 작게 만들지 마라" 가드를 맨 앞 ③비율을 숫자 대신
+  그림 묘사("머리가 상반신 절반, 키는 머리 2개, 몸은 작은 덩어리").
 
-**5블록 공식**(biji-style-bible.md §6) 그대로. **한 장당 변경은 표정+포즈+소품 한 컨셉만**, 정체성·비율·색은 EXACT 유지.
-
----
-
-## ⚠️ 화질·경계면 안 깨지게 (모든 장 공통 — 재작업 방지)
-
-1. **해상도**: square 1:1, **2048×2048(2K)**. (화질 ↑, 결과화면 80px로 줄여도 또렷)
-2. **배경**: pure flat `#FFFFFF` only. **그라데이션·풍경·후광 글로우 금지**(가장자리로 번지면 컷아웃 때 테두리 깨짐).
-3. **여백**: 캐릭터+소품+반짝이 전부 **사방 8% 이상 흰 여백** 안에 들어오게(캔버스 가장자리에 닿지 않게) → 자동 누끼 깨끗.
-4. **그림자**: 발밑 soft oval contact shadow **하나만**. 캐릭터 뒤 drop shadow 금지(누끼 가장자리 헤일로 원인).
-5. **라인**: uniform outline 2.5%, crisp vector edge, **반투명 글로우/안티에일리어싱 헤일로 없이** 선명하게.
-6. **머리 정면 고정**: 머리 돌리지 말 것(귀 11시·1시 유지). 포즈는 팔·소품·표정으로만.
-
-> 저장: `assets/biji-master/incoming/chok-{id}.jpg` (예: `chok-god.jpg`) → `node scripts/process-biji-master.cjs` → `public/biji/chok/{id}.png` 자동 배치 → 결과화면 자동 노출.
-
-**Gemini 사용법:** baseline 첨부(`C:\Users\User\OneDrive\Desktop\비버\baseline front biji.jpg`) → 아래 코드블록 통째 복사 → 전송 → 비율·색·꼬리·귀 baseline과 동일 확인 후 저장.
+> 저장: `assets/biji-master/incoming/chok-{id}.jpg` → `node scripts/process-biji-master.cjs`
+> → `public/biji/chok/{id}.png` 자동 배치 → 결과화면 자동 노출(emoji 폴백 대체).
+> baseline 첨부: `C:\Users\User\OneDrive\Desktop\비버\baseline front biji.jpg`
+> **god 한 장 먼저 검증 → OK면 나머지 4장.**
 
 ---
 
-## 🏆 1. god (촉신, 7/7) — 트로피 번쩍, 최고의 촉
+## 🏆 1. god (촉신, 7/7) — 트로피 가슴 앞으로
 
 ```
-Using the attached image (the Geometry Master baseline of "Biji") as the EXACT identity reference. Generate Biji with ONE specific addition described below.
+Use the attached image as the EXACT base for the character "Biji". You are redrawing THIS SAME beaver in THE SAME standing pose — only changing the face expression and adding ONE prop. Do not invent a new body.
 
-PRESERVE EXACTLY (do not change ANY of these):
-- All body proportions: head-to-body ratio 1:0.86, total height 1.86 heads, head_width = head_height × 1.24
-- All 7 locked palette colors: #B07245 (body fur), #F0D0A0 (belly), #3A1E0D (outline/eyes/nose), #F4B5A8 (cheeks/inner ear), #8E5A32 (tail), #FFFDF5 (teeth), #FFFFFF (background)
-- Eye spacing (30% inner edges), eye position (52% from head top), cheek blushes (14% diameter)
-- Ear position (11 and 1 o'clock), ear size, ear inner pink fill — ears must NOT be covered
-- Two front teeth, nose shape, mouth position, tail (horizontal paddle, diamond crosshatch, #8E5A32)
-- Outline weight 2.5% of character height, uniform, color #3A1E0D
-- Head stays front-facing (do NOT rotate the head)
-- Pure white #FFFFFF background with soft oval contact shadow under feet
+CRITICAL — KEEP THE BODY 100% IDENTICAL TO THE ATTACHED REFERENCE:
+- The head is HUGE and round, filling the entire upper half of the character. Total height is only about 1.9 head-heights — super-chibi, head-dominant baby proportions. The body is a small round blob beneath the big head, with short stubby arms and tiny feet.
+- Do NOT make the body taller, slimmer, or more upright. Do NOT elongate the torso or legs. Do NOT shrink the head or enlarge the body. Keep the exact same stance, short arm length, body silhouette, and uniform thick outline as the reference.
+- Keep all 7 locked colors: #B07245 body fur, #F0D0A0 belly, #3A1E0D outline/eyes/nose, #F4B5A8 cheeks/inner ear, #8E5A32 tail, #FFFDF5 teeth, #FFFFFF background.
+- Keep ears at 11 and 1 o'clock (fully visible), two front teeth, nose, cheek blushes, and the diamond-crosshatch paddle tail exactly as reference. Head stays front-facing.
 
-ADD ONLY (this is the change — triumphant champion lifting a trophy):
-- Both paws raised high above the head together, holding up a GOLD TROPHY CUP (classic two-handled winner's cup): cup height approximately 35% of head width, color solid #E0A23A (gold) with #3A1E0D outline, simple chibi shape with a small base, two side handles
-- Both arms bent at the elbow and lifted upward so the trophy sits just above the head — the trophy must NOT touch the top canvas edge (keep 8%+ white margin above it)
-- Big proud OPEN-MOUTH smile (happy, wide), two front teeth visible
-- Eyes turned into cheerful upward curves OR sparkling — two small 4-pointed white sparkle glints (#FFFFFF) inside the eyes for a starry triumphant look
-- 3 floating gold sparkle stars (4-pointed, #E0A23A with #3A1E0D outline, each ≈ 7% of head width) around the trophy in the upper area, all within the canvas with white margin
+CHANGE ONLY THESE:
+- Both short arms reach FORWARD and together in front of the lower chest, holding a small GOLD TROPHY CUP at chest/belly height (NOT raised above the head). Trophy ≈ 30% of head width, two small handles, solid #E0A23A gold with #3A1E0D outline. Keep the arms short and the body unchanged — the arms just come forward, they do NOT stretch upward.
+- Proud happy OPEN-MOUTH smile, two front teeth visible.
+- 2 small gold sparkle stars (4-pointed, #E0A23A with #3A1E0D outline, ≈ 6% of head width) floating beside the head on the left and right (NOT above).
 
-CANVAS: square 1:1, 2048×2048, character + raised trophy occupy ~62-68% of canvas height, centered horizontally and vertically, at least 8% pure-white margin on all four sides.
+CANVAS: square 1:1, 2048×2048, pure flat #FFFFFF background, soft oval contact shadow under the feet only (no other shadow, no gradient, no glow). Character + trophy occupy ~60% of canvas height, centered, with at least 12% pure-white margin on all four sides so nothing touches the edges.
 
-LOCK: Character proportions, body fur #B07245, belly #F0D0A0, outline weight, ear placement, tail pattern MUST match reference EXACTLY. Gold #E0A23A appears ONLY on the trophy and floating stars. Pure white flat background, no gradient, no glow bleed to edges, single soft contact shadow only. Do not add a crown or cape. Do not restyle. Do not rotate the head.
+LOCK: This is the SAME beaver, SAME body, SAME pose as the attached reference — only the held trophy, smile, and two side stars are added. Gold #E0A23A appears ONLY on the trophy and stars. Do not restyle, do not change proportions, do not make it taller, do not raise arms overhead, do not rotate the head.
 ```
-
-**저장 파일명:** `chok-god.jpg`
+저장: `chok-god.jpg`
 
 ---
 
-## 🔥 2. master (촉고수, 6/7) — 손가락총 윙크, 자신만만
+## 😏 2. master (촉고수, 6/7) — 손가락총 + 윙크
 
 ```
-Using the attached image (the Geometry Master baseline of "Biji") as the EXACT identity reference. Generate Biji with ONE specific addition described below.
+Use the attached image as the EXACT base for the character "Biji". You are redrawing THIS SAME beaver in THE SAME standing pose — only changing the face expression and adding ONE small gesture. Do not invent a new body.
 
-PRESERVE EXACTLY (do not change ANY of these):
-- All body proportions: head-to-body ratio 1:0.86, total height 1.86 heads, head_width = head_height × 1.24
-- All 7 locked palette colors: #B07245, #F0D0A0, #3A1E0D, #F4B5A8, #8E5A32, #FFFDF5, #FFFFFF
-- Eye spacing, cheek blushes, ear position/size/inner pink, two front teeth, nose, tail pattern
-- Outline weight 2.5%, uniform, #3A1E0D
-- Head stays front-facing (do NOT rotate the head)
-- Pure white #FFFFFF background with soft oval contact shadow under feet
+CRITICAL — KEEP THE BODY 100% IDENTICAL TO THE ATTACHED REFERENCE:
+- The head is HUGE and round, filling the upper half of the character. Total height ≈ 1.9 head-heights (super-chibi, head-dominant). Small round blob body, short stubby arms, tiny feet.
+- Do NOT make the body taller, slimmer, or upright. Do NOT elongate torso/legs. Do NOT shrink the head. Keep the exact same stance, arm length, silhouette, and thick uniform outline as the reference.
+- Keep all 7 locked colors: #B07245 body, #F0D0A0 belly, #3A1E0D outline/eyes/nose, #F4B5A8 cheeks/inner ear, #8E5A32 tail, #FFFDF5 teeth, #FFFFFF background.
+- Keep ears at 11 and 1 o'clock (visible), two front teeth, nose, cheek blushes, paddle tail with diamond crosshatch. Head front-facing.
 
-ADD ONLY (this is the change — cocky "finger gun" confident pose):
-- Right paw raised to chest/shoulder height making a "FINGER GUN" gesture pointing toward the viewer/slightly to the side (paw shaped like a pointing gesture, one digit extended forward, thumb up)
-- A tiny coral spark at the fingertip: one small 4-pointed sparkle, fill #FE7644 (coral) with #3A1E0D outline, ≈ 5% of head width (the ONLY non-palette color, only on this spark)
-- Left paw resting confidently on the hip (arm bent at elbow)
-- One eye WINKING: the right eye becomes a downward "U" curved closed line (#3A1E0D, same weight as outline), the left eye stays the normal solid #3A1E0D circle with white highlight
-- Cocky closed-mouth smirk: mouth corners clearly upturned to one side, two teeth visible
-- Cheek blushes normal
+CHANGE ONLY THESE:
+- The right short arm bends so the right paw is at chest height making a small "FINGER GUN" gesture pointing slightly to the side (one digit forward, thumb up). Keep the arm SHORT — just bend it, do not lengthen it. The left arm stays exactly as the reference.
+- Right eye WINKING: the right eye becomes a downward "U" curved closed line in #3A1E0D (same weight as outline). Left eye stays the normal solid #3A1E0D circle with a white highlight dot.
+- Cocky closed-mouth smirk: mouth corners upturned to one side, two teeth visible.
+- One tiny coral spark at the fingertip: a small 4-pointed sparkle, fill #FE7644 with #3A1E0D outline, ≈ 5% of head width (the only non-palette color, only here).
 
-CANVAS: square 1:1, 2048×2048, character occupies ~62-68% of canvas height, centered, at least 8% pure-white margin on all four sides.
+CANVAS: square 1:1, 2048×2048, pure flat #FFFFFF background, soft oval contact shadow under feet only (no gradient, no glow). Character occupies ~60% of canvas height, centered, at least 12% pure-white margin on all four sides.
 
-LOCK: Character proportions, palette (except #FE7644 used ONLY on the fingertip spark), outline weight, ear placement, tail pattern MUST match reference EXACTLY. Pure white flat background, no gradient, no glow bleed, single soft contact shadow only. Do not add sunglasses, hat, or chain (those belong to other grades). Do not restyle. Do not rotate the head.
+LOCK: SAME beaver, SAME body, SAME pose as the attached reference — only the wink, smirk, finger-gun paw, and fingertip spark change. Do not restyle, do not change proportions, do not make it taller, do not rotate the head. Do not add sunglasses, hat, or chain.
 ```
-
-**저장 파일명:** `chok-master.jpg`
+저장: `chok-master.jpg`
 
 ---
 
-## 😎 3. pro (촉상수, 5/7) — 선글라스 + 엄지척, 여유
+## 😎 3. pro (촉상수, 5/7) — 선글라스 + 엄지척
 
 ```
-Using the attached image (the Geometry Master baseline of "Biji") as the EXACT identity reference. Generate Biji with ONE specific addition described below.
+Use the attached image as the EXACT base for the character "Biji". You are redrawing THIS SAME beaver in THE SAME standing pose — only changing the face and adding ONE small gesture. Do not invent a new body.
 
-PRESERVE EXACTLY (do not change ANY of these):
-- All body proportions: head-to-body ratio 1:0.86, total height 1.86 heads, head_width = head_height × 1.24
-- All 7 locked palette colors: #B07245, #F0D0A0, #3A1E0D, #F4B5A8, #8E5A32, #FFFDF5, #FFFFFF
-- Eye position (52% from head top) and spacing — eyes hidden behind sunglasses but position unchanged
-- Cheek blushes (still visible below the sunglasses), ear position/size/inner pink, two front teeth, nose, tail pattern
-- Outline weight 2.5%, uniform, #3A1E0D
-- Head stays front-facing (do NOT rotate the head)
-- Pure white #FFFFFF background with soft oval contact shadow under feet
+CRITICAL — KEEP THE BODY 100% IDENTICAL TO THE ATTACHED REFERENCE:
+- The head is HUGE and round, filling the upper half. Total height ≈ 1.9 head-heights (super-chibi, head-dominant). Small round blob body, short stubby arms, tiny feet.
+- Do NOT make the body taller, slimmer, or upright. Do NOT elongate torso/legs. Do NOT shrink the head. Keep the exact same stance, arm length, silhouette, and thick uniform outline as the reference.
+- Keep all 7 locked colors: #B07245 body, #F0D0A0 belly, #3A1E0D outline/eyes/nose, #F4B5A8 cheeks/inner ear, #8E5A32 tail, #FFFDF5 teeth, #FFFFFF background.
+- Keep ears at 11 and 1 o'clock (visible), two front teeth, nose, cheek blushes (visible below the sunglasses), paddle tail with diamond crosshatch. Head front-facing.
 
-ADD ONLY (this is the change — relaxed cool look):
-- Simple RECTANGULAR SUNGLASSES covering both eyes: solid #3A1E0D fill (no lens reflection, no gold), total width ≈ 52% of head width to cover both eyes naturally — must NOT cover or touch the ears
-- Right paw raised to chest height giving a clear THUMBS-UP (closed fist with thumb pointing straight up)
-- Left paw relaxed at side
-- Relaxed confident closed-mouth smile, mouth corners gently upturned, two teeth visible
-- Cheek blushes normal, visible just below the sunglasses
+CHANGE ONLY THESE:
+- Add simple RECTANGULAR SUNGLASSES over both eyes: solid #3A1E0D fill (no reflection, no gold), width ≈ 52% of head width, covering both eyes naturally — must NOT touch or cover the ears.
+- The right short arm bends so the right paw is at chest height giving a clear THUMBS-UP (closed fist, thumb pointing up). Keep the arm SHORT — just bend it. The left arm stays exactly as the reference.
+- Relaxed cool closed-mouth smile, corners gently upturned, two teeth visible.
 
-CANVAS: square 1:1, 2048×2048, character occupies ~62-68% of canvas height, centered, at least 8% pure-white margin on all four sides.
+CANVAS: square 1:1, 2048×2048, pure flat #FFFFFF background, soft oval contact shadow under feet only (no gradient, no glow). Character occupies ~60% of canvas height, centered, at least 12% pure-white margin on all four sides.
 
-LOCK: Character proportions, palette (sunglasses are #3A1E0D, already in palette — NO new colors), outline weight, ear placement and visibility, tail pattern MUST match reference EXACTLY. Pure white flat background, no gradient, no glow bleed, single soft contact shadow only. Sunglasses are plain rectangular and solid #3A1E0D — NOT star-shaped, NO gold, NO chain. Do not restyle. Do not rotate the head.
+LOCK: SAME beaver, SAME body, SAME pose as the attached reference — only the sunglasses, thumbs-up paw, and smile change. Sunglasses are plain rectangular solid #3A1E0D (NOT star-shaped, NO gold, NO chain). Do not restyle, do not change proportions, do not make it taller, do not rotate the head.
 ```
-
-**저장 파일명:** `chok-pro.jpg`
+저장: `chok-pro.jpg`
 
 ---
 
-## 🙂 4. mid (촉중수, 4/7) — 브이(V) 사인, 무난한 미소
+## ✌️ 4. mid (촉중수, 4/7) — V사인 + 잔잔한 미소
 
 ```
-Using the attached image (the Geometry Master baseline of "Biji") as the EXACT identity reference. Generate Biji with ONE specific addition described below.
+Use the attached image as the EXACT base for the character "Biji". You are redrawing THIS SAME beaver in THE SAME standing pose — only changing the face and adding ONE small gesture. Do not invent a new body.
 
-PRESERVE EXACTLY (do not change ANY of these):
-- All body proportions: head-to-body ratio 1:0.86, total height 1.86 heads, head_width = head_height × 1.24
-- All 7 locked palette colors: #B07245, #F0D0A0, #3A1E0D, #F4B5A8, #8E5A32, #FFFDF5, #FFFFFF
-- Eye size (17%, solid #3A1E0D with white highlight), eye spacing, cheek blushes, ear position/size/inner pink, two front teeth, nose, tail pattern
-- Outline weight 2.5%, uniform, #3A1E0D
-- Head stays front-facing (do NOT rotate the head)
-- Pure white #FFFFFF background with soft oval contact shadow under feet
+CRITICAL — KEEP THE BODY 100% IDENTICAL TO THE ATTACHED REFERENCE:
+- The head is HUGE and round, filling the upper half. Total height ≈ 1.9 head-heights (super-chibi, head-dominant). Small round blob body, short stubby arms, tiny feet.
+- Do NOT make the body taller, slimmer, or upright. Do NOT elongate torso/legs. Do NOT shrink the head. Keep the exact same stance, arm length, silhouette, and thick uniform outline as the reference.
+- Keep all 7 locked colors: #B07245 body, #F0D0A0 belly, #3A1E0D outline/eyes/nose, #F4B5A8 cheeks/inner ear, #8E5A32 tail, #FFFDF5 teeth, #FFFFFF background.
+- Keep ears at 11 and 1 o'clock (visible), two front teeth, nose, cheek blushes, paddle tail with diamond crosshatch. Head front-facing. Eyes stay normal solid #3A1E0D circles with white highlight.
 
-ADD ONLY (this is the change — easy-going "not bad" peace sign):
-- Right paw raised near the cheek making a small "V / PEACE SIGN" (two digits up in a V), paw at cheek height
-- Left paw relaxed at side
-- Gentle CONTENT closed-mouth smile (mild, friendly, mouth corners softly upturned, two teeth slightly visible) — relaxed satisfied vibe, not super excited
-- Eyes normal solid #3A1E0D circles with white highlight (calm, friendly)
-- Cheek blushes normal (#F4B5A8, 80%)
+CHANGE ONLY THESE:
+- The right short arm bends so the right paw is up near the cheek making a small "V / PEACE SIGN" (two digits up in a V). Keep the arm SHORT — just bend it. The left arm stays exactly as the reference.
+- Gentle CONTENT closed-mouth smile (mild and friendly, corners softly upturned, two teeth slightly visible) — relaxed "not bad" vibe, not super excited.
 
-CANVAS: square 1:1, 2048×2048, character occupies ~62-68% of canvas height, centered, at least 8% pure-white margin on all four sides.
+CANVAS: square 1:1, 2048×2048, pure flat #FFFFFF background, soft oval contact shadow under feet only (no gradient, no glow). Character occupies ~60% of canvas height, centered, at least 12% pure-white margin on all four sides.
 
-LOCK: Character proportions, palette (NO new colors), outline weight, ear placement, tail pattern MUST match reference EXACTLY. Pure white flat background, no gradient, no glow bleed, single soft contact shadow only. Do not add glasses, hat, props, or floating elements — just the V-sign paw and gentle smile. Do not restyle. Do not rotate the head.
+LOCK: SAME beaver, SAME body, SAME pose as the attached reference — only the V-sign paw and gentle smile change. No new colors. Do not restyle, do not change proportions, do not make it taller, do not rotate the head. Do not add glasses, hats, or floating items.
 ```
-
-**저장 파일명:** `chok-mid.jpg`
+저장: `chok-mid.jpg`
 
 ---
 
-## 🐣 5. rookie (촉린이, 0~3/7) — 머리 긁적, 감 잡는 중
+## 🐣 5. rookie (촉린이, 0~3/7) — 머리 긁적 + 물음표
 
 ```
-Using the attached image (the Geometry Master baseline of "Biji") as the EXACT identity reference. Generate Biji with ONE specific addition described below.
+Use the attached image as the EXACT base for the character "Biji". You are redrawing THIS SAME beaver in THE SAME standing pose — only changing the face and adding ONE small gesture. Do not invent a new body.
 
-PRESERVE EXACTLY (do not change ANY of these):
-- All body proportions: head-to-body ratio 1:0.86, total height 1.86 heads, head_width = head_height × 1.24
-- All 7 locked palette colors: #B07245, #F0D0A0, #3A1E0D, #F4B5A8, #8E5A32, #FFFDF5, #FFFFFF
-- Eye spacing, eye color (solid #3A1E0D with white highlight), cheek blushes, ear position/size/inner pink, two front teeth, nose, tail pattern
-- Outline weight 2.5%, uniform, #3A1E0D
-- Head stays front-facing (do NOT rotate the head — convey "puzzled" with the paw and props, not by tilting the head)
-- Pure white #FFFFFF background with soft oval contact shadow under feet
+CRITICAL — KEEP THE BODY 100% IDENTICAL TO THE ATTACHED REFERENCE:
+- The head is HUGE and round, filling the upper half. Total height ≈ 1.9 head-heights (super-chibi, head-dominant). Small round blob body, short stubby arms, tiny feet.
+- Do NOT make the body taller, slimmer, or upright. Do NOT elongate torso/legs. Do NOT shrink the head. Keep the exact same stance, arm length, silhouette, and thick uniform outline as the reference.
+- Keep all 7 locked colors: #B07245 body, #F0D0A0 belly, #3A1E0D outline/eyes/nose, #F4B5A8 cheeks/inner ear, #8E5A32 tail, #FFFDF5 teeth, #FFFFFF background.
+- Keep ears at 11 and 1 o'clock (visible), two front teeth, nose, cheek blushes, paddle tail with diamond crosshatch. Head stays front-facing — show "puzzled" with the paw and props, NOT by tilting the head.
 
-ADD ONLY (this is the change — sheepish newbie "still figuring it out"):
-- Right paw raised to scratch the back/side of the head (paw touching the head near the right ear, elbow bent up) — classic "hmm, not sure" head-scratch
-- Left paw relaxed at side
-- Sheepish small awkward smile: mouth a small gentle wavy/asymmetric line, ONE tooth peeking, slightly embarrassed
-- Eyes: keep both as normal solid #3A1E0D circles with white highlight, but make them look slightly innocent/round (you may enlarge to 18% of head width)
-- One small SWEAT DROP near the temple/forehead on the upper-right of the head: teardrop shape, fill #FFFFFF with #3A1E0D outline, ≈ 6% of head width
-- One small QUESTION MARK "?" floating in the upper area beside the head: color #3A1E0D, ≈ 10% of head width, fully within the canvas with white margin
+CHANGE ONLY THESE:
+- The right short arm bends UP so the right paw lightly scratches the side of the head next to the right ear (classic "hmm, not sure" head-scratch). Keep the arm SHORT and the paw BESIDE the ear (not covering it). The left arm stays exactly as the reference.
+- Sheepish small awkward smile: mouth a small gentle wavy line, one tooth peeking.
+- One small SWEAT DROP on the upper-right of the head: teardrop shape, fill #FFFFFF with #3A1E0D outline, ≈ 6% of head width.
+- One small QUESTION MARK "?" floating beside the head in the upper area: color #3A1E0D, ≈ 9% of head width, fully inside the canvas with white margin.
 
-CANVAS: square 1:1, 2048×2048, character occupies ~62-68% of canvas height, centered, at least 8% pure-white margin on all four sides.
+CANVAS: square 1:1, 2048×2048, pure flat #FFFFFF background, soft oval contact shadow under feet only (no gradient, no glow). Character occupies ~60% of canvas height, centered, at least 12% pure-white margin on all four sides.
 
-LOCK: Character proportions, palette (NO new colors — sweat drop is white+outline, "?" is #3A1E0D), outline weight, ear placement and visibility (the scratching paw is BESIDE the ear, not covering it), tail pattern MUST match reference EXACTLY. Pure white flat background, no gradient, no glow bleed, single soft contact shadow only. Keep the head front-facing. Do not add a hat, pacifier, or bonnet (those belong to other grades). Do not restyle.
+LOCK: SAME beaver, SAME body, SAME pose as the attached reference — only the head-scratch paw, sheepish smile, sweat drop, and "?" change. No new colors (sweat is white+outline, "?" is #3A1E0D). Do not restyle, do not change proportions, do not make it taller, do not rotate the head. Do not add a hat, pacifier, or bonnet.
 ```
-
-**저장 파일명:** `chok-rookie.jpg`
+저장: `chok-rookie.jpg`
 
 ---
 
-## ✅ 5장 다 받은 후
-
+## ✅ 5장 후
 ```bash
 node scripts/process-biji-master.cjs
 ```
-
-→ `incoming/chok-*.jpg` 자동 누끼+512² → `public/biji/chok/{god,master,pro,mid,rookie}.png` 배치.
-결과화면이 emoji 폴백(🏆🔥😎🙂🐣)에서 비지로 자동 전환됨(코드 수정 불필요).
-
-검증: `/play` 7문제 풀고 결과화면에서 등급별 비지 노출 확인.
+→ `public/biji/chok/{god,master,pro,mid,rookie}.png` 자동 → 결과화면 자동 노출.
