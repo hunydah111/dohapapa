@@ -103,22 +103,25 @@ export function PlayExperience() {
   const [setDone, setSetDone] = useState(false);
   const cells = useRef(playableCells());
   const setCorrectRef = useRef(0); // 세트 적중 즉시값(마지막 문제 stale 방지)
+  const usedRef = useRef<Set<string>>(new Set()); // 이번 세트에 이미 출제한 셀(중복 출제 방지)
 
   const cellMeta = (key: string) => {
     const c = cells.current.find((x) => x.key === key);
     return { sigungu: c?.sigungu ?? key.split("|")[0], tier: key.split("|")[1] };
   };
   const showQuestion = (reg: Regime, base: number, idx: number) => {
-    const r = regimeRound(reg, base + idx);
+    const r = regimeRound(reg, base + idx, usedRef.current);
+    usedRef.current.add(r.cellKey);
     setRound({ ...r, ...cellMeta(r.cellKey) });
     setResult(null);
   };
-  // 새 세트 시작 — 문제 인덱스·적중 초기화 후 1번 문제 출제.
+  // 새 세트 시작 — 문제 인덱스·적중·출제이력 초기화 후 1번 문제 출제.
   const startSet = (reg: Regime, base: number) => {
     setSetSeed(base);
     setQIdx(0);
     setSetCorrect(0);
     setCorrectRef.current = 0;
+    usedRef.current = new Set();
     setSetDone(false);
     showQuestion(reg, base, 0);
   };
@@ -295,9 +298,12 @@ export function PlayExperience() {
                   {(() => {
                     const top = topPerformer(round.tier, round.fromMonth, round.toMonth);
                     if (!top) return null;
+                    // 하락 국면(최선이 0/마이너스)이면 "가장 많이 오른" 대신 "그나마 가장 선방한"으로.
+                    const rising = top.pct > 0;
                     return (
                       <p className="rounded-xl px-3 py-2 text-[12.5px] leading-snug" style={{ background: "#f7ead0", color: "#7a6a52" }}>
-                        📈 그때 이 가격대에서 가장 많이 오른 곳: <b>{top.sigungu} {TIER_LABEL[round.tier]}</b> <b style={{ color: "#c2731a" }}>{pct(top.pct)}</b>
+                        {rising ? "📈 그때 이 가격대에서 가장 많이 오른 곳: " : "🛟 그때 이 가격대에서 그나마 가장 선방한 곳: "}
+                        <b>{top.sigungu} {TIER_LABEL[round.tier]}</b> <b style={{ color: "#c2731a" }}>{pct(top.pct)}</b>
                         {!result.outperform && <> — 여기({round.sigungu})는 시장만큼 못 따라가 언더퍼폼이었어.</>}
                       </p>
                     );

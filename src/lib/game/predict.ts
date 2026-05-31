@@ -134,15 +134,21 @@ export const REGIMES: Regime[] = [
   { id: "low26", label: "고가조정·저가강세", short: "26.2~5", desc: "고가·중상가 꺾이고 저가가 상대 강세", from: "2026-02", to: "2026-05" },
 ];
 
-/** 국면 라운드 출제 — 그 국면 기간(from→to) 안에서 채점 가능한 셀을 seed로 결정적 선택. */
-export function regimeRound(regime: Regime, seed: number): Round {
+/**
+ * 국면 라운드 출제 — 그 국면 기간(from→to) 안에서 채점 가능한 셀을 seed로 결정적 선택.
+ * `exclude`에 든 cellKey는 건너뛴다(한 세트 안 같은 동네·가격대 재출제 = 동일 질문 방지).
+ */
+export function regimeRound(regime: Regime, seed: number, exclude?: Set<string>): Round {
   const cells = playableCells();
-  for (let i = 0; i < 64; i++) {
+  let fallback: Round | null = null; // exclude 때문에 거른 resolvable 후보(전부 막히면 차선책)
+  for (let i = 0; i < 96; i++) {
     const cell = cells[hash(seed * 1000 + i) % cells.length];
     const round: Round = { cellKey: cell.key, fromMonth: regime.from, toMonth: regime.to };
-    if (scoreRound({ ...round, pick: "UP" }).resolvable) return round;
+    if (!scoreRound({ ...round, pick: "UP" }).resolvable) continue;
+    if (exclude?.has(cell.key)) { fallback ??= round; continue; }
+    return round;
   }
-  return { cellKey: cells[0]?.key ?? "", fromMonth: regime.from, toMonth: regime.to };
+  return fallback ?? { cellKey: cells[0]?.key ?? "", fromMonth: regime.from, toMonth: regime.to };
 }
 
 const LIVE_HORIZON_MONTHS = 1; // 라이브 예측 기본 1개월(빠른 resolve). 스펙서 조정 가능.

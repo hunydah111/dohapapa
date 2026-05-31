@@ -95,6 +95,24 @@ describe("REGIMES / regimeRound (명명 국면 출제)", () => {
     const r = scoreRound({ ...regimeRound(REGIMES[0], 7), pick: "UP" });
     expect(r.resolvable).toBe(true);
   });
+  it("exclude에 든 셀은 재출제 안 함(한 세트 동일 질문 방지)", () => {
+    const reg = REGIMES[1];
+    const first = regimeRound(reg, 42);
+    // 같은 seed라도 first가 exclude되면 다른 셀이 나와야
+    const second = regimeRound(reg, 42, new Set([first.cellKey]));
+    expect(second.cellKey).not.toBe(first.cellKey);
+    expect(scoreRound({ ...second, pick: "UP" }).resolvable).toBe(true);
+  });
+  it("한 세트(SET_SIZE문제) 안에서 셀 중복 없음", () => {
+    const reg = REGIMES[3]; // 하락 국면(셀 풀 가장 좁음)에서도 중복 0이어야
+    const used = new Set<string>();
+    for (let i = 0; i < SET_SIZE; i++) {
+      const r = regimeRound(reg, 100 + i, used);
+      expect(used.has(r.cellKey)).toBe(false);
+      used.add(r.cellKey);
+    }
+    expect(used.size).toBe(SET_SIZE);
+  });
 });
 
 describe("setGrade (7문제 세트 등급)", () => {
