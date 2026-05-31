@@ -128,7 +128,7 @@ export interface Regime {
 // 누적 변동(검증): rally24 low+3.1/mid2+13.1/high+14.1 · high25 low+1.6/mid2+18.4/high+19.7
 //   · mid25 low+3.7/mid1+12.0/high+3.9 · low26 low+0.9/mid2-4.7/high-2.9. (build 시점 재확인)
 export const REGIMES: Regime[] = [
-  { id: "rally24", label: "회복 랠리", short: "24.2~8", desc: "침체 후 반등 — 중·고가가 동반 상승, 저가는 소외", from: "2024-02", to: "2024-08" },
+  { id: "rally24", label: "바닥 찍고 반등", short: "24.2~8", desc: "2022~23년 하락 끝, 집값 반등 시작 — 중·고가가 먼저 오르고 저가는 소외", from: "2024-02", to: "2024-08" },
   { id: "high25", label: "고가 폭등기", short: "25.2~7", desc: "초고가가 단독 폭등(+20%), 저가는 거의 제자리", from: "2025-02", to: "2025-07" },
   { id: "mid25", label: "중가 키맞추기", short: "25.8~26.1", desc: "고가 정점·횡보, 소외됐던 중가가 따라잡기", from: "2025-08", to: "2026-01" },
   { id: "low26", label: "고가조정·저가강세", short: "26.2~5", desc: "고가·중상가 꺾이고 저가가 상대 강세", from: "2026-02", to: "2026-05" },
