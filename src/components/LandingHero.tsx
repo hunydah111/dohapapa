@@ -142,8 +142,12 @@ export function LandingHero({
           className="mt-2.5 flex w-full items-center justify-center rounded-2xl border-2 border-coral-300 bg-white px-4 py-3 text-[15px] font-bold transition-colors hover:border-coral-500"
           style={{ color: "#c4521f" }}
         >
-          목표 아파트, 내 예산으로 언제? →
+          내집마련플랜 D-day 계산해보자 →
         </Link>
+        {/* 플랜 CTA 보조 카피 — 무엇을 답해주는지 한 줄(목표집·내 예산·언제) */}
+        <p className="mt-1.5 text-center text-[12.5px] font-medium" style={{ color: "#9a8f82" }}>
+          목표 아파트, 내 예산으로 언제?
+        </p>
 
         {/* 신뢰 한 줄 (3줄 → 1줄 압축) — 가입·민감정보·데이터·정책 점검 한 호흡 */}
         <p
@@ -155,13 +159,22 @@ export function LandingHero({
           국토부 공개 실거래
           {FRESH_DATE ? ` ${FRESH_DATE}` : ""} · 정책 {POLICY_VERIFIED_SHORT} 점검
         </p>
-        {/* 부동산 촉 — 데일리 훅(시세 감각 entry) */}
+        {/* 부동산 촉 — 데일리 훅(시세 감각 entry). 눈에 띄게: 코랄 그라데 카드 + eyebrow + 화살표 */}
         <Link
           href="/play"
-          className="mx-auto mt-4 flex w-full max-w-xs items-center justify-center gap-1.5 rounded-2xl bg-[#fff4ef] px-4 py-2.5 text-[13px] font-bold transition-colors hover:bg-[#ffe9df]"
-          style={{ color: "#e8662f" }}
+          className="mx-auto mt-4 flex w-full items-center gap-2.5 rounded-2xl border border-coral-200 px-4 py-3 shadow-sm transition-transform hover:scale-[1.02]"
+          style={{ background: "linear-gradient(100deg,#fff1ea,#ffe1d3)" }}
         >
-          🎯 내 부동산 촉, 몇 단? — 동네가 시장 이길까?
+          <span className="text-[20px]" aria-hidden>🎯</span>
+          <span className="flex flex-col items-start leading-tight">
+            <span className="text-[10.5px] font-bold" style={{ color: "#d98a5a" }}>
+              데일리 · 동네가 시장 이길까?
+            </span>
+            <span className="text-[15px] font-extrabold" style={{ color: "#e8662f" }}>
+              내 부동산 촉, 몇 단?
+            </span>
+          </span>
+          <span className="ml-auto text-[16px] font-bold" style={{ color: "#e8662f" }} aria-hidden>→</span>
         </Link>
         {/* 비지 도감 — 소심한 discovery link (도감 페이지로 유도) */}
         <Link

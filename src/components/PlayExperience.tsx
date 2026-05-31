@@ -219,8 +219,8 @@ export function PlayExperience() {
 
           {!result ? (
             <div className="mt-4 grid grid-cols-2 gap-2.5">
-              <button onClick={() => guess("UP")} className="rounded-2xl bg-coral-600 py-3.5 text-[15px] font-bold text-white transition-transform hover:scale-[1.02]">📈 이긴다 (UP)</button>
-              <button onClick={() => guess("DOWN")} className="rounded-2xl border border-[#d9c5a4] bg-white py-3.5 text-[15px] font-bold text-[#6e5b46] transition-colors hover:bg-[#f3ece4]">📉 못 이긴다 (DOWN)</button>
+              <button onClick={() => guess("UP")} className="rounded-2xl bg-coral-600 py-3.5 text-[15px] font-bold text-white transition-transform hover:scale-[1.02]">📈 이겼다 (UP)</button>
+              <button onClick={() => guess("DOWN")} className="rounded-2xl border border-[#d9c5a4] bg-white py-3.5 text-[15px] font-bold text-[#6e5b46] transition-colors hover:bg-[#f3ece4]">📉 못 이겼다 (DOWN)</button>
             </div>
           ) : (
             <div className="mt-4 flex flex-col gap-2">
