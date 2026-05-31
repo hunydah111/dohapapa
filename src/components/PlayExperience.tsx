@@ -19,6 +19,7 @@ import {
 } from "@/lib/game/predict";
 import { trendLatestMonth } from "@/lib/recommend/trendIndex";
 import { SITE_URL } from "@/lib/site";
+import { BijiFallbackImage } from "@/components/BijiFallbackImage";
 
 // 부동산 촉 게임 — "이 동네(가격대), 같은 가격대 평균(시장) 이길까?" UP/DOWN.
 // 복기(과거 즉시채점)로 재미 즉검증 + 라이브(미래 예측, 다음 갱신 때 발표). 줄세우기=촉(실력)뿐.
@@ -65,16 +66,13 @@ const dan = (correct: number) => Math.min(9, 1 + Math.floor(correct / 5));
 
 /** 등급 비지 — public/biji/chok/<id>.png 있으면 이미지, 없으면 emoji 폴백. */
 function GradeBiji({ grade }: { grade: Grade }) {
-  const [failed, setFailed] = useState(false);
-  if (failed) return <span className="text-[44px]" aria-hidden>{grade.emoji}</span>;
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <BijiFallbackImage
       src={`${grade.image}?v=1`}
+      emoji={grade.emoji}
       alt={`촉 등급: ${grade.label}`}
       className="h-20 w-20 object-contain"
-      draggable={false}
-      onError={() => setFailed(true)}
+      emojiClassName="text-[44px]"
     />
   );
 }

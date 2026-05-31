@@ -11,6 +11,7 @@ import {
   type PersonaType,
 } from "@/lib/game/persona";
 import { SITE_URL } from "@/lib/site";
+import { BijiFallbackImage } from "@/components/BijiFallbackImage";
 
 // 부동산 성향 비지 테스트 — 직교 2축 → 4유형. No-PII(결과만 localStorage), 번들 로직(DB0).
 
@@ -18,16 +19,13 @@ const STORE_KEY = "biji-persona";
 
 /** 유형 비지 — public/biji/persona/<id>.png 있으면 이미지, 없으면 emoji 폴백. */
 function PersonaBiji({ type }: { type: PersonaType }) {
-  const [failed, setFailed] = useState(false);
-  if (failed) return <span className="text-[52px]" aria-hidden>{type.emoji}</span>;
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <BijiFallbackImage
       src={`${type.image}?v=1`}
+      emoji={type.emoji}
       alt={`성향 비지: ${type.label}`}
       className="h-24 w-24 object-contain"
-      draggable={false}
-      onError={() => setFailed(true)}
+      emojiClassName="text-[52px]"
     />
   );
 }

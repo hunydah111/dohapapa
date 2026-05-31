@@ -15,6 +15,7 @@ import {
   type LeagueRegion,
 } from "@/lib/league";
 import { SITE_URL } from "@/lib/site";
+import { BijiFallbackImage } from "@/components/BijiFallbackImage";
 
 // 동네 자존심 리그 — 시군구 4보드 순위. No-PII(내 동네 시군구만 localStorage), 번들(DB0).
 
@@ -25,6 +26,11 @@ const asOfLabel = (() => {
 })();
 
 const medal = (rank: number) => (rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `${rank}위`);
+
+/** 리그 비지 — public/biji/league/<id>.png 있으면 이미지, 없으면 emoji 폴백. */
+function LeagueBiji({ id, emoji, alt, className, emojiClassName }: { id: string; emoji: string; alt: string; className: string; emojiClassName?: string }) {
+  return <BijiFallbackImage src={`/biji/league/${id}.png?v=1`} emoji={emoji} alt={alt} className={className} emojiClassName={emojiClassName} />;
+}
 
 export function LeagueExperience() {
   const [sgg, setSgg] = useState<string>("");
@@ -71,7 +77,8 @@ export function LeagueExperience() {
       </div>
 
       <div className="rounded-3xl px-5 py-4 text-center" style={{ background: "linear-gradient(160deg,#fff4ef,#f7ead0)" }}>
-        <p className="font-jua text-[22px]" style={{ color: "#e8662f" }}>🚩 동네 자존심 리그</p>
+        <LeagueBiji id="flag" emoji="🚩" alt="깃발 든 비지 마스코트" className="mx-auto mb-1 block h-16 w-16 object-contain text-[40px] leading-none" />
+        <p className="font-jua text-[22px]" style={{ color: "#e8662f" }}>동네 자존심 리그</p>
         <p className="mt-1 text-[13px]" style={{ color: "#6e5b46" }}>우리 동네, 이 달 몇 위?</p>
       </div>
 
@@ -93,6 +100,9 @@ export function LeagueExperience() {
       {/* 내 동네 카드 — 가장 잘하는 보드 강조(긍정 프레이밍) */}
       {mine && best && (
         <div className="rounded-3xl border border-coral-200 p-5 text-center shadow-sm" style={{ background: "linear-gradient(160deg,#fff1ea,#ffe6d8)" }}>
+          {mine.ranks[best.id] === 1 && (
+            <LeagueBiji id="champ" emoji="👑" alt="1위 챔피언 비지 마스코트" className="mx-auto mb-1 block h-14 w-14 object-contain text-[36px] leading-none" />
+          )}
           <p className="text-[13px] font-semibold" style={{ color: "#b08948" }}>{sgg}의 자랑</p>
           <p className="mt-1 font-jua text-[26px] leading-tight" style={{ color: "#e8662f" }}>
             {best.emoji} {best.label} {medal(mine.ranks[best.id])}
@@ -146,7 +156,11 @@ export function LeagueExperience() {
                 }`}
               >
                 <span className="flex items-center gap-2">
-                  <span className="inline-block w-7 text-center font-bold" style={{ color: isMine ? "#e8662f" : "#b08948" }}>{medal(r.ranks[board])}</span>
+                  {r.ranks[board] === 1 ? (
+                    <LeagueBiji id="champ" emoji="👑" alt="1위 챔피언 비지 마스코트" className="inline-block h-7 w-7 shrink-0 text-center text-[20px] leading-7" />
+                  ) : (
+                    <span className="inline-block w-7 text-center font-bold" style={{ color: isMine ? "#e8662f" : "#b08948" }}>{medal(r.ranks[board])}</span>
+                  )}
                   {r.sigungu}{isMine && " (내 동네)"}
                 </span>
                 <span style={{ color: "#6e5b46" }}>{b.stat(r)}</span>
