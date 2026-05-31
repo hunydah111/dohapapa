@@ -22,10 +22,10 @@ CRITICAL — KEEP THE BODY 100% IDENTICAL TO THE REFERENCE:
 - Keep 7 locked colors: #B07245 body, #F0D0A0 belly, #3A1E0D outline/eyes/nose, #F4B5A8 cheeks/inner ear, #8E5A32 tail, #FFFDF5 teeth, #FFFFFF background.
 - Keep ears at 11 and 1 o'clock (fully visible), two front teeth, nose, cheek blushes, diamond-crosshatch paddle tail. Head front-facing.
 
-CHANGE ONLY THESE (bold "go-getter" fighter look):
-- A CORAL HEADBAND tied across the forehead, sitting BELOW the ears so both ears stay fully visible: a flat band, color #FE7644 with #3A1E0D outline, with two small tie-ends flicking out on the right side. (the only non-palette color, only on the headband)
+CHANGE ONLY THESE (fierce TIGER fighter look — make it clearly read as a tiger):
+- TIGER STRIPES on the face: 2-3 short dark stripe marks on each cheek (angled outward), plus 2-3 short vertical stripe marks across the forehead/top of the head, color #3A1E0D (thinner than the main outline). The clear "this is a tiger" cue. Do not cover the eyes.
 - The right short arm bends so the right paw is a small clenched FIST at chest height, pumped in a "let's go!" gesture. Keep the arm short. Left arm stays as reference.
-- Bold confident OPEN-MOUTH grin, two front teeth visible, eyebrows-like determined eyes (eyes stay solid #3A1E0D circles with white highlight, just add a confident energy).
+- Bold confident OPEN-MOUTH grin, two front teeth visible, determined energetic eyes (eyes stay solid #3A1E0D circles with white highlight, just add a confident energy).
 
 CANVAS & LOCK: square 1:1 2048², pure flat #FFFFFF background, soft oval contact shadow under feet only, ~60% height, centered, 12% white margin all sides. SAME beaver, SAME body, SAME pose — only headband, fist, grin change. Do not restyle, do not change proportions, do not raise arms overhead, do not rotate the head, do not cover the ears.
 ```
