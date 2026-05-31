@@ -131,7 +131,7 @@ export function PlayExperience() {
     }
   };
 
-  // 복기 베팅 → 즉시 채점.
+  // 복기 예측 → 즉시 채점.
   const guess = (pick: Pick) => {
     if (!round || result) return;
     const r = scoreRound({ ...round, pick });
@@ -152,7 +152,7 @@ export function PlayExperience() {
   const next = () => newRound(regime, st.seed);
 
   // 라이브 예측 — 미래 1개월, 대기열에 저장(다음 갱신 때 발표).
-  const betLive = (pick: Pick) => {
+  const predictLive = (pick: Pick) => {
     const lr = liveRound(st.seed + 100);
     const meta = cellMeta(lr.cellKey);
     persist({ ...st, pending: [...st.pending, { ...lr, pick, ...meta }], seed: st.seed + 1 });
@@ -243,8 +243,8 @@ export function PlayExperience() {
           무작위 동네의 <b>다음 달</b>을 예측 → 갱신 때 발표. 대기 {st.pending.length}건.
         </p>
         <div className="mt-2.5 grid grid-cols-2 gap-2">
-          <button onClick={() => betLive("UP")} className="rounded-xl bg-coral-50 py-2 text-[13px] font-semibold text-coral-700">랜덤 동네 UP에 걸기</button>
-          <button onClick={() => betLive("DOWN")} className="rounded-xl bg-[#f3ece4] py-2 text-[13px] font-semibold text-[#6e5b46]">DOWN에 걸기</button>
+          <button onClick={() => predictLive("UP")} className="rounded-xl bg-coral-50 py-2 text-[13px] font-semibold text-coral-700">랜덤 동네 UP 예측</button>
+          <button onClick={() => predictLive("DOWN")} className="rounded-xl bg-[#f3ece4] py-2 text-[13px] font-semibold text-[#6e5b46]">DOWN 예측</button>
         </div>
       </div>
 
