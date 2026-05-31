@@ -176,6 +176,23 @@ export function LandingHero({
           </span>
           <span className="ml-auto text-[16px] font-bold" style={{ color: "#e8662f" }} aria-hidden>→</span>
         </Link>
+        {/* 부동산 성향 테스트 — 두 번째 데일리 훅 */}
+        <Link
+          href="/persona"
+          className="mx-auto mt-2 flex w-full items-center gap-2.5 rounded-2xl border border-[#e3d5bd] px-4 py-3 shadow-sm transition-transform hover:scale-[1.02]"
+          style={{ background: "linear-gradient(100deg,#fbf4e8,#f5e7cc)" }}
+        >
+          <span className="text-[20px]" aria-hidden>🦫</span>
+          <span className="flex flex-col items-start leading-tight">
+            <span className="text-[10.5px] font-bold" style={{ color: "#b08948" }}>
+              10문항 성향 테스트 · 영끌? 가성비?
+            </span>
+            <span className="text-[15px] font-extrabold" style={{ color: "#9a5a1e" }}>
+              나는 무슨 부동산 비지?
+            </span>
+          </span>
+          <span className="ml-auto text-[16px] font-bold" style={{ color: "#b08948" }} aria-hidden>→</span>
+        </Link>
         {/* 비지 도감 — 소심한 discovery link (도감 페이지로 유도) */}
         <Link
           href="/biji"
