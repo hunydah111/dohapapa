@@ -64,3 +64,42 @@
 
 ## 페이징
 1. **복기 MVP**(재미 가설 검증) → 2. 라이브 예측 + 촉 랭킹 → 3. (장기) 촉 좋은 사람 팔로우/예측 구독 = 부동산 인플루언서化(사업성 2차).
+
+---
+
+# 구현 플랜 (MVP) — 2026-05-31
+
+> 데이터 검증 완료: `trendIndex.series`에 **시군구|tier 106셀 + 14개월** 존재, peer(`수도권|tier`)와
+> 실제 상이 → 게임 성립·복기 풀 충분. 전부 번들·DB0. MVP = 복기(instant) + 라이브(pending) 둘 다
+> (라이브가 "안목 게임"의 무게 — 복기만이면 trivia로 가벼워짐).
+
+## 파일
+- `src/lib/game/predict.ts` (순수 로직):
+  - `playableCells()` — `trendIndex.series`에서 **수도권|* 제외 + 자기 series 보유 + 개월수 충분**인 (sgg,tier) 셀 목록.
+  - `peerKeyOf(tier)` = `수도권|{tier}`.
+  - `scoreRound({cellKey, fromMonth, toMonth, pick})` — `cellΔ=idx[to]/idx[from]-1`, `peerΔ` 동일. `outperform=cellΔ>peerΔ`, `correct=(pick==="UP")===outperform`. 반환 `{resolvable, correct, cellPct, peerPct}`. 엣지: 월 데이터 없음/동률/peer 없음 → resolvable=false.
+  - `backtestRound(seed)` — 결정적(seed=날짜+n) 셀+과거 (from,to) 윈도우 출제(복기).
+  - `liveRound(seed)` — 셀 + (latestMonth → +horizon) 미래 예측 출제.
+- `tests/predict.test.ts` (**TDD 먼저**): scoreRound 4케이스(아웃퍼폼/언더/동률/결측), playableCells(수도권·결측 제외), backtest 결정성.
+- `src/components/PlayExperience.tsx` + `src/app/play/page.tsx` (client): 라운드 카드(셀+기간) → UP/DOWN → 복기 즉시 채점 / 라이브 "발표 대기" → 촉 점수·연승·"촉 N단". 카톡 도발 공유 + 면책. 통장 연결 1줄(localStorage 예산 있으면).
+- 상태: localStorage(점수·연승·pending 라이브 예측). **No-PII.**
+- 라이브 resolve: 마운트 시 `pending` 중 `toMonth ≤ latestMonth` 인 것 `scoreRound`로 채점.
+- 진입: 랜딩/결과에서 `/play` 링크.
+
+## TDD 순서
+1. `predict.ts` (scoreRound·playableCells·backtest) + 테스트 → 로직 확정.
+2. 복기 모드 UI(즉시 채점) — *재미 가설 검증 핵심*.
+3. 라이브 pending + resolve.
+4. 점수·연승·촉단 localStorage.
+5. 카톡 도발 공유 + 면책 + 통장 1줄.
+6. Playwright E2E(복기 1라운드→채점→점수→공유) + preship.
+
+## 가드
+- 랭킹 축 = **촉 정확도만**(돈 랭킹 금지). 오답=선망("촉 키우자"), 시기 금지.
+- 면책: "시세 감각 게임 · 예측·투자권유 아님 · 국토부 실거래 기반 지수".
+
+## MVP 컷
+복기+라이브·점수/연승/촉단·공유. **타인 랭킹·구독·통장 정밀연결 = 2차.**
+
+## 검증
+predict 단위테스트 · Playwright(복기 플레이→채점→점수→공유 양뷰) · preship · 면책/박탈감 카피 점검.

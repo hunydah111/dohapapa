@@ -61,6 +61,21 @@ export function trendLatestMonth(): string {
   return data.latestMonth;
 }
 
+/** 정렬된 month 목록(촉 게임 출제용). */
+export function trendMonths(): string[] {
+  return data.months;
+}
+
+/** 전체 series 키 목록(`${scope}|${tier}`). */
+export function trendSeriesKeys(): string[] {
+  return Object.keys(data.series);
+}
+
+/** 키로 series 조회. 없으면 undefined. */
+export function getTrendSeries(key: string): TrendSeries | undefined {
+  return data.series[key];
+}
+
 /** 시리즈에서 month 의 지수값을 읽되, 범위를 벗어나면 양끝으로 클램프. */
 function valueAt(series: TrendSeries, month: string): number | null {
   const direct = series.index[month];
