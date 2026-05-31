@@ -44,11 +44,11 @@ CRITICAL — KEEP THE BODY 100% IDENTICAL TO THE REFERENCE:
 - Keep 7 locked colors: #B07245 body, #F0D0A0 belly, #3A1E0D outline/eyes/nose, #F4B5A8 cheeks/inner ear, #8E5A32 tail, #FFFDF5 teeth, #FFFFFF background.
 - Keep ears at 11 and 1 o'clock (visible), two front teeth, nose, cheek blushes, diamond-crosshatch paddle tail. Head front-facing.
 
-CHANGE ONLY THESE (sly bargain-hunter look):
-- The right short arm bends so the right paw holds a small GOLD PRICE TAG (꼬리표) at chest height: a classic tag shape (rectangle with one angled corner and a small hole/string), color solid #E0A23A gold with #3A1E0D outline, ≈ 22% of head width. (only non-palette color, only on the tag)
-- Left arm stays as reference.
-- Right eye WINKING: right eye becomes a downward "U" curved closed line (#3A1E0D). Left eye stays a normal solid #3A1E0D circle with white highlight.
-- Sly clever smirk: mouth corners upturned to one side, two teeth visible.
+CHANGE ONLY THESE (sly bargain-hunter FOX look — make it clearly read as a fox):
+- FOX WHISKERS: on each cheek, 2-3 thin short whisker lines in #3A1E0D (thinner than the main outline), angled gently outward from beside the nose — the clearest "this is a fox" cue.
+- FOX-POINTED EARS: keep BOTH ears at the same 11 and 1 o'clock positions, same size, with the same coral-pink inner fill — but draw the ear TIPS slightly more pointed/triangular (fox-like) instead of fully round. Ears stay fully visible, not covered.
+- The right short arm bends so the right paw holds a small GOLD PRICE TAG (꼬리표) at chest height: a classic tag shape (rectangle with one angled corner and a small hole/string), color solid #E0A23A gold with #3A1E0D outline, ≈ 22% of head width. (only non-palette color, only on the tag). Left arm stays as reference.
+- Right eye WINKING: right eye becomes a downward "U" curved closed line (#3A1E0D). Left eye stays a normal solid #3A1E0D circle with white highlight. Sly clever smirk: mouth corners upturned to one side, two teeth visible.
 
 CANVAS & LOCK: square 1:1 2048², pure flat #FFFFFF background, soft oval contact shadow under feet only, ~60% height, centered, 12% white margin all sides. SAME beaver, SAME body, SAME pose — only the price tag, wink, smirk change. Do not restyle, do not change proportions, do not make it taller, do not rotate the head.
 ```
