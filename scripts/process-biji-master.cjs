@@ -54,6 +54,13 @@ function classifyOutput(filename) {
     fs.mkdirSync(outDir, { recursive: true });
     return { outPath: path.join(outDir, `${chokMatch[1]}.png`), category: "chok", slug: chokMatch[1] };
   }
+  // persona-tiger.jpg → public/biji/persona/tiger.png (성향 테스트 유형)
+  const personaMatch = stem.match(/^persona[-_](.+)$/);
+  if (personaMatch) {
+    const outDir = path.join(ROOT, "public", "biji", "persona");
+    fs.mkdirSync(outDir, { recursive: true });
+    return { outPath: path.join(outDir, `${personaMatch[1]}.png`), category: "persona", slug: personaMatch[1] };
+  }
   // baseline 또는 그 외 → fallback
   return { outPath: path.join(FALLBACK_OUT, `${stem}.png`), category: "misc", slug: stem };
 }
