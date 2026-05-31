@@ -42,6 +42,7 @@ npx tsx --env-file=.env.local scripts/geocode-complexes.ts      # fills latitude
 npx tsx --env-file=.env.local scripts/enrich-schools.ts         # fills nearestElemSchoolM for 초품아 scoring
 npx tsx --env-file=.env.local scripts/build-trend-index.ts      # bakes src/data/trendIndex.json (commit it)
 npx tsx --env-file=.env.local scripts/build-snapshot.ts         # bakes src/data/complexSnapshot.json (commit it) — runtime reads this, NOT the DB
+npx tsx scripts/build-league.ts                                 # bakes src/data/leagueTable.json (동네 자존심 리그) — reads bundled trendIndex+snapshot, no DB/env
 ```
 
 `fetch-molit.ts` defaults to `--months=3 --gu=강남구,서초구,송파구`; pass `--gu=all` for all of 서울 25구 + 경기 (codes in `src/lib/molit.ts` `LAWD_CODES`). A complex with null lat/lng is invisible to the recommend engine (it's filtered out), so geocoding is mandatory after a fetch.

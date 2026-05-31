@@ -193,6 +193,23 @@ export function LandingHero({
           </span>
           <span className="ml-auto text-[16px] font-bold" style={{ color: "#b08948" }} aria-hidden>→</span>
         </Link>
+        {/* 동네 자존심 리그 — 세 번째 데일리 훅 */}
+        <Link
+          href="/league"
+          className="mx-auto mt-2 flex w-full items-center gap-2.5 rounded-2xl border border-[#cfe0d2] px-4 py-3 shadow-sm transition-transform hover:scale-[1.02]"
+          style={{ background: "linear-gradient(100deg,#eef6ef,#dcecdf)" }}
+        >
+          <span className="text-[20px]" aria-hidden>🚩</span>
+          <span className="flex flex-col items-start leading-tight">
+            <span className="text-[10.5px] font-bold" style={{ color: "#5f8a6a" }}>
+              상승·거래·가성비·꾸준 4부문
+            </span>
+            <span className="text-[15px] font-extrabold" style={{ color: "#3f7a52" }}>
+              우리 동네 이 달 몇 위?
+            </span>
+          </span>
+          <span className="ml-auto text-[16px] font-bold" style={{ color: "#5f8a6a" }} aria-hidden>→</span>
+        </Link>
         {/* 비지 도감 — 소심한 discovery link (도감 페이지로 유도) */}
         <Link
           href="/biji"
