@@ -17,7 +17,8 @@ import {
   type TrendIndexData,
 } from "@/lib/recommend/trendIndex";
 
-const LOOKBACK_MONTHS = 13;
+const LOOKBACK_MONTHS = 30; // 2024-01~ 전 이력 활용 — 반복매매 페어↑로 지수 안정·게임 국면 폭 확장
+                            // (스냅샷 median/budgetPercentile은 별도 12~13개월 윈도라 현재시세는 그대로)
 const MIN_PAIRS = 5; // 인접월 매칭쌍이 이만큼은 돼야 추세 신뢰
 const MIN_RELIABLE_MONTHS = 3; // 시군구×tier 시리즈는 신뢰월이 이만큼일 때만 emit(아니면 수도권 폴백)
 const TIERS: PriceTier[] = ["low", "mid1", "mid2", "high"];

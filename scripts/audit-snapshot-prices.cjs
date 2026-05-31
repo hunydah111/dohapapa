@@ -10,8 +10,11 @@ const 억 = (n) => (n / 1e8).toFixed(2);
 
 // 임계 — 데이터 품질 회귀 감지(현 baseline 기준 여유 둠).
 const BIG_INV_PCT = 0.15; // 인접 평형 가격 낙폭 이 이상이면 "의심"
-const MAX_BIG_INV = 200; // 의심 역전 이 이상이면 fail (현재 ~113)
-const MAX_SPARSE_RATIO = 0.65; // count≤3 밴드 비율 이 이상이면 fail (현재 ~0.575)
+// 역전 게이트는 "양쪽 표본 충분(count>3)"인 진짜 의심만 센다. 절대카운트(옛 200)는 데이터가
+// 커지면 단일거래 fluke가 비례 증가해 밀린다(표본 노이즈≠품질회귀). 표본충분 역전만이 진짜 신호.
+const SAMPLE_MIN = 3; // 양 밴드 모두 이보다 많아야 fluke 아닌 '진짜 의심'
+const MAX_REAL_INV = 20; // 표본충분 의심 역전 이 이상이면 fail (현재 ~2)
+const MAX_SPARSE_RATIO = 0.65; // count≤3 밴드 비율 이 이상이면 fail (현재 ~0.533)
 
 let bands = 0, sparse1 = 0, sparse3 = 0, areaBad = 0, monoOK = 0, multiBand = 0;
 const inv = [];
@@ -45,11 +48,12 @@ for (const c of C) {
 }
 
 const bigInv = inv.filter((x) => x.drop > BIG_INV_PCT);
+const realInv = bigInv.filter((x) => x.small.count > SAMPLE_MIN && x.big.count > SAMPLE_MIN);
 const sparseRatio = sparse3 / bands;
 
 console.log(`=== 스냅샷 가격 무결성 감사 (생성 ${d.generatedAt || "?"}) ===`);
 console.log(`단지 ${C.length} · 평형밴드 ${bands} · 다평형 단지 ${multiBand}`);
-console.log(`\n[①] 면적-총가격 단조증가 ${monoOK}/${multiBand} (${(monoOK / multiBand * 100).toFixed(1)}%) · 역전쌍 ${inv.length} · 의심(>${BIG_INV_PCT * 100}%) ${bigInv.length}`);
+console.log(`\n[①] 면적-총가격 단조증가 ${monoOK}/${multiBand} (${(monoOK / multiBand * 100).toFixed(1)}%) · 역전쌍 ${inv.length} · 의심(>${BIG_INV_PCT * 100}%) ${bigInv.length} · 표본충분 의심 ${realInv.length}(나머지는 단일거래 fluke)`);
 inv.sort((a, b) => b.drop - a.drop).slice(0, 10).forEach((x) =>
   console.log(`    ${x.name}(${x.sgg}) ${x.small.area}㎡ ${억(x.small.medianKrw)}(cnt${x.small.count}) → ${x.big.area}㎡ ${억(x.big.medianKrw)}(cnt${x.big.count})  -${(x.drop * 100).toFixed(0)}%`));
 console.log(`\n[②] 평단가 outlier(±40%): ${ppmOut.length}`);
@@ -57,10 +61,10 @@ console.log(`[③] 희박표본 count≤1: ${sparse1} · count≤3: ${sparse3}/$
 console.log(`[④] 면적 오라벨(<20·>250㎡): ${areaBad}`);
 
 const fails = [];
-if (bigInv.length > MAX_BIG_INV) fails.push(`의심 역전 ${bigInv.length} > ${MAX_BIG_INV}`);
+if (realInv.length > MAX_REAL_INV) fails.push(`표본충분 의심 역전 ${realInv.length} > ${MAX_REAL_INV}`);
 if (sparseRatio > MAX_SPARSE_RATIO) fails.push(`희박표본 비율 ${(sparseRatio * 100).toFixed(1)}% > ${MAX_SPARSE_RATIO * 100}%`);
 if (fails.length) {
   console.log(`\n✗ 데이터 품질 임계 초과: ${fails.join(" · ")}`);
   process.exit(1);
 }
-console.log(`\n✅ 임계 내 — 의심 역전 ≤${MAX_BIG_INV}, 희박표본 ≤${MAX_SPARSE_RATIO * 100}%. (대부분 역전은 단일거래 fluke·rep평형 사용으로 완화)`);
+console.log(`\n✅ 임계 내 — 표본충분 의심 역전 ≤${MAX_REAL_INV}, 희박표본 ≤${MAX_SPARSE_RATIO * 100}%. (단일거래 fluke 역전은 rep평형 사용으로 완화)`);

@@ -50,12 +50,35 @@ async function geocodeComplex(
   return null;
 }
 
+interface Target { id: string; name: string; sigungu: string; dongName: string }
+
 async function main(): Promise<void> {
-  const targets = await prisma.complex.findMany({
-    where: { OR: [{ latitude: null }, { longitude: null }] },
-    select: { id: true, name: true, sigungu: true, dongName: true },
-  });
-  console.log(`지오코딩 대상: ${targets.length.toLocaleString()}개 단지`);
+  // Neon(기본) 또는 로컬 dev.db(--from-sqlite=) — 인천 등 sqlite 전용 단지 지오코딩.
+  const sqliteArg = process.argv.find((a) => a.startsWith("--from-sqlite="));
+  type Sdb = { prepare: (s: string) => { all: (...p: unknown[]) => Record<string, unknown>[]; run: (...p: unknown[]) => unknown }; close: () => void };
+  let sdb: Sdb | null = null;
+
+  let targets: Target[];
+  if (sqliteArg) {
+    const { DatabaseSync } = await import("node:sqlite");
+    sdb = new DatabaseSync(sqliteArg.slice("--from-sqlite=".length)) as unknown as Sdb;
+    targets = sdb!
+      .prepare(`SELECT id,name,sigungu,dongName FROM Complex WHERE latitude IS NULL OR longitude IS NULL`)
+      .all()
+      .map((r) => ({ id: String(r.id), name: String(r.name), sigungu: String(r.sigungu), dongName: String(r.dongName) }));
+  } else {
+    targets = (await prisma.complex.findMany({
+      where: { OR: [{ latitude: null }, { longitude: null }] },
+      select: { id: true, name: true, sigungu: true, dongName: true },
+    })) as Target[];
+  }
+  console.log(`지오코딩 대상: ${targets.length.toLocaleString()}개 단지${sqliteArg ? " (sqlite)" : ""}`);
+
+  const updateStmt = sdb ? sdb.prepare(`UPDATE Complex SET latitude=?, longitude=? WHERE id=?`) : null;
+  const save = async (id: string, lat: number, lng: number) => {
+    if (updateStmt) updateStmt.run(lat, lng, id);
+    else await prisma.complex.update({ where: { id }, data: { latitude: lat, longitude: lng } });
+  };
 
   let ok = 0;
   let fail = 0;
@@ -68,10 +91,7 @@ async function main(): Promise<void> {
         try {
           const coord = await geocodeComplex(c.sigungu, c.dongName, c.name);
           if (coord) {
-            await prisma.complex.update({
-              where: { id: c.id },
-              data: { latitude: coord.lat, longitude: coord.lng },
-            });
+            await save(c.id, coord.lat, coord.lng);
             ok++;
           } else {
             fail++;
@@ -88,6 +108,7 @@ async function main(): Promise<void> {
     }
   }
 
+  sdb?.close();
   console.log(`완료: 성공 ${ok.toLocaleString()}, 실패 ${fail.toLocaleString()}`);
 }
 
