@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import type { LivePulseData } from "@/lib/livePulse";
 
 // 라이브 펄스 스트립 — 초록 펄스 점(데이터 살아있음) + 신선도 기준일 + 회전 팩트.
@@ -21,7 +22,10 @@ export function LivePulse({ data }: { data: LivePulseData }) {
   const fact = data.facts[i];
 
   return (
-    <div className="mx-auto mt-4 flex w-full max-w-sm items-center gap-2.5 rounded-2xl border border-[#e6dcc9] bg-white/70 px-3.5 py-2.5 shadow-sm">
+    <Link
+      href="/updates"
+      className="mx-auto mt-4 flex w-full max-w-sm items-center gap-2.5 rounded-2xl border border-[#e6dcc9] bg-white/70 px-3.5 py-2.5 shadow-sm transition-colors hover:border-[#cfe0d2] hover:bg-white"
+    >
       {/* 살아있음 펄스 점 */}
       <span className="relative flex h-2.5 w-2.5 shrink-0" aria-hidden>
         <span className="live-dot absolute inline-flex h-full w-full rounded-full" style={{ background: "#4f9d54" }} />
@@ -52,6 +56,7 @@ export function LivePulse({ data }: { data: LivePulseData }) {
           ))}
         </span>
       )}
-    </div>
+      <span className="shrink-0 text-[13px] font-bold" style={{ color: "#b8a98f" }} aria-hidden>›</span>
+    </Link>
   );
 }
