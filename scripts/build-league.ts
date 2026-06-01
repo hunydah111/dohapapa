@@ -69,7 +69,7 @@ const median = (xs: number[]) => {
 // 공통 시군구 = momentum 과 snapshot 둘 다 있는 곳
 const sggs = Object.keys(agg).filter((s) => momentum[s] != null);
 
-const metrics = sggs.map((sgg) => {
+const metricsAll = sggs.map((sgg) => {
   const a = agg[sgg];
   return {
     sigungu: sgg,
@@ -80,6 +80,13 @@ const metrics = sggs.map((sgg) => {
     volatility: a.vol.length ? a.vol.reduce((s, v) => s + v, 0) / a.vol.length : NaN,
   };
 });
+// 표본부족 가드: 평단가/변동성이 결측(NaN)이면 NaN→JSON null 로 직렬화돼 화면에 "변동 null"이
+// 뜨고 정렬 비교(NaN)가 깨진다. 그런 시군구는 리그에서 제외(자존심 리그 = 표본 충분한 동네만).
+const metrics = metricsAll.filter(
+  (m) => Number.isFinite(m.pricePerPy) && Number.isFinite(m.volatility) && Number.isFinite(m.momentumPct),
+);
+const dropped = metricsAll.length - metrics.length;
+if (dropped > 0) console.log(`⚠️ 표본부족 ${dropped}개 시군구 제외(평단가·변동성·모멘텀 결측)`);
 
 // ── 3) value (가성비 강세) = z(모멘텀) + z(-평단가) ──
 const z = (vals: number[]) => {
