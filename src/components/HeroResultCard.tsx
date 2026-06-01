@@ -8,6 +8,15 @@ import { composeBijiName } from "@/lib/bijiName";
 import { pickTierImage } from "@/lib/budgetPercentile";
 import type { FriendTag } from "@/lib/friendShare";
 import { classifyRegulation } from "@/lib/regulation";
+import dataMeta from "@/data/dataMeta.json";
+
+// 추정가 출처일 — "2026-05-29" → "2026.5.29" (국토부 실거래 반영 기준일).
+const PRICE_AS_OF: string = (() => {
+  const d = dataMeta.latestDealDate;
+  if (!d) return "";
+  const [y, m, day] = d.split("-");
+  return `${y}.${Number(m)}.${Number(day)}`;
+})();
 
 // 발견의 의외성 카피 — "이 조건에 이 동네가?" (회의: 재미=발견). 컴플라이언스: 투자권유 아님.
 // 톤: 시크하고 유머러스한 선배 모먼트 (v1.5) — "잡았어 = 발견, 추천 아님" 패턴.
@@ -155,7 +164,7 @@ export function HeroResultCard({
                 </p>
               )}
               <p className="mt-1 px-2 text-center text-[11px] leading-relaxed text-white/50">
-                국토부 실거래가 기반 추정 · 미래가치 예측 아님
+                국토부 실거래가 기반 추정{PRICE_AS_OF ? ` · ${PRICE_AS_OF} 반영` : ""} · 미래가치 예측 아님
               </p>
               {/* 동네 비지 분포 — MIN 충족 시만. 본인 등급과 top 비교해 위트 톤 차등. */}
               {bijiDistribution?.topLabel && bijiDistribution.topPercent != null && (() => {

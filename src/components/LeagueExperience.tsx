@@ -16,6 +16,8 @@ import {
 } from "@/lib/league";
 import { SITE_URL } from "@/lib/site";
 import { BijiFallbackImage } from "@/components/BijiFallbackImage";
+import { NextRefresh } from "@/components/NextRefresh";
+import { TodayNeighborhood } from "@/components/TodayNeighborhood";
 
 // 동네 자존심 리그 — 시군구 4보드 순위. No-PII(내 동네 시군구만 localStorage), 번들(DB0).
 
@@ -73,7 +75,9 @@ export function LeagueExperience() {
     <main className="mx-auto flex w-full max-w-md flex-col gap-4 px-5 py-8">
       <div className="flex items-center justify-between">
         <Link href="/" className="text-sm font-semibold text-coral-600 hover:text-coral-800">← 비집고</Link>
-        <span className="text-[12px]" style={{ color: "#9a8f82" }}>{asOfLabel} 기준 · {LEAGUE_TOTAL}곳</span>
+        <span className="text-[12px]" style={{ color: "#9a8f82" }}>
+          {asOfLabel} 기준 · {LEAGUE_TOTAL}곳 · 다음 갱신 <NextRefresh />
+        </span>
       </div>
 
       <div className="rounded-3xl px-5 py-4 text-center" style={{ background: "linear-gradient(160deg,#fff4ef,#f7ead0)" }}>
@@ -81,6 +85,9 @@ export function LeagueExperience() {
         <p className="font-jua text-[22px]" style={{ color: "#e8662f" }}>동네 자존심 리그</p>
         <p className="mt-1 text-[13px]" style={{ color: "#6e5b46" }}>우리 동네, 이 달 몇 위?</p>
       </div>
+
+      {/* 오늘의 동네 — 매일 바뀜(날짜 시드). 클릭 시 내 동네로 선택. */}
+      <TodayNeighborhood onPick={choose} />
 
       {/* 내 동네 선택 */}
       <div className="flex items-center gap-2">
