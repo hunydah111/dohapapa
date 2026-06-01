@@ -53,6 +53,11 @@ jobs:
       # 4c) 업데이트 로그 — 이번 주 엔트리 1줄 append(/updates 타임라인 = 살아있음 증거).
       #     ★ data-meta·league 다음. 누적 txCount 증가분을 자동 산출해 "이번 주 +N건"으로 쌓는다.
       - run: npx tsx scripts/build-update-log.ts
+      # 4d) R-ONE 주간 매매가격지수 — 주간에도 갱신(일간이 실패해도 최신 유지).
+      - run: npx tsx scripts/build-reb-weekly.ts
+        continue-on-error: true
+      # 4e) 일간 펄스도 한 번 새로(전체 재계산 직후 최근 창 재확인).
+      - run: npx tsx scripts/daily-pulse.ts --gu=all --months=2
 
       # 5) 바뀐 데이터 JSON 만 커밋 → push 시 Vercel 자동 배포.
       #    (분양권(fetch-presale)은 변동이 드물고 호출이 무거워 제외 — 필요 시 수동.)
@@ -60,7 +65,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data/trendIndex.json src/data/dataMeta.json src/data/complexSnapshot.json src/data/leagueTable.json src/data/updateLog.json
+          git add src/data/trendIndex.json src/data/dataMeta.json src/data/complexSnapshot.json src/data/leagueTable.json src/data/updateLog.json src/data/rebWeekly.json src/data/dailyPulse.json
           if git diff --staged --quiet; then
             echo "변경 없음 — 커밋 생략"
           else

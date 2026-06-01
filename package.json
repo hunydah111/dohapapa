@@ -15,6 +15,8 @@
     "biji:tier": "node scripts/tier-jpg-to-png.cjs",
     "reb:list": "tsx --env-file=.env.local scripts/build-reb-index.ts --list",
     "reb:build": "tsx --env-file=.env.local scripts/build-reb-index.ts",
+    "reb:weekly": "tsx --env-file=.env.local scripts/build-reb-weekly.ts",
+    "daily-pulse": "tsx --env-file=.env.local scripts/daily-pulse.ts",
     "hooks:install": "cp hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit && echo '✅ pre-commit hook installed'",
     "test": "vitest run",
     "test:watch": "vitest",

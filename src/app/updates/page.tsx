@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getUpdateEntries, getLatestUpdate, fmtDot } from "@/lib/updateLog";
+import { getUpdateEntries, getLatestUpdate, getDailyPulse, getWeeklyIndex, fmtDot } from "@/lib/updateLog";
 import { NextRefresh } from "@/components/NextRefresh";
 
 export const metadata: Metadata = {
@@ -12,6 +12,10 @@ export const metadata: Metadata = {
 export default function UpdatesPage() {
   const latest = getLatestUpdate();
   const entries = getUpdateEntries();
+  const dailyP = getDailyPulse();
+  const wk = getWeeklyIndex();
+  const wkCap = wk.regions?.["수도권"];
+  const pctStr = (p: number) => `${p >= 0 ? "+" : ""}${p}%`;
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-col gap-4 px-5 py-8">
@@ -56,7 +60,56 @@ export default function UpdatesPage() {
             )}
           </div>
           <p className="mt-3 text-[11px]" style={{ color: "#9a8f82" }}>
-            매주 일요일 새벽 자동 파이프라인 → 새 실거래만 반영 → 사이트 자동 배포.
+            매주 일요일 새벽 전체 시세 재계산 → 사이트 자동 배포.
+          </p>
+        </div>
+      )}
+
+      {/* 일간 폴링 — 매일 최근 거래월 신고분 확인(정확한 창 명시, 속이지 않음) */}
+      <div className="rounded-3xl border border-[#cfe0d2] bg-[#f6fbf7] p-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <span className="text-[12px] font-bold" style={{ color: "#3f7a52" }}>🟢 매일 실거래 확인</span>
+          <span className="text-[11px]" style={{ color: "#5f8a6a" }}>{fmtDot(dailyP.checkedAt)} 확인</span>
+        </div>
+        <p className="mt-1.5 text-[13px] leading-snug" style={{ color: "#3a2c1d" }}>
+          거래월 <b>{fmtDot(dailyP.windowFromMonth)} ~ {fmtDot(dailyP.windowToMonth)}</b> 신고분을 매일 다시 확인합니다.
+        </p>
+        <p className="mt-0.5 text-[12px]" style={{ color: "#6e5b46" }}>
+          이 창 {dailyP.recentCount.toLocaleString()}건 · 최신 거래일 {dailyP.latestDealDate ? fmtDot(dailyP.latestDealDate) : "—"}
+          {dailyP.newSincePrev != null && dailyP.newSincePrev > 0 && (
+            <span style={{ color: "#3f7a52" }}> · 어제 대비 +{dailyP.newSincePrev.toLocaleString()}건</span>
+          )}
+        </p>
+        <p className="mt-1.5 text-[10.5px] leading-snug" style={{ color: "#9a8f82" }}>
+          국토부는 계약일만 공개(신고일 비공개)라, ‘신규’는 매일 같은 창을 다시 세어 늘어난 만큼으로 잡습니다. 전체 시세 재계산은 주간.
+        </p>
+      </div>
+
+      {/* R-ONE 주간 — 공식 가격지수의 이번 주 흐름(호가 아님) */}
+      {wkCap && (
+        <div className="rounded-3xl border border-[#ecd9b3] bg-[#fffdf8] p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-[12px] font-bold" style={{ color: "#b08948" }}>📈 R-ONE 주간 시세 (공식)</span>
+            <span className="text-[11px]" style={{ color: "#9a8f82" }}>{fmtDot(wk.asOfDate)} 기준 주</span>
+          </div>
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
+            {(["수도권", "서울", "경기", "인천"] as const).map((name) => {
+              const r = wk.regions[name];
+              if (!r) return null;
+              const up = r.changePct > 0, flat = r.changePct === 0;
+              return (
+                <span
+                  key={name}
+                  className="rounded-full px-2.5 py-1 text-[12px] font-bold"
+                  style={{ background: flat ? "#f1eee7" : up ? "#fff1ea" : "#eef3f6", color: flat ? "#9a8f82" : up ? "#c2531f" : "#4a6b86" }}
+                >
+                  {name} {pctStr(r.changePct)}
+                </span>
+              );
+            })}
+          </div>
+          <p className="mt-2 text-[10.5px]" style={{ color: "#9a8f82" }}>
+            한국부동산원 주간 아파트 매매가격지수. 호가가 아닌 <b>공식 가격지수</b>의 주간 변동률.
           </p>
         </div>
       )}

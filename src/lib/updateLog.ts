@@ -2,6 +2,8 @@
 // 빌더: scripts/build-update-log.ts (매주 한 줄 append). 순수·DB0.
 
 import log from "@/data/updateLog.json";
+import daily from "@/data/dailyPulse.json";
+import weekly from "@/data/rebWeekly.json";
 
 export interface UpdateEntry {
   /** 갱신 실행일 YYYY-MM-DD. */
@@ -34,6 +36,38 @@ export function getLatestUpdate(): UpdateEntry | null {
 
 /** "2026-05-31" → "2026.5.31" / "2026-05" → "2026.5". */
 export function fmtDot(d: string): string {
+  if (!d) return "";
   const [y, m, day] = d.split("-");
   return day ? `${y}.${Number(m)}.${Number(day)}` : `${y}.${Number(m)}`;
+}
+
+// ── 일간 실거래 펄스(매일 폴링·최근 거래월 신고분) ──
+export interface DailyPulse {
+  checkedAt: string;
+  windowFromMonth: string;
+  windowToMonth: string;
+  latestDealDate: string | null;
+  recentCount: number;
+  newSincePrev: number | null;
+  guCount: number;
+}
+export function getDailyPulse(): DailyPulse {
+  return daily as DailyPulse;
+}
+
+// ── R-ONE 주간 매매가격지수(공식·합법 "이번 주 시세") ──
+export interface WeeklyRegion {
+  index: number;
+  changePct: number;
+  week: string;
+  date: string;
+}
+export interface WeeklyIndex {
+  source: string;
+  asOfWeek: string;
+  asOfDate: string;
+  regions: Record<string, WeeklyRegion>;
+}
+export function getWeeklyIndex(): WeeklyIndex {
+  return weekly as unknown as WeeklyIndex;
 }

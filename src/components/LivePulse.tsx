@@ -33,9 +33,9 @@ export function LivePulse({ data }: { data: LivePulseData }) {
       </span>
 
       <div className="min-w-0 flex-1 text-left leading-tight">
-        {/* 신선도 기준일 — 항상 보이는 신호 */}
+        {/* 신선도 기준일 — 항상 보이는 신호(매일 실거래 확인) */}
         <p className="text-[10.5px] font-semibold" style={{ color: "#5f8a6a" }}>
-          실거래 {data.freshDate} 반영 · 매주 자동 갱신
+          국토부 실거래 매일 확인 · {data.checkedDate} 기준
         </p>
         {/* 회전 팩트 — fade로 흐름(살아있음) */}
         <p key={i} className="live-fact truncate text-[12.5px] font-bold" style={{ color: "#3a2c1d" }}>

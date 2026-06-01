@@ -1,0 +1,51 @@
+name: daily-pulse
+
+# 하이브리드의 '가벼운' 쪽 — 매일 05:30 KST(20:30 UTC). 최근 거래월 실거래만 다시 폴링 +
+# R-ONE 주간 지수. DB·snapshot 안 건드림(API만, 가벼움) → 매일 커밋·배포로 "매일 갱신" 실체.
+# 무거운 전체 시세 재계산은 weekly-data-refresh(일요일)가 담당.
+# 일요일엔 05:30 daily → 06:00 weekly 순서라 충돌 없음.
+on:
+  schedule:
+    - cron: "30 20 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-pulse
+  cancel-in-progress: false
+
+jobs:
+  pulse:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Seoul # checkedAt·거래월 창을 KST로 일관
+      MOLIT_API_KEY: ${{ secrets.MOLIT_API_KEY }}
+      REB_API_KEY: ${{ secrets.REB_API_KEY }} # ★ GitHub repo secrets 에 추가 필요(없으면 R-ONE 단계만 스킵)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      # 1) 일간 실거래 펄스 — 최근 2개월 거래월 재확인(누적/스냅샷 미변경).
+      - run: npx tsx scripts/daily-pulse.ts --gu=all --months=2
+      # 2) R-ONE 주간 매매가격지수 — 권역 이번 주 변동률(키 없으면 실패해도 펄스는 커밋되게 continue).
+      - run: npx tsx scripts/build-reb-weekly.ts
+        continue-on-error: true
+
+      # 3) 가벼운 JSON 만 커밋 → push 시 Vercel 자동 배포(매일).
+      - name: commit pulse
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/dailyPulse.json src/data/rebWeekly.json
+          if git diff --staged --quiet; then
+            echo "변경 없음 — 커밋 생략"
+          else
+            git commit -m "chore(data): 일간 실거래 펄스 + R-ONE 주간 ($(date +%Y-%m-%d))"
+            git push
+          fi
