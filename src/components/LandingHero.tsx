@@ -3,19 +3,12 @@ import { Button } from "@/components/ui/Button";
 import { HeroNumber } from "@/components/ui/HeroNumber";
 import { NeighborhoodChart } from "@/components/NeighborhoodChart";
 import { PopularComplexChart } from "@/components/PopularComplexChart";
-import dataMeta from "@/data/dataMeta.json";
+import { LivePulse } from "@/components/LivePulse";
+import { getLivePulse } from "@/lib/livePulse";
 import { POLICY_META } from "@/lib/policyLoan";
 import type { FriendTag } from "@/lib/friendShare";
 import { composeBijiName } from "@/lib/bijiName";
 import { pickTierImage } from "@/lib/budgetPercentile";
-
-// 최근 실거래 반영일 — "2026-05-20" → "2026.5.20". 매일 크론이 dataMeta.json 을 갱신.
-const FRESH_DATE: string | null = (() => {
-  const d = dataMeta.latestDealDate;
-  if (!d) return null;
-  const [y, m, day] = d.split("-");
-  return `${y}.${Number(m)}.${Number(day)}`;
-})();
 
 // 정책(대출·세제) 점검 시점 — "2026-05-25" → "2026.5".
 const POLICY_VERIFIED_SHORT: string = (() => {
@@ -131,6 +124,10 @@ export function LandingHero({
         내 통장에 맞는 단지만 잡아줌
       </p>
 
+      {/* 라이브 펄스 — "이 사이트 살아있다·매주 갱신된다"를 어느 진입에서도 1초 인지.
+          번들 데이터(주간 크론 자동 갱신)에서 매주 바뀌는 값만 회전 노출. DB0·API0. */}
+      <LivePulse data={getLivePulse()} />
+
       {/* 단일 메인 CTA — 한 화면 한 결정 (토스/Mercury 패턴) */}
       <div className="mx-auto mt-7 w-full max-w-sm">
         <Button onClick={onStart} fullWidth>
@@ -156,8 +153,7 @@ export function LandingHero({
         >
           가입·로그인 없음 · 민감정보 저장 안 함
           <br />
-          국토부 공개 실거래
-          {FRESH_DATE ? ` ${FRESH_DATE}` : ""} · 정책 {POLICY_VERIFIED_SHORT} 점검
+          국토부 공개 실거래 기반 · 정책 {POLICY_VERIFIED_SHORT} 점검
         </p>
         {/* ── 놀이 섹션 — 데일리 리텐션 훅 묶음. 검색·플랜(1차 결정)과 구분선으로 분리해
             "탭할 게 5개" 산만함 대신 하나의 놀이터로 인지시킴. 카드 3색은 3게임 구분 신호로 유지. */}

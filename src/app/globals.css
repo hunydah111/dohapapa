@@ -202,9 +202,21 @@ body {
 .biji-tap-shine  { animation: biji-tap-shine 0.5s ease-out; }
 .biji-tap-flip   { animation: biji-tap-flip 0.5s ease-out; transform-origin: 50% 30%; }
 
+/* ── 라이브 펄스 — "데이터 살아있음" 신호(초록 점 펄스 + 회전 팩트 fade) ── */
+@keyframes live-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(0.7); }
+  50%      { opacity: 0;    transform: scale(2.2); }
+}
+.live-dot  { animation: live-pulse 2s cubic-bezier(0, 0, 0.2, 1) infinite; }
+@keyframes live-fact-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: none; }
+}
+.live-fact { animation: live-fact-in 0.45s ease both; }
+
 @media (prefers-reduced-motion: reduce) {
   .biji-breathe, .biji-blink, .biji-compass, .biji-tail, .biji-hop, .biji-pop-in, .fade-in-up, .plan-delta,
-  .biji-tap-wiggle, .biji-tap-shine, .biji-tap-flip { animation: none; }
+  .biji-tap-wiggle, .biji-tap-shine, .biji-tap-flip, .live-dot, .live-fact { animation: none; }
 }
 
 /* ── 비디오 모션 비지 (자체 motion mp4 + PNG 폴백) — reduce-motion 시 폴백만 ── */
