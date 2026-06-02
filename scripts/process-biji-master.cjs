@@ -7,7 +7,7 @@
 //      - accessory-{slug}.{jpg|png} → public/biji/accessory/{slug}.png
 //      - chok-{slug}.{jpg|png}      → public/biji/chok/{slug}.png  (촉 게임 등급)
 //      - persona-{slug}.{jpg|png}   → public/biji/persona/{slug}.png  (성향 테스트 유형)
-//      - league-{slug}.{jpg|png}    → public/biji/league/{slug}.png  (동네 자존심 리그)
+//      - league-{slug}.{jpg|png}    → public/biji/league/{slug}.png  (동네 자랑 리그)
 //      - 그 외                       → assets/biji-master/processed/{name}.png
 //   4) 처리된 원본은 assets/biji-master/incoming/_processed/ 로 이동
 //
@@ -63,7 +63,7 @@ function classifyOutput(filename) {
     fs.mkdirSync(outDir, { recursive: true });
     return { outPath: path.join(outDir, `${personaMatch[1]}.png`), category: "persona", slug: personaMatch[1] };
   }
-  // league-flag.jpg → public/biji/league/flag.png (동네 자존심 리그)
+  // league-flag.jpg → public/biji/league/flag.png (동네 자랑 리그)
   const leagueMatch = stem.match(/^league[-_](.+)$/);
   if (leagueMatch) {
     const outDir = path.join(ROOT, "public", "biji", "league");

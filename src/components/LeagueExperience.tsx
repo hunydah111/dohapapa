@@ -92,9 +92,9 @@ export function LeagueExperience() {
   const share = async () => {
     if (!mine || !best) return;
     const url = `${SITE_URL}/league`;
-    const text = `${regionLabel(mine)}, 이 달 '${best.label}' ${mine.ranks[best.id]}위 ${best.emoji} (${total}곳 중) — 너희 동네는? 🚩`;
+    const text = `${regionLabel(mine)} 이 달의 자랑 ${best.emoji} '${best.label}' ${mine.ranks[best.id]}위 (${total}곳 중) — 너희 동네 자랑은?`;
     try {
-      if (navigator.share) await navigator.share({ title: "동네 자존심 리그", text, url });
+      if (navigator.share) await navigator.share({ title: "동네 자랑 리그", text, url });
       else { await navigator.clipboard.writeText(`${text}\n${url}`); setToast("링크 복사됨 — 카톡에 붙여넣기"); setTimeout(() => setToast(null), 2500); }
     } catch { /* 취소 무시 */ }
   };
@@ -114,8 +114,8 @@ export function LeagueExperience() {
 
       <div className="rounded-3xl px-5 py-4 text-center" style={{ background: "linear-gradient(160deg,#fff4ef,#f7ead0)" }}>
         <LeagueBiji id="flag" emoji="🚩" alt="깃발 든 비지 마스코트" className="mx-auto mb-1 block h-16 w-16 object-contain text-[40px] leading-none" />
-        <p className="font-jua text-[22px]" style={{ color: "#e8662f" }}>동네 자존심 리그</p>
-        <p className="mt-1 text-[13px]" style={{ color: "#6e5b46" }}>우리 동네, 이 달 몇 위?</p>
+        <p className="font-jua text-[22px]" style={{ color: "#e8662f" }}>동네 자랑 리그</p>
+        <p className="mt-1 text-[13px]" style={{ color: "#6e5b46" }}>우리 동네, 이 달의 자랑은?</p>
       </div>
 
       {/* 단위 토글 — 동(세분) / 시군구(전 지역 폴백) */}

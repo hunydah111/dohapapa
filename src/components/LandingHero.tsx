@@ -198,7 +198,7 @@ export function LandingHero({
             </span>
             <span className="ml-auto text-[16px] font-bold" style={{ color: "#b08948" }} aria-hidden>→</span>
           </Link>
-          {/* 동네 자존심 리그 */}
+          {/* 동네 자랑 리그 */}
           <Link
             href="/league"
             className="mx-auto mt-2 flex w-full items-center gap-2.5 rounded-2xl border border-[#cfe0d2] px-4 py-3 shadow-sm transition-transform hover:scale-[1.02]"
@@ -210,7 +210,7 @@ export function LandingHero({
                 상승·거래·가성비·신축 4부문
               </span>
               <span className="text-[15px] font-extrabold" style={{ color: "#3f7a52" }}>
-                우리 동네 이 달 몇 위?
+                우리 동네, 이 달의 자랑은?
               </span>
             </span>
             <span className="ml-auto text-[16px] font-bold" style={{ color: "#5f8a6a" }} aria-hidden>→</span>
