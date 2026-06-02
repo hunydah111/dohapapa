@@ -209,18 +209,42 @@ export function scoreSchool(
 
 // ── 건축연도 점수 ────────────────────────────────────────────────────────────
 
-// WHY 중립화: 연식의 가치(신축 프리미엄·재건축 기대 등)는 이미 실거래가에 반영된다.
-// 노후 단지를 점수로 감점하면 "재건축 기대가 높아 비싼 구축"을 가격과 모순되게 깎게 됨.
-// 따라서 연식은 별도 감점/가점하지 않고 중립(60)으로 둔다. 시장의 평가는 budgetFit(실거래가)과
-// '동네 또래단지보다 비싸요' 배지(또래 대비 평단가)로 드러낸다.
+// 연식 점수 — 신축일수록 높다. price-first 철학과의 화해:
+//   · 시장가치(신축 프리미엄·재건축 기대)는 여전히 실거래가(budgetFit)에 맡기고 여기서 판단하지 않는다.
+//   · 다만 사용자가 '연식'을 중요하게 고를수록만, 정규화 가중치(buildWeights)를 통해 "새 집을 원한다"는
+//     개인 취향으로 반영된다. 우선도가 낮으면 가중치가 작아 영향이 미미하고, 5면 확실히 위로 끌어올린다.
+//   · 노후 단지를 "구축/재건축" 같은 미검증 라벨로 깎지 않는다 — 긍정 태그(신축/준신축)만 붙이고
+//     점수만 낮춰, 가격과 모순되는 부정 낙인을 피한다.
+// 2005년 = 약 60점 앵커 — index.ts 안정형 '준신축(2005년~) 이상' 필터(scores.buildingAge ≥ 60)와 일치.
 export function scoreBuildingAge(buildYear: number | null): ScoreResult {
-  return {
-    score: 60,
-    reason:
-      buildYear !== null
-        ? `${buildYear}년 준공 — 연식 가치는 실거래가에 반영(별도 감점 없음)`
-        : "건축년도 정보 없음",
-  };
+  if (buildYear === null) return { score: 60, reason: "건축년도 정보 없음" };
+
+  let score: number;
+  let tag = "";
+  if (buildYear >= 2023) {
+    score = 95;
+    tag = "신축";
+  } else if (buildYear >= 2018) {
+    score = 88;
+    tag = "준신축";
+  } else if (buildYear >= 2013) {
+    score = 80;
+    tag = "준신축";
+  } else if (buildYear >= 2008) {
+    score = 72;
+  } else if (buildYear >= 2005) {
+    score = 63;
+  } else if (buildYear >= 2000) {
+    score = 53;
+  } else if (buildYear >= 1995) {
+    score = 46;
+  } else if (buildYear >= 1990) {
+    score = 40;
+  } else {
+    score = 35;
+  }
+
+  return { score, reason: tag ? `${buildYear}년 준공 · ${tag}` : `${buildYear}년 준공` };
 }
 
 // ── 거래 많은 단지(대단지·인기) 점수 ─────────────────────────────────────────

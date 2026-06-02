@@ -79,7 +79,6 @@ export function CandidateCard({
   )}`;
 
   // 선택 이유 — 줄줄이 한 문장 대신 "라벨 : 값" 행으로 정돈. 정보 없는 신호는 숨김.
-  // (연식은 price-first 철학상 중립화돼 선정 사유가 아니므로 헤더 'N년식'으로만 노출.)
   // 평수 행은 단지 메타 줄에 이미 있어 중복 제거(2026-05-27 β).
   const reasonRows: { label: string; value: string }[] = [];
   if (candidate.commuteLegs.length > 0) {
@@ -96,6 +95,13 @@ export function CandidateCard({
     candidate.reasoning.school !== "초등학교 거리 정보 없음"
   ) {
     reasonRows.push({ label: "초등학교", value: candidate.reasoning.school });
+  }
+  // 연식 — 사용자가 우선순위로 고르면 점수에 실제 반영되므로 선정 사유로 노출(왜 이 순위인지 보이게).
+  if (
+    candidate.reasoning.buildingAge &&
+    candidate.reasoning.buildingAge !== "건축년도 정보 없음"
+  ) {
+    reasonRows.push({ label: "연식", value: candidate.reasoning.buildingAge });
   }
   if (candidate.reasoning.largeComplex) {
     reasonRows.push({ label: "단지", value: candidate.reasoning.largeComplex });
@@ -341,8 +347,8 @@ export function CandidateCard({
         }}
       />
 
-      {/* 항목별 점수 5종(통근·예산·학군·연식·대단지)은 종합점수와 중복이고
-          buildingAge가 항상 60 고정(price-first 중립화)이라 노이즈만 줘서 제거(2026-05-27 β). */}
+      {/* 항목별 점수 막대 5종은 종합점수와 중복이라 제거(2026-05-27 β).
+          대신 '골라낸 이유'에 가중치 큰 신호(연식 포함)를 문장으로 노출한다. */}
 
       {/* 동네 (반경 1km) — 시설 사실 + 5축 레이더. fetch 후 fade-in, 데이터 없으면 숨김. */}
       {neighborhood && (

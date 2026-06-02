@@ -300,10 +300,21 @@ describe("scoreSchool", () => {
 // ── scoreBuildingAge ──────────────────────────────────────────────────────────
 
 describe("scoreBuildingAge", () => {
-  it("연식과 무관하게 중립(60) — 가치는 실거래가에 반영되므로 별도 감점/가점 안 함", () => {
-    expect(scoreBuildingAge(2020).score).toBe(60);
-    expect(scoreBuildingAge(2000).score).toBe(60);
-    expect(scoreBuildingAge(1980).score).toBe(60);
+  it("신축일수록 점수가 높다(단조 비증가) — 사용자가 연식을 중시할 때만 가중치로 반영", () => {
+    const years = [2024, 2020, 2015, 2010, 2006, 2002, 1996, 1992, 1985];
+    const scores = years.map((y) => scoreBuildingAge(y).score);
+    for (let i = 1; i < scores.length; i++) {
+      expect(scores[i]).toBeLessThanOrEqual(scores[i - 1]);
+    }
+    expect(scores[0]).toBeGreaterThan(scores[scores.length - 1]); // 신축 > 노후
+  });
+
+  it("2005년 = 60점 앵커: index.ts 안정형 '준신축 이상' 필터(≥60) 경계와 일치", () => {
+    expect(scoreBuildingAge(2005).score).toBeGreaterThanOrEqual(60);
+    expect(scoreBuildingAge(2004).score).toBeLessThan(60);
+  });
+
+  it("건축년도 정보 없으면 중립(60)", () => {
     expect(scoreBuildingAge(null).score).toBe(60);
   });
 
