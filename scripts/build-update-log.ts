@@ -30,8 +30,9 @@ const log: { entries: Entry[] } = existsSync(LOG)
 const now = new Date(); // 크론은 TZ=Asia/Seoul. 로컬 시드는 로컬 TZ(무방).
 const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
-const mom = lt.regions.find((r: { ranks: { momentum: number } }) => r.ranks.momentum === 1);
-const complexCount = lt.regions.reduce((s: number, r: { complexCount: number }) => s + r.complexCount, 0);
+// 시군구 풀로 집계 — 전 단지 커버 유지(동 리그는 표본임계로 일부 동 제외돼 합계가 줄어듦).
+const mom = lt.sigunguRegions.find((r: { ranks: { momentum: number } }) => r.ranks.momentum === 1);
+const complexCount = lt.sigunguRegions.reduce((s: number, r: { complexCount: number }) => s + r.complexCount, 0);
 const prev = log.entries[log.entries.length - 1];
 const newTx = prev ? dm.txCount - prev.txCount : null;
 

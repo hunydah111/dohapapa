@@ -38,7 +38,9 @@ const dot = (d: string): string => {
 };
 
 export function getLivePulse(): LivePulseData {
-  const regions = table.regions;
+  // 펄스/요약은 시군구 단위(전 단지 커버·81곳)로 — 동 리그(table.regions)는 표본임계로 일부 동이 빠져
+  // 단지 합계가 줄고 #1이 동(洞)이 된다. 기존 의미 유지 위해 시군구 풀을 읽는다.
+  const regions = table.sigunguRegions;
   const mom = regions.find((r) => r.ranks.momentum === 1);
   const complexSum = regions.reduce((s, r) => s + r.complexCount, 0);
   const cap = (weekly.regions as Record<string, { changePct: number }>)["수도권"];

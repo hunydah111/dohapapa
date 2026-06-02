@@ -1,11 +1,7023 @@
 {
-  "generatedAt": "2026-06-02T01:43:14.141Z",
+  "generatedAt": "2026-06-02T02:04:36.783Z",
   "asOf": "2026-05",
   "momentumWindow": "2026-02~2026-05",
-  "total": 81,
+  "dongTotal": 438,
+  "sigunguTotal": 79,
   "regions": [
     {
       "sigungu": "종로구",
+      "dongName": "창신동",
+      "momentumPct": -1.1,
+      "trades": 79,
+      "complexCount": 9,
+      "pricePerPy": 3534,
+      "recentSharePct": 0,
+      "medianBuildYear": 1993,
+      "ranks": {
+        "momentum": 352,
+        "trades": 410,
+        "value": 343,
+        "fresh": 371
+      }
+    },
+    {
+      "sigungu": "종로구",
+      "dongName": "숭인동",
+      "momentumPct": -1.1,
+      "trades": 70,
+      "complexCount": 14,
+      "pricePerPy": 2658,
+      "recentSharePct": 7,
+      "medianBuildYear": 2013,
+      "ranks": {
+        "momentum": 353,
+        "trades": 419,
+        "value": 322,
+        "fresh": 322
+      }
+    },
+    {
+      "sigungu": "중구",
+      "dongName": "신당동",
+      "momentumPct": -1.3,
+      "trades": 237,
+      "complexCount": 33,
+      "pricePerPy": 3583,
+      "recentSharePct": 9,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 354,
+        "trades": 201,
+        "value": 356,
+        "fresh": 279
+      }
+    },
+    {
+      "sigungu": "중구",
+      "dongName": "황학동",
+      "momentumPct": -1.3,
+      "trades": 152,
+      "complexCount": 10,
+      "pricePerPy": 3793,
+      "recentSharePct": 50,
+      "medianBuildYear": 2016,
+      "ranks": {
+        "momentum": 355,
+        "trades": 306,
+        "value": 361,
+        "fresh": 44
+      }
+    },
+    {
+      "sigungu": "용산구",
+      "dongName": "효창동",
+      "momentumPct": -3.3,
+      "trades": 73,
+      "complexCount": 15,
+      "pricePerPy": 5329,
+      "recentSharePct": 20,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 412,
+        "trades": 418,
+        "value": 412,
+        "fresh": 157
+      }
+    },
+    {
+      "sigungu": "용산구",
+      "dongName": "이촌동",
+      "momentumPct": -3.3,
+      "trades": 219,
+      "complexCount": 33,
+      "pricePerPy": 8142,
+      "recentSharePct": 0,
+      "medianBuildYear": 1976,
+      "ranks": {
+        "momentum": 409,
+        "trades": 220,
+        "value": 429,
+        "fresh": 372
+      }
+    },
+    {
+      "sigungu": "용산구",
+      "dongName": "한남동",
+      "momentumPct": -3.3,
+      "trades": 78,
+      "complexCount": 16,
+      "pricePerPy": 7064,
+      "recentSharePct": 19,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 411,
+        "trades": 413,
+        "value": 425,
+        "fresh": 171
+      }
+    },
+    {
+      "sigungu": "용산구",
+      "dongName": "문배동",
+      "momentumPct": -3.3,
+      "trades": 88,
+      "complexCount": 14,
+      "pricePerPy": 4861,
+      "recentSharePct": 7,
+      "medianBuildYear": 2007,
+      "ranks": {
+        "momentum": 410,
+        "trades": 392,
+        "value": 405,
+        "fresh": 323
+      }
+    },
+    {
+      "sigungu": "성동구",
+      "dongName": "성수동2가",
+      "momentumPct": 1.4,
+      "trades": 134,
+      "complexCount": 19,
+      "pricePerPy": 6280,
+      "recentSharePct": 0,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 109,
+        "trades": 327,
+        "value": 349,
+        "fresh": 373
+      }
+    },
+    {
+      "sigungu": "성동구",
+      "dongName": "하왕십리동",
+      "momentumPct": 1.4,
+      "trades": 227,
+      "complexCount": 14,
+      "pricePerPy": 6258,
+      "recentSharePct": 29,
+      "medianBuildYear": 2009,
+      "ranks": {
+        "momentum": 105,
+        "trades": 216,
+        "value": 348,
+        "fresh": 103
+      }
+    },
+    {
+      "sigungu": "성동구",
+      "dongName": "금호동4가",
+      "momentumPct": 1.4,
+      "trades": 156,
+      "complexCount": 9,
+      "pricePerPy": 7888,
+      "recentSharePct": 22,
+      "medianBuildYear": 2007,
+      "ranks": {
+        "momentum": 108,
+        "trades": 303,
+        "value": 381,
+        "fresh": 141
+      }
+    },
+    {
+      "sigungu": "성동구",
+      "dongName": "마장동",
+      "momentumPct": 1.4,
+      "trades": 231,
+      "complexCount": 13,
+      "pricePerPy": 5824,
+      "recentSharePct": 23,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 104,
+        "trades": 209,
+        "value": 334,
+        "fresh": 135
+      }
+    },
+    {
+      "sigungu": "성동구",
+      "dongName": "성수동1가",
+      "momentumPct": 1.4,
+      "trades": 262,
+      "complexCount": 20,
+      "pricePerPy": 9123,
+      "recentSharePct": 20,
+      "medianBuildYear": 2000,
+      "ranks": {
+        "momentum": 103,
+        "trades": 177,
+        "value": 397,
+        "fresh": 158
+      }
+    },
+    {
+      "sigungu": "성동구",
+      "dongName": "옥수동",
+      "momentumPct": 1.4,
+      "trades": 162,
+      "complexCount": 17,
+      "pricePerPy": 6684,
+      "recentSharePct": 0,
+      "medianBuildYear": 1999,
+      "ranks": {
+        "momentum": 107,
+        "trades": 296,
+        "value": 362,
+        "fresh": 374
+      }
+    },
+    {
+      "sigungu": "성동구",
+      "dongName": "행당동",
+      "momentumPct": 1.4,
+      "trades": 194,
+      "complexCount": 13,
+      "pricePerPy": 8754,
+      "recentSharePct": 15,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 106,
+        "trades": 246,
+        "value": 395,
+        "fresh": 209
+      }
+    },
+    {
+      "sigungu": "광진구",
+      "dongName": "자양동",
+      "momentumPct": -2.3,
+      "trades": 521,
+      "complexCount": 60,
+      "pricePerPy": 6504,
+      "recentSharePct": 13,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 391,
+        "trades": 47,
+        "value": 415,
+        "fresh": 229
+      }
+    },
+    {
+      "sigungu": "광진구",
+      "dongName": "구의동",
+      "momentumPct": -2.3,
+      "trades": 228,
+      "complexCount": 43,
+      "pricePerPy": 4313,
+      "recentSharePct": 26,
+      "medianBuildYear": 2006,
+      "ranks": {
+        "momentum": 393,
+        "trades": 214,
+        "value": 386,
+        "fresh": 120
+      }
+    },
+    {
+      "sigungu": "광진구",
+      "dongName": "광장동",
+      "momentumPct": -2.3,
+      "trades": 266,
+      "complexCount": 24,
+      "pricePerPy": 7259,
+      "recentSharePct": 4,
+      "medianBuildYear": 1998,
+      "ranks": {
+        "momentum": 392,
+        "trades": 171,
+        "value": 420,
+        "fresh": 355
+      }
+    },
+    {
+      "sigungu": "광진구",
+      "dongName": "중곡동",
+      "momentumPct": -2.3,
+      "trades": 116,
+      "complexCount": 19,
+      "pricePerPy": 2870,
+      "recentSharePct": 16,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 394,
+        "trades": 348,
+        "value": 364,
+        "fresh": 207
+      }
+    },
+    {
+      "sigungu": "동대문구",
+      "dongName": "전농동",
+      "momentumPct": 0.7,
+      "trades": 234,
+      "complexCount": 13,
+      "pricePerPy": 4906,
+      "recentSharePct": 31,
+      "medianBuildYear": 2007,
+      "ranks": {
+        "momentum": 186,
+        "trades": 206,
+        "value": 330,
+        "fresh": 90
+      }
+    },
+    {
+      "sigungu": "동대문구",
+      "dongName": "이문동",
+      "momentumPct": 0.7,
+      "trades": 213,
+      "complexCount": 18,
+      "pricePerPy": 4393,
+      "recentSharePct": 22,
+      "medianBuildYear": 2008,
+      "ranks": {
+        "momentum": 188,
+        "trades": 224,
+        "value": 316,
+        "fresh": 142
+      }
+    },
+    {
+      "sigungu": "동대문구",
+      "dongName": "용두동",
+      "momentumPct": 0.7,
+      "trades": 164,
+      "complexCount": 20,
+      "pricePerPy": 4477,
+      "recentSharePct": 40,
+      "medianBuildYear": 2014,
+      "ranks": {
+        "momentum": 189,
+        "trades": 293,
+        "value": 319,
+        "fresh": 66
+      }
+    },
+    {
+      "sigungu": "동대문구",
+      "dongName": "답십리동",
+      "momentumPct": 0.7,
+      "trades": 440,
+      "complexCount": 35,
+      "pricePerPy": 3940,
+      "recentSharePct": 31,
+      "medianBuildYear": 2010,
+      "ranks": {
+        "momentum": 184,
+        "trades": 77,
+        "value": 301,
+        "fresh": 88
+      }
+    },
+    {
+      "sigungu": "동대문구",
+      "dongName": "휘경동",
+      "momentumPct": 0.7,
+      "trades": 231,
+      "complexCount": 20,
+      "pricePerPy": 3917,
+      "recentSharePct": 20,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 187,
+        "trades": 210,
+        "value": 300,
+        "fresh": 159
+      }
+    },
+    {
+      "sigungu": "동대문구",
+      "dongName": "장안동",
+      "momentumPct": 0.7,
+      "trades": 327,
+      "complexCount": 68,
+      "pricePerPy": 2887,
+      "recentSharePct": 29,
+      "medianBuildYear": 2011,
+      "ranks": {
+        "momentum": 185,
+        "trades": 129,
+        "value": 241,
+        "fresh": 100
+      }
+    },
+    {
+      "sigungu": "동대문구",
+      "dongName": "제기동",
+      "momentumPct": 0.7,
+      "trades": 83,
+      "complexCount": 10,
+      "pricePerPy": 3782,
+      "recentSharePct": 20,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 190,
+        "trades": 404,
+        "value": 290,
+        "fresh": 160
+      }
+    },
+    {
+      "sigungu": "중랑구",
+      "dongName": "망우동",
+      "momentumPct": 3.4,
+      "trades": 121,
+      "complexCount": 24,
+      "pricePerPy": 2619,
+      "recentSharePct": 17,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 36,
+        "trades": 339,
+        "value": 23,
+        "fresh": 193
+      }
+    },
+    {
+      "sigungu": "중랑구",
+      "dongName": "면목동",
+      "momentumPct": 3.4,
+      "trades": 455,
+      "complexCount": 53,
+      "pricePerPy": 3134,
+      "recentSharePct": 15,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 32,
+        "trades": 69,
+        "value": 38,
+        "fresh": 214
+      }
+    },
+    {
+      "sigungu": "중랑구",
+      "dongName": "상봉동",
+      "momentumPct": 3.4,
+      "trades": 314,
+      "complexCount": 26,
+      "pricePerPy": 3517,
+      "recentSharePct": 35,
+      "medianBuildYear": 2006,
+      "ranks": {
+        "momentum": 34,
+        "trades": 132,
+        "value": 59,
+        "fresh": 79
+      }
+    },
+    {
+      "sigungu": "중랑구",
+      "dongName": "묵동",
+      "momentumPct": 3.4,
+      "trades": 229,
+      "complexCount": 36,
+      "pricePerPy": 3024,
+      "recentSharePct": 3,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 35,
+        "trades": 213,
+        "value": 32,
+        "fresh": 366
+      }
+    },
+    {
+      "sigungu": "중랑구",
+      "dongName": "신내동",
+      "momentumPct": 3.4,
+      "trades": 381,
+      "complexCount": 34,
+      "pricePerPy": 2852,
+      "recentSharePct": 3,
+      "medianBuildYear": 1999,
+      "ranks": {
+        "momentum": 33,
+        "trades": 100,
+        "value": 29,
+        "fresh": 364
+      }
+    },
+    {
+      "sigungu": "성북구",
+      "dongName": "장위동",
+      "momentumPct": 3,
+      "trades": 163,
+      "complexCount": 15,
+      "pricePerPy": 3777,
+      "recentSharePct": 47,
+      "medianBuildYear": 2008,
+      "ranks": {
+        "momentum": 48,
+        "trades": 294,
+        "value": 127,
+        "fresh": 51
+      }
+    },
+    {
+      "sigungu": "성북구",
+      "dongName": "정릉동",
+      "momentumPct": 3,
+      "trades": 372,
+      "complexCount": 28,
+      "pricePerPy": 3073,
+      "recentSharePct": 4,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 43,
+        "trades": 105,
+        "value": 58,
+        "fresh": 357
+      }
+    },
+    {
+      "sigungu": "성북구",
+      "dongName": "길음동",
+      "momentumPct": 3,
+      "trades": 297,
+      "complexCount": 14,
+      "pricePerPy": 5465,
+      "recentSharePct": 21,
+      "medianBuildYear": 2007,
+      "ranks": {
+        "momentum": 44,
+        "trades": 147,
+        "value": 255,
+        "fresh": 148
+      }
+    },
+    {
+      "sigungu": "성북구",
+      "dongName": "돈암동",
+      "momentumPct": 3,
+      "trades": 246,
+      "complexCount": 17,
+      "pricePerPy": 3883,
+      "recentSharePct": 6,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 46,
+        "trades": 191,
+        "value": 134,
+        "fresh": 336
+      }
+    },
+    {
+      "sigungu": "성북구",
+      "dongName": "하월곡동",
+      "momentumPct": 3,
+      "trades": 237,
+      "complexCount": 18,
+      "pricePerPy": 3436,
+      "recentSharePct": 6,
+      "medianBuildYear": 2007,
+      "ranks": {
+        "momentum": 47,
+        "trades": 202,
+        "value": 89,
+        "fresh": 339
+      }
+    },
+    {
+      "sigungu": "성북구",
+      "dongName": "석관동",
+      "momentumPct": 3,
+      "trades": 128,
+      "complexCount": 8,
+      "pricePerPy": 3789,
+      "recentSharePct": 25,
+      "medianBuildYear": 2009,
+      "ranks": {
+        "momentum": 49,
+        "trades": 331,
+        "value": 129,
+        "fresh": 121
+      }
+    },
+    {
+      "sigungu": "성북구",
+      "dongName": "종암동",
+      "momentumPct": 3,
+      "trades": 249,
+      "complexCount": 13,
+      "pricePerPy": 4515,
+      "recentSharePct": 8,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 45,
+        "trades": 189,
+        "value": 189,
+        "fresh": 307
+      }
+    },
+    {
+      "sigungu": "강북구",
+      "dongName": "미아동",
+      "momentumPct": 1.8,
+      "trades": 503,
+      "complexCount": 24,
+      "pricePerPy": 2985,
+      "recentSharePct": 17,
+      "medianBuildYear": 2008,
+      "ranks": {
+        "momentum": 74,
+        "trades": 52,
+        "value": 159,
+        "fresh": 194
+      }
+    },
+    {
+      "sigungu": "강북구",
+      "dongName": "수유동",
+      "momentumPct": 1.8,
+      "trades": 112,
+      "complexCount": 26,
+      "pricePerPy": 2329,
+      "recentSharePct": 31,
+      "medianBuildYear": 2010,
+      "ranks": {
+        "momentum": 76,
+        "trades": 360,
+        "value": 100,
+        "fresh": 91
+      }
+    },
+    {
+      "sigungu": "강북구",
+      "dongName": "번동",
+      "momentumPct": 1.8,
+      "trades": 157,
+      "complexCount": 22,
+      "pricePerPy": 2476,
+      "recentSharePct": 0,
+      "medianBuildYear": 2000,
+      "ranks": {
+        "momentum": 75,
+        "trades": 301,
+        "value": 119,
+        "fresh": 375
+      }
+    },
+    {
+      "sigungu": "도봉구",
+      "dongName": "창동",
+      "momentumPct": 2.5,
+      "trades": 541,
+      "complexCount": 50,
+      "pricePerPy": 3166,
+      "recentSharePct": 6,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 53,
+        "trades": 43,
+        "value": 112,
+        "fresh": 335
+      }
+    },
+    {
+      "sigungu": "도봉구",
+      "dongName": "방학동",
+      "momentumPct": 2.5,
+      "trades": 265,
+      "complexCount": 34,
+      "pricePerPy": 2176,
+      "recentSharePct": 12,
+      "medianBuildYear": 2001,
+      "ranks": {
+        "momentum": 55,
+        "trades": 173,
+        "value": 34,
+        "fresh": 241
+      }
+    },
+    {
+      "sigungu": "도봉구",
+      "dongName": "도봉동",
+      "momentumPct": 2.5,
+      "trades": 202,
+      "complexCount": 17,
+      "pricePerPy": 2361,
+      "recentSharePct": 0,
+      "medianBuildYear": 1999,
+      "ranks": {
+        "momentum": 56,
+        "trades": 237,
+        "value": 40,
+        "fresh": 376
+      }
+    },
+    {
+      "sigungu": "도봉구",
+      "dongName": "쌍문동",
+      "momentumPct": 2.5,
+      "trades": 281,
+      "complexCount": 43,
+      "pricePerPy": 2162,
+      "recentSharePct": 9,
+      "medianBuildYear": 1998,
+      "ranks": {
+        "momentum": 54,
+        "trades": 158,
+        "value": 31,
+        "fresh": 278
+      }
+    },
+    {
+      "sigungu": "노원구",
+      "dongName": "공릉동",
+      "momentumPct": 0,
+      "trades": 557,
+      "complexCount": 61,
+      "pricePerPy": 3030,
+      "recentSharePct": 10,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 280,
+        "trades": 40,
+        "value": 292,
+        "fresh": 273
+      }
+    },
+    {
+      "sigungu": "노원구",
+      "dongName": "상계동",
+      "momentumPct": 0,
+      "trades": 774,
+      "complexCount": 66,
+      "pricePerPy": 2756,
+      "recentSharePct": 8,
+      "medianBuildYear": 2000,
+      "ranks": {
+        "momentum": 277,
+        "trades": 12,
+        "value": 274,
+        "fresh": 319
+      }
+    },
+    {
+      "sigungu": "노원구",
+      "dongName": "중계동",
+      "momentumPct": 0,
+      "trades": 678,
+      "complexCount": 41,
+      "pricePerPy": 3330,
+      "recentSharePct": 2,
+      "medianBuildYear": 1995,
+      "ranks": {
+        "momentum": 278,
+        "trades": 22,
+        "value": 308,
+        "fresh": 367
+      }
+    },
+    {
+      "sigungu": "노원구",
+      "dongName": "월계동",
+      "momentumPct": 0,
+      "trades": 567,
+      "complexCount": 37,
+      "pricePerPy": 3017,
+      "recentSharePct": 11,
+      "medianBuildYear": 1999,
+      "ranks": {
+        "momentum": 279,
+        "trades": 38,
+        "value": 291,
+        "fresh": 260
+      }
+    },
+    {
+      "sigungu": "노원구",
+      "dongName": "하계동",
+      "momentumPct": 0,
+      "trades": 347,
+      "complexCount": 17,
+      "pricePerPy": 3489,
+      "recentSharePct": 0,
+      "medianBuildYear": 1989,
+      "ranks": {
+        "momentum": 281,
+        "trades": 120,
+        "value": 313,
+        "fresh": 377
+      }
+    },
+    {
+      "sigungu": "은평구",
+      "dongName": "응암동",
+      "momentumPct": 0.2,
+      "trades": 455,
+      "complexCount": 48,
+      "pricePerPy": 2961,
+      "recentSharePct": 35,
+      "medianBuildYear": 2011,
+      "ranks": {
+        "momentum": 254,
+        "trades": 70,
+        "value": 275,
+        "fresh": 77
+      }
+    },
+    {
+      "sigungu": "은평구",
+      "dongName": "녹번동",
+      "momentumPct": 0.2,
+      "trades": 159,
+      "complexCount": 17,
+      "pricePerPy": 3859,
+      "recentSharePct": 47,
+      "medianBuildYear": 2015,
+      "ranks": {
+        "momentum": 258,
+        "trades": 298,
+        "value": 318,
+        "fresh": 50
+      }
+    },
+    {
+      "sigungu": "은평구",
+      "dongName": "수색동",
+      "momentumPct": 0.2,
+      "trades": 189,
+      "complexCount": 9,
+      "pricePerPy": 5031,
+      "recentSharePct": 56,
+      "medianBuildYear": 2021,
+      "ranks": {
+        "momentum": 256,
+        "trades": 258,
+        "value": 350,
+        "fresh": 40
+      }
+    },
+    {
+      "sigungu": "은평구",
+      "dongName": "대조동",
+      "momentumPct": 0.2,
+      "trades": 115,
+      "complexCount": 27,
+      "pricePerPy": 3526,
+      "recentSharePct": 41,
+      "medianBuildYear": 2014,
+      "ranks": {
+        "momentum": 259,
+        "trades": 353,
+        "value": 307,
+        "fresh": 65
+      }
+    },
+    {
+      "sigungu": "은평구",
+      "dongName": "불광동",
+      "momentumPct": 0.2,
+      "trades": 243,
+      "complexCount": 30,
+      "pricePerPy": 3180,
+      "recentSharePct": 13,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 255,
+        "trades": 193,
+        "value": 288,
+        "fresh": 230
+      }
+    },
+    {
+      "sigungu": "은평구",
+      "dongName": "구산동",
+      "momentumPct": 0.2,
+      "trades": 79,
+      "complexCount": 16,
+      "pricePerPy": 2273,
+      "recentSharePct": 19,
+      "medianBuildYear": 2006,
+      "ranks": {
+        "momentum": 262,
+        "trades": 411,
+        "value": 234,
+        "fresh": 172
+      }
+    },
+    {
+      "sigungu": "은평구",
+      "dongName": "증산동",
+      "momentumPct": 0.2,
+      "trades": 88,
+      "complexCount": 19,
+      "pricePerPy": 3338,
+      "recentSharePct": 26,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 260,
+        "trades": 393,
+        "value": 299,
+        "fresh": 114
+      }
+    },
+    {
+      "sigungu": "은평구",
+      "dongName": "신사동",
+      "momentumPct": 0.2,
+      "trades": 174,
+      "complexCount": 29,
+      "pricePerPy": 2556,
+      "recentSharePct": 10,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 257,
+        "trades": 275,
+        "value": 256,
+        "fresh": 262
+      }
+    },
+    {
+      "sigungu": "은평구",
+      "dongName": "갈현동",
+      "momentumPct": 0.2,
+      "trades": 81,
+      "complexCount": 18,
+      "pricePerPy": 2360,
+      "recentSharePct": 22,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 261,
+        "trades": 405,
+        "value": 247,
+        "fresh": 143
+      }
+    },
+    {
+      "sigungu": "은평구",
+      "dongName": "역촌동",
+      "momentumPct": 0.2,
+      "trades": 63,
+      "complexCount": 26,
+      "pricePerPy": 2300,
+      "recentSharePct": 12,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 263,
+        "trades": 428,
+        "value": 240,
+        "fresh": 247
+      }
+    },
+    {
+      "sigungu": "서대문구",
+      "dongName": "남가좌동",
+      "momentumPct": 3.7,
+      "trades": 255,
+      "complexCount": 17,
+      "pricePerPy": 5724,
+      "recentSharePct": 29,
+      "medianBuildYear": 2015,
+      "ranks": {
+        "momentum": 15,
+        "trades": 185,
+        "value": 214,
+        "fresh": 101
+      }
+    },
+    {
+      "sigungu": "서대문구",
+      "dongName": "북가좌동",
+      "momentumPct": 3.7,
+      "trades": 189,
+      "complexCount": 18,
+      "pricePerPy": 3867,
+      "recentSharePct": 6,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 16,
+        "trades": 259,
+        "value": 55,
+        "fresh": 340
+      }
+    },
+    {
+      "sigungu": "서대문구",
+      "dongName": "홍은동",
+      "momentumPct": 3.7,
+      "trades": 298,
+      "complexCount": 36,
+      "pricePerPy": 3041,
+      "recentSharePct": 25,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 14,
+        "trades": 145,
+        "value": 24,
+        "fresh": 122
+      }
+    },
+    {
+      "sigungu": "서대문구",
+      "dongName": "홍제동",
+      "momentumPct": 3.7,
+      "trades": 397,
+      "complexCount": 39,
+      "pricePerPy": 3521,
+      "recentSharePct": 18,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 13,
+        "trades": 92,
+        "value": 37,
+        "fresh": 180
+      }
+    },
+    {
+      "sigungu": "서대문구",
+      "dongName": "북아현동",
+      "momentumPct": 3.7,
+      "trades": 166,
+      "complexCount": 18,
+      "pricePerPy": 6842,
+      "recentSharePct": 28,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 17,
+        "trades": 292,
+        "value": 283,
+        "fresh": 107
+      }
+    },
+    {
+      "sigungu": "서대문구",
+      "dongName": "연희동",
+      "momentumPct": 3.7,
+      "trades": 105,
+      "complexCount": 23,
+      "pricePerPy": 2938,
+      "recentSharePct": 4,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 18,
+        "trades": 372,
+        "value": 21,
+        "fresh": 352
+      }
+    },
+    {
+      "sigungu": "마포구",
+      "dongName": "망원동",
+      "momentumPct": 0.6,
+      "trades": 139,
+      "complexCount": 44,
+      "pricePerPy": 3776,
+      "recentSharePct": 16,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 210,
+        "trades": 321,
+        "value": 293,
+        "fresh": 205
+      }
+    },
+    {
+      "sigungu": "마포구",
+      "dongName": "공덕동",
+      "momentumPct": 0.6,
+      "trades": 144,
+      "complexCount": 14,
+      "pricePerPy": 8554,
+      "recentSharePct": 21,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 209,
+        "trades": 317,
+        "value": 399,
+        "fresh": 149
+      }
+    },
+    {
+      "sigungu": "마포구",
+      "dongName": "창전동",
+      "momentumPct": 0.6,
+      "trades": 168,
+      "complexCount": 12,
+      "pricePerPy": 5600,
+      "recentSharePct": 8,
+      "medianBuildYear": 2007,
+      "ranks": {
+        "momentum": 208,
+        "trades": 288,
+        "value": 353,
+        "fresh": 290
+      }
+    },
+    {
+      "sigungu": "마포구",
+      "dongName": "신수동",
+      "momentumPct": 0.6,
+      "trades": 120,
+      "complexCount": 12,
+      "pricePerPy": 6475,
+      "recentSharePct": 8,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 211,
+        "trades": 342,
+        "value": 370,
+        "fresh": 291
+      }
+    },
+    {
+      "sigungu": "마포구",
+      "dongName": "도화동",
+      "momentumPct": 0.6,
+      "trades": 205,
+      "complexCount": 12,
+      "pricePerPy": 6212,
+      "recentSharePct": 0,
+      "medianBuildYear": 1998,
+      "ranks": {
+        "momentum": 205,
+        "trades": 233,
+        "value": 367,
+        "fresh": 378
+      }
+    },
+    {
+      "sigungu": "마포구",
+      "dongName": "신공덕동",
+      "momentumPct": 0.6,
+      "trades": 196,
+      "complexCount": 13,
+      "pricePerPy": 6746,
+      "recentSharePct": 8,
+      "medianBuildYear": 2009,
+      "ranks": {
+        "momentum": 207,
+        "trades": 245,
+        "value": 374,
+        "fresh": 308
+      }
+    },
+    {
+      "sigungu": "마포구",
+      "dongName": "성산동",
+      "momentumPct": 0.6,
+      "trades": 243,
+      "complexCount": 20,
+      "pricePerPy": 3659,
+      "recentSharePct": 5,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 204,
+        "trades": 194,
+        "value": 289,
+        "fresh": 346
+      }
+    },
+    {
+      "sigungu": "마포구",
+      "dongName": "중동",
+      "momentumPct": 0.6,
+      "trades": 85,
+      "complexCount": 9,
+      "pricePerPy": 3522,
+      "recentSharePct": 0,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 213,
+        "trades": 401,
+        "value": 281,
+        "fresh": 379
+      }
+    },
+    {
+      "sigungu": "마포구",
+      "dongName": "염리동",
+      "momentumPct": 0.6,
+      "trades": 113,
+      "complexCount": 8,
+      "pricePerPy": 7864,
+      "recentSharePct": 25,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 212,
+        "trades": 359,
+        "value": 392,
+        "fresh": 123
+      }
+    },
+    {
+      "sigungu": "마포구",
+      "dongName": "상암동",
+      "momentumPct": 0.6,
+      "trades": 198,
+      "complexCount": 13,
+      "pricePerPy": 5318,
+      "recentSharePct": 0,
+      "medianBuildYear": 2009,
+      "ranks": {
+        "momentum": 206,
+        "trades": 242,
+        "value": 342,
+        "fresh": 380
+      }
+    },
+    {
+      "sigungu": "마포구",
+      "dongName": "아현동",
+      "momentumPct": 0.6,
+      "trades": 255,
+      "complexCount": 13,
+      "pricePerPy": 8351,
+      "recentSharePct": 31,
+      "medianBuildYear": 2014,
+      "ranks": {
+        "momentum": 203,
+        "trades": 186,
+        "value": 398,
+        "fresh": 92
+      }
+    },
+    {
+      "sigungu": "양천구",
+      "dongName": "신월동",
+      "momentumPct": -1.4,
+      "trades": 563,
+      "complexCount": 114,
+      "pricePerPy": 2337,
+      "recentSharePct": 11,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 358,
+        "trades": 39,
+        "value": 321,
+        "fresh": 249
+      }
+    },
+    {
+      "sigungu": "양천구",
+      "dongName": "신정동",
+      "momentumPct": -1.4,
+      "trades": 821,
+      "complexCount": 96,
+      "pricePerPy": 3664,
+      "recentSharePct": 6,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 356,
+        "trades": 11,
+        "value": 359,
+        "fresh": 333
+      }
+    },
+    {
+      "sigungu": "양천구",
+      "dongName": "목동",
+      "momentumPct": -1.4,
+      "trades": 666,
+      "complexCount": 88,
+      "pricePerPy": 4317,
+      "recentSharePct": 3,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 357,
+        "trades": 24,
+        "value": 369,
+        "fresh": 360
+      }
+    },
+    {
+      "sigungu": "강서구",
+      "dongName": "방화동",
+      "momentumPct": 0,
+      "trades": 403,
+      "complexCount": 41,
+      "pricePerPy": 3152,
+      "recentSharePct": 15,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 272,
+        "trades": 89,
+        "value": 296,
+        "fresh": 219
+      }
+    },
+    {
+      "sigungu": "강서구",
+      "dongName": "가양동",
+      "momentumPct": 0,
+      "trades": 231,
+      "complexCount": 13,
+      "pricePerPy": 4992,
+      "recentSharePct": 8,
+      "medianBuildYear": 1999,
+      "ranks": {
+        "momentum": 275,
+        "trades": 211,
+        "value": 355,
+        "fresh": 309
+      }
+    },
+    {
+      "sigungu": "강서구",
+      "dongName": "화곡동",
+      "momentumPct": 0,
+      "trades": 447,
+      "complexCount": 103,
+      "pricePerPy": 2614,
+      "recentSharePct": 18,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 270,
+        "trades": 75,
+        "value": 266,
+        "fresh": 176
+      }
+    },
+    {
+      "sigungu": "강서구",
+      "dongName": "마곡동",
+      "momentumPct": 0,
+      "trades": 298,
+      "complexCount": 33,
+      "pricePerPy": 4938,
+      "recentSharePct": 21,
+      "medianBuildYear": 2008,
+      "ranks": {
+        "momentum": 273,
+        "trades": 146,
+        "value": 352,
+        "fresh": 152
+      }
+    },
+    {
+      "sigungu": "강서구",
+      "dongName": "등촌동",
+      "momentumPct": 0,
+      "trades": 434,
+      "complexCount": 47,
+      "pricePerPy": 4060,
+      "recentSharePct": 17,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 271,
+        "trades": 80,
+        "value": 327,
+        "fresh": 191
+      }
+    },
+    {
+      "sigungu": "강서구",
+      "dongName": "내발산동",
+      "momentumPct": 0,
+      "trades": 234,
+      "complexCount": 52,
+      "pricePerPy": 2904,
+      "recentSharePct": 6,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 274,
+        "trades": 207,
+        "value": 282,
+        "fresh": 338
+      }
+    },
+    {
+      "sigungu": "강서구",
+      "dongName": "염창동",
+      "momentumPct": 0,
+      "trades": 501,
+      "complexCount": 55,
+      "pricePerPy": 4571,
+      "recentSharePct": 9,
+      "medianBuildYear": 2001,
+      "ranks": {
+        "momentum": 269,
+        "trades": 53,
+        "value": 340,
+        "fresh": 280
+      }
+    },
+    {
+      "sigungu": "구로구",
+      "dongName": "개봉동",
+      "momentumPct": 3,
+      "trades": 450,
+      "complexCount": 32,
+      "pricePerPy": 2909,
+      "recentSharePct": 9,
+      "medianBuildYear": 2001,
+      "ranks": {
+        "momentum": 38,
+        "trades": 72,
+        "value": 43,
+        "fresh": 276
+      }
+    },
+    {
+      "sigungu": "구로구",
+      "dongName": "구로동",
+      "momentumPct": 3,
+      "trades": 724,
+      "complexCount": 104,
+      "pricePerPy": 2706,
+      "recentSharePct": 5,
+      "medianBuildYear": 2000,
+      "ranks": {
+        "momentum": 37,
+        "trades": 18,
+        "value": 36,
+        "fresh": 347
+      }
+    },
+    {
+      "sigungu": "구로구",
+      "dongName": "오류동",
+      "momentumPct": 3,
+      "trades": 171,
+      "complexCount": 28,
+      "pricePerPy": 2487,
+      "recentSharePct": 14,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 41,
+        "trades": 282,
+        "value": 28,
+        "fresh": 221
+      }
+    },
+    {
+      "sigungu": "구로구",
+      "dongName": "신도림동",
+      "momentumPct": 3,
+      "trades": 260,
+      "complexCount": 22,
+      "pricePerPy": 5254,
+      "recentSharePct": 5,
+      "medianBuildYear": 2001,
+      "ranks": {
+        "momentum": 40,
+        "trades": 179,
+        "value": 236,
+        "fresh": 349
+      }
+    },
+    {
+      "sigungu": "구로구",
+      "dongName": "항동",
+      "momentumPct": 3,
+      "trades": 98,
+      "complexCount": 9,
+      "pricePerPy": 3334,
+      "recentSharePct": 78,
+      "medianBuildYear": 2019,
+      "ranks": {
+        "momentum": 42,
+        "trades": 378,
+        "value": 69,
+        "fresh": 20
+      }
+    },
+    {
+      "sigungu": "구로구",
+      "dongName": "고척동",
+      "momentumPct": 3,
+      "trades": 306,
+      "complexCount": 32,
+      "pricePerPy": 3036,
+      "recentSharePct": 3,
+      "medianBuildYear": 2000,
+      "ranks": {
+        "momentum": 39,
+        "trades": 141,
+        "value": 50,
+        "fresh": 363
+      }
+    },
+    {
+      "sigungu": "금천구",
+      "dongName": "독산동",
+      "momentumPct": 0.6,
+      "trades": 302,
+      "complexCount": 39,
+      "pricePerPy": 2452,
+      "recentSharePct": 15,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 197,
+        "trades": 143,
+        "value": 213,
+        "fresh": 210
+      }
+    },
+    {
+      "sigungu": "금천구",
+      "dongName": "가산동",
+      "momentumPct": 0.6,
+      "trades": 66,
+      "complexCount": 13,
+      "pricePerPy": 2345,
+      "recentSharePct": 15,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 199,
+        "trades": 423,
+        "value": 208,
+        "fresh": 211
+      }
+    },
+    {
+      "sigungu": "금천구",
+      "dongName": "시흥동",
+      "momentumPct": 0.6,
+      "trades": 284,
+      "complexCount": 33,
+      "pricePerPy": 2486,
+      "recentSharePct": 9,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 198,
+        "trades": 154,
+        "value": 215,
+        "fresh": 281
+      }
+    },
+    {
+      "sigungu": "영등포구",
+      "dongName": "신길동",
+      "momentumPct": 0.2,
+      "trades": 468,
+      "complexCount": 43,
+      "pricePerPy": 4857,
+      "recentSharePct": 21,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 235,
+        "trades": 64,
+        "value": 341,
+        "fresh": 155
+      }
+    },
+    {
+      "sigungu": "영등포구",
+      "dongName": "당산동5가",
+      "momentumPct": 0.2,
+      "trades": 93,
+      "complexCount": 8,
+      "pricePerPy": 7434,
+      "recentSharePct": 13,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 242,
+        "trades": 387,
+        "value": 391,
+        "fresh": 234
+      }
+    },
+    {
+      "sigungu": "영등포구",
+      "dongName": "여의도동",
+      "momentumPct": 0.2,
+      "trades": 224,
+      "complexCount": 23,
+      "pricePerPy": 9124,
+      "recentSharePct": 4,
+      "medianBuildYear": 1978,
+      "ranks": {
+        "momentum": 237,
+        "trades": 219,
+        "value": 413,
+        "fresh": 353
+      }
+    },
+    {
+      "sigungu": "영등포구",
+      "dongName": "대림동",
+      "momentumPct": 0.2,
+      "trades": 282,
+      "complexCount": 25,
+      "pricePerPy": 3543,
+      "recentSharePct": 16,
+      "medianBuildYear": 2001,
+      "ranks": {
+        "momentum": 236,
+        "trades": 157,
+        "value": 302,
+        "fresh": 204
+      }
+    },
+    {
+      "sigungu": "영등포구",
+      "dongName": "당산동3가",
+      "momentumPct": 0.2,
+      "trades": 97,
+      "complexCount": 8,
+      "pricePerPy": 6299,
+      "recentSharePct": 0,
+      "medianBuildYear": 2010,
+      "ranks": {
+        "momentum": 241,
+        "trades": 380,
+        "value": 373,
+        "fresh": 381
+      }
+    },
+    {
+      "sigungu": "영등포구",
+      "dongName": "당산동4가",
+      "momentumPct": 0.2,
+      "trades": 129,
+      "complexCount": 10,
+      "pricePerPy": 6293,
+      "recentSharePct": 10,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 238,
+        "trades": 330,
+        "value": 372,
+        "fresh": 264
+      }
+    },
+    {
+      "sigungu": "영등포구",
+      "dongName": "양평동3가",
+      "momentumPct": 0.2,
+      "trades": 105,
+      "complexCount": 13,
+      "pricePerPy": 4637,
+      "recentSharePct": 8,
+      "medianBuildYear": 2000,
+      "ranks": {
+        "momentum": 240,
+        "trades": 373,
+        "value": 335,
+        "fresh": 310
+      }
+    },
+    {
+      "sigungu": "영등포구",
+      "dongName": "문래동6가",
+      "momentumPct": 0.2,
+      "trades": 111,
+      "complexCount": 10,
+      "pricePerPy": 5235,
+      "recentSharePct": 10,
+      "medianBuildYear": 1997,
+      "ranks": {
+        "momentum": 239,
+        "trades": 363,
+        "value": 354,
+        "fresh": 265
+      }
+    },
+    {
+      "sigungu": "영등포구",
+      "dongName": "문래동3가",
+      "momentumPct": 0.2,
+      "trades": 64,
+      "complexCount": 11,
+      "pricePerPy": 5385,
+      "recentSharePct": 0,
+      "medianBuildYear": 2001,
+      "ranks": {
+        "momentum": 243,
+        "trades": 425,
+        "value": 358,
+        "fresh": 382
+      }
+    },
+    {
+      "sigungu": "동작구",
+      "dongName": "상도동",
+      "momentumPct": 1.1,
+      "trades": 448,
+      "complexCount": 47,
+      "pricePerPy": 4319,
+      "recentSharePct": 17,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 138,
+        "trades": 74,
+        "value": 295,
+        "fresh": 192
+      }
+    },
+    {
+      "sigungu": "동작구",
+      "dongName": "대방동",
+      "momentumPct": 1.1,
+      "trades": 145,
+      "complexCount": 17,
+      "pricePerPy": 5222,
+      "recentSharePct": 0,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 142,
+        "trades": 314,
+        "value": 326,
+        "fresh": 383
+      }
+    },
+    {
+      "sigungu": "동작구",
+      "dongName": "사당동",
+      "momentumPct": 1.1,
+      "trades": 425,
+      "complexCount": 40,
+      "pricePerPy": 4943,
+      "recentSharePct": 15,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 139,
+        "trades": 83,
+        "value": 320,
+        "fresh": 215
+      }
+    },
+    {
+      "sigungu": "동작구",
+      "dongName": "흑석동",
+      "momentumPct": 1.1,
+      "trades": 191,
+      "complexCount": 12,
+      "pricePerPy": 8161,
+      "recentSharePct": 25,
+      "medianBuildYear": 2010,
+      "ranks": {
+        "momentum": 141,
+        "trades": 255,
+        "value": 388,
+        "fresh": 124
+      }
+    },
+    {
+      "sigungu": "동작구",
+      "dongName": "신대방동",
+      "momentumPct": 1.1,
+      "trades": 251,
+      "complexCount": 27,
+      "pricePerPy": 4329,
+      "recentSharePct": 7,
+      "medianBuildYear": 1998,
+      "ranks": {
+        "momentum": 140,
+        "trades": 188,
+        "value": 298,
+        "fresh": 320
+      }
+    },
+    {
+      "sigungu": "관악구",
+      "dongName": "신림동",
+      "momentumPct": 2.8,
+      "trades": 472,
+      "complexCount": 59,
+      "pricePerPy": 2975,
+      "recentSharePct": 8,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 51,
+        "trades": 60,
+        "value": 63,
+        "fresh": 289
+      }
+    },
+    {
+      "sigungu": "관악구",
+      "dongName": "봉천동",
+      "momentumPct": 2.8,
+      "trades": 721,
+      "complexCount": 93,
+      "pricePerPy": 3459,
+      "recentSharePct": 10,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 50,
+        "trades": 19,
+        "value": 115,
+        "fresh": 275
+      }
+    },
+    {
+      "sigungu": "관악구",
+      "dongName": "남현동",
+      "momentumPct": 2.8,
+      "trades": 66,
+      "complexCount": 25,
+      "pricePerPy": 3193,
+      "recentSharePct": 8,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 52,
+        "trades": 424,
+        "value": 84,
+        "fresh": 303
+      }
+    },
+    {
+      "sigungu": "서초구",
+      "dongName": "서초동",
+      "momentumPct": -2.6,
+      "trades": 643,
+      "complexCount": 116,
+      "pricePerPy": 5346,
+      "recentSharePct": 11,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 398,
+        "trades": 26,
+        "value": 402,
+        "fresh": 251
+      }
+    },
+    {
+      "sigungu": "서초구",
+      "dongName": "우면동",
+      "momentumPct": -2.6,
+      "trades": 112,
+      "complexCount": 13,
+      "pricePerPy": 7036,
+      "recentSharePct": 0,
+      "medianBuildYear": 2012,
+      "ranks": {
+        "momentum": 402,
+        "trades": 361,
+        "value": 421,
+        "fresh": 384
+      }
+    },
+    {
+      "sigungu": "서초구",
+      "dongName": "반포동",
+      "momentumPct": -2.6,
+      "trades": 258,
+      "complexCount": 45,
+      "pricePerPy": 6217,
+      "recentSharePct": 18,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 401,
+        "trades": 182,
+        "value": 414,
+        "fresh": 182
+      }
+    },
+    {
+      "sigungu": "서초구",
+      "dongName": "방배동",
+      "momentumPct": -2.6,
+      "trades": 350,
+      "complexCount": 94,
+      "pricePerPy": 6122,
+      "recentSharePct": 11,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 399,
+        "trades": 116,
+        "value": 410,
+        "fresh": 261
+      }
+    },
+    {
+      "sigungu": "서초구",
+      "dongName": "잠원동",
+      "momentumPct": -2.6,
+      "trades": 262,
+      "complexCount": 47,
+      "pricePerPy": 12381,
+      "recentSharePct": 23,
+      "medianBuildYear": 1998,
+      "ranks": {
+        "momentum": 400,
+        "trades": 178,
+        "value": 434,
+        "fresh": 134
+      }
+    },
+    {
+      "sigungu": "서초구",
+      "dongName": "양재동",
+      "momentumPct": -2.6,
+      "trades": 51,
+      "complexCount": 26,
+      "pricePerPy": 4139,
+      "recentSharePct": 8,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 403,
+        "trades": 437,
+        "value": 387,
+        "fresh": 311
+      }
+    },
+    {
+      "sigungu": "강남구",
+      "dongName": "삼성동",
+      "momentumPct": -5.4,
+      "trades": 207,
+      "complexCount": 44,
+      "pricePerPy": 8483,
+      "recentSharePct": 7,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 430,
+        "trades": 230,
+        "value": 432,
+        "fresh": 326
+      }
+    },
+    {
+      "sigungu": "강남구",
+      "dongName": "역삼동",
+      "momentumPct": -5.4,
+      "trades": 274,
+      "complexCount": 54,
+      "pricePerPy": 5589,
+      "recentSharePct": 11,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 427,
+        "trades": 165,
+        "value": 428,
+        "fresh": 252
+      }
+    },
+    {
+      "sigungu": "강남구",
+      "dongName": "도곡동",
+      "momentumPct": -5.4,
+      "trades": 228,
+      "complexCount": 39,
+      "pricePerPy": 6785,
+      "recentSharePct": 10,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 429,
+        "trades": 215,
+        "value": 430,
+        "fresh": 263
+      }
+    },
+    {
+      "sigungu": "강남구",
+      "dongName": "일원동",
+      "momentumPct": -5.4,
+      "trades": 133,
+      "complexCount": 14,
+      "pricePerPy": 10915,
+      "recentSharePct": 21,
+      "medianBuildYear": 1993,
+      "ranks": {
+        "momentum": 435,
+        "trades": 328,
+        "value": 436,
+        "fresh": 150
+      }
+    },
+    {
+      "sigungu": "강남구",
+      "dongName": "대치동",
+      "momentumPct": -5.4,
+      "trades": 194,
+      "complexCount": 32,
+      "pricePerPy": 9399,
+      "recentSharePct": 13,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 431,
+        "trades": 247,
+        "value": 433,
+        "fresh": 235
+      }
+    },
+    {
+      "sigungu": "강남구",
+      "dongName": "논현동",
+      "momentumPct": -5.4,
+      "trades": 145,
+      "complexCount": 36,
+      "pricePerPy": 5010,
+      "recentSharePct": 8,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 434,
+        "trades": 315,
+        "value": 427,
+        "fresh": 292
+      }
+    },
+    {
+      "sigungu": "강남구",
+      "dongName": "개포동",
+      "momentumPct": -5.4,
+      "trades": 271,
+      "complexCount": 27,
+      "pricePerPy": 10021,
+      "recentSharePct": 30,
+      "medianBuildYear": 1993,
+      "ranks": {
+        "momentum": 428,
+        "trades": 168,
+        "value": 435,
+        "fresh": 98
+      }
+    },
+    {
+      "sigungu": "강남구",
+      "dongName": "청담동",
+      "momentumPct": -5.4,
+      "trades": 169,
+      "complexCount": 37,
+      "pricePerPy": 7875,
+      "recentSharePct": 14,
+      "medianBuildYear": 1999,
+      "ranks": {
+        "momentum": 432,
+        "trades": 286,
+        "value": 431,
+        "fresh": 228
+      }
+    },
+    {
+      "sigungu": "강남구",
+      "dongName": "수서동",
+      "momentumPct": -5.4,
+      "trades": 154,
+      "complexCount": 8,
+      "pricePerPy": 11069,
+      "recentSharePct": 13,
+      "medianBuildYear": 1993,
+      "ranks": {
+        "momentum": 433,
+        "trades": 305,
+        "value": 437,
+        "fresh": 236
+      }
+    },
+    {
+      "sigungu": "강남구",
+      "dongName": "압구정동",
+      "momentumPct": -5.4,
+      "trades": 68,
+      "complexCount": 9,
+      "pricePerPy": 15249,
+      "recentSharePct": 0,
+      "medianBuildYear": 1980,
+      "ranks": {
+        "momentum": 436,
+        "trades": 422,
+        "value": 438,
+        "fresh": 385
+      }
+    },
+    {
+      "sigungu": "송파구",
+      "dongName": "가락동",
+      "momentumPct": -1.7,
+      "trades": 417,
+      "complexCount": 54,
+      "pricePerPy": 4535,
+      "recentSharePct": 7,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 376,
+        "trades": 85,
+        "value": 380,
+        "fresh": 321
+      }
+    },
+    {
+      "sigungu": "송파구",
+      "dongName": "잠실동",
+      "momentumPct": -1.7,
+      "trades": 316,
+      "complexCount": 16,
+      "pricePerPy": 8611,
+      "recentSharePct": 19,
+      "medianBuildYear": 2006,
+      "ranks": {
+        "momentum": 377,
+        "trades": 130,
+        "value": 424,
+        "fresh": 173
+      }
+    },
+    {
+      "sigungu": "송파구",
+      "dongName": "신천동",
+      "momentumPct": -1.7,
+      "trades": 194,
+      "complexCount": 12,
+      "pricePerPy": 8496,
+      "recentSharePct": 8,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 383,
+        "trades": 248,
+        "value": 423,
+        "fresh": 293
+      }
+    },
+    {
+      "sigungu": "송파구",
+      "dongName": "장지동",
+      "momentumPct": -1.7,
+      "trades": 240,
+      "complexCount": 22,
+      "pricePerPy": 7499,
+      "recentSharePct": 23,
+      "medianBuildYear": 2011,
+      "ranks": {
+        "momentum": 379,
+        "trades": 198,
+        "value": 419,
+        "fresh": 138
+      }
+    },
+    {
+      "sigungu": "송파구",
+      "dongName": "방이동",
+      "momentumPct": -1.7,
+      "trades": 133,
+      "complexCount": 35,
+      "pricePerPy": 4340,
+      "recentSharePct": 14,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 385,
+        "trades": 329,
+        "value": 377,
+        "fresh": 222
+      }
+    },
+    {
+      "sigungu": "송파구",
+      "dongName": "풍납동",
+      "momentumPct": -1.7,
+      "trades": 197,
+      "complexCount": 23,
+      "pricePerPy": 4693,
+      "recentSharePct": 9,
+      "medianBuildYear": 1999,
+      "ranks": {
+        "momentum": 382,
+        "trades": 244,
+        "value": 383,
+        "fresh": 285
+      }
+    },
+    {
+      "sigungu": "송파구",
+      "dongName": "거여동",
+      "momentumPct": -1.7,
+      "trades": 226,
+      "complexCount": 18,
+      "pricePerPy": 5158,
+      "recentSharePct": 22,
+      "medianBuildYear": 1999,
+      "ranks": {
+        "momentum": 380,
+        "trades": 217,
+        "value": 389,
+        "fresh": 144
+      }
+    },
+    {
+      "sigungu": "송파구",
+      "dongName": "마천동",
+      "momentumPct": -1.7,
+      "trades": 106,
+      "complexCount": 20,
+      "pricePerPy": 4298,
+      "recentSharePct": 10,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 386,
+        "trades": 371,
+        "value": 375,
+        "fresh": 266
+      }
+    },
+    {
+      "sigungu": "송파구",
+      "dongName": "오금동",
+      "momentumPct": -1.7,
+      "trades": 171,
+      "complexCount": 26,
+      "pricePerPy": 5762,
+      "recentSharePct": 27,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 384,
+        "trades": 283,
+        "value": 396,
+        "fresh": 112
+      }
+    },
+    {
+      "sigungu": "송파구",
+      "dongName": "문정동",
+      "momentumPct": -1.7,
+      "trades": 242,
+      "complexCount": 26,
+      "pricePerPy": 4762,
+      "recentSharePct": 8,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 378,
+        "trades": 195,
+        "value": 384,
+        "fresh": 312
+      }
+    },
+    {
+      "sigungu": "송파구",
+      "dongName": "송파동",
+      "momentumPct": -1.7,
+      "trades": 205,
+      "complexCount": 24,
+      "pricePerPy": 6291,
+      "recentSharePct": 21,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 381,
+        "trades": 234,
+        "value": 404,
+        "fresh": 156
+      }
+    },
+    {
+      "sigungu": "강동구",
+      "dongName": "천호동",
+      "momentumPct": -0.3,
+      "trades": 401,
+      "complexCount": 72,
+      "pricePerPy": 3381,
+      "recentSharePct": 11,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 311,
+        "trades": 91,
+        "value": 317,
+        "fresh": 253
+      }
+    },
+    {
+      "sigungu": "강동구",
+      "dongName": "둔촌동",
+      "momentumPct": -0.3,
+      "trades": 242,
+      "complexCount": 34,
+      "pricePerPy": 4248,
+      "recentSharePct": 15,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 315,
+        "trades": 196,
+        "value": 338,
+        "fresh": 218
+      }
+    },
+    {
+      "sigungu": "강동구",
+      "dongName": "상일동",
+      "momentumPct": -0.3,
+      "trades": 200,
+      "complexCount": 10,
+      "pricePerPy": 6989,
+      "recentSharePct": 70,
+      "medianBuildYear": 2019,
+      "ranks": {
+        "momentum": 317,
+        "trades": 240,
+        "value": 393,
+        "fresh": 23
+      }
+    },
+    {
+      "sigungu": "강동구",
+      "dongName": "명일동",
+      "momentumPct": -0.3,
+      "trades": 259,
+      "complexCount": 31,
+      "pricePerPy": 3938,
+      "recentSharePct": 6,
+      "medianBuildYear": 2001,
+      "ranks": {
+        "momentum": 314,
+        "trades": 180,
+        "value": 332,
+        "fresh": 330
+      }
+    },
+    {
+      "sigungu": "강동구",
+      "dongName": "길동",
+      "momentumPct": -0.3,
+      "trades": 297,
+      "complexCount": 63,
+      "pricePerPy": 3005,
+      "recentSharePct": 16,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 312,
+        "trades": 148,
+        "value": 303,
+        "fresh": 206
+      }
+    },
+    {
+      "sigungu": "강동구",
+      "dongName": "강일동",
+      "momentumPct": -0.3,
+      "trades": 186,
+      "complexCount": 15,
+      "pricePerPy": 4997,
+      "recentSharePct": 20,
+      "medianBuildYear": 2009,
+      "ranks": {
+        "momentum": 319,
+        "trades": 263,
+        "value": 363,
+        "fresh": 161
+      }
+    },
+    {
+      "sigungu": "강동구",
+      "dongName": "성내동",
+      "momentumPct": -0.3,
+      "trades": 279,
+      "complexCount": 69,
+      "pricePerPy": 3678,
+      "recentSharePct": 17,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 313,
+        "trades": 160,
+        "value": 325,
+        "fresh": 187
+      }
+    },
+    {
+      "sigungu": "강동구",
+      "dongName": "암사동",
+      "momentumPct": -0.3,
+      "trades": 240,
+      "complexCount": 28,
+      "pricePerPy": 4204,
+      "recentSharePct": 4,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 316,
+        "trades": 199,
+        "value": 336,
+        "fresh": 358
+      }
+    },
+    {
+      "sigungu": "강동구",
+      "dongName": "고덕동",
+      "momentumPct": -0.3,
+      "trades": 187,
+      "complexCount": 8,
+      "pricePerPy": 8303,
+      "recentSharePct": 50,
+      "medianBuildYear": 2016,
+      "ranks": {
+        "momentum": 318,
+        "trades": 260,
+        "value": 407,
+        "fresh": 45
+      }
+    },
+    {
+      "sigungu": "수원시 장안구",
+      "dongName": "송죽동",
+      "momentumPct": 4.9,
+      "trades": 51,
+      "complexCount": 9,
+      "pricePerPy": 1584,
+      "recentSharePct": 11,
+      "medianBuildYear": 1995,
+      "ranks": {
+        "momentum": 6,
+        "trades": 438,
+        "value": 2,
+        "fresh": 254
+      }
+    },
+    {
+      "sigungu": "수원시 장안구",
+      "dongName": "정자동",
+      "momentumPct": 4.9,
+      "trades": 714,
+      "complexCount": 50,
+      "pricePerPy": 2186,
+      "recentSharePct": 10,
+      "medianBuildYear": 2000,
+      "ranks": {
+        "momentum": 1,
+        "trades": 20,
+        "value": 6,
+        "fresh": 267
+      }
+    },
+    {
+      "sigungu": "수원시 장안구",
+      "dongName": "조원동",
+      "momentumPct": 4.9,
+      "trades": 194,
+      "complexCount": 18,
+      "pricePerPy": 1887,
+      "recentSharePct": 6,
+      "medianBuildYear": 2001,
+      "ranks": {
+        "momentum": 3,
+        "trades": 249,
+        "value": 4,
+        "fresh": 341
+      }
+    },
+    {
+      "sigungu": "수원시 장안구",
+      "dongName": "연무동",
+      "momentumPct": 4.9,
+      "trades": 77,
+      "complexCount": 12,
+      "pricePerPy": 1453,
+      "recentSharePct": 17,
+      "medianBuildYear": 1995,
+      "ranks": {
+        "momentum": 5,
+        "trades": 415,
+        "value": 1,
+        "fresh": 195
+      }
+    },
+    {
+      "sigungu": "수원시 장안구",
+      "dongName": "천천동",
+      "momentumPct": 4.9,
+      "trades": 213,
+      "complexCount": 10,
+      "pricePerPy": 2133,
+      "recentSharePct": 0,
+      "medianBuildYear": 2001,
+      "ranks": {
+        "momentum": 2,
+        "trades": 225,
+        "value": 5,
+        "fresh": 386
+      }
+    },
+    {
+      "sigungu": "수원시 장안구",
+      "dongName": "율전동",
+      "momentumPct": 4.9,
+      "trades": 149,
+      "complexCount": 19,
+      "pricePerPy": 1714,
+      "recentSharePct": 5,
+      "medianBuildYear": 1998,
+      "ranks": {
+        "momentum": 4,
+        "trades": 310,
+        "value": 3,
+        "fresh": 343
+      }
+    },
+    {
+      "sigungu": "수원시 권선구",
+      "dongName": "호매실동",
+      "momentumPct": 1.6,
+      "trades": 410,
+      "complexCount": 12,
+      "pricePerPy": 2370,
+      "recentSharePct": 42,
+      "medianBuildYear": 2015,
+      "ranks": {
+        "momentum": 85,
+        "trades": 86,
+        "value": 132,
+        "fresh": 61
+      }
+    },
+    {
+      "sigungu": "수원시 권선구",
+      "dongName": "권선동",
+      "momentumPct": 1.6,
+      "trades": 744,
+      "complexCount": 45,
+      "pricePerPy": 1857,
+      "recentSharePct": 13,
+      "medianBuildYear": 2000,
+      "ranks": {
+        "momentum": 84,
+        "trades": 16,
+        "value": 75,
+        "fresh": 231
+      }
+    },
+    {
+      "sigungu": "수원시 권선구",
+      "dongName": "금곡동",
+      "momentumPct": 1.6,
+      "trades": 380,
+      "complexCount": 19,
+      "pricePerPy": 1740,
+      "recentSharePct": 21,
+      "medianBuildYear": 1998,
+      "ranks": {
+        "momentum": 86,
+        "trades": 101,
+        "value": 64,
+        "fresh": 153
+      }
+    },
+    {
+      "sigungu": "수원시 권선구",
+      "dongName": "오목천동",
+      "momentumPct": 1.6,
+      "trades": 163,
+      "complexCount": 11,
+      "pricePerPy": 1555,
+      "recentSharePct": 18,
+      "medianBuildYear": 2006,
+      "ranks": {
+        "momentum": 88,
+        "trades": 295,
+        "value": 52,
+        "fresh": 177
+      }
+    },
+    {
+      "sigungu": "수원시 권선구",
+      "dongName": "서둔동",
+      "momentumPct": 1.6,
+      "trades": 115,
+      "complexCount": 9,
+      "pricePerPy": 2126,
+      "recentSharePct": 33,
+      "medianBuildYear": 2009,
+      "ranks": {
+        "momentum": 89,
+        "trades": 354,
+        "value": 105,
+        "fresh": 80
+      }
+    },
+    {
+      "sigungu": "수원시 권선구",
+      "dongName": "당수동",
+      "momentumPct": 1.6,
+      "trades": 81,
+      "complexCount": 8,
+      "pricePerPy": 1547,
+      "recentSharePct": 25,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 92,
+        "trades": 406,
+        "value": 51,
+        "fresh": 125
+      }
+    },
+    {
+      "sigungu": "수원시 권선구",
+      "dongName": "세류동",
+      "momentumPct": 1.6,
+      "trades": 99,
+      "complexCount": 14,
+      "pricePerPy": 1565,
+      "recentSharePct": 0,
+      "medianBuildYear": 1999,
+      "ranks": {
+        "momentum": 90,
+        "trades": 376,
+        "value": 54,
+        "fresh": 387
+      }
+    },
+    {
+      "sigungu": "수원시 권선구",
+      "dongName": "구운동",
+      "momentumPct": 1.6,
+      "trades": 192,
+      "complexCount": 10,
+      "pricePerPy": 1898,
+      "recentSharePct": 0,
+      "medianBuildYear": 2001,
+      "ranks": {
+        "momentum": 87,
+        "trades": 253,
+        "value": 79,
+        "fresh": 388
+      }
+    },
+    {
+      "sigungu": "수원시 권선구",
+      "dongName": "고색동",
+      "momentumPct": 1.6,
+      "trades": 99,
+      "complexCount": 9,
+      "pricePerPy": 1605,
+      "recentSharePct": 0,
+      "medianBuildYear": 1998,
+      "ranks": {
+        "momentum": 91,
+        "trades": 377,
+        "value": 57,
+        "fresh": 389
+      }
+    },
+    {
+      "sigungu": "수원시 팔달구",
+      "dongName": "인계동",
+      "momentumPct": 1,
+      "trades": 361,
+      "complexCount": 32,
+      "pricePerPy": 1840,
+      "recentSharePct": 25,
+      "medianBuildYear": 2009,
+      "ranks": {
+        "momentum": 145,
+        "trades": 110,
+        "value": 140,
+        "fresh": 126
+      }
+    },
+    {
+      "sigungu": "수원시 팔달구",
+      "dongName": "화서동",
+      "momentumPct": 1,
+      "trades": 371,
+      "complexCount": 28,
+      "pricePerPy": 2351,
+      "recentSharePct": 4,
+      "medianBuildYear": 2001,
+      "ranks": {
+        "momentum": 144,
+        "trades": 106,
+        "value": 186,
+        "fresh": 359
+      }
+    },
+    {
+      "sigungu": "수원시 팔달구",
+      "dongName": "우만동",
+      "momentumPct": 1,
+      "trades": 192,
+      "complexCount": 17,
+      "pricePerPy": 2487,
+      "recentSharePct": 12,
+      "medianBuildYear": 1995,
+      "ranks": {
+        "momentum": 146,
+        "trades": 254,
+        "value": 193,
+        "fresh": 242
+      }
+    },
+    {
+      "sigungu": "수원시 영통구",
+      "dongName": "원천동",
+      "momentumPct": 1.6,
+      "trades": 259,
+      "complexCount": 13,
+      "pricePerPy": 2755,
+      "recentSharePct": 46,
+      "medianBuildYear": 2014,
+      "ranks": {
+        "momentum": 97,
+        "trades": 181,
+        "value": 165,
+        "fresh": 52
+      }
+    },
+    {
+      "sigungu": "수원시 영통구",
+      "dongName": "망포동",
+      "momentumPct": 1.6,
+      "trades": 643,
+      "complexCount": 31,
+      "pricePerPy": 2513,
+      "recentSharePct": 32,
+      "medianBuildYear": 2006,
+      "ranks": {
+        "momentum": 94,
+        "trades": 27,
+        "value": 142,
+        "fresh": 85
+      }
+    },
+    {
+      "sigungu": "수원시 영통구",
+      "dongName": "영통동",
+      "momentumPct": 1.6,
+      "trades": 1033,
+      "complexCount": 38,
+      "pricePerPy": 2565,
+      "recentSharePct": 5,
+      "medianBuildYear": 1998,
+      "ranks": {
+        "momentum": 93,
+        "trades": 4,
+        "value": 146,
+        "fresh": 344
+      }
+    },
+    {
+      "sigungu": "수원시 영통구",
+      "dongName": "매탄동",
+      "momentumPct": 1.6,
+      "trades": 477,
+      "complexCount": 25,
+      "pricePerPy": 1987,
+      "recentSharePct": 0,
+      "medianBuildYear": 1998,
+      "ranks": {
+        "momentum": 95,
+        "trades": 58,
+        "value": 90,
+        "fresh": 390
+      }
+    },
+    {
+      "sigungu": "수원시 영통구",
+      "dongName": "이의동",
+      "momentumPct": 1.6,
+      "trades": 285,
+      "complexCount": 18,
+      "pricePerPy": 5012,
+      "recentSharePct": 6,
+      "medianBuildYear": 2012,
+      "ranks": {
+        "momentum": 96,
+        "trades": 152,
+        "value": 310,
+        "fresh": 342
+      }
+    },
+    {
+      "sigungu": "성남시 수정구",
+      "dongName": "신흥동",
+      "momentumPct": 0.9,
+      "trades": 267,
+      "complexCount": 17,
+      "pricePerPy": 3418,
+      "recentSharePct": 41,
+      "medianBuildYear": 2006,
+      "ranks": {
+        "momentum": 157,
+        "trades": 170,
+        "value": 259,
+        "fresh": 63
+      }
+    },
+    {
+      "sigungu": "성남시 수정구",
+      "dongName": "단대동",
+      "momentumPct": 0.9,
+      "trades": 87,
+      "complexCount": 8,
+      "pricePerPy": 3125,
+      "recentSharePct": 0,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 159,
+        "trades": 398,
+        "value": 243,
+        "fresh": 391
+      }
+    },
+    {
+      "sigungu": "성남시 수정구",
+      "dongName": "창곡동",
+      "momentumPct": 0.9,
+      "trades": 238,
+      "complexCount": 16,
+      "pricePerPy": 6520,
+      "recentSharePct": 81,
+      "medianBuildYear": 2016,
+      "ranks": {
+        "momentum": 158,
+        "trades": 200,
+        "value": 366,
+        "fresh": 19
+      }
+    },
+    {
+      "sigungu": "성남시 수정구",
+      "dongName": "태평동",
+      "momentumPct": 0.9,
+      "trades": 86,
+      "complexCount": 15,
+      "pricePerPy": 2676,
+      "recentSharePct": 7,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 160,
+        "trades": 400,
+        "value": 209,
+        "fresh": 327
+      }
+    },
+    {
+      "sigungu": "성남시 수정구",
+      "dongName": "수진동",
+      "momentumPct": 0.9,
+      "trades": 69,
+      "complexCount": 14,
+      "pricePerPy": 2930,
+      "recentSharePct": 0,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 161,
+        "trades": 420,
+        "value": 223,
+        "fresh": 392
+      }
+    },
+    {
+      "sigungu": "성남시 중원구",
+      "dongName": "금광동",
+      "momentumPct": -0.1,
+      "trades": 233,
+      "complexCount": 13,
+      "pricePerPy": 3434,
+      "recentSharePct": 54,
+      "medianBuildYear": 2021,
+      "ranks": {
+        "momentum": 289,
+        "trades": 208,
+        "value": 315,
+        "fresh": 41
+      }
+    },
+    {
+      "sigungu": "성남시 중원구",
+      "dongName": "하대원동",
+      "momentumPct": -0.1,
+      "trades": 108,
+      "complexCount": 16,
+      "pricePerPy": 2619,
+      "recentSharePct": 19,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 290,
+        "trades": 368,
+        "value": 273,
+        "fresh": 174
+      }
+    },
+    {
+      "sigungu": "성남시 중원구",
+      "dongName": "상대원동",
+      "momentumPct": -0.1,
+      "trades": 96,
+      "complexCount": 9,
+      "pricePerPy": 2519,
+      "recentSharePct": 0,
+      "medianBuildYear": 1993,
+      "ranks": {
+        "momentum": 291,
+        "trades": 381,
+        "value": 269,
+        "fresh": 393
+      }
+    },
+    {
+      "sigungu": "성남시 중원구",
+      "dongName": "성남동",
+      "momentumPct": -0.1,
+      "trades": 61,
+      "complexCount": 22,
+      "pricePerPy": 2420,
+      "recentSharePct": 9,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 292,
+        "trades": 430,
+        "value": 264,
+        "fresh": 282
+      }
+    },
+    {
+      "sigungu": "성남시 분당구",
+      "dongName": "판교동",
+      "momentumPct": -1.6,
+      "trades": 121,
+      "complexCount": 8,
+      "pricePerPy": 6959,
+      "recentSharePct": 0,
+      "medianBuildYear": 2009,
+      "ranks": {
+        "momentum": 374,
+        "trades": 340,
+        "value": 408,
+        "fresh": 394
+      }
+    },
+    {
+      "sigungu": "성남시 분당구",
+      "dongName": "정자동",
+      "momentumPct": -1.6,
+      "trades": 505,
+      "complexCount": 34,
+      "pricePerPy": 6741,
+      "recentSharePct": 3,
+      "medianBuildYear": 1995,
+      "ranks": {
+        "momentum": 365,
+        "trades": 51,
+        "value": 406,
+        "fresh": 365
+      }
+    },
+    {
+      "sigungu": "성남시 분당구",
+      "dongName": "이매동",
+      "momentumPct": -1.6,
+      "trades": 242,
+      "complexCount": 18,
+      "pricePerPy": 6293,
+      "recentSharePct": 0,
+      "medianBuildYear": 1992,
+      "ranks": {
+        "momentum": 369,
+        "trades": 197,
+        "value": 401,
+        "fresh": 395
+      }
+    },
+    {
+      "sigungu": "성남시 분당구",
+      "dongName": "서현동",
+      "momentumPct": -1.6,
+      "trades": 313,
+      "complexCount": 14,
+      "pricePerPy": 7044,
+      "recentSharePct": 0,
+      "medianBuildYear": 1992,
+      "ranks": {
+        "momentum": 366,
+        "trades": 133,
+        "value": 409,
+        "fresh": 396
+      }
+    },
+    {
+      "sigungu": "성남시 분당구",
+      "dongName": "야탑동",
+      "momentumPct": -1.6,
+      "trades": 307,
+      "complexCount": 19,
+      "pricePerPy": 5622,
+      "recentSharePct": 0,
+      "medianBuildYear": 1994,
+      "ranks": {
+        "momentum": 367,
+        "trades": 140,
+        "value": 394,
+        "fresh": 397
+      }
+    },
+    {
+      "sigungu": "성남시 분당구",
+      "dongName": "삼평동",
+      "momentumPct": -1.6,
+      "trades": 172,
+      "complexCount": 9,
+      "pricePerPy": 8071,
+      "recentSharePct": 0,
+      "medianBuildYear": 2009,
+      "ranks": {
+        "momentum": 371,
+        "trades": 280,
+        "value": 422,
+        "fresh": 398
+      }
+    },
+    {
+      "sigungu": "성남시 분당구",
+      "dongName": "구미동",
+      "momentumPct": -1.6,
+      "trades": 270,
+      "complexCount": 19,
+      "pricePerPy": 6255,
+      "recentSharePct": 0,
+      "medianBuildYear": 1995,
+      "ranks": {
+        "momentum": 368,
+        "trades": 169,
+        "value": 400,
+        "fresh": 399
+      }
+    },
+    {
+      "sigungu": "성남시 분당구",
+      "dongName": "수내동",
+      "momentumPct": -1.6,
+      "trades": 144,
+      "complexCount": 12,
+      "pricePerPy": 7663,
+      "recentSharePct": 8,
+      "medianBuildYear": 1992,
+      "ranks": {
+        "momentum": 373,
+        "trades": 318,
+        "value": 418,
+        "fresh": 294
+      }
+    },
+    {
+      "sigungu": "성남시 분당구",
+      "dongName": "금곡동",
+      "momentumPct": -1.6,
+      "trades": 173,
+      "complexCount": 14,
+      "pricePerPy": 6419,
+      "recentSharePct": 0,
+      "medianBuildYear": 1995,
+      "ranks": {
+        "momentum": 370,
+        "trades": 277,
+        "value": 403,
+        "fresh": 400
+      }
+    },
+    {
+      "sigungu": "성남시 분당구",
+      "dongName": "백현동",
+      "momentumPct": -1.6,
+      "trades": 150,
+      "complexCount": 9,
+      "pricePerPy": 8996,
+      "recentSharePct": 11,
+      "medianBuildYear": 2009,
+      "ranks": {
+        "momentum": 372,
+        "trades": 308,
+        "value": 426,
+        "fresh": 255
+      }
+    },
+    {
+      "sigungu": "성남시 분당구",
+      "dongName": "운중동",
+      "momentumPct": -1.6,
+      "trades": 108,
+      "complexCount": 8,
+      "pricePerPy": 7160,
+      "recentSharePct": 0,
+      "medianBuildYear": 2009,
+      "ranks": {
+        "momentum": 375,
+        "trades": 369,
+        "value": 411,
+        "fresh": 401
+      }
+    },
+    {
+      "sigungu": "안양시 만안구",
+      "dongName": "박달동",
+      "momentumPct": 3.4,
+      "trades": 187,
+      "complexCount": 18,
+      "pricePerPy": 1945,
+      "recentSharePct": 11,
+      "medianBuildYear": 2001,
+      "ranks": {
+        "momentum": 31,
+        "trades": 261,
+        "value": 15,
+        "fresh": 256
+      }
+    },
+    {
+      "sigungu": "안양시 만안구",
+      "dongName": "안양동",
+      "momentumPct": 3.4,
+      "trades": 1017,
+      "complexCount": 103,
+      "pricePerPy": 1854,
+      "recentSharePct": 31,
+      "medianBuildYear": 2009,
+      "ranks": {
+        "momentum": 29,
+        "trades": 6,
+        "value": 13,
+        "fresh": 89
+      }
+    },
+    {
+      "sigungu": "안양시 만안구",
+      "dongName": "석수동",
+      "momentumPct": 3.4,
+      "trades": 453,
+      "complexCount": 32,
+      "pricePerPy": 2527,
+      "recentSharePct": 9,
+      "medianBuildYear": 2006,
+      "ranks": {
+        "momentum": 30,
+        "trades": 71,
+        "value": 20,
+        "fresh": 277
+      }
+    },
+    {
+      "sigungu": "안양시 동안구",
+      "dongName": "관양동",
+      "momentumPct": 1.3,
+      "trades": 480,
+      "complexCount": 34,
+      "pricePerPy": 3482,
+      "recentSharePct": 12,
+      "medianBuildYear": 1993,
+      "ranks": {
+        "momentum": 120,
+        "trades": 55,
+        "value": 232,
+        "fresh": 243
+      }
+    },
+    {
+      "sigungu": "안양시 동안구",
+      "dongName": "비산동",
+      "momentumPct": 1.3,
+      "trades": 591,
+      "complexCount": 25,
+      "pricePerPy": 3407,
+      "recentSharePct": 28,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 119,
+        "trades": 34,
+        "value": 226,
+        "fresh": 105
+      }
+    },
+    {
+      "sigungu": "안양시 동안구",
+      "dongName": "호계동",
+      "momentumPct": 1.3,
+      "trades": 965,
+      "complexCount": 73,
+      "pricePerPy": 2691,
+      "recentSharePct": 18,
+      "medianBuildYear": 2001,
+      "ranks": {
+        "momentum": 118,
+        "trades": 7,
+        "value": 180,
+        "fresh": 181
+      }
+    },
+    {
+      "sigungu": "안양시 동안구",
+      "dongName": "평촌동",
+      "momentumPct": 1.3,
+      "trades": 464,
+      "complexCount": 30,
+      "pricePerPy": 4792,
+      "recentSharePct": 3,
+      "medianBuildYear": 1994,
+      "ranks": {
+        "momentum": 121,
+        "trades": 66,
+        "value": 311,
+        "fresh": 361
+      }
+    },
+    {
+      "sigungu": "안산시 상록구",
+      "dongName": "사동",
+      "momentumPct": -7.4,
+      "trades": 441,
+      "complexCount": 25,
+      "pricePerPy": 1489,
+      "recentSharePct": 12,
+      "medianBuildYear": 2000,
+      "ranks": {
+        "momentum": 437,
+        "trades": 76,
+        "value": 417,
+        "fresh": 240
+      }
+    },
+    {
+      "sigungu": "안산시 상록구",
+      "dongName": "본오동",
+      "momentumPct": -7.4,
+      "trades": 167,
+      "complexCount": 12,
+      "pricePerPy": 1410,
+      "recentSharePct": 0,
+      "medianBuildYear": 1996,
+      "ranks": {
+        "momentum": 438,
+        "trades": 289,
+        "value": 416,
+        "fresh": 402
+      }
+    },
+    {
+      "sigungu": "안산시 단원구",
+      "dongName": "초지동",
+      "momentumPct": 0.4,
+      "trades": 276,
+      "complexCount": 11,
+      "pricePerPy": 1922,
+      "recentSharePct": 27,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 232,
+        "trades": 163,
+        "value": 198,
+        "fresh": 109
+      }
+    },
+    {
+      "sigungu": "안산시 단원구",
+      "dongName": "고잔동",
+      "momentumPct": 0.4,
+      "trades": 397,
+      "complexCount": 21,
+      "pricePerPy": 2357,
+      "recentSharePct": 24,
+      "medianBuildYear": 2001,
+      "ranks": {
+        "momentum": 231,
+        "trades": 93,
+        "value": 222,
+        "fresh": 132
+      }
+    },
+    {
+      "sigungu": "안산시 단원구",
+      "dongName": "선부동",
+      "momentumPct": 0.4,
+      "trades": 276,
+      "complexCount": 15,
+      "pricePerPy": 1900,
+      "recentSharePct": 27,
+      "medianBuildYear": 1997,
+      "ranks": {
+        "momentum": 233,
+        "trades": 164,
+        "value": 195,
+        "fresh": 113
+      }
+    },
+    {
+      "sigungu": "안산시 단원구",
+      "dongName": "신길동",
+      "momentumPct": 0.4,
+      "trades": 94,
+      "complexCount": 8,
+      "pricePerPy": 1522,
+      "recentSharePct": 0,
+      "medianBuildYear": 2009,
+      "ranks": {
+        "momentum": 234,
+        "trades": 383,
+        "value": 162,
+        "fresh": 403
+      }
+    },
+    {
+      "sigungu": "고양시 덕양구",
+      "dongName": "덕은동",
+      "momentumPct": 1.3,
+      "trades": 123,
+      "complexCount": 8,
+      "pricePerPy": 4636,
+      "recentSharePct": 100,
+      "medianBuildYear": 2022,
+      "ranks": {
+        "momentum": 130,
+        "trades": 336,
+        "value": 305,
+        "fresh": 1
+      }
+    },
+    {
+      "sigungu": "고양시 덕양구",
+      "dongName": "고양동",
+      "momentumPct": 1.3,
+      "trades": 122,
+      "complexCount": 15,
+      "pricePerPy": 1173,
+      "recentSharePct": 0,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 131,
+        "trades": 338,
+        "value": 48,
+        "fresh": 404
+      }
+    },
+    {
+      "sigungu": "고양시 덕양구",
+      "dongName": "토당동",
+      "momentumPct": 1.3,
+      "trades": 146,
+      "complexCount": 22,
+      "pricePerPy": 1928,
+      "recentSharePct": 14,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 129,
+        "trades": 313,
+        "value": 122,
+        "fresh": 226
+      }
+    },
+    {
+      "sigungu": "고양시 덕양구",
+      "dongName": "화정동",
+      "momentumPct": 1.3,
+      "trades": 349,
+      "complexCount": 24,
+      "pricePerPy": 1868,
+      "recentSharePct": 0,
+      "medianBuildYear": 1995,
+      "ranks": {
+        "momentum": 127,
+        "trades": 118,
+        "value": 117,
+        "fresh": 405
+      }
+    },
+    {
+      "sigungu": "고양시 덕양구",
+      "dongName": "행신동",
+      "momentumPct": 1.3,
+      "trades": 573,
+      "complexCount": 44,
+      "pricePerPy": 1954,
+      "recentSharePct": 2,
+      "medianBuildYear": 1996,
+      "ranks": {
+        "momentum": 126,
+        "trades": 36,
+        "value": 124,
+        "fresh": 368
+      }
+    },
+    {
+      "sigungu": "고양시 덕양구",
+      "dongName": "성사동",
+      "momentumPct": 1.3,
+      "trades": 177,
+      "complexCount": 16,
+      "pricePerPy": 1794,
+      "recentSharePct": 0,
+      "medianBuildYear": 1993,
+      "ranks": {
+        "momentum": 128,
+        "trades": 271,
+        "value": 107,
+        "fresh": 406
+      }
+    },
+    {
+      "sigungu": "고양시 덕양구",
+      "dongName": "관산동",
+      "momentumPct": 1.3,
+      "trades": 59,
+      "complexCount": 8,
+      "pricePerPy": 1222,
+      "recentSharePct": 0,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 132,
+        "trades": 432,
+        "value": 53,
+        "fresh": 407
+      }
+    },
+    {
+      "sigungu": "고양시 일산동구",
+      "dongName": "풍동",
+      "momentumPct": -4.4,
+      "trades": 204,
+      "complexCount": 17,
+      "pricePerPy": 1547,
+      "recentSharePct": 18,
+      "medianBuildYear": 2006,
+      "ranks": {
+        "momentum": 421,
+        "trades": 235,
+        "value": 378,
+        "fresh": 183
+      }
+    },
+    {
+      "sigungu": "고양시 일산동구",
+      "dongName": "마두동",
+      "momentumPct": -4.4,
+      "trades": 201,
+      "complexCount": 17,
+      "pricePerPy": 2036,
+      "recentSharePct": 0,
+      "medianBuildYear": 1993,
+      "ranks": {
+        "momentum": 422,
+        "trades": 238,
+        "value": 385,
+        "fresh": 408
+      }
+    },
+    {
+      "sigungu": "고양시 일산동구",
+      "dongName": "백석동",
+      "momentumPct": -4.4,
+      "trades": 225,
+      "complexCount": 17,
+      "pricePerPy": 1822,
+      "recentSharePct": 6,
+      "medianBuildYear": 1994,
+      "ranks": {
+        "momentum": 420,
+        "trades": 218,
+        "value": 382,
+        "fresh": 337
+      }
+    },
+    {
+      "sigungu": "고양시 일산동구",
+      "dongName": "중산동",
+      "momentumPct": -4.4,
+      "trades": 266,
+      "complexCount": 19,
+      "pricePerPy": 1223,
+      "recentSharePct": 5,
+      "medianBuildYear": 1995,
+      "ranks": {
+        "momentum": 419,
+        "trades": 172,
+        "value": 371,
+        "fresh": 345
+      }
+    },
+    {
+      "sigungu": "고양시 일산동구",
+      "dongName": "식사동",
+      "momentumPct": -4.4,
+      "trades": 199,
+      "complexCount": 11,
+      "pricePerPy": 1621,
+      "recentSharePct": 18,
+      "medianBuildYear": 2010,
+      "ranks": {
+        "momentum": 423,
+        "trades": 241,
+        "value": 379,
+        "fresh": 178
+      }
+    },
+    {
+      "sigungu": "고양시 일산동구",
+      "dongName": "장항동",
+      "momentumPct": -4.4,
+      "trades": 119,
+      "complexCount": 11,
+      "pricePerPy": 2370,
+      "recentSharePct": 36,
+      "medianBuildYear": 1994,
+      "ranks": {
+        "momentum": 424,
+        "trades": 345,
+        "value": 390,
+        "fresh": 72
+      }
+    },
+    {
+      "sigungu": "고양시 일산서구",
+      "dongName": "일산동",
+      "momentumPct": -3.3,
+      "trades": 509,
+      "complexCount": 58,
+      "pricePerPy": 1511,
+      "recentSharePct": 2,
+      "medianBuildYear": 1995,
+      "ranks": {
+        "momentum": 404,
+        "trades": 50,
+        "value": 357,
+        "fresh": 370
+      }
+    },
+    {
+      "sigungu": "고양시 일산서구",
+      "dongName": "탄현동",
+      "momentumPct": -3.3,
+      "trades": 338,
+      "complexCount": 24,
+      "pricePerPy": 1270,
+      "recentSharePct": 8,
+      "medianBuildYear": 2000,
+      "ranks": {
+        "momentum": 406,
+        "trades": 124,
+        "value": 346,
+        "fresh": 295
+      }
+    },
+    {
+      "sigungu": "고양시 일산서구",
+      "dongName": "주엽동",
+      "momentumPct": -3.3,
+      "trades": 478,
+      "complexCount": 37,
+      "pricePerPy": 1876,
+      "recentSharePct": 0,
+      "medianBuildYear": 1994,
+      "ranks": {
+        "momentum": 405,
+        "trades": 57,
+        "value": 365,
+        "fresh": 409
+      }
+    },
+    {
+      "sigungu": "고양시 일산서구",
+      "dongName": "대화동",
+      "momentumPct": -3.3,
+      "trades": 162,
+      "complexCount": 16,
+      "pricePerPy": 1660,
+      "recentSharePct": 6,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 407,
+        "trades": 297,
+        "value": 360,
+        "fresh": 334
+      }
+    },
+    {
+      "sigungu": "고양시 일산서구",
+      "dongName": "덕이동",
+      "momentumPct": -3.3,
+      "trades": 127,
+      "complexCount": 13,
+      "pricePerPy": 1217,
+      "recentSharePct": 8,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 408,
+        "trades": 333,
+        "value": 344,
+        "fresh": 313
+      }
+    },
+    {
+      "sigungu": "용인시 처인구",
+      "dongName": "포곡읍 둔전리",
+      "momentumPct": -1.5,
+      "trades": 79,
+      "complexCount": 8,
+      "pricePerPy": 1297,
+      "recentSharePct": 0,
+      "medianBuildYear": 1998,
+      "ranks": {
+        "momentum": 363,
+        "trades": 412,
+        "value": 279,
+        "fresh": 410
+      }
+    },
+    {
+      "sigungu": "용인시 처인구",
+      "dongName": "역북동",
+      "momentumPct": -1.5,
+      "trades": 264,
+      "complexCount": 19,
+      "pricePerPy": 1400,
+      "recentSharePct": 42,
+      "medianBuildYear": 1999,
+      "ranks": {
+        "momentum": 359,
+        "trades": 174,
+        "value": 284,
+        "fresh": 60
+      }
+    },
+    {
+      "sigungu": "용인시 처인구",
+      "dongName": "고림동",
+      "momentumPct": -1.5,
+      "trades": 170,
+      "complexCount": 12,
+      "pricePerPy": 1302,
+      "recentSharePct": 42,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 360,
+        "trades": 284,
+        "value": 280,
+        "fresh": 62
+      }
+    },
+    {
+      "sigungu": "용인시 처인구",
+      "dongName": "이동읍 천리",
+      "momentumPct": -1.5,
+      "trades": 76,
+      "complexCount": 8,
+      "pricePerPy": 1182,
+      "recentSharePct": 25,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 364,
+        "trades": 416,
+        "value": 271,
+        "fresh": 127
+      }
+    },
+    {
+      "sigungu": "용인시 처인구",
+      "dongName": "김량장동",
+      "momentumPct": -1.5,
+      "trades": 148,
+      "complexCount": 25,
+      "pricePerPy": 1181,
+      "recentSharePct": 28,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 361,
+        "trades": 312,
+        "value": 270,
+        "fresh": 106
+      }
+    },
+    {
+      "sigungu": "용인시 처인구",
+      "dongName": "삼가동",
+      "momentumPct": -1.5,
+      "trades": 119,
+      "complexCount": 9,
+      "pricePerPy": 1424,
+      "recentSharePct": 0,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 362,
+        "trades": 346,
+        "value": 287,
+        "fresh": 411
+      }
+    },
+    {
+      "sigungu": "용인시 기흥구",
+      "dongName": "언남동",
+      "momentumPct": 3.7,
+      "trades": 313,
+      "complexCount": 15,
+      "pricePerPy": 1906,
+      "recentSharePct": 20,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 26,
+        "trades": 134,
+        "value": 10,
+        "fresh": 162
+      }
+    },
+    {
+      "sigungu": "용인시 기흥구",
+      "dongName": "구갈동",
+      "momentumPct": 3.7,
+      "trades": 410,
+      "complexCount": 21,
+      "pricePerPy": 2547,
+      "recentSharePct": 29,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 22,
+        "trades": 87,
+        "value": 19,
+        "fresh": 104
+      }
+    },
+    {
+      "sigungu": "용인시 기흥구",
+      "dongName": "중동",
+      "momentumPct": 3.7,
+      "trades": 435,
+      "complexCount": 23,
+      "pricePerPy": 1864,
+      "recentSharePct": 9,
+      "medianBuildYear": 2006,
+      "ranks": {
+        "momentum": 20,
+        "trades": 79,
+        "value": 9,
+        "fresh": 286
+      }
+    },
+    {
+      "sigungu": "용인시 기흥구",
+      "dongName": "상하동",
+      "momentumPct": 3.7,
+      "trades": 173,
+      "complexCount": 8,
+      "pricePerPy": 1530,
+      "recentSharePct": 0,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 28,
+        "trades": 278,
+        "value": 7,
+        "fresh": 412
+      }
+    },
+    {
+      "sigungu": "용인시 기흥구",
+      "dongName": "신갈동",
+      "momentumPct": 3.7,
+      "trades": 516,
+      "complexCount": 26,
+      "pricePerPy": 2430,
+      "recentSharePct": 19,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 19,
+        "trades": 48,
+        "value": 18,
+        "fresh": 169
+      }
+    },
+    {
+      "sigungu": "용인시 기흥구",
+      "dongName": "마북동",
+      "momentumPct": 3.7,
+      "trades": 418,
+      "complexCount": 23,
+      "pricePerPy": 2354,
+      "recentSharePct": 22,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 21,
+        "trades": 84,
+        "value": 17,
+        "fresh": 147
+      }
+    },
+    {
+      "sigungu": "용인시 기흥구",
+      "dongName": "동백동",
+      "momentumPct": 3.7,
+      "trades": 360,
+      "complexCount": 18,
+      "pricePerPy": 2071,
+      "recentSharePct": 11,
+      "medianBuildYear": 2006,
+      "ranks": {
+        "momentum": 24,
+        "trades": 111,
+        "value": 11,
+        "fresh": 257
+      }
+    },
+    {
+      "sigungu": "용인시 기흥구",
+      "dongName": "보정동",
+      "momentumPct": 3.7,
+      "trades": 329,
+      "complexCount": 19,
+      "pricePerPy": 3093,
+      "recentSharePct": 0,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 25,
+        "trades": 128,
+        "value": 25,
+        "fresh": 413
+      }
+    },
+    {
+      "sigungu": "용인시 기흥구",
+      "dongName": "보라동",
+      "momentumPct": 3.7,
+      "trades": 211,
+      "complexCount": 10,
+      "pricePerPy": 1687,
+      "recentSharePct": 10,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 27,
+        "trades": 226,
+        "value": 8,
+        "fresh": 268
+      }
+    },
+    {
+      "sigungu": "용인시 기흥구",
+      "dongName": "영덕동",
+      "momentumPct": 3.7,
+      "trades": 370,
+      "complexCount": 17,
+      "pricePerPy": 2166,
+      "recentSharePct": 18,
+      "medianBuildYear": 2009,
+      "ranks": {
+        "momentum": 23,
+        "trades": 107,
+        "value": 14,
+        "fresh": 184
+      }
+    },
+    {
+      "sigungu": "용인시 수지구",
+      "dongName": "상현동",
+      "momentumPct": 2.1,
+      "trades": 748,
+      "complexCount": 47,
+      "pricePerPy": 2995,
+      "recentSharePct": 13,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 69,
+        "trades": 15,
+        "value": 139,
+        "fresh": 233
+      }
+    },
+    {
+      "sigungu": "용인시 수지구",
+      "dongName": "풍덕천동",
+      "momentumPct": 2.1,
+      "trades": 866,
+      "complexCount": 35,
+      "pricePerPy": 4272,
+      "recentSharePct": 9,
+      "medianBuildYear": 2000,
+      "ranks": {
+        "momentum": 68,
+        "trades": 9,
+        "value": 235,
+        "fresh": 287
+      }
+    },
+    {
+      "sigungu": "용인시 수지구",
+      "dongName": "신봉동",
+      "momentumPct": 2.1,
+      "trades": 364,
+      "complexCount": 22,
+      "pricePerPy": 2748,
+      "recentSharePct": 18,
+      "medianBuildYear": 2010,
+      "ranks": {
+        "momentum": 73,
+        "trades": 109,
+        "value": 118,
+        "fresh": 179
+      }
+    },
+    {
+      "sigungu": "용인시 수지구",
+      "dongName": "죽전동",
+      "momentumPct": 2.1,
+      "trades": 670,
+      "complexCount": 67,
+      "pricePerPy": 2977,
+      "recentSharePct": 4,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 70,
+        "trades": 23,
+        "value": 135,
+        "fresh": 351
+      }
+    },
+    {
+      "sigungu": "용인시 수지구",
+      "dongName": "성복동",
+      "momentumPct": 2.1,
+      "trades": 466,
+      "complexCount": 22,
+      "pricePerPy": 2790,
+      "recentSharePct": 23,
+      "medianBuildYear": 2010,
+      "ranks": {
+        "momentum": 71,
+        "trades": 65,
+        "value": 121,
+        "fresh": 139
+      }
+    },
+    {
+      "sigungu": "용인시 수지구",
+      "dongName": "동천동",
+      "momentumPct": 2.1,
+      "trades": 388,
+      "complexCount": 27,
+      "pricePerPy": 3808,
+      "recentSharePct": 26,
+      "medianBuildYear": 2007,
+      "ranks": {
+        "momentum": 72,
+        "trades": 96,
+        "value": 205,
+        "fresh": 118
+      }
+    },
+    {
+      "sigungu": "부천시 원미구",
+      "dongName": "상동",
+      "momentumPct": 0.7,
+      "trades": 743,
+      "complexCount": 49,
+      "pricePerPy": 2603,
+      "recentSharePct": 4,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 192,
+        "trades": 17,
+        "value": 217,
+        "fresh": 356
+      }
+    },
+    {
+      "sigungu": "부천시 원미구",
+      "dongName": "중동",
+      "momentumPct": 0.7,
+      "trades": 1054,
+      "complexCount": 62,
+      "pricePerPy": 2438,
+      "recentSharePct": 11,
+      "medianBuildYear": 1994,
+      "ranks": {
+        "momentum": 191,
+        "trades": 3,
+        "value": 210,
+        "fresh": 250
+      }
+    },
+    {
+      "sigungu": "부천시 원미구",
+      "dongName": "심곡동",
+      "momentumPct": 0.7,
+      "trades": 109,
+      "complexCount": 40,
+      "pricePerPy": 1739,
+      "recentSharePct": 45,
+      "medianBuildYear": 2014,
+      "ranks": {
+        "momentum": 195,
+        "trades": 367,
+        "value": 153,
+        "fresh": 53
+      }
+    },
+    {
+      "sigungu": "부천시 원미구",
+      "dongName": "역곡동",
+      "momentumPct": 0.7,
+      "trades": 174,
+      "complexCount": 41,
+      "pricePerPy": 1922,
+      "recentSharePct": 15,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 193,
+        "trades": 276,
+        "value": 170,
+        "fresh": 220
+      }
+    },
+    {
+      "sigungu": "부천시 원미구",
+      "dongName": "원미동",
+      "momentumPct": 0.7,
+      "trades": 64,
+      "complexCount": 16,
+      "pricePerPy": 1868,
+      "recentSharePct": 50,
+      "medianBuildYear": 2016,
+      "ranks": {
+        "momentum": 196,
+        "trades": 426,
+        "value": 167,
+        "fresh": 46
+      }
+    },
+    {
+      "sigungu": "부천시 원미구",
+      "dongName": "약대동",
+      "momentumPct": 0.7,
+      "trades": 111,
+      "complexCount": 9,
+      "pricePerPy": 2147,
+      "recentSharePct": 44,
+      "medianBuildYear": 2012,
+      "ranks": {
+        "momentum": 194,
+        "trades": 364,
+        "value": 190,
+        "fresh": 54
+      }
+    },
+    {
+      "sigungu": "부천시 소사구",
+      "dongName": "범박동",
+      "momentumPct": -1.1,
+      "trades": 237,
+      "complexCount": 8,
+      "pricePerPy": 2152,
+      "recentSharePct": 13,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 349,
+        "trades": 203,
+        "value": 304,
+        "fresh": 237
+      }
+    },
+    {
+      "sigungu": "부천시 소사구",
+      "dongName": "소사본동",
+      "momentumPct": -1.1,
+      "trades": 300,
+      "complexCount": 45,
+      "pricePerPy": 1698,
+      "recentSharePct": 58,
+      "medianBuildYear": 2017,
+      "ranks": {
+        "momentum": 346,
+        "trades": 144,
+        "value": 278,
+        "fresh": 36
+      }
+    },
+    {
+      "sigungu": "부천시 소사구",
+      "dongName": "괴안동",
+      "momentumPct": -1.1,
+      "trades": 263,
+      "complexCount": 53,
+      "pricePerPy": 1598,
+      "recentSharePct": 32,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 348,
+        "trades": 176,
+        "value": 272,
+        "fresh": 86
+      }
+    },
+    {
+      "sigungu": "부천시 소사구",
+      "dongName": "옥길동",
+      "momentumPct": -1.1,
+      "trades": 193,
+      "complexCount": 8,
+      "pricePerPy": 2797,
+      "recentSharePct": 100,
+      "medianBuildYear": 2017,
+      "ranks": {
+        "momentum": 350,
+        "trades": 251,
+        "value": 324,
+        "fresh": 2
+      }
+    },
+    {
+      "sigungu": "부천시 소사구",
+      "dongName": "송내동",
+      "momentumPct": -1.1,
+      "trades": 291,
+      "complexCount": 36,
+      "pricePerPy": 1669,
+      "recentSharePct": 19,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 347,
+        "trades": 149,
+        "value": 276,
+        "fresh": 168
+      }
+    },
+    {
+      "sigungu": "부천시 소사구",
+      "dongName": "심곡본동",
+      "momentumPct": -1.1,
+      "trades": 96,
+      "complexCount": 22,
+      "pricePerPy": 1822,
+      "recentSharePct": 41,
+      "medianBuildYear": 2012,
+      "ranks": {
+        "momentum": 351,
+        "trades": 382,
+        "value": 286,
+        "fresh": 64
+      }
+    },
+    {
+      "sigungu": "부천시 오정구",
+      "dongName": "원종동",
+      "momentumPct": -0.8,
+      "trades": 279,
+      "complexCount": 73,
+      "pricePerPy": 1564,
+      "recentSharePct": 37,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 339,
+        "trades": 161,
+        "value": 257,
+        "fresh": 70
+      }
+    },
+    {
+      "sigungu": "부천시 오정구",
+      "dongName": "오정동",
+      "momentumPct": -0.8,
+      "trades": 88,
+      "complexCount": 11,
+      "pricePerPy": 1648,
+      "recentSharePct": 0,
+      "medianBuildYear": 2006,
+      "ranks": {
+        "momentum": 340,
+        "trades": 394,
+        "value": 261,
+        "fresh": 414
+      }
+    },
+    {
+      "sigungu": "부천시 오정구",
+      "dongName": "고강동",
+      "momentumPct": -0.8,
+      "trades": 80,
+      "complexCount": 33,
+      "pricePerPy": 1287,
+      "recentSharePct": 30,
+      "medianBuildYear": 1989,
+      "ranks": {
+        "momentum": 341,
+        "trades": 408,
+        "value": 237,
+        "fresh": 94
+      }
+    },
+    {
+      "sigungu": "화성시 남양구",
+      "dongName": "새솔동",
+      "momentumPct": 0.6,
+      "trades": 149,
+      "complexCount": 12,
+      "pricePerPy": 2218,
+      "recentSharePct": 100,
+      "medianBuildYear": 2019,
+      "ranks": {
+        "momentum": 201,
+        "trades": 311,
+        "value": 199,
+        "fresh": 3
+      }
+    },
+    {
+      "sigungu": "화성시 남양구",
+      "dongName": "남양읍 남양리",
+      "momentumPct": 0.6,
+      "trades": 187,
+      "complexCount": 14,
+      "pricePerPy": 1586,
+      "recentSharePct": 57,
+      "medianBuildYear": 2017,
+      "ranks": {
+        "momentum": 200,
+        "trades": 262,
+        "value": 147,
+        "fresh": 37
+      }
+    },
+    {
+      "sigungu": "화성시 남양구",
+      "dongName": "향남읍 행정리",
+      "momentumPct": 0.6,
+      "trades": 124,
+      "complexCount": 10,
+      "pricePerPy": 1502,
+      "recentSharePct": 0,
+      "medianBuildYear": 2008,
+      "ranks": {
+        "momentum": 202,
+        "trades": 334,
+        "value": 141,
+        "fresh": 415
+      }
+    },
+    {
+      "sigungu": "화성시 향남구",
+      "dongName": "봉담읍 상리",
+      "momentumPct": -1.8,
+      "trades": 169,
+      "complexCount": 9,
+      "pricePerPy": 2205,
+      "recentSharePct": 67,
+      "medianBuildYear": 2022,
+      "ranks": {
+        "momentum": 388,
+        "trades": 287,
+        "value": 329,
+        "fresh": 25
+      }
+    },
+    {
+      "sigungu": "화성시 향남구",
+      "dongName": "봉담읍 동화리",
+      "momentumPct": -1.8,
+      "trades": 139,
+      "complexCount": 9,
+      "pricePerPy": 1394,
+      "recentSharePct": 33,
+      "medianBuildYear": 2008,
+      "ranks": {
+        "momentum": 389,
+        "trades": 322,
+        "value": 306,
+        "fresh": 81
+      }
+    },
+    {
+      "sigungu": "화성시 향남구",
+      "dongName": "봉담읍 와우리",
+      "momentumPct": -1.8,
+      "trades": 198,
+      "complexCount": 12,
+      "pricePerPy": 1212,
+      "recentSharePct": 17,
+      "medianBuildYear": 2007,
+      "ranks": {
+        "momentum": 387,
+        "trades": 243,
+        "value": 297,
+        "fresh": 196
+      }
+    },
+    {
+      "sigungu": "화성시 향남구",
+      "dongName": "기안동",
+      "momentumPct": -1.8,
+      "trades": 139,
+      "complexCount": 8,
+      "pricePerPy": 1048,
+      "recentSharePct": 25,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 390,
+        "trades": 323,
+        "value": 285,
+        "fresh": 128
+      }
+    },
+    {
+      "sigungu": "화성시 병점구",
+      "dongName": "병점동",
+      "momentumPct": 2.1,
+      "trades": 472,
+      "complexCount": 25,
+      "pricePerPy": 1490,
+      "recentSharePct": 8,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 65,
+        "trades": 61,
+        "value": 26,
+        "fresh": 304
+      }
+    },
+    {
+      "sigungu": "화성시 병점구",
+      "dongName": "반월동",
+      "momentumPct": 2.1,
+      "trades": 375,
+      "complexCount": 13,
+      "pricePerPy": 1932,
+      "recentSharePct": 31,
+      "medianBuildYear": 2007,
+      "ranks": {
+        "momentum": 66,
+        "trades": 102,
+        "value": 41,
+        "fresh": 93
+      }
+    },
+    {
+      "sigungu": "화성시 병점구",
+      "dongName": "안녕동",
+      "momentumPct": 2.1,
+      "trades": 116,
+      "complexCount": 8,
+      "pricePerPy": 1277,
+      "recentSharePct": 38,
+      "medianBuildYear": 2006,
+      "ranks": {
+        "momentum": 67,
+        "trades": 349,
+        "value": 22,
+        "fresh": 68
+      }
+    },
+    {
+      "sigungu": "화성시 동탄구",
+      "dongName": "목동",
+      "momentumPct": 2.2,
+      "trades": 431,
+      "complexCount": 9,
+      "pricePerPy": 2920,
+      "recentSharePct": 100,
+      "medianBuildYear": 2018,
+      "ranks": {
+        "momentum": 61,
+        "trades": 82,
+        "value": 126,
+        "fresh": 4
+      }
+    },
+    {
+      "sigungu": "화성시 동탄구",
+      "dongName": "능동",
+      "momentumPct": 2.2,
+      "trades": 334,
+      "complexCount": 11,
+      "pricePerPy": 2373,
+      "recentSharePct": 0,
+      "medianBuildYear": 2008,
+      "ranks": {
+        "momentum": 64,
+        "trades": 126,
+        "value": 65,
+        "fresh": 416
+      }
+    },
+    {
+      "sigungu": "화성시 동탄구",
+      "dongName": "청계동",
+      "momentumPct": 2.2,
+      "trades": 844,
+      "complexCount": 19,
+      "pricePerPy": 4458,
+      "recentSharePct": 21,
+      "medianBuildYear": 2015,
+      "ranks": {
+        "momentum": 57,
+        "trades": 10,
+        "value": 248,
+        "fresh": 154
+      }
+    },
+    {
+      "sigungu": "화성시 동탄구",
+      "dongName": "영천동",
+      "momentumPct": 2.2,
+      "trades": 665,
+      "complexCount": 15,
+      "pricePerPy": 3308,
+      "recentSharePct": 87,
+      "medianBuildYear": 2017,
+      "ranks": {
+        "momentum": 58,
+        "trades": 25,
+        "value": 155,
+        "fresh": 18
+      }
+    },
+    {
+      "sigungu": "화성시 동탄구",
+      "dongName": "여울동",
+      "momentumPct": 2.2,
+      "trades": 543,
+      "complexCount": 18,
+      "pricePerPy": 4709,
+      "recentSharePct": 94,
+      "medianBuildYear": 2019,
+      "ranks": {
+        "momentum": 60,
+        "trades": 42,
+        "value": 260,
+        "fresh": 12
+      }
+    },
+    {
+      "sigungu": "화성시 동탄구",
+      "dongName": "장지동",
+      "momentumPct": 2.2,
+      "trades": 350,
+      "complexCount": 11,
+      "pricePerPy": 2698,
+      "recentSharePct": 100,
+      "medianBuildYear": 2019,
+      "ranks": {
+        "momentum": 63,
+        "trades": 117,
+        "value": 99,
+        "fresh": 5
+      }
+    },
+    {
+      "sigungu": "화성시 동탄구",
+      "dongName": "반송동",
+      "momentumPct": 2.2,
+      "trades": 611,
+      "complexCount": 33,
+      "pricePerPy": 2749,
+      "recentSharePct": 0,
+      "medianBuildYear": 2007,
+      "ranks": {
+        "momentum": 59,
+        "trades": 30,
+        "value": 109,
+        "fresh": 417
+      }
+    },
+    {
+      "sigungu": "화성시 동탄구",
+      "dongName": "산척동",
+      "momentumPct": 2.2,
+      "trades": 392,
+      "complexCount": 10,
+      "pricePerPy": 3511,
+      "recentSharePct": 100,
+      "medianBuildYear": 2018,
+      "ranks": {
+        "momentum": 62,
+        "trades": 95,
+        "value": 175,
+        "fresh": 6
+      }
+    },
+    {
+      "sigungu": "의정부시",
+      "dongName": "의정부동",
+      "momentumPct": 0.9,
+      "trades": 457,
+      "complexCount": 59,
+      "pricePerPy": 1347,
+      "recentSharePct": 61,
+      "medianBuildYear": 2018,
+      "ranks": {
+        "momentum": 149,
+        "trades": 67,
+        "value": 93,
+        "fresh": 30
+      }
+    },
+    {
+      "sigungu": "의정부시",
+      "dongName": "호원동",
+      "momentumPct": 0.9,
+      "trades": 469,
+      "complexCount": 50,
+      "pricePerPy": 1539,
+      "recentSharePct": 8,
+      "medianBuildYear": 1997,
+      "ranks": {
+        "momentum": 148,
+        "trades": 63,
+        "value": 116,
+        "fresh": 305
+      }
+    },
+    {
+      "sigungu": "의정부시",
+      "dongName": "용현동",
+      "momentumPct": 0.9,
+      "trades": 254,
+      "complexCount": 22,
+      "pricePerPy": 1255,
+      "recentSharePct": 23,
+      "medianBuildYear": 1998,
+      "ranks": {
+        "momentum": 151,
+        "trades": 187,
+        "value": 82,
+        "fresh": 140
+      }
+    },
+    {
+      "sigungu": "의정부시",
+      "dongName": "금오동",
+      "momentumPct": 0.9,
+      "trades": 104,
+      "complexCount": 13,
+      "pricePerPy": 1355,
+      "recentSharePct": 8,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 154,
+        "trades": 374,
+        "value": 95,
+        "fresh": 314
+      }
+    },
+    {
+      "sigungu": "의정부시",
+      "dongName": "민락동",
+      "momentumPct": 0.9,
+      "trades": 373,
+      "complexCount": 23,
+      "pricePerPy": 1460,
+      "recentSharePct": 17,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 150,
+        "trades": 104,
+        "value": 103,
+        "fresh": 188
+      }
+    },
+    {
+      "sigungu": "의정부시",
+      "dongName": "장암동",
+      "momentumPct": 0.9,
+      "trades": 173,
+      "complexCount": 10,
+      "pricePerPy": 1792,
+      "recentSharePct": 10,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 152,
+        "trades": 279,
+        "value": 138,
+        "fresh": 269
+      }
+    },
+    {
+      "sigungu": "의정부시",
+      "dongName": "녹양동",
+      "momentumPct": 0.9,
+      "trades": 87,
+      "complexCount": 8,
+      "pricePerPy": 1301,
+      "recentSharePct": 0,
+      "medianBuildYear": 2006,
+      "ranks": {
+        "momentum": 156,
+        "trades": 399,
+        "value": 88,
+        "fresh": 418
+      }
+    },
+    {
+      "sigungu": "의정부시",
+      "dongName": "가능동",
+      "momentumPct": 0.9,
+      "trades": 150,
+      "complexCount": 18,
+      "pricePerPy": 1331,
+      "recentSharePct": 28,
+      "medianBuildYear": 2007,
+      "ranks": {
+        "momentum": 153,
+        "trades": 309,
+        "value": 91,
+        "fresh": 108
+      }
+    },
+    {
+      "sigungu": "의정부시",
+      "dongName": "낙양동",
+      "momentumPct": 0.9,
+      "trades": 91,
+      "complexCount": 8,
+      "pricePerPy": 1715,
+      "recentSharePct": 88,
+      "medianBuildYear": 2017,
+      "ranks": {
+        "momentum": 155,
+        "trades": 391,
+        "value": 133,
+        "fresh": 16
+      }
+    },
+    {
+      "sigungu": "의정부시",
+      "dongName": "신곡동",
+      "momentumPct": 0.9,
+      "trades": 591,
+      "complexCount": 47,
+      "pricePerPy": 1233,
+      "recentSharePct": 6,
+      "medianBuildYear": 1998,
+      "ranks": {
+        "momentum": 147,
+        "trades": 35,
+        "value": 78,
+        "fresh": 332
+      }
+    },
+    {
+      "sigungu": "광명시",
+      "dongName": "철산동",
+      "momentumPct": 1.3,
+      "trades": 613,
+      "complexCount": 20,
+      "pricePerPy": 3962,
+      "recentSharePct": 15,
+      "medianBuildYear": 2006,
+      "ranks": {
+        "momentum": 123,
+        "trades": 29,
+        "value": 267,
+        "fresh": 216
+      }
+    },
+    {
+      "sigungu": "광명시",
+      "dongName": "소하동",
+      "momentumPct": 1.3,
+      "trades": 235,
+      "complexCount": 24,
+      "pricePerPy": 2545,
+      "recentSharePct": 8,
+      "medianBuildYear": 2006,
+      "ranks": {
+        "momentum": 125,
+        "trades": 205,
+        "value": 173,
+        "fresh": 296
+      }
+    },
+    {
+      "sigungu": "광명시",
+      "dongName": "하안동",
+      "momentumPct": 1.3,
+      "trades": 749,
+      "complexCount": 15,
+      "pricePerPy": 3923,
+      "recentSharePct": 0,
+      "medianBuildYear": 1990,
+      "ranks": {
+        "momentum": 122,
+        "trades": 14,
+        "value": 265,
+        "fresh": 419
+      }
+    },
+    {
+      "sigungu": "광명시",
+      "dongName": "광명동",
+      "momentumPct": 1.3,
+      "trades": 349,
+      "complexCount": 24,
+      "pricePerPy": 2668,
+      "recentSharePct": 29,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 124,
+        "trades": 119,
+        "value": 183,
+        "fresh": 102
+      }
+    },
+    {
+      "sigungu": "평택시",
+      "dongName": "동삭동",
+      "momentumPct": 0.5,
+      "trades": 470,
+      "complexCount": 17,
+      "pricePerPy": 1814,
+      "recentSharePct": 76,
+      "medianBuildYear": 2019,
+      "ranks": {
+        "momentum": 218,
+        "trades": 62,
+        "value": 179,
+        "fresh": 22
+      }
+    },
+    {
+      "sigungu": "평택시",
+      "dongName": "고덕동",
+      "momentumPct": 0.5,
+      "trades": 351,
+      "complexCount": 18,
+      "pricePerPy": 2294,
+      "recentSharePct": 100,
+      "medianBuildYear": 2022,
+      "ranks": {
+        "momentum": 220,
+        "trades": 115,
+        "value": 212,
+        "fresh": 7
+      }
+    },
+    {
+      "sigungu": "평택시",
+      "dongName": "장당동",
+      "momentumPct": 0.5,
+      "trades": 120,
+      "complexCount": 10,
+      "pricePerPy": 1066,
+      "recentSharePct": 20,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 227,
+        "trades": 343,
+        "value": 114,
+        "fresh": 163
+      }
+    },
+    {
+      "sigungu": "평택시",
+      "dongName": "청북읍 옥길리",
+      "momentumPct": 0.5,
+      "trades": 178,
+      "complexCount": 12,
+      "pricePerPy": 798,
+      "recentSharePct": 33,
+      "medianBuildYear": 2013,
+      "ranks": {
+        "momentum": 223,
+        "trades": 269,
+        "value": 83,
+        "fresh": 82
+      }
+    },
+    {
+      "sigungu": "평택시",
+      "dongName": "비전동",
+      "momentumPct": 0.5,
+      "trades": 330,
+      "complexCount": 41,
+      "pricePerPy": 908,
+      "recentSharePct": 10,
+      "medianBuildYear": 1995,
+      "ranks": {
+        "momentum": 221,
+        "trades": 127,
+        "value": 97,
+        "fresh": 274
+      }
+    },
+    {
+      "sigungu": "평택시",
+      "dongName": "이충동",
+      "momentumPct": 0.5,
+      "trades": 403,
+      "complexCount": 19,
+      "pricePerPy": 1021,
+      "recentSharePct": 37,
+      "medianBuildYear": 2006,
+      "ranks": {
+        "momentum": 219,
+        "trades": 90,
+        "value": 110,
+        "fresh": 71
+      }
+    },
+    {
+      "sigungu": "평택시",
+      "dongName": "용이동",
+      "momentumPct": 0.5,
+      "trades": 264,
+      "complexCount": 15,
+      "pricePerPy": 1333,
+      "recentSharePct": 60,
+      "medianBuildYear": 2017,
+      "ranks": {
+        "momentum": 222,
+        "trades": 175,
+        "value": 137,
+        "fresh": 31
+      }
+    },
+    {
+      "sigungu": "평택시",
+      "dongName": "서정동",
+      "momentumPct": 0.5,
+      "trades": 178,
+      "complexCount": 20,
+      "pricePerPy": 1021,
+      "recentSharePct": 50,
+      "medianBuildYear": 2016,
+      "ranks": {
+        "momentum": 224,
+        "trades": 270,
+        "value": 111,
+        "fresh": 47
+      }
+    },
+    {
+      "sigungu": "평택시",
+      "dongName": "지산동",
+      "momentumPct": 0.5,
+      "trades": 61,
+      "complexCount": 10,
+      "pricePerPy": 1010,
+      "recentSharePct": 60,
+      "medianBuildYear": 2016,
+      "ranks": {
+        "momentum": 229,
+        "trades": 431,
+        "value": 108,
+        "fresh": 32
+      }
+    },
+    {
+      "sigungu": "평택시",
+      "dongName": "세교동",
+      "momentumPct": 0.5,
+      "trades": 170,
+      "complexCount": 12,
+      "pricePerPy": 992,
+      "recentSharePct": 17,
+      "medianBuildYear": 1998,
+      "ranks": {
+        "momentum": 225,
+        "trades": 285,
+        "value": 101,
+        "fresh": 197
+      }
+    },
+    {
+      "sigungu": "평택시",
+      "dongName": "포승읍 도곡리",
+      "momentumPct": 0.5,
+      "trades": 98,
+      "complexCount": 10,
+      "pricePerPy": 817,
+      "recentSharePct": 20,
+      "medianBuildYear": 2013,
+      "ranks": {
+        "momentum": 228,
+        "trades": 379,
+        "value": 86,
+        "fresh": 164
+      }
+    },
+    {
+      "sigungu": "평택시",
+      "dongName": "안중읍 현화리",
+      "momentumPct": 0.5,
+      "trades": 156,
+      "complexCount": 12,
+      "pricePerPy": 717,
+      "recentSharePct": 0,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 226,
+        "trades": 304,
+        "value": 73,
+        "fresh": 420
+      }
+    },
+    {
+      "sigungu": "평택시",
+      "dongName": "평택동",
+      "momentumPct": 0.5,
+      "trades": 52,
+      "complexCount": 10,
+      "pricePerPy": 1200,
+      "recentSharePct": 60,
+      "medianBuildYear": 2017,
+      "ranks": {
+        "momentum": 230,
+        "trades": 436,
+        "value": 128,
+        "fresh": 33
+      }
+    },
+    {
+      "sigungu": "동두천시",
+      "dongName": "지행동",
+      "momentumPct": -5,
+      "trades": 247,
+      "complexCount": 19,
+      "pricePerPy": 920,
+      "recentSharePct": 16,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 425,
+        "trades": 190,
+        "value": 376,
+        "fresh": 208
+      }
+    },
+    {
+      "sigungu": "동두천시",
+      "dongName": "생연동",
+      "momentumPct": -5,
+      "trades": 206,
+      "complexCount": 31,
+      "pricePerPy": 479,
+      "recentSharePct": 3,
+      "medianBuildYear": 1994,
+      "ranks": {
+        "momentum": 426,
+        "trades": 232,
+        "value": 368,
+        "fresh": 362
+      }
+    },
+    {
+      "sigungu": "구리시",
+      "dongName": "인창동",
+      "momentumPct": 1.5,
+      "trades": 1024,
+      "complexCount": 46,
+      "pricePerPy": 2808,
+      "recentSharePct": 4,
+      "medianBuildYear": 2001,
+      "ranks": {
+        "momentum": 98,
+        "trades": 5,
+        "value": 177,
+        "fresh": 354
+      }
+    },
+    {
+      "sigungu": "구리시",
+      "dongName": "수택동",
+      "momentumPct": 1.5,
+      "trades": 480,
+      "complexCount": 51,
+      "pricePerPy": 3037,
+      "recentSharePct": 8,
+      "medianBuildYear": 2000,
+      "ranks": {
+        "momentum": 99,
+        "trades": 56,
+        "value": 196,
+        "fresh": 306
+      }
+    },
+    {
+      "sigungu": "구리시",
+      "dongName": "토평동",
+      "momentumPct": 1.5,
+      "trades": 108,
+      "complexCount": 8,
+      "pricePerPy": 3362,
+      "recentSharePct": 0,
+      "medianBuildYear": 2001,
+      "ranks": {
+        "momentum": 102,
+        "trades": 370,
+        "value": 216,
+        "fresh": 421
+      }
+    },
+    {
+      "sigungu": "구리시",
+      "dongName": "교문동",
+      "momentumPct": 1.5,
+      "trades": 290,
+      "complexCount": 16,
+      "pricePerPy": 3794,
+      "recentSharePct": 0,
+      "medianBuildYear": 1994,
+      "ranks": {
+        "momentum": 100,
+        "trades": 150,
+        "value": 251,
+        "fresh": 422
+      }
+    },
+    {
+      "sigungu": "구리시",
+      "dongName": "갈매동",
+      "momentumPct": 1.5,
+      "trades": 256,
+      "complexCount": 9,
+      "pricePerPy": 3142,
+      "recentSharePct": 100,
+      "medianBuildYear": 2017,
+      "ranks": {
+        "momentum": 101,
+        "trades": 184,
+        "value": 202,
+        "fresh": 8
+      }
+    },
+    {
+      "sigungu": "남양주시",
+      "dongName": "다산동",
+      "momentumPct": 0.8,
+      "trades": 1286,
+      "complexCount": 49,
+      "pricePerPy": 2741,
+      "recentSharePct": 49,
+      "medianBuildYear": 2013,
+      "ranks": {
+        "momentum": 164,
+        "trades": 2,
+        "value": 218,
+        "fresh": 49
+      }
+    },
+    {
+      "sigungu": "남양주시",
+      "dongName": "와부읍 도곡리",
+      "momentumPct": 0.8,
+      "trades": 172,
+      "complexCount": 9,
+      "pricePerPy": 2178,
+      "recentSharePct": 11,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 171,
+        "trades": 281,
+        "value": 182,
+        "fresh": 258
+      }
+    },
+    {
+      "sigungu": "남양주시",
+      "dongName": "진접읍 금곡리",
+      "momentumPct": 0.8,
+      "trades": 201,
+      "complexCount": 12,
+      "pricePerPy": 1829,
+      "recentSharePct": 8,
+      "medianBuildYear": 2009,
+      "ranks": {
+        "momentum": 170,
+        "trades": 239,
+        "value": 152,
+        "fresh": 297
+      }
+    },
+    {
+      "sigungu": "남양주시",
+      "dongName": "화도읍 녹촌리",
+      "momentumPct": 0.8,
+      "trades": 93,
+      "complexCount": 9,
+      "pricePerPy": 1940,
+      "recentSharePct": 67,
+      "medianBuildYear": 2019,
+      "ranks": {
+        "momentum": 180,
+        "trades": 388,
+        "value": 158,
+        "fresh": 26
+      }
+    },
+    {
+      "sigungu": "남양주시",
+      "dongName": "퇴계원읍 퇴계원리",
+      "momentumPct": 0.8,
+      "trades": 145,
+      "complexCount": 12,
+      "pricePerPy": 1790,
+      "recentSharePct": 0,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 174,
+        "trades": 316,
+        "value": 149,
+        "fresh": 423
+      }
+    },
+    {
+      "sigungu": "남양주시",
+      "dongName": "별내동",
+      "momentumPct": 0.8,
+      "trades": 409,
+      "complexCount": 21,
+      "pricePerPy": 2437,
+      "recentSharePct": 14,
+      "medianBuildYear": 2013,
+      "ranks": {
+        "momentum": 165,
+        "trades": 88,
+        "value": 200,
+        "fresh": 223
+      }
+    },
+    {
+      "sigungu": "남양주시",
+      "dongName": "진접읍 장현리",
+      "momentumPct": 0.8,
+      "trades": 158,
+      "complexCount": 14,
+      "pricePerPy": 1040,
+      "recentSharePct": 0,
+      "medianBuildYear": 1999,
+      "ranks": {
+        "momentum": 172,
+        "trades": 299,
+        "value": 71,
+        "fresh": 424
+      }
+    },
+    {
+      "sigungu": "남양주시",
+      "dongName": "평내동",
+      "momentumPct": 0.8,
+      "trades": 283,
+      "complexCount": 17,
+      "pricePerPy": 1660,
+      "recentSharePct": 12,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 169,
+        "trades": 156,
+        "value": 136,
+        "fresh": 244
+      }
+    },
+    {
+      "sigungu": "남양주시",
+      "dongName": "오남읍 오남리",
+      "momentumPct": 0.8,
+      "trades": 312,
+      "complexCount": 32,
+      "pricePerPy": 1046,
+      "recentSharePct": 0,
+      "medianBuildYear": 1998,
+      "ranks": {
+        "momentum": 167,
+        "trades": 136,
+        "value": 72,
+        "fresh": 425
+      }
+    },
+    {
+      "sigungu": "남양주시",
+      "dongName": "화도읍 마석우리",
+      "momentumPct": 0.8,
+      "trades": 92,
+      "complexCount": 9,
+      "pricePerPy": 1326,
+      "recentSharePct": 11,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 181,
+        "trades": 390,
+        "value": 102,
+        "fresh": 259
+      }
+    },
+    {
+      "sigungu": "남양주시",
+      "dongName": "오남읍 양지리",
+      "momentumPct": 0.8,
+      "trades": 118,
+      "complexCount": 9,
+      "pricePerPy": 1124,
+      "recentSharePct": 0,
+      "medianBuildYear": 2000,
+      "ranks": {
+        "momentum": 177,
+        "trades": 347,
+        "value": 81,
+        "fresh": 426
+      }
+    },
+    {
+      "sigungu": "남양주시",
+      "dongName": "화도읍 창현리",
+      "momentumPct": 0.8,
+      "trades": 124,
+      "complexCount": 14,
+      "pricePerPy": 1168,
+      "recentSharePct": 7,
+      "medianBuildYear": 1997,
+      "ranks": {
+        "momentum": 176,
+        "trades": 335,
+        "value": 87,
+        "fresh": 324
+      }
+    },
+    {
+      "sigungu": "남양주시",
+      "dongName": "와부읍 덕소리",
+      "momentumPct": 0.8,
+      "trades": 312,
+      "complexCount": 22,
+      "pricePerPy": 2193,
+      "recentSharePct": 5,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 168,
+        "trades": 137,
+        "value": 184,
+        "fresh": 350
+      }
+    },
+    {
+      "sigungu": "남양주시",
+      "dongName": "호평동",
+      "momentumPct": 0.8,
+      "trades": 358,
+      "complexCount": 22,
+      "pricePerPy": 1758,
+      "recentSharePct": 14,
+      "medianBuildYear": 2006,
+      "ranks": {
+        "momentum": 166,
+        "trades": 112,
+        "value": 144,
+        "fresh": 227
+      }
+    },
+    {
+      "sigungu": "남양주시",
+      "dongName": "화도읍 묵현리",
+      "momentumPct": 0.8,
+      "trades": 158,
+      "complexCount": 14,
+      "pricePerPy": 1060,
+      "recentSharePct": 14,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 173,
+        "trades": 300,
+        "value": 74,
+        "fresh": 224
+      }
+    },
+    {
+      "sigungu": "남양주시",
+      "dongName": "별내면 청학리",
+      "momentumPct": 0.8,
+      "trades": 128,
+      "complexCount": 11,
+      "pricePerPy": 1215,
+      "recentSharePct": 0,
+      "medianBuildYear": 1999,
+      "ranks": {
+        "momentum": 175,
+        "trades": 332,
+        "value": 92,
+        "fresh": 427
+      }
+    },
+    {
+      "sigungu": "남양주시",
+      "dongName": "금곡동",
+      "momentumPct": 0.8,
+      "trades": 116,
+      "complexCount": 22,
+      "pricePerPy": 1074,
+      "recentSharePct": 9,
+      "medianBuildYear": 1992,
+      "ranks": {
+        "momentum": 178,
+        "trades": 350,
+        "value": 76,
+        "fresh": 283
+      }
+    },
+    {
+      "sigungu": "남양주시",
+      "dongName": "진건읍 용정리",
+      "momentumPct": 0.8,
+      "trades": 112,
+      "complexCount": 15,
+      "pricePerPy": 970,
+      "recentSharePct": 0,
+      "medianBuildYear": 1996,
+      "ranks": {
+        "momentum": 179,
+        "trades": 362,
+        "value": 66,
+        "fresh": 428
+      }
+    },
+    {
+      "sigungu": "오산시",
+      "dongName": "갈곶동",
+      "momentumPct": -0.9,
+      "trades": 94,
+      "complexCount": 10,
+      "pricePerPy": 1023,
+      "recentSharePct": 10,
+      "medianBuildYear": 2000,
+      "ranks": {
+        "momentum": 343,
+        "trades": 384,
+        "value": 227,
+        "fresh": 270
+      }
+    },
+    {
+      "sigungu": "오산시",
+      "dongName": "궐동",
+      "momentumPct": -0.9,
+      "trades": 85,
+      "complexCount": 11,
+      "pricePerPy": 1131,
+      "recentSharePct": 36,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 344,
+        "trades": 402,
+        "value": 239,
+        "fresh": 73
+      }
+    },
+    {
+      "sigungu": "오산시",
+      "dongName": "원동",
+      "momentumPct": -0.9,
+      "trades": 305,
+      "complexCount": 27,
+      "pricePerPy": 1073,
+      "recentSharePct": 22,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 342,
+        "trades": 142,
+        "value": 230,
+        "fresh": 145
+      }
+    },
+    {
+      "sigungu": "오산시",
+      "dongName": "오산동",
+      "momentumPct": -0.9,
+      "trades": 63,
+      "complexCount": 10,
+      "pricePerPy": 1291,
+      "recentSharePct": 30,
+      "medianBuildYear": 2013,
+      "ranks": {
+        "momentum": 345,
+        "trades": 429,
+        "value": 253,
+        "fresh": 95
+      }
+    },
+    {
+      "sigungu": "시흥시",
+      "dongName": "배곧동",
+      "momentumPct": 0.2,
+      "trades": 336,
+      "complexCount": 17,
+      "pricePerPy": 2207,
+      "recentSharePct": 88,
+      "medianBuildYear": 2018,
+      "ranks": {
+        "momentum": 246,
+        "trades": 125,
+        "value": 225,
+        "fresh": 15
+      }
+    },
+    {
+      "sigungu": "시흥시",
+      "dongName": "조남동",
+      "momentumPct": 0.2,
+      "trades": 175,
+      "complexCount": 16,
+      "pricePerPy": 2314,
+      "recentSharePct": 56,
+      "medianBuildYear": 2016,
+      "ranks": {
+        "momentum": 251,
+        "trades": 274,
+        "value": 231,
+        "fresh": 39
+      }
+    },
+    {
+      "sigungu": "시흥시",
+      "dongName": "신천동",
+      "momentumPct": 0.2,
+      "trades": 81,
+      "complexCount": 23,
+      "pricePerPy": 1284,
+      "recentSharePct": 17,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 253,
+        "trades": 407,
+        "value": 154,
+        "fresh": 189
+      }
+    },
+    {
+      "sigungu": "시흥시",
+      "dongName": "정왕동",
+      "momentumPct": 0.2,
+      "trades": 712,
+      "complexCount": 61,
+      "pricePerPy": 1348,
+      "recentSharePct": 7,
+      "medianBuildYear": 1997,
+      "ranks": {
+        "momentum": 244,
+        "trades": 21,
+        "value": 163,
+        "fresh": 329
+      }
+    },
+    {
+      "sigungu": "시흥시",
+      "dongName": "장현동",
+      "momentumPct": 0.2,
+      "trades": 193,
+      "complexCount": 12,
+      "pricePerPy": 2130,
+      "recentSharePct": 67,
+      "medianBuildYear": 2020,
+      "ranks": {
+        "momentum": 248,
+        "trades": 252,
+        "value": 220,
+        "fresh": 27
+      }
+    },
+    {
+      "sigungu": "시흥시",
+      "dongName": "거모동",
+      "momentumPct": 0.2,
+      "trades": 110,
+      "complexCount": 12,
+      "pricePerPy": 931,
+      "recentSharePct": 8,
+      "medianBuildYear": 1994,
+      "ranks": {
+        "momentum": 252,
+        "trades": 365,
+        "value": 131,
+        "fresh": 298
+      }
+    },
+    {
+      "sigungu": "시흥시",
+      "dongName": "은행동",
+      "momentumPct": 0.2,
+      "trades": 384,
+      "complexCount": 30,
+      "pricePerPy": 1664,
+      "recentSharePct": 30,
+      "medianBuildYear": 1998,
+      "ranks": {
+        "momentum": 245,
+        "trades": 97,
+        "value": 191,
+        "fresh": 96
+      }
+    },
+    {
+      "sigungu": "시흥시",
+      "dongName": "대야동",
+      "momentumPct": 0.2,
+      "trades": 284,
+      "complexCount": 19,
+      "pricePerPy": 1713,
+      "recentSharePct": 26,
+      "medianBuildYear": 1997,
+      "ranks": {
+        "momentum": 247,
+        "trades": 155,
+        "value": 194,
+        "fresh": 115
+      }
+    },
+    {
+      "sigungu": "시흥시",
+      "dongName": "월곶동",
+      "momentumPct": 0.2,
+      "trades": 186,
+      "complexCount": 11,
+      "pricePerPy": 1340,
+      "recentSharePct": 36,
+      "medianBuildYear": 2013,
+      "ranks": {
+        "momentum": 249,
+        "trades": 264,
+        "value": 160,
+        "fresh": 74
+      }
+    },
+    {
+      "sigungu": "시흥시",
+      "dongName": "장곡동",
+      "momentumPct": 0.2,
+      "trades": 180,
+      "complexCount": 10,
+      "pricePerPy": 1742,
+      "recentSharePct": 20,
+      "medianBuildYear": 1999,
+      "ranks": {
+        "momentum": 250,
+        "trades": 267,
+        "value": 197,
+        "fresh": 165
+      }
+    },
+    {
+      "sigungu": "군포시",
+      "dongName": "당동",
+      "momentumPct": -0.4,
+      "trades": 177,
+      "complexCount": 30,
+      "pricePerPy": 1703,
+      "recentSharePct": 17,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 330,
+        "trades": 272,
+        "value": 244,
+        "fresh": 198
+      }
+    },
+    {
+      "sigungu": "군포시",
+      "dongName": "산본동",
+      "momentumPct": -0.4,
+      "trades": 960,
+      "complexCount": 37,
+      "pricePerPy": 2385,
+      "recentSharePct": 0,
+      "medianBuildYear": 1994,
+      "ranks": {
+        "momentum": 328,
+        "trades": 8,
+        "value": 277,
+        "fresh": 429
+      }
+    },
+    {
+      "sigungu": "군포시",
+      "dongName": "당정동",
+      "momentumPct": -0.4,
+      "trades": 80,
+      "complexCount": 15,
+      "pricePerPy": 1565,
+      "recentSharePct": 0,
+      "medianBuildYear": 2006,
+      "ranks": {
+        "momentum": 331,
+        "trades": 409,
+        "value": 229,
+        "fresh": 430
+      }
+    },
+    {
+      "sigungu": "군포시",
+      "dongName": "금정동",
+      "momentumPct": -0.4,
+      "trades": 353,
+      "complexCount": 24,
+      "pricePerPy": 1802,
+      "recentSharePct": 8,
+      "medianBuildYear": 1992,
+      "ranks": {
+        "momentum": 329,
+        "trades": 114,
+        "value": 250,
+        "fresh": 299
+      }
+    },
+    {
+      "sigungu": "의왕시",
+      "dongName": "포일동",
+      "momentumPct": -0.1,
+      "trades": 194,
+      "complexCount": 12,
+      "pricePerPy": 3816,
+      "recentSharePct": 8,
+      "medianBuildYear": 2009,
+      "ranks": {
+        "momentum": 287,
+        "trades": 250,
+        "value": 323,
+        "fresh": 300
+      }
+    },
+    {
+      "sigungu": "의왕시",
+      "dongName": "내손동",
+      "momentumPct": -0.1,
+      "trades": 274,
+      "complexCount": 13,
+      "pricePerPy": 3255,
+      "recentSharePct": 8,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 285,
+        "trades": 166,
+        "value": 309,
+        "fresh": 315
+      }
+    },
+    {
+      "sigungu": "의왕시",
+      "dongName": "오전동",
+      "momentumPct": -0.1,
+      "trades": 272,
+      "complexCount": 26,
+      "pricePerPy": 2113,
+      "recentSharePct": 8,
+      "medianBuildYear": 1999,
+      "ranks": {
+        "momentum": 286,
+        "trades": 167,
+        "value": 249,
+        "fresh": 316
+      }
+    },
+    {
+      "sigungu": "의왕시",
+      "dongName": "삼동",
+      "momentumPct": -0.1,
+      "trades": 123,
+      "complexCount": 17,
+      "pricePerPy": 1999,
+      "recentSharePct": 24,
+      "medianBuildYear": 2000,
+      "ranks": {
+        "momentum": 288,
+        "trades": 337,
+        "value": 238,
+        "fresh": 133
+      }
+    },
+    {
+      "sigungu": "하남시",
+      "dongName": "풍산동",
+      "momentumPct": 4.5,
+      "trades": 237,
+      "complexCount": 12,
+      "pricePerPy": 4952,
+      "recentSharePct": 100,
+      "medianBuildYear": 2018,
+      "ranks": {
+        "momentum": 9,
+        "trades": 204,
+        "value": 80,
+        "fresh": 9
+      }
+    },
+    {
+      "sigungu": "하남시",
+      "dongName": "덕풍동",
+      "momentumPct": 4.5,
+      "trades": 311,
+      "complexCount": 30,
+      "pricePerPy": 2973,
+      "recentSharePct": 17,
+      "medianBuildYear": 2006,
+      "ranks": {
+        "momentum": 7,
+        "trades": 138,
+        "value": 12,
+        "fresh": 199
+      }
+    },
+    {
+      "sigungu": "하남시",
+      "dongName": "망월동",
+      "momentumPct": 4.5,
+      "trades": 309,
+      "complexCount": 14,
+      "pricePerPy": 5066,
+      "recentSharePct": 57,
+      "medianBuildYear": 2016,
+      "ranks": {
+        "momentum": 8,
+        "trades": 139,
+        "value": 96,
+        "fresh": 38
+      }
+    },
+    {
+      "sigungu": "하남시",
+      "dongName": "신장동",
+      "momentumPct": 4.5,
+      "trades": 215,
+      "complexCount": 16,
+      "pricePerPy": 3181,
+      "recentSharePct": 19,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 11,
+        "trades": 223,
+        "value": 16,
+        "fresh": 175
+      }
+    },
+    {
+      "sigungu": "하남시",
+      "dongName": "학암동",
+      "momentumPct": 4.5,
+      "trades": 217,
+      "complexCount": 11,
+      "pricePerPy": 5767,
+      "recentSharePct": 91,
+      "medianBuildYear": 2021,
+      "ranks": {
+        "momentum": 10,
+        "trades": 221,
+        "value": 157,
+        "fresh": 13
+      }
+    },
+    {
+      "sigungu": "하남시",
+      "dongName": "감이동",
+      "momentumPct": 4.5,
+      "trades": 211,
+      "complexCount": 11,
+      "pricePerPy": 5871,
+      "recentSharePct": 100,
+      "medianBuildYear": 2021,
+      "ranks": {
+        "momentum": 12,
+        "trades": 227,
+        "value": 169,
+        "fresh": 10
+      }
+    },
+    {
+      "sigungu": "파주시",
+      "dongName": "동패동",
+      "momentumPct": -0.3,
+      "trades": 358,
+      "complexCount": 19,
+      "pricePerPy": 1795,
+      "recentSharePct": 53,
+      "medianBuildYear": 2020,
+      "ranks": {
+        "momentum": 320,
+        "trades": 113,
+        "value": 242,
+        "fresh": 43
+      }
+    },
+    {
+      "sigungu": "파주시",
+      "dongName": "목동동",
+      "momentumPct": -0.3,
+      "trades": 285,
+      "complexCount": 10,
+      "pricePerPy": 2131,
+      "recentSharePct": 60,
+      "medianBuildYear": 2018,
+      "ranks": {
+        "momentum": 321,
+        "trades": 153,
+        "value": 262,
+        "fresh": 34
+      }
+    },
+    {
+      "sigungu": "파주시",
+      "dongName": "다율동",
+      "momentumPct": -0.3,
+      "trades": 167,
+      "complexCount": 9,
+      "pricePerPy": 1838,
+      "recentSharePct": 78,
+      "medianBuildYear": 2023,
+      "ranks": {
+        "momentum": 322,
+        "trades": 290,
+        "value": 246,
+        "fresh": 21
+      }
+    },
+    {
+      "sigungu": "파주시",
+      "dongName": "문산읍 문산리",
+      "momentumPct": -0.3,
+      "trades": 55,
+      "complexCount": 9,
+      "pricePerPy": 532,
+      "recentSharePct": 0,
+      "medianBuildYear": 1995,
+      "ranks": {
+        "momentum": 327,
+        "trades": 434,
+        "value": 143,
+        "fresh": 431
+      }
+    },
+    {
+      "sigungu": "파주시",
+      "dongName": "금촌동",
+      "momentumPct": -0.3,
+      "trades": 141,
+      "complexCount": 17,
+      "pricePerPy": 991,
+      "recentSharePct": 18,
+      "medianBuildYear": 2000,
+      "ranks": {
+        "momentum": 323,
+        "trades": 319,
+        "value": 185,
+        "fresh": 185
+      }
+    },
+    {
+      "sigungu": "파주시",
+      "dongName": "와동동",
+      "momentumPct": -0.3,
+      "trades": 136,
+      "complexCount": 9,
+      "pricePerPy": 1836,
+      "recentSharePct": 33,
+      "medianBuildYear": 2014,
+      "ranks": {
+        "momentum": 324,
+        "trades": 324,
+        "value": 245,
+        "fresh": 83
+      }
+    },
+    {
+      "sigungu": "파주시",
+      "dongName": "문산읍 선유리",
+      "momentumPct": -0.3,
+      "trades": 64,
+      "complexCount": 8,
+      "pricePerPy": 785,
+      "recentSharePct": 25,
+      "medianBuildYear": 2007,
+      "ranks": {
+        "momentum": 326,
+        "trades": 427,
+        "value": 166,
+        "fresh": 129
+      }
+    },
+    {
+      "sigungu": "파주시",
+      "dongName": "문산읍 당동리",
+      "momentumPct": -0.3,
+      "trades": 93,
+      "complexCount": 8,
+      "pricePerPy": 868,
+      "recentSharePct": 0,
+      "medianBuildYear": 2010,
+      "ranks": {
+        "momentum": 325,
+        "trades": 389,
+        "value": 174,
+        "fresh": 432
+      }
+    },
+    {
+      "sigungu": "이천시",
+      "dongName": "송정동",
+      "momentumPct": -3.4,
+      "trades": 116,
+      "complexCount": 8,
+      "pricePerPy": 991,
+      "recentSharePct": 25,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 414,
+        "trades": 351,
+        "value": 339,
+        "fresh": 130
+      }
+    },
+    {
+      "sigungu": "이천시",
+      "dongName": "증포동",
+      "momentumPct": -3.4,
+      "trades": 230,
+      "complexCount": 19,
+      "pricePerPy": 961,
+      "recentSharePct": 26,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 413,
+        "trades": 212,
+        "value": 337,
+        "fresh": 116
+      }
+    },
+    {
+      "sigungu": "이천시",
+      "dongName": "갈산동",
+      "momentumPct": -3.4,
+      "trades": 56,
+      "complexCount": 8,
+      "pricePerPy": 1211,
+      "recentSharePct": 0,
+      "medianBuildYear": 2006,
+      "ranks": {
+        "momentum": 418,
+        "trades": 433,
+        "value": 345,
+        "fresh": 433
+      }
+    },
+    {
+      "sigungu": "이천시",
+      "dongName": "안흥동",
+      "momentumPct": -3.4,
+      "trades": 88,
+      "complexCount": 8,
+      "pricePerPy": 1331,
+      "recentSharePct": 63,
+      "medianBuildYear": 2021,
+      "ranks": {
+        "momentum": 415,
+        "trades": 395,
+        "value": 351,
+        "fresh": 29
+      }
+    },
+    {
+      "sigungu": "이천시",
+      "dongName": "장호원읍 진암리",
+      "momentumPct": -3.4,
+      "trades": 69,
+      "complexCount": 8,
+      "pricePerPy": 643,
+      "recentSharePct": 13,
+      "medianBuildYear": 2007,
+      "ranks": {
+        "momentum": 417,
+        "trades": 421,
+        "value": 331,
+        "fresh": 238
+      }
+    },
+    {
+      "sigungu": "이천시",
+      "dongName": "부발읍 아미리",
+      "momentumPct": -3.4,
+      "trades": 76,
+      "complexCount": 11,
+      "pricePerPy": 1229,
+      "recentSharePct": 9,
+      "medianBuildYear": 2010,
+      "ranks": {
+        "momentum": 416,
+        "trades": 417,
+        "value": 347,
+        "fresh": 284
+      }
+    },
+    {
+      "sigungu": "안성시",
+      "dongName": "공도읍 만정리",
+      "momentumPct": -0.6,
+      "trades": 115,
+      "complexCount": 10,
+      "pricePerPy": 945,
+      "recentSharePct": 20,
+      "medianBuildYear": 2008,
+      "ranks": {
+        "momentum": 338,
+        "trades": 355,
+        "value": 204,
+        "fresh": 166
+      }
+    },
+    {
+      "sigungu": "김포시",
+      "dongName": "운양동",
+      "momentumPct": 1.4,
+      "trades": 217,
+      "complexCount": 13,
+      "pricePerPy": 2075,
+      "recentSharePct": 38,
+      "medianBuildYear": 2014,
+      "ranks": {
+        "momentum": 113,
+        "trades": 222,
+        "value": 125,
+        "fresh": 67
+      }
+    },
+    {
+      "sigungu": "김포시",
+      "dongName": "고촌읍 신곡리",
+      "momentumPct": 1.4,
+      "trades": 208,
+      "complexCount": 19,
+      "pricePerPy": 2026,
+      "recentSharePct": 26,
+      "medianBuildYear": 2008,
+      "ranks": {
+        "momentum": 114,
+        "trades": 228,
+        "value": 120,
+        "fresh": 117
+      }
+    },
+    {
+      "sigungu": "김포시",
+      "dongName": "풍무동",
+      "momentumPct": 1.4,
+      "trades": 514,
+      "complexCount": 20,
+      "pricePerPy": 1434,
+      "recentSharePct": 25,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 110,
+        "trades": 49,
+        "value": 60,
+        "fresh": 131
+      }
+    },
+    {
+      "sigungu": "김포시",
+      "dongName": "사우동",
+      "momentumPct": 1.4,
+      "trades": 157,
+      "complexCount": 13,
+      "pricePerPy": 1610,
+      "recentSharePct": 8,
+      "medianBuildYear": 1998,
+      "ranks": {
+        "momentum": 115,
+        "trades": 302,
+        "value": 70,
+        "fresh": 317
+      }
+    },
+    {
+      "sigungu": "김포시",
+      "dongName": "장기동",
+      "momentumPct": 1.4,
+      "trades": 434,
+      "complexCount": 24,
+      "pricePerPy": 1651,
+      "recentSharePct": 17,
+      "medianBuildYear": 2011,
+      "ranks": {
+        "momentum": 111,
+        "trades": 81,
+        "value": 77,
+        "fresh": 200
+      }
+    },
+    {
+      "sigungu": "김포시",
+      "dongName": "구래동",
+      "momentumPct": 1.4,
+      "trades": 245,
+      "complexCount": 14,
+      "pricePerPy": 1719,
+      "recentSharePct": 64,
+      "medianBuildYear": 2018,
+      "ranks": {
+        "momentum": 112,
+        "trades": 192,
+        "value": 85,
+        "fresh": 28
+      }
+    },
+    {
+      "sigungu": "김포시",
+      "dongName": "북변동",
+      "momentumPct": 1.4,
+      "trades": 135,
+      "complexCount": 15,
+      "pricePerPy": 1379,
+      "recentSharePct": 0,
+      "medianBuildYear": 1999,
+      "ranks": {
+        "momentum": 116,
+        "trades": 326,
+        "value": 56,
+        "fresh": 434
+      }
+    },
+    {
+      "sigungu": "김포시",
+      "dongName": "감정동",
+      "momentumPct": 1.4,
+      "trades": 115,
+      "complexCount": 13,
+      "pricePerPy": 1152,
+      "recentSharePct": 15,
+      "medianBuildYear": 1996,
+      "ranks": {
+        "momentum": 117,
+        "trades": 356,
+        "value": 42,
+        "fresh": 212
+      }
+    },
+    {
+      "sigungu": "광주시",
+      "dongName": "신현동",
+      "momentumPct": -0.2,
+      "trades": 141,
+      "complexCount": 10,
+      "pricePerPy": 2413,
+      "recentSharePct": 70,
+      "medianBuildYear": 2018,
+      "ranks": {
+        "momentum": 295,
+        "trades": 320,
+        "value": 268,
+        "fresh": 24
+      }
+    },
+    {
+      "sigungu": "광주시",
+      "dongName": "탄벌동",
+      "momentumPct": -0.2,
+      "trades": 115,
+      "complexCount": 11,
+      "pricePerPy": 1394,
+      "recentSharePct": 27,
+      "medianBuildYear": 2011,
+      "ranks": {
+        "momentum": 296,
+        "trades": 357,
+        "value": 203,
+        "fresh": 110
+      }
+    },
+    {
+      "sigungu": "광주시",
+      "dongName": "양벌동",
+      "momentumPct": -0.2,
+      "trades": 167,
+      "complexCount": 11,
+      "pricePerPy": 1173,
+      "recentSharePct": 27,
+      "medianBuildYear": 2003,
+      "ranks": {
+        "momentum": 293,
+        "trades": 291,
+        "value": 188,
+        "fresh": 111
+      }
+    },
+    {
+      "sigungu": "광주시",
+      "dongName": "태전동",
+      "momentumPct": -0.2,
+      "trades": 151,
+      "complexCount": 10,
+      "pricePerPy": 1501,
+      "recentSharePct": 30,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 294,
+        "trades": 307,
+        "value": 211,
+        "fresh": 97
+      }
+    },
+    {
+      "sigungu": "광주시",
+      "dongName": "초월읍 쌍동리",
+      "momentumPct": -0.2,
+      "trades": 101,
+      "complexCount": 9,
+      "pricePerPy": 1876,
+      "recentSharePct": 44,
+      "medianBuildYear": 2007,
+      "ranks": {
+        "momentum": 297,
+        "trades": 375,
+        "value": 233,
+        "fresh": 55
+      }
+    },
+    {
+      "sigungu": "양주시",
+      "dongName": "삼숭동",
+      "momentumPct": 0.5,
+      "trades": 190,
+      "complexCount": 12,
+      "pricePerPy": 921,
+      "recentSharePct": 17,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 216,
+        "trades": 256,
+        "value": 94,
+        "fresh": 201
+      }
+    },
+    {
+      "sigungu": "양주시",
+      "dongName": "덕정동",
+      "momentumPct": 0.5,
+      "trades": 121,
+      "complexCount": 12,
+      "pricePerPy": 1035,
+      "recentSharePct": 8,
+      "medianBuildYear": 2001,
+      "ranks": {
+        "momentum": 217,
+        "trades": 341,
+        "value": 104,
+        "fresh": 301
+      }
+    },
+    {
+      "sigungu": "양주시",
+      "dongName": "덕계동",
+      "momentumPct": 0.5,
+      "trades": 313,
+      "complexCount": 24,
+      "pricePerPy": 962,
+      "recentSharePct": 33,
+      "medianBuildYear": 2007,
+      "ranks": {
+        "momentum": 215,
+        "trades": 135,
+        "value": 98,
+        "fresh": 84
+      }
+    },
+    {
+      "sigungu": "양주시",
+      "dongName": "옥정동",
+      "momentumPct": 0.5,
+      "trades": 487,
+      "complexCount": 21,
+      "pricePerPy": 1665,
+      "recentSharePct": 90,
+      "medianBuildYear": 2022,
+      "ranks": {
+        "momentum": 214,
+        "trades": 54,
+        "value": 161,
+        "fresh": 14
+      }
+    },
+    {
+      "sigungu": "포천시",
+      "dongName": "신읍동",
+      "momentumPct": 0.9,
+      "trades": 88,
+      "complexCount": 13,
+      "pricePerPy": 701,
+      "recentSharePct": 8,
+      "medianBuildYear": 1999,
+      "ranks": {
+        "momentum": 163,
+        "trades": 396,
+        "value": 45,
+        "fresh": 318
+      }
+    },
+    {
+      "sigungu": "포천시",
+      "dongName": "소흘읍 송우리",
+      "momentumPct": 0.9,
+      "trades": 179,
+      "complexCount": 13,
+      "pricePerPy": 937,
+      "recentSharePct": 15,
+      "medianBuildYear": 1997,
+      "ranks": {
+        "momentum": 162,
+        "trades": 268,
+        "value": 61,
+        "fresh": 213
+      }
+    },
+    {
+      "sigungu": "연천군",
+      "dongName": "전곡읍 전곡리",
+      "momentumPct": 1.1,
+      "trades": 78,
+      "complexCount": 17,
+      "pricePerPy": 465,
+      "recentSharePct": 12,
+      "medianBuildYear": 1997,
+      "ranks": {
+        "momentum": 143,
+        "trades": 414,
+        "value": 27,
+        "fresh": 245
+      }
+    },
+    {
+      "sigungu": "가평군",
+      "dongName": "가평읍 읍내리",
+      "momentumPct": 0,
+      "trades": 88,
+      "complexCount": 14,
+      "pricePerPy": 682,
+      "recentSharePct": 36,
+      "medianBuildYear": 2012,
+      "ranks": {
+        "momentum": 276,
+        "trades": 397,
+        "value": 130,
+        "fresh": 76
+      }
+    },
+    {
+      "sigungu": "양평군",
+      "dongName": "용문면 다문리",
+      "momentumPct": 0.8,
+      "trades": 54,
+      "complexCount": 9,
+      "pricePerPy": 925,
+      "recentSharePct": 44,
+      "medianBuildYear": 2011,
+      "ranks": {
+        "momentum": 183,
+        "trades": 435,
+        "value": 67,
+        "fresh": 56
+      }
+    },
+    {
+      "sigungu": "양평군",
+      "dongName": "양평읍 양근리",
+      "momentumPct": 0.8,
+      "trades": 181,
+      "complexCount": 17,
+      "pricePerPy": 1412,
+      "recentSharePct": 35,
+      "medianBuildYear": 2012,
+      "ranks": {
+        "momentum": 182,
+        "trades": 266,
+        "value": 123,
+        "fresh": 78
+      }
+    },
+    {
+      "sigungu": "인천 중구",
+      "dongName": "중산동",
+      "momentumPct": -2.4,
+      "trades": 393,
+      "complexCount": 17,
+      "pricePerPy": 1566,
+      "recentSharePct": 59,
+      "medianBuildYear": 2018,
+      "ranks": {
+        "momentum": 395,
+        "trades": 94,
+        "value": 328,
+        "fresh": 35
+      }
+    },
+    {
+      "sigungu": "인천 중구",
+      "dongName": "운남동",
+      "momentumPct": -2.4,
+      "trades": 115,
+      "complexCount": 8,
+      "pricePerPy": 1805,
+      "recentSharePct": 88,
+      "medianBuildYear": 2024,
+      "ranks": {
+        "momentum": 397,
+        "trades": 358,
+        "value": 333,
+        "fresh": 17
+      }
+    },
+    {
+      "sigungu": "인천 중구",
+      "dongName": "운서동",
+      "momentumPct": -2.4,
+      "trades": 207,
+      "complexCount": 17,
+      "pricePerPy": 1017,
+      "recentSharePct": 12,
+      "medianBuildYear": 2002,
+      "ranks": {
+        "momentum": 396,
+        "trades": 231,
+        "value": 314,
+        "fresh": 246
+      }
+    },
+    {
+      "sigungu": "인천 동구",
+      "dongName": "송림동",
+      "momentumPct": -0.2,
+      "trades": 136,
+      "complexCount": 13,
+      "pricePerPy": 1060,
+      "recentSharePct": 23,
+      "medianBuildYear": 2009,
+      "ranks": {
+        "momentum": 298,
+        "trades": 325,
+        "value": 178,
+        "fresh": 136
+      }
+    },
+    {
+      "sigungu": "미추홀구",
+      "dongName": "주안동",
+      "momentumPct": 0,
+      "trades": 643,
+      "complexCount": 109,
+      "pricePerPy": 965,
+      "recentSharePct": 22,
+      "medianBuildYear": 2010,
+      "ranks": {
+        "momentum": 264,
+        "trades": 28,
+        "value": 150,
+        "fresh": 146
+      }
+    },
+    {
+      "sigungu": "미추홀구",
+      "dongName": "용현동",
+      "momentumPct": 0,
+      "trades": 384,
+      "complexCount": 42,
+      "pricePerPy": 961,
+      "recentSharePct": 17,
+      "medianBuildYear": 1999,
+      "ranks": {
+        "momentum": 265,
+        "trades": 98,
+        "value": 148,
+        "fresh": 202
+      }
+    },
+    {
+      "sigungu": "미추홀구",
+      "dongName": "도화동",
+      "momentumPct": 0,
+      "trades": 286,
+      "complexCount": 41,
+      "pricePerPy": 965,
+      "recentSharePct": 32,
+      "medianBuildYear": 2013,
+      "ranks": {
+        "momentum": 267,
+        "trades": 151,
+        "value": 151,
+        "fresh": 87
+      }
+    },
+    {
+      "sigungu": "미추홀구",
+      "dongName": "학익동",
+      "momentumPct": 0,
+      "trades": 345,
+      "complexCount": 35,
+      "pricePerPy": 1093,
+      "recentSharePct": 14,
+      "medianBuildYear": 1997,
+      "ranks": {
+        "momentum": 266,
+        "trades": 121,
+        "value": 156,
+        "fresh": 225
+      }
+    },
+    {
+      "sigungu": "미추홀구",
+      "dongName": "숭의동",
+      "momentumPct": 0,
+      "trades": 203,
+      "complexCount": 63,
+      "pricePerPy": 943,
+      "recentSharePct": 43,
+      "medianBuildYear": 2015,
+      "ranks": {
+        "momentum": 268,
+        "trades": 236,
+        "value": 145,
+        "fresh": 57
+      }
+    },
+    {
+      "sigungu": "연수구",
+      "dongName": "송도동",
+      "momentumPct": -0.5,
+      "trades": 1642,
+      "complexCount": 82,
+      "pricePerPy": 2860,
+      "recentSharePct": 43,
+      "medianBuildYear": 2014,
+      "ranks": {
+        "momentum": 332,
+        "trades": 1,
+        "value": 312,
+        "fresh": 59
+      }
+    },
+    {
+      "sigungu": "연수구",
+      "dongName": "청학동",
+      "momentumPct": -0.5,
+      "trades": 110,
+      "complexCount": 13,
+      "pricePerPy": 1106,
+      "recentSharePct": 0,
+      "medianBuildYear": 1993,
+      "ranks": {
+        "momentum": 336,
+        "trades": 366,
+        "value": 207,
+        "fresh": 435
+      }
+    },
+    {
+      "sigungu": "연수구",
+      "dongName": "동춘동",
+      "momentumPct": -0.5,
+      "trades": 528,
+      "complexCount": 31,
+      "pricePerPy": 1476,
+      "recentSharePct": 26,
+      "medianBuildYear": 1994,
+      "ranks": {
+        "momentum": 333,
+        "trades": 46,
+        "value": 228,
+        "fresh": 119
+      }
+    },
+    {
+      "sigungu": "연수구",
+      "dongName": "연수동",
+      "momentumPct": -0.5,
+      "trades": 438,
+      "complexCount": 25,
+      "pricePerPy": 1396,
+      "recentSharePct": 0,
+      "medianBuildYear": 1993,
+      "ranks": {
+        "momentum": 334,
+        "trades": 78,
+        "value": 221,
+        "fresh": 436
+      }
+    },
+    {
+      "sigungu": "연수구",
+      "dongName": "선학동",
+      "momentumPct": -0.5,
+      "trades": 85,
+      "complexCount": 8,
+      "pricePerPy": 1104,
+      "recentSharePct": 13,
+      "medianBuildYear": 1992,
+      "ranks": {
+        "momentum": 337,
+        "trades": 403,
+        "value": 206,
+        "fresh": 239
+      }
+    },
+    {
+      "sigungu": "연수구",
+      "dongName": "옥련동",
+      "momentumPct": -0.5,
+      "trades": 281,
+      "complexCount": 23,
+      "pricePerPy": 1350,
+      "recentSharePct": 13,
+      "medianBuildYear": 1997,
+      "ranks": {
+        "momentum": 335,
+        "trades": 159,
+        "value": 219,
+        "fresh": 232
+      }
+    },
+    {
+      "sigungu": "남동구",
+      "dongName": "구월동",
+      "momentumPct": 1.2,
+      "trades": 533,
+      "complexCount": 61,
+      "pricePerPy": 1273,
+      "recentSharePct": 30,
+      "medianBuildYear": 2015,
+      "ranks": {
+        "momentum": 134,
+        "trades": 44,
+        "value": 62,
+        "fresh": 99
+      }
+    },
+    {
+      "sigungu": "남동구",
+      "dongName": "간석동",
+      "momentumPct": 1.2,
+      "trades": 475,
+      "complexCount": 70,
+      "pricePerPy": 1062,
+      "recentSharePct": 21,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 135,
+        "trades": 59,
+        "value": 47,
+        "fresh": 151
+      }
+    },
+    {
+      "sigungu": "남동구",
+      "dongName": "논현동",
+      "momentumPct": 1.2,
+      "trades": 457,
+      "complexCount": 26,
+      "pricePerPy": 1694,
+      "recentSharePct": 12,
+      "medianBuildYear": 2009,
+      "ranks": {
+        "momentum": 136,
+        "trades": 68,
+        "value": 106,
+        "fresh": 248
+      }
+    },
+    {
+      "sigungu": "남동구",
+      "dongName": "서창동",
+      "momentumPct": 1.2,
+      "trades": 190,
+      "complexCount": 14,
+      "pricePerPy": 1731,
+      "recentSharePct": 43,
+      "medianBuildYear": 2014,
+      "ranks": {
+        "momentum": 137,
+        "trades": 257,
+        "value": 113,
+        "fresh": 58
+      }
+    },
+    {
+      "sigungu": "남동구",
+      "dongName": "만수동",
+      "momentumPct": 1.2,
+      "trades": 568,
+      "complexCount": 45,
+      "pricePerPy": 1092,
+      "recentSharePct": 2,
+      "medianBuildYear": 1990,
+      "ranks": {
+        "momentum": 133,
+        "trades": 37,
+        "value": 49,
+        "fresh": 369
+      }
+    },
+    {
+      "sigungu": "부평구",
+      "dongName": "부개동",
+      "momentumPct": 1.7,
+      "trades": 529,
+      "complexCount": 37,
+      "pricePerPy": 1563,
+      "recentSharePct": 8,
+      "medianBuildYear": 1992,
+      "ranks": {
+        "momentum": 79,
+        "trades": 45,
+        "value": 46,
+        "fresh": 302
+      }
+    },
+    {
+      "sigungu": "부평구",
+      "dongName": "산곡동",
+      "momentumPct": 1.7,
+      "trades": 592,
+      "complexCount": 37,
+      "pricePerPy": 1414,
+      "recentSharePct": 16,
+      "medianBuildYear": 1992,
+      "ranks": {
+        "momentum": 78,
+        "trades": 33,
+        "value": 39,
+        "fresh": 203
+      }
+    },
+    {
+      "sigungu": "부평구",
+      "dongName": "부평동",
+      "momentumPct": 1.7,
+      "trades": 608,
+      "complexCount": 136,
+      "pricePerPy": 1233,
+      "recentSharePct": 23,
+      "medianBuildYear": 2014,
+      "ranks": {
+        "momentum": 77,
+        "trades": 31,
+        "value": 30,
+        "fresh": 137
+      }
+    },
+    {
+      "sigungu": "부평구",
+      "dongName": "삼산동",
+      "momentumPct": 1.7,
+      "trades": 370,
+      "complexCount": 20,
+      "pricePerPy": 1879,
+      "recentSharePct": 10,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 80,
+        "trades": 108,
+        "value": 68,
+        "fresh": 271
+      }
+    },
+    {
+      "sigungu": "부평구",
+      "dongName": "청천동",
+      "momentumPct": 1.7,
+      "trades": 345,
+      "complexCount": 17,
+      "pricePerPy": 1280,
+      "recentSharePct": 18,
+      "medianBuildYear": 1994,
+      "ranks": {
+        "momentum": 81,
+        "trades": 122,
+        "value": 35,
+        "fresh": 186
+      }
+    },
+    {
+      "sigungu": "부평구",
+      "dongName": "십정동",
+      "momentumPct": 1.7,
+      "trades": 258,
+      "complexCount": 26,
+      "pricePerPy": 1253,
+      "recentSharePct": 19,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 82,
+        "trades": 183,
+        "value": 33,
+        "fresh": 170
+      }
+    },
+    {
+      "sigungu": "부평구",
+      "dongName": "갈산동",
+      "momentumPct": 1.7,
+      "trades": 208,
+      "complexCount": 14,
+      "pricePerPy": 1513,
+      "recentSharePct": 7,
+      "medianBuildYear": 1992,
+      "ranks": {
+        "momentum": 83,
+        "trades": 229,
+        "value": 44,
+        "fresh": 325
+      }
+    },
+    {
+      "sigungu": "계양구",
+      "dongName": "작전동",
+      "momentumPct": 0,
+      "trades": 605,
+      "complexCount": 62,
+      "pricePerPy": 1158,
+      "recentSharePct": 6,
+      "medianBuildYear": 1990,
+      "ranks": {
+        "momentum": 282,
+        "trades": 32,
+        "value": 171,
+        "fresh": 331
+      }
+    },
+    {
+      "sigungu": "계양구",
+      "dongName": "계산동",
+      "momentumPct": 0,
+      "trades": 345,
+      "complexCount": 45,
+      "pricePerPy": 1120,
+      "recentSharePct": 7,
+      "medianBuildYear": 1990,
+      "ranks": {
+        "momentum": 284,
+        "trades": 123,
+        "value": 168,
+        "fresh": 328
+      }
+    },
+    {
+      "sigungu": "계양구",
+      "dongName": "효성동",
+      "momentumPct": 0,
+      "trades": 383,
+      "complexCount": 40,
+      "pricePerPy": 1161,
+      "recentSharePct": 15,
+      "medianBuildYear": 1995,
+      "ranks": {
+        "momentum": 283,
+        "trades": 99,
+        "value": 172,
+        "fresh": 217
+      }
+    },
+    {
+      "sigungu": "인천 서구",
+      "dongName": "원당동",
+      "momentumPct": -0.3,
+      "trades": 450,
+      "complexCount": 12,
+      "pricePerPy": 2841,
+      "recentSharePct": 100,
+      "medianBuildYear": 2022,
+      "ranks": {
+        "momentum": 301,
+        "trades": 73,
+        "value": 294,
+        "fresh": 11
+      }
+    },
+    {
+      "sigungu": "인천 서구",
+      "dongName": "신현동",
+      "momentumPct": -0.3,
+      "trades": 120,
+      "complexCount": 8,
+      "pricePerPy": 2128,
+      "recentSharePct": 38,
+      "medianBuildYear": 2010,
+      "ranks": {
+        "momentum": 307,
+        "trades": 344,
+        "value": 258,
+        "fresh": 69
+      }
+    },
+    {
+      "sigungu": "인천 서구",
+      "dongName": "청라동",
+      "momentumPct": -0.3,
+      "trades": 750,
+      "complexCount": 41,
+      "pricePerPy": 2252,
+      "recentSharePct": 20,
+      "medianBuildYear": 2012,
+      "ranks": {
+        "momentum": 299,
+        "trades": 13,
+        "value": 263,
+        "fresh": 167
+      }
+    },
+    {
+      "sigungu": "인천 서구",
+      "dongName": "검암동",
+      "momentumPct": -0.3,
+      "trades": 94,
+      "complexCount": 9,
+      "pricePerPy": 1672,
+      "recentSharePct": 0,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 309,
+        "trades": 385,
+        "value": 224,
+        "fresh": 437
+      }
+    },
+    {
+      "sigungu": "인천 서구",
+      "dongName": "가정동",
+      "momentumPct": -0.3,
+      "trades": 278,
+      "complexCount": 22,
+      "pricePerPy": 1053,
+      "recentSharePct": 36,
+      "medianBuildYear": 1992,
+      "ranks": {
+        "momentum": 304,
+        "trades": 162,
+        "value": 187,
+        "fresh": 75
+      }
+    },
+    {
+      "sigungu": "인천 서구",
+      "dongName": "마전동",
+      "momentumPct": -0.3,
+      "trades": 375,
+      "complexCount": 35,
+      "pricePerPy": 1025,
+      "recentSharePct": 9,
+      "medianBuildYear": 2004,
+      "ranks": {
+        "momentum": 302,
+        "trades": 103,
+        "value": 181,
+        "fresh": 288
+      }
+    },
+    {
+      "sigungu": "인천 서구",
+      "dongName": "심곡동",
+      "momentumPct": -0.3,
+      "trades": 94,
+      "complexCount": 9,
+      "pricePerPy": 1168,
+      "recentSharePct": 0,
+      "medianBuildYear": 1996,
+      "ranks": {
+        "momentum": 310,
+        "trades": 386,
+        "value": 192,
+        "fresh": 438
+      }
+    },
+    {
+      "sigungu": "인천 서구",
+      "dongName": "가좌동",
+      "momentumPct": -0.3,
+      "trades": 315,
+      "complexCount": 42,
+      "pricePerPy": 818,
+      "recentSharePct": 5,
+      "medianBuildYear": 1989,
+      "ranks": {
+        "momentum": 303,
+        "trades": 131,
+        "value": 164,
+        "fresh": 348
+      }
+    },
+    {
+      "sigungu": "인천 서구",
+      "dongName": "불로동",
+      "momentumPct": -0.3,
+      "trades": 176,
+      "complexCount": 15,
+      "pricePerPy": 2011,
+      "recentSharePct": 53,
+      "medianBuildYear": 2022,
+      "ranks": {
+        "momentum": 306,
+        "trades": 273,
+        "value": 254,
+        "fresh": 42
+      }
+    },
+    {
+      "sigungu": "인천 서구",
+      "dongName": "석남동",
+      "momentumPct": -0.3,
+      "trades": 182,
+      "complexCount": 46,
+      "pricePerPy": 960,
+      "recentSharePct": 17,
+      "medianBuildYear": 2005,
+      "ranks": {
+        "momentum": 305,
+        "trades": 265,
+        "value": 176,
+        "fresh": 190
+      }
+    },
+    {
+      "sigungu": "인천 서구",
+      "dongName": "당하동",
+      "momentumPct": -0.3,
+      "trades": 544,
+      "complexCount": 28,
+      "pricePerPy": 1969,
+      "recentSharePct": 50,
+      "medianBuildYear": 2017,
+      "ranks": {
+        "momentum": 300,
+        "trades": 41,
+        "value": 252,
+        "fresh": 48
+      }
+    },
+    {
+      "sigungu": "인천 서구",
+      "dongName": "왕길동",
+      "momentumPct": -0.3,
+      "trades": 116,
+      "complexCount": 10,
+      "pricePerPy": 1287,
+      "recentSharePct": 10,
+      "medianBuildYear": 2010,
+      "ranks": {
+        "momentum": 308,
+        "trades": 352,
+        "value": 201,
+        "fresh": 272
+      }
+    }
+  ],
+  "sigunguRegions": [
+    {
+      "sigungu": "종로구",
+      "dongName": null,
       "momentumPct": -1.1,
       "trades": 378,
       "complexCount": 69,
@@ -13,14 +7025,15 @@
       "recentSharePct": 14,
       "medianBuildYear": 2004,
       "ranks": {
-        "momentum": 63,
+        "momentum": 61,
         "trades": 76,
-        "value": 67,
-        "fresh": 52
+        "value": 65,
+        "fresh": 51
       }
     },
     {
       "sigungu": "중구",
+      "dongName": null,
       "momentumPct": -1.3,
       "trades": 609,
       "complexCount": 80,
@@ -28,14 +7041,15 @@
       "recentSharePct": 28,
       "medianBuildYear": 2007,
       "ranks": {
-        "momentum": 64,
+        "momentum": 62,
         "trades": 70,
-        "value": 71,
+        "value": 69,
         "fresh": 23
       }
     },
     {
       "sigungu": "용산구",
+      "dongName": null,
       "momentumPct": -3.3,
       "trades": 865,
       "complexCount": 138,
@@ -43,14 +7057,15 @@
       "recentSharePct": 9,
       "medianBuildYear": 2003,
       "ranks": {
-        "momentum": 75,
+        "momentum": 73,
         "trades": 65,
-        "value": 79,
-        "fresh": 71
+        "value": 77,
+        "fresh": 69
       }
     },
     {
       "sigungu": "성동구",
+      "dongName": null,
       "momentumPct": 1.4,
       "trades": 1856,
       "complexCount": 140,
@@ -60,12 +7075,13 @@
       "ranks": {
         "momentum": 19,
         "trades": 33,
-        "value": 73,
-        "fresh": 47
+        "value": 71,
+        "fresh": 46
       }
     },
     {
       "sigungu": "광진구",
+      "dongName": null,
       "momentumPct": -2.3,
       "trades": 1203,
       "complexCount": 160,
@@ -73,14 +7089,15 @@
       "recentSharePct": 16,
       "medianBuildYear": 2003,
       "ranks": {
-        "momentum": 70,
+        "momentum": 68,
         "trades": 57,
-        "value": 75,
-        "fresh": 44
+        "value": 73,
+        "fresh": 43
       }
     },
     {
       "sigungu": "동대문구",
+      "dongName": null,
       "momentumPct": 0.7,
       "trades": 1823,
       "complexCount": 200,
@@ -88,14 +7105,15 @@
       "recentSharePct": 28,
       "medianBuildYear": 2008,
       "ranks": {
-        "momentum": 33,
+        "momentum": 32,
         "trades": 34,
-        "value": 57,
+        "value": 55,
         "fresh": 18
       }
     },
     {
       "sigungu": "중랑구",
+      "dongName": null,
       "momentumPct": 3.4,
       "trades": 1543,
       "complexCount": 190,
@@ -105,12 +7123,13 @@
       "ranks": {
         "momentum": 6,
         "trades": 44,
-        "value": 9,
-        "fresh": 62
+        "value": 8,
+        "fresh": 60
       }
     },
     {
       "sigungu": "성북구",
+      "dongName": null,
       "momentumPct": 3,
       "trades": 2001,
       "complexCount": 145,
@@ -120,12 +7139,13 @@
       "ranks": {
         "momentum": 8,
         "trades": 30,
-        "value": 34,
-        "fresh": 57
+        "value": 32,
+        "fresh": 55
       }
     },
     {
       "sigungu": "강북구",
+      "dongName": null,
       "momentumPct": 1.8,
       "trades": 778,
       "complexCount": 76,
@@ -135,12 +7155,13 @@
       "ranks": {
         "momentum": 14,
         "trades": 68,
-        "value": 26,
-        "fresh": 45
+        "value": 24,
+        "fresh": 44
       }
     },
     {
       "sigungu": "도봉구",
+      "dongName": null,
       "momentumPct": 2.5,
       "trades": 1289,
       "complexCount": 144,
@@ -150,12 +7171,13 @@
       "ranks": {
         "momentum": 10,
         "trades": 53,
-        "value": 10,
-        "fresh": 77
+        "value": 9,
+        "fresh": 75
       }
     },
     {
       "sigungu": "노원구",
+      "dongName": null,
       "momentumPct": 0,
       "trades": 2923,
       "complexCount": 222,
@@ -163,14 +7185,15 @@
       "recentSharePct": 7,
       "medianBuildYear": 1999,
       "ranks": {
-        "momentum": 48,
+        "momentum": 46,
         "trades": 9,
-        "value": 58,
-        "fresh": 79
+        "value": 56,
+        "fresh": 77
       }
     },
     {
       "sigungu": "은평구",
+      "dongName": null,
       "momentumPct": 0.2,
       "trades": 1714,
       "complexCount": 246,
@@ -178,14 +7201,15 @@
       "recentSharePct": 28,
       "medianBuildYear": 2007,
       "ranks": {
-        "momentum": 43,
+        "momentum": 42,
         "trades": 38,
-        "value": 55,
+        "value": 53,
         "fresh": 22
       }
     },
     {
       "sigungu": "서대문구",
+      "dongName": null,
       "momentumPct": 3.7,
       "trades": 1577,
       "complexCount": 181,
@@ -195,12 +7219,13 @@
       "ranks": {
         "momentum": 3,
         "trades": 42,
-        "value": 21,
+        "value": 19,
         "fresh": 42
       }
     },
     {
       "sigungu": "마포구",
+      "dongName": null,
       "momentumPct": 0.6,
       "trades": 2356,
       "complexCount": 224,
@@ -208,14 +7233,15 @@
       "recentSharePct": 12,
       "medianBuildYear": 2004,
       "ranks": {
-        "momentum": 37,
+        "momentum": 36,
         "trades": 19,
-        "value": 69,
-        "fresh": 66
+        "value": 67,
+        "fresh": 64
       }
     },
     {
       "sigungu": "양천구",
+      "dongName": null,
       "momentumPct": -1.4,
       "trades": 2050,
       "complexCount": 298,
@@ -223,14 +7249,15 @@
       "recentSharePct": 7,
       "medianBuildYear": 2003,
       "ranks": {
-        "momentum": 65,
+        "momentum": 63,
         "trades": 28,
-        "value": 66,
-        "fresh": 78
+        "value": 64,
+        "fresh": 76
       }
     },
     {
       "sigungu": "강서구",
+      "dongName": null,
       "momentumPct": 0,
       "trades": 2600,
       "complexCount": 348,
@@ -238,14 +7265,15 @@
       "recentSharePct": 14,
       "medianBuildYear": 2004,
       "ranks": {
-        "momentum": 45,
+        "momentum": 44,
         "trades": 14,
-        "value": 61,
-        "fresh": 53
+        "value": 59,
+        "fresh": 52
       }
     },
     {
       "sigungu": "구로구",
+      "dongName": null,
       "momentumPct": 3,
       "trades": 2111,
       "complexCount": 243,
@@ -256,11 +7284,12 @@
         "momentum": 7,
         "trades": 26,
         "value": 11,
-        "fresh": 73
+        "fresh": 71
       }
     },
     {
       "sigungu": "금천구",
+      "dongName": null,
       "momentumPct": 0.6,
       "trades": 652,
       "complexCount": 85,
@@ -268,14 +7297,15 @@
       "recentSharePct": 13,
       "medianBuildYear": 2002,
       "ranks": {
-        "momentum": 35,
+        "momentum": 34,
         "trades": 69,
-        "value": 43,
-        "fresh": 59
+        "value": 41,
+        "fresh": 57
       }
     },
     {
       "sigungu": "영등포구",
+      "dongName": null,
       "momentumPct": 0.2,
       "trades": 2279,
       "complexCount": 230,
@@ -283,14 +7313,15 @@
       "recentSharePct": 13,
       "medianBuildYear": 2001,
       "ranks": {
-        "momentum": 41,
+        "momentum": 40,
         "trades": 24,
-        "value": 70,
-        "fresh": 58
+        "value": 68,
+        "fresh": 56
       }
     },
     {
       "sigungu": "동작구",
+      "dongName": null,
       "momentumPct": 1.1,
       "trades": 1680,
       "complexCount": 164,
@@ -300,12 +7331,13 @@
       "ranks": {
         "momentum": 25,
         "trades": 40,
-        "value": 64,
-        "fresh": 64
+        "value": 63,
+        "fresh": 62
       }
     },
     {
       "sigungu": "관악구",
+      "dongName": null,
       "momentumPct": 2.8,
       "trades": 1260,
       "complexCount": 178,
@@ -315,12 +7347,13 @@
       "ranks": {
         "momentum": 9,
         "trades": 54,
-        "value": 25,
-        "fresh": 72
+        "value": 23,
+        "fresh": 70
       }
     },
     {
       "sigungu": "서초구",
+      "dongName": null,
       "momentumPct": -2.6,
       "trades": 1726,
       "complexCount": 348,
@@ -328,14 +7361,15 @@
       "recentSharePct": 13,
       "medianBuildYear": 2004,
       "ranks": {
-        "momentum": 72,
+        "momentum": 70,
         "trades": 36,
-        "value": 78,
-        "fresh": 61
+        "value": 76,
+        "fresh": 59
       }
     },
     {
       "sigungu": "강남구",
+      "dongName": null,
       "momentumPct": -5.4,
       "trades": 2003,
       "complexCount": 323,
@@ -343,14 +7377,15 @@
       "recentSharePct": 11,
       "medianBuildYear": 2003,
       "ranks": {
-        "momentum": 80,
+        "momentum": 78,
         "trades": 29,
-        "value": 81,
-        "fresh": 68
+        "value": 79,
+        "fresh": 66
       }
     },
     {
       "sigungu": "송파구",
+      "dongName": null,
       "momentumPct": -1.7,
       "trades": 2507,
       "complexCount": 292,
@@ -358,14 +7393,15 @@
       "recentSharePct": 14,
       "medianBuildYear": 2003,
       "ranks": {
-        "momentum": 68,
+        "momentum": 66,
         "trades": 16,
-        "value": 74,
-        "fresh": 55
+        "value": 72,
+        "fresh": 54
       }
     },
     {
       "sigungu": "강동구",
+      "dongName": null,
       "momentumPct": -0.3,
       "trades": 2291,
       "complexCount": 330,
@@ -373,14 +7409,15 @@
       "recentSharePct": 16,
       "medianBuildYear": 2004,
       "ranks": {
-        "momentum": 55,
+        "momentum": 53,
         "trades": 23,
-        "value": 62,
-        "fresh": 46
+        "value": 60,
+        "fresh": 45
       }
     },
     {
       "sigungu": "수원시 장안구",
+      "dongName": null,
       "momentumPct": 4.9,
       "trades": 1478,
       "complexCount": 138,
@@ -391,11 +7428,12 @@
         "momentum": 1,
         "trades": 48,
         "value": 1,
-        "fresh": 75
+        "fresh": 73
       }
     },
     {
       "sigungu": "수원시 권선구",
+      "dongName": null,
       "momentumPct": 1.6,
       "trades": 2586,
       "complexCount": 163,
@@ -405,12 +7443,13 @@
       "ranks": {
         "momentum": 16,
         "trades": 15,
-        "value": 12,
-        "fresh": 50
+        "value": 10,
+        "fresh": 49
       }
     },
     {
       "sigungu": "수원시 팔달구",
+      "dongName": null,
       "momentumPct": 1,
       "trades": 1407,
       "complexCount": 97,
@@ -418,14 +7457,15 @@
       "recentSharePct": 19,
       "medianBuildYear": 2003,
       "ranks": {
-        "momentum": 27,
+        "momentum": 26,
         "trades": 49,
-        "value": 30,
+        "value": 27,
         "fresh": 39
       }
     },
     {
       "sigungu": "수원시 영통구",
+      "dongName": null,
       "momentumPct": 1.6,
       "trades": 2919,
       "complexCount": 133,
@@ -435,12 +7475,13 @@
       "ranks": {
         "momentum": 17,
         "trades": 11,
-        "value": 35,
-        "fresh": 49
+        "value": 33,
+        "fresh": 48
       }
     },
     {
       "sigungu": "성남시 수정구",
+      "dongName": null,
       "momentumPct": 0.9,
       "trades": 966,
       "complexCount": 79,
@@ -448,14 +7489,15 @@
       "recentSharePct": 33,
       "medianBuildYear": 2007,
       "ranks": {
-        "momentum": 29,
+        "momentum": 28,
         "trades": 62,
-        "value": 52,
+        "value": 50,
         "fresh": 12
       }
     },
     {
       "sigungu": "성남시 중원구",
+      "dongName": null,
       "momentumPct": -0.1,
       "trades": 784,
       "complexCount": 74,
@@ -463,14 +7505,15 @@
       "recentSharePct": 20,
       "medianBuildYear": 2005,
       "ranks": {
-        "momentum": 51,
+        "momentum": 49,
         "trades": 66,
-        "value": 56,
+        "value": 54,
         "fresh": 33
       }
     },
     {
       "sigungu": "성남시 분당구",
+      "dongName": null,
       "momentumPct": -1.6,
       "trades": 2684,
       "complexCount": 176,
@@ -478,14 +7521,15 @@
       "recentSharePct": 6,
       "medianBuildYear": 1995,
       "ranks": {
-        "momentum": 67,
+        "momentum": 65,
         "trades": 13,
-        "value": 77,
-        "fresh": 80
+        "value": 75,
+        "fresh": 78
       }
     },
     {
       "sigungu": "안양시 만안구",
+      "dongName": null,
       "momentumPct": 3.4,
       "trades": 1657,
       "complexCount": 153,
@@ -501,6 +7545,7 @@
     },
     {
       "sigungu": "안양시 동안구",
+      "dongName": null,
       "momentumPct": 1.3,
       "trades": 2500,
       "complexCount": 162,
@@ -510,12 +7555,13 @@
       "ranks": {
         "momentum": 21,
         "trades": 18,
-        "value": 50,
-        "fresh": 48
+        "value": 48,
+        "fresh": 47
       }
     },
     {
       "sigungu": "안산시 상록구",
+      "dongName": null,
       "momentumPct": -7.4,
       "trades": 1028,
       "complexCount": 74,
@@ -523,14 +7569,15 @@
       "recentSharePct": 12,
       "medianBuildYear": 1999,
       "ranks": {
-        "momentum": 81,
+        "momentum": 79,
         "trades": 60,
-        "value": 76,
-        "fresh": 65
+        "value": 74,
+        "fresh": 63
       }
     },
     {
       "sigungu": "안산시 단원구",
+      "dongName": null,
       "momentumPct": 0.4,
       "trades": 1258,
       "complexCount": 64,
@@ -538,14 +7585,15 @@
       "recentSharePct": 27,
       "medianBuildYear": 2004,
       "ranks": {
-        "momentum": 40,
+        "momentum": 39,
         "trades": 56,
-        "value": 41,
+        "value": 39,
         "fresh": 25
       }
     },
     {
       "sigungu": "고양시 덕양구",
+      "dongName": null,
       "momentumPct": 1.3,
       "trades": 2330,
       "complexCount": 182,
@@ -555,12 +7603,13 @@
       "ranks": {
         "momentum": 23,
         "trades": 21,
-        "value": 23,
+        "value": 21,
         "fresh": 40
       }
     },
     {
       "sigungu": "고양시 일산동구",
+      "dongName": null,
       "momentumPct": -4.4,
       "trades": 1260,
       "complexCount": 97,
@@ -568,14 +7617,15 @@
       "recentSharePct": 11,
       "medianBuildYear": 1995,
       "ranks": {
-        "momentum": 78,
+        "momentum": 76,
         "trades": 55,
-        "value": 72,
-        "fresh": 70
+        "value": 70,
+        "fresh": 68
       }
     },
     {
       "sigungu": "고양시 일산서구",
+      "dongName": null,
       "momentumPct": -3.3,
       "trades": 1692,
       "complexCount": 154,
@@ -583,14 +7633,15 @@
       "recentSharePct": 3,
       "medianBuildYear": 1995,
       "ranks": {
-        "momentum": 74,
+        "momentum": 72,
         "trades": 39,
-        "value": 65,
-        "fresh": 81
+        "value": 62,
+        "fresh": 79
       }
     },
     {
       "sigungu": "용인시 처인구",
+      "dongName": null,
       "momentumPct": -1.5,
       "trades": 1357,
       "complexCount": 131,
@@ -598,14 +7649,15 @@
       "recentSharePct": 28,
       "medianBuildYear": 2003,
       "ranks": {
-        "momentum": 66,
+        "momentum": 64,
         "trades": 52,
-        "value": 48,
+        "value": 46,
         "fresh": 19
       }
     },
     {
       "sigungu": "용인시 기흥구",
+      "dongName": null,
       "momentumPct": 3.7,
       "trades": 4117,
       "complexCount": 213,
@@ -616,11 +7668,12 @@
         "momentum": 4,
         "trades": 3,
         "value": 2,
-        "fresh": 54
+        "fresh": 53
       }
     },
     {
       "sigungu": "용인시 수지구",
+      "dongName": null,
       "momentumPct": 2.1,
       "trades": 3502,
       "complexCount": 220,
@@ -630,12 +7683,13 @@
       "ranks": {
         "momentum": 13,
         "trades": 6,
-        "value": 39,
-        "fresh": 60
+        "value": 37,
+        "fresh": 58
       }
     },
     {
       "sigungu": "부천시 원미구",
+      "dongName": null,
       "momentumPct": 0.7,
       "trades": 2340,
       "complexCount": 247,
@@ -643,14 +7697,15 @@
       "recentSharePct": 21,
       "medianBuildYear": 2003,
       "ranks": {
-        "momentum": 34,
+        "momentum": 33,
         "trades": 20,
-        "value": 37,
+        "value": 36,
         "fresh": 32
       }
     },
     {
       "sigungu": "부천시 소사구",
+      "dongName": null,
       "momentumPct": -1.1,
       "trades": 1380,
       "complexCount": 172,
@@ -658,14 +7713,15 @@
       "recentSharePct": 40,
       "medianBuildYear": 2008,
       "ranks": {
-        "momentum": 62,
+        "momentum": 60,
         "trades": 51,
-        "value": 51,
+        "value": 49,
         "fresh": 7
       }
     },
     {
       "sigungu": "부천시 오정구",
+      "dongName": null,
       "momentumPct": -0.8,
       "trades": 549,
       "complexCount": 144,
@@ -673,14 +7729,15 @@
       "recentSharePct": 35,
       "medianBuildYear": 2005,
       "ranks": {
-        "momentum": 60,
+        "momentum": 58,
         "trades": 72,
-        "value": 46,
+        "value": 44,
         "fresh": 11
       }
     },
     {
       "sigungu": "화성시 남양구",
+      "dongName": null,
       "momentumPct": 0.6,
       "trades": 779,
       "complexCount": 71,
@@ -688,14 +7745,15 @@
       "recentSharePct": 42,
       "medianBuildYear": 2010,
       "ranks": {
-        "momentum": 36,
+        "momentum": 35,
         "trades": 67,
-        "value": 24,
+        "value": 22,
         "fresh": 5
       }
     },
     {
       "sigungu": "화성시 향남구",
+      "dongName": null,
       "momentumPct": -1.8,
       "trades": 891,
       "complexCount": 60,
@@ -703,14 +7761,15 @@
       "recentSharePct": 40,
       "medianBuildYear": 2008,
       "ranks": {
-        "momentum": 69,
+        "momentum": 67,
         "trades": 63,
-        "value": 54,
+        "value": 52,
         "fresh": 6
       }
     },
     {
       "sigungu": "화성시 병점구",
+      "dongName": null,
       "momentumPct": 2.1,
       "trades": 1397,
       "complexCount": 69,
@@ -720,12 +7779,13 @@
       "ranks": {
         "momentum": 12,
         "trades": 50,
-        "value": 5,
+        "value": 4,
         "fresh": 31
       }
     },
     {
       "sigungu": "화성시 동탄구",
+      "dongName": null,
       "momentumPct": 2.2,
       "trades": 4547,
       "complexCount": 135,
@@ -735,12 +7795,13 @@
       "ranks": {
         "momentum": 11,
         "trades": 2,
-        "value": 33,
+        "value": 31,
         "fresh": 3
       }
     },
     {
       "sigungu": "의정부시",
+      "dongName": null,
       "momentumPct": 0.9,
       "trades": 2913,
       "complexCount": 266,
@@ -748,14 +7809,15 @@
       "recentSharePct": 28,
       "medianBuildYear": 2004,
       "ranks": {
-        "momentum": 28,
+        "momentum": 27,
         "trades": 12,
-        "value": 17,
+        "value": 15,
         "fresh": 21
       }
     },
     {
       "sigungu": "광명시",
+      "dongName": null,
       "momentumPct": 1.3,
       "trades": 2062,
       "complexCount": 88,
@@ -765,12 +7827,13 @@
       "ranks": {
         "momentum": 22,
         "trades": 27,
-        "value": 45,
+        "value": 43,
         "fresh": 34
       }
     },
     {
       "sigungu": "평택시",
+      "dongName": null,
       "momentumPct": 0.5,
       "trades": 3952,
       "complexCount": 308,
@@ -778,14 +7841,15 @@
       "recentSharePct": 39,
       "medianBuildYear": 2010,
       "ranks": {
-        "momentum": 39,
+        "momentum": 38,
         "trades": 4,
-        "value": 14,
+        "value": 13,
         "fresh": 8
       }
     },
     {
       "sigungu": "동두천시",
+      "dongName": null,
       "momentumPct": -5,
       "trades": 571,
       "complexCount": 64,
@@ -793,14 +7857,15 @@
       "recentSharePct": 8,
       "medianBuildYear": 2002,
       "ranks": {
-        "momentum": 79,
+        "momentum": 77,
         "trades": 71,
-        "value": 68,
-        "fresh": 76
+        "value": 66,
+        "fresh": 74
       }
     },
     {
       "sigungu": "과천시",
+      "dongName": null,
       "momentumPct": -2.6,
       "trades": 202,
       "complexCount": 19,
@@ -808,14 +7873,15 @@
       "recentSharePct": 58,
       "medianBuildYear": 2020,
       "ranks": {
-        "momentum": 73,
+        "momentum": 71,
         "trades": 79,
-        "value": 80,
+        "value": 78,
         "fresh": 1
       }
     },
     {
       "sigungu": "구리시",
+      "dongName": null,
       "momentumPct": 1.5,
       "trades": 2158,
       "complexCount": 130,
@@ -825,12 +7891,13 @@
       "ranks": {
         "momentum": 18,
         "trades": 25,
-        "value": 42,
-        "fresh": 67
+        "value": 40,
+        "fresh": 65
       }
     },
     {
       "sigungu": "남양주시",
+      "dongName": null,
       "momentumPct": 0.8,
       "trades": 4869,
       "complexCount": 337,
@@ -838,14 +7905,15 @@
       "recentSharePct": 15,
       "medianBuildYear": 2004,
       "ranks": {
-        "momentum": 31,
+        "momentum": 30,
         "trades": 1,
-        "value": 20,
-        "fresh": 51
+        "value": 18,
+        "fresh": 50
       }
     },
     {
       "sigungu": "오산시",
+      "dongName": null,
       "momentumPct": -0.9,
       "trades": 1482,
       "complexCount": 107,
@@ -853,14 +7921,15 @@
       "recentSharePct": 30,
       "medianBuildYear": 2009,
       "ranks": {
-        "momentum": 61,
+        "momentum": 59,
         "trades": 47,
-        "value": 44,
+        "value": 42,
         "fresh": 17
       }
     },
     {
       "sigungu": "시흥시",
+      "dongName": null,
       "momentumPct": 0.2,
       "trades": 3131,
       "complexCount": 262,
@@ -868,14 +7937,15 @@
       "recentSharePct": 28,
       "medianBuildYear": 1999,
       "ranks": {
-        "momentum": 42,
+        "momentum": 41,
         "trades": 7,
-        "value": 31,
+        "value": 29,
         "fresh": 20
       }
     },
     {
       "sigungu": "군포시",
+      "dongName": null,
       "momentumPct": -0.4,
       "trades": 1726,
       "complexCount": 123,
@@ -883,14 +7953,15 @@
       "recentSharePct": 11,
       "medianBuildYear": 2003,
       "ranks": {
-        "momentum": 57,
+        "momentum": 55,
         "trades": 37,
-        "value": 49,
-        "fresh": 69
+        "value": 47,
+        "fresh": 67
       }
     },
     {
       "sigungu": "의왕시",
+      "dongName": null,
       "momentumPct": -0.1,
       "trades": 1025,
       "complexCount": 85,
@@ -898,14 +7969,15 @@
       "recentSharePct": 19,
       "medianBuildYear": 2002,
       "ranks": {
-        "momentum": 50,
+        "momentum": 48,
         "trades": 61,
-        "value": 53,
+        "value": 51,
         "fresh": 37
       }
     },
     {
       "sigungu": "하남시",
+      "dongName": null,
       "momentumPct": 4.5,
       "trades": 1735,
       "complexCount": 106,
@@ -921,6 +7993,7 @@
     },
     {
       "sigungu": "파주시",
+      "dongName": null,
       "momentumPct": -0.3,
       "trades": 1528,
       "complexCount": 107,
@@ -928,14 +8001,15 @@
       "recentSharePct": 32,
       "medianBuildYear": 2009,
       "ranks": {
-        "momentum": 56,
+        "momentum": 54,
         "trades": 45,
-        "value": 38,
+        "value": 35,
         "fresh": 13
       }
     },
     {
       "sigungu": "이천시",
+      "dongName": null,
       "momentumPct": -3.4,
       "trades": 1104,
       "complexCount": 138,
@@ -943,14 +8017,15 @@
       "recentSharePct": 19,
       "medianBuildYear": 2002,
       "ranks": {
-        "momentum": 76,
+        "momentum": 74,
         "trades": 59,
-        "value": 60,
+        "value": 58,
         "fresh": 36
       }
     },
     {
       "sigungu": "안성시",
+      "dongName": null,
       "momentumPct": -0.6,
       "trades": 1140,
       "complexCount": 78,
@@ -958,14 +8033,15 @@
       "recentSharePct": 27,
       "medianBuildYear": 2004,
       "ranks": {
-        "momentum": 59,
+        "momentum": 57,
         "trades": 58,
-        "value": 32,
+        "value": 30,
         "fresh": 24
       }
     },
     {
       "sigungu": "김포시",
+      "dongName": null,
       "momentumPct": 1.4,
       "trades": 2501,
       "complexCount": 163,
@@ -975,12 +8051,13 @@
       "ranks": {
         "momentum": 20,
         "trades": 17,
-        "value": 13,
+        "value": 12,
         "fresh": 16
       }
     },
     {
       "sigungu": "광주시",
+      "dongName": null,
       "momentumPct": -0.2,
       "trades": 1505,
       "complexCount": 111,
@@ -988,14 +8065,15 @@
       "recentSharePct": 37,
       "medianBuildYear": 2005,
       "ranks": {
-        "momentum": 52,
+        "momentum": 50,
         "trades": 46,
-        "value": 40,
+        "value": 38,
         "fresh": 9
       }
     },
     {
       "sigungu": "양주시",
+      "dongName": null,
       "momentumPct": 0.5,
       "trades": 1567,
       "complexCount": 114,
@@ -1003,14 +8081,15 @@
       "recentSharePct": 32,
       "medianBuildYear": 2007,
       "ranks": {
-        "momentum": 38,
+        "momentum": 37,
         "trades": 43,
-        "value": 15,
+        "value": 14,
         "fresh": 14
       }
     },
     {
       "sigungu": "포천시",
+      "dongName": null,
       "momentumPct": 0.9,
       "trades": 459,
       "complexCount": 48,
@@ -1018,14 +8097,15 @@
       "recentSharePct": 19,
       "medianBuildYear": 2002,
       "ranks": {
-        "momentum": 30,
+        "momentum": 29,
         "trades": 73,
-        "value": 7,
+        "value": 6,
         "fresh": 38
       }
     },
     {
       "sigungu": "여주시",
+      "dongName": null,
       "momentumPct": -4.1,
       "trades": 422,
       "complexCount": 40,
@@ -1033,29 +8113,15 @@
       "recentSharePct": 23,
       "medianBuildYear": 2006,
       "ranks": {
-        "momentum": 77,
+        "momentum": 75,
         "trades": 74,
-        "value": 63,
+        "value": 61,
         "fresh": 30
       }
     },
     {
-      "sigungu": "연천군",
-      "momentumPct": 1.1,
-      "trades": 131,
-      "complexCount": 24,
-      "pricePerPy": 531,
-      "recentSharePct": 17,
-      "medianBuildYear": 1999,
-      "ranks": {
-        "momentum": 26,
-        "trades": 80,
-        "value": 4,
-        "fresh": 43
-      }
-    },
-    {
       "sigungu": "가평군",
+      "dongName": null,
       "momentumPct": 0,
       "trades": 261,
       "complexCount": 35,
@@ -1063,14 +8129,15 @@
       "recentSharePct": 31,
       "medianBuildYear": 2008,
       "ranks": {
-        "momentum": 46,
+        "momentum": 45,
         "trades": 77,
-        "value": 18,
+        "value": 16,
         "fresh": 15
       }
     },
     {
       "sigungu": "양평군",
+      "dongName": null,
       "momentumPct": 0.8,
       "trades": 408,
       "complexCount": 47,
@@ -1078,14 +8145,15 @@
       "recentSharePct": 43,
       "medianBuildYear": 2011,
       "ranks": {
-        "momentum": 32,
+        "momentum": 31,
         "trades": 75,
-        "value": 19,
+        "value": 17,
         "fresh": 4
       }
     },
     {
       "sigungu": "인천 중구",
+      "dongName": null,
       "momentumPct": -2.4,
       "trades": 891,
       "complexCount": 69,
@@ -1093,14 +8161,15 @@
       "recentSharePct": 35,
       "medianBuildYear": 2007,
       "ranks": {
-        "momentum": 71,
+        "momentum": 69,
         "trades": 64,
-        "value": 59,
+        "value": 57,
         "fresh": 10
       }
     },
     {
       "sigungu": "인천 동구",
+      "dongName": null,
       "momentumPct": -0.2,
       "trades": 244,
       "complexCount": 24,
@@ -1108,14 +8177,15 @@
       "recentSharePct": 13,
       "medianBuildYear": 2003,
       "ranks": {
-        "momentum": 53,
+        "momentum": 51,
         "trades": 78,
-        "value": 29,
-        "fresh": 63
+        "value": 26,
+        "fresh": 61
       }
     },
     {
       "sigungu": "미추홀구",
+      "dongName": null,
       "momentumPct": 0,
       "trades": 1948,
       "complexCount": 299,
@@ -1123,14 +8193,15 @@
       "recentSharePct": 25,
       "medianBuildYear": 2007,
       "ranks": {
-        "momentum": 44,
+        "momentum": 43,
         "trades": 31,
-        "value": 22,
+        "value": 20,
         "fresh": 27
       }
     },
     {
       "sigungu": "연수구",
+      "dongName": null,
       "momentumPct": -0.5,
       "trades": 3084,
       "complexCount": 182,
@@ -1138,14 +8209,15 @@
       "recentSharePct": 26,
       "medianBuildYear": 2006,
       "ranks": {
-        "momentum": 58,
+        "momentum": 56,
         "trades": 8,
-        "value": 47,
+        "value": 45,
         "fresh": 26
       }
     },
     {
       "sigungu": "남동구",
+      "dongName": null,
       "momentumPct": 1.2,
       "trades": 2298,
       "complexCount": 225,
@@ -1155,12 +8227,13 @@
       "ranks": {
         "momentum": 24,
         "trades": 22,
-        "value": 8,
+        "value": 7,
         "fresh": 35
       }
     },
     {
       "sigungu": "부평구",
+      "dongName": null,
       "momentumPct": 1.7,
       "trades": 2922,
       "complexCount": 288,
@@ -1170,12 +8243,13 @@
       "ranks": {
         "momentum": 15,
         "trades": 10,
-        "value": 6,
+        "value": 5,
         "fresh": 41
       }
     },
     {
       "sigungu": "계양구",
+      "dongName": null,
       "momentumPct": 0,
       "trades": 1880,
       "complexCount": 189,
@@ -1183,14 +8257,15 @@
       "recentSharePct": 8,
       "medianBuildYear": 1992,
       "ranks": {
-        "momentum": 49,
+        "momentum": 47,
         "trades": 32,
-        "value": 27,
-        "fresh": 74
+        "value": 25,
+        "fresh": 72
       }
     },
     {
       "sigungu": "인천 서구",
+      "dongName": null,
       "momentumPct": -0.3,
       "trades": 3785,
       "complexCount": 300,
@@ -1198,25 +8273,10 @@
       "recentSharePct": 25,
       "medianBuildYear": 2006,
       "ranks": {
-        "momentum": 54,
+        "momentum": 52,
         "trades": 5,
-        "value": 36,
+        "value": 34,
         "fresh": 28
-      }
-    },
-    {
-      "sigungu": "강화군",
-      "momentumPct": 0,
-      "trades": 94,
-      "complexCount": 15,
-      "pricePerPy": 653,
-      "recentSharePct": 13,
-      "medianBuildYear": 2004,
-      "ranks": {
-        "momentum": 47,
-        "trades": 81,
-        "value": 16,
-        "fresh": 56
       }
     }
   ]

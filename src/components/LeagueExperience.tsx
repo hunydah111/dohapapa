@@ -6,22 +6,27 @@ import {
   BOARDS,
   getBoard,
   getRegion,
+  listRegions,
   bestBoardFor,
-  allSigungu,
   boardOf,
+  regionId,
+  regionLabel,
+  totalOf,
   LEAGUE_AS_OF,
-  LEAGUE_TOTAL,
   type BoardId,
   type LeagueRegion,
+  type LeagueUnit,
 } from "@/lib/league";
 import { SITE_URL } from "@/lib/site";
 import { BijiFallbackImage } from "@/components/BijiFallbackImage";
 import { NextRefresh } from "@/components/NextRefresh";
 import { TodayNeighborhood } from "@/components/TodayNeighborhood";
 
-// 동네 자존심 리그 — 시군구 4보드 순위. No-PII(내 동네 시군구만 localStorage), 번들(DB0).
+// 동네 리그 — 동(읍면동)/시군구 2단위 × 4보드 순위. No-PII(내 동네 id만 localStorage), 번들(DB0).
 
-const STORE_KEY = "biji-league-sgg";
+const STORE_KEY = "biji-league-v2";
+type Saved = { unit: LeagueUnit; id: string };
+
 const asOfLabel = (() => {
   const [y, m] = LEAGUE_AS_OF.split("-");
   return `${y}.${Number(m)}`;
@@ -35,40 +40,67 @@ function LeagueBiji({ id, emoji, alt, className, emojiClassName }: { id: string;
 }
 
 export function LeagueExperience() {
-  const [sgg, setSgg] = useState<string>("");
+  const [unit, setUnit] = useState<LeagueUnit>("dong");
+  const [sel, setSel] = useState<string>("");
   const [board, setBoard] = useState<BoardId>("momentum");
   const [toast, setToast] = useState<string | null>(null);
-  const sigunguList = allSigungu();
+  const regionList = listRegions(unit);
 
   /* eslint-disable react-hooks/set-state-in-effect -- localStorage 복원(마운트 1회) */
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORE_KEY);
-      if (saved && getRegion(saved)) setSgg(saved);
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) {
+        const s = JSON.parse(raw) as Saved;
+        if (s?.unit && s?.id && getRegion(s.id, s.unit)) {
+          setUnit(s.unit);
+          setSel(s.id);
+        }
+      }
     } catch { /* 무시 */ }
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  const choose = (s: string) => {
-    setSgg(s);
-    try { localStorage.setItem(STORE_KEY, s); } catch { /* 무시 */ }
+  const persist = (u: LeagueUnit, id: string) => {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ unit: u, id } satisfies Saved)); } catch { /* 무시 */ }
   };
 
-  const mine: LeagueRegion | null = sgg ? getRegion(sgg) : null;
+  const choose = (id: string, u: LeagueUnit = unit) => {
+    setUnit(u);
+    setSel(id);
+    persist(u, id);
+  };
+
+  // 단위 전환 — 동→시군구는 부모 시군구로 자동 매핑, 시군구→동은(모호) 선택 해제.
+  const switchUnit = (u: LeagueUnit) => {
+    if (u === unit) return;
+    let nextSel = "";
+    const cur = sel ? getRegion(sel, unit) : null;
+    if (cur && u === "sigungu") {
+      const parent = getRegion(cur.sigungu, "sigungu");
+      nextSel = parent ? regionId(parent) : "";
+    }
+    setUnit(u);
+    setSel(nextSel);
+    persist(u, nextSel);
+  };
+
+  const mine: LeagueRegion | null = sel ? getRegion(sel, unit) : null;
   const best = mine ? bestBoardFor(mine) : null;
+  const total = totalOf(unit);
 
   const share = async () => {
     if (!mine || !best) return;
     const url = `${SITE_URL}/league`;
-    const text = `${sgg}, 이 달 '${best.label}' 전국 ${mine.ranks[best.id]}위 ${best.emoji} (${LEAGUE_TOTAL}곳 중) — 너희 동네는? 🚩`;
+    const text = `${regionLabel(mine)}, 이 달 '${best.label}' ${mine.ranks[best.id]}위 ${best.emoji} (${total}곳 중) — 너희 동네는? 🚩`;
     try {
       if (navigator.share) await navigator.share({ title: "동네 자존심 리그", text, url });
       else { await navigator.clipboard.writeText(`${text}\n${url}`); setToast("링크 복사됨 — 카톡에 붙여넣기"); setTimeout(() => setToast(null), 2500); }
     } catch { /* 취소 무시 */ }
   };
 
-  const top = getBoard(board, 10);
-  const inTop = mine && top.some((r) => r.sigungu === sgg);
+  const top = getBoard(board, unit, 10);
+  const inTop = mine && top.some((r) => regionId(r) === sel);
   const b = boardOf(board);
 
   return (
@@ -76,7 +108,7 @@ export function LeagueExperience() {
       <div className="flex items-center justify-between">
         <Link href="/" className="text-sm font-semibold text-coral-600 hover:text-coral-800">← 비집고</Link>
         <span className="text-[12px]" style={{ color: "#9a8f82" }}>
-          {asOfLabel} 기준 · {LEAGUE_TOTAL}곳 · 다음 갱신 <NextRefresh />
+          {asOfLabel} 기준 · {total.toLocaleString()}곳 · 다음 갱신 <NextRefresh />
         </span>
       </div>
 
@@ -86,21 +118,35 @@ export function LeagueExperience() {
         <p className="mt-1 text-[13px]" style={{ color: "#6e5b46" }}>우리 동네, 이 달 몇 위?</p>
       </div>
 
+      {/* 단위 토글 — 동(세분) / 시군구(전 지역 폴백) */}
+      <div className="flex rounded-2xl bg-[#f3ece4] p-1 text-[13px] font-bold">
+        {([["dong", "동네별"], ["sigungu", "구·시 전체"]] as [LeagueUnit, string][]).map(([u, label]) => (
+          <button
+            key={u}
+            onClick={() => switchUnit(u)}
+            className={`flex-1 rounded-xl py-2 transition-colors ${unit === u ? "bg-coral-600 text-white shadow-sm" : "text-[#6e5b46]"}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       {/* 오늘의 동네 — 매일 바뀜(날짜 시드). 클릭 시 내 동네로 선택. */}
       <TodayNeighborhood onPick={choose} />
 
       {/* 내 동네 선택 */}
       <div className="flex items-center gap-2">
-        <span className="text-[13px] font-semibold" style={{ color: "#6e5b46" }}>내 동네</span>
+        <span className="shrink-0 text-[13px] font-semibold" style={{ color: "#6e5b46" }}>내 동네</span>
         <select
-          value={sgg}
+          value={sel}
           onChange={(e) => choose(e.target.value)}
-          className="flex-1 rounded-2xl border border-[#d9c5a4] bg-white px-3 py-2.5 text-[14px] font-semibold text-[#3a2c1d] focus:outline-none focus:ring-2 focus:ring-coral-400"
+          className="min-w-0 flex-1 rounded-2xl border border-[#d9c5a4] bg-white px-3 py-2.5 text-[14px] font-semibold text-[#3a2c1d] focus:outline-none focus:ring-2 focus:ring-coral-400"
         >
-          <option value="">시군구 선택…</option>
-          {sigunguList.map((s) => (
-            <option key={s} value={s}>{s}</option>
-          ))}
+          <option value="">{unit === "dong" ? "동 선택…" : "시군구 선택…"}</option>
+          {regionList.map((r) => {
+            const id = regionId(r);
+            return <option key={id} value={id}>{regionLabel(r)}</option>;
+          })}
         </select>
       </div>
 
@@ -110,7 +156,7 @@ export function LeagueExperience() {
           {mine.ranks[best.id] === 1 && (
             <LeagueBiji id="champ" emoji="👑" alt="1위 챔피언 비지 마스코트" className="mx-auto mb-1 block h-14 w-14 object-contain text-[36px] leading-none" />
           )}
-          <p className="text-[13px] font-semibold" style={{ color: "#b08948" }}>{sgg}의 자랑</p>
+          <p className="text-[13px] font-semibold" style={{ color: "#b08948" }}>{regionLabel(mine)}의 자랑</p>
           <p className="mt-1 font-jua text-[26px] leading-tight" style={{ color: "#e8662f" }}>
             {best.emoji} {best.label} {medal(mine.ranks[best.id])}
           </p>
@@ -154,10 +200,11 @@ export function LeagueExperience() {
 
         <ol className="mt-3 flex flex-col gap-1">
           {top.map((r) => {
-            const isMine = r.sigungu === sgg;
+            const id = regionId(r);
+            const isMine = id === sel;
             return (
               <li
-                key={r.sigungu}
+                key={id}
                 className={`flex items-center justify-between rounded-xl px-3 py-2 text-[13px] ${
                   isMine ? "bg-coral-50 font-bold text-coral-800" : "text-[#3a2c1d]"
                 }`}
@@ -168,7 +215,7 @@ export function LeagueExperience() {
                   ) : (
                     <span className="inline-block w-7 text-center font-bold" style={{ color: isMine ? "#e8662f" : "#b08948" }}>{medal(r.ranks[board])}</span>
                   )}
-                  {r.sigungu}{isMine && " (내 동네)"}
+                  {regionLabel(r)}{isMine && " (내 동네)"}
                 </span>
                 <span style={{ color: "#6e5b46" }}>{b.stat(r)}</span>
               </li>
@@ -180,7 +227,7 @@ export function LeagueExperience() {
               <li className="flex items-center justify-between rounded-xl bg-coral-50 px-3 py-2 text-[13px] font-bold text-coral-800">
                 <span className="flex items-center gap-2">
                   <span className="inline-block w-7 text-center font-bold" style={{ color: "#e8662f" }}>{mine.ranks[board]}위</span>
-                  {sgg} (내 동네)
+                  {regionLabel(mine)} (내 동네)
                 </span>
                 <span style={{ color: "#6e5b46" }}>{b.stat(mine)}</span>
               </li>
@@ -190,7 +237,8 @@ export function LeagueExperience() {
       </div>
 
       <p className="text-[11px] leading-relaxed" style={{ color: "#b3a99c" }}>
-        {asOfLabel} 국토부 공개 실거래 기준 · 동네(시군구) 순위이며 개인 정보 아님 · 과거 실거래 흐름이고 미래 예측·투자권유 아님.
+        {asOfLabel} 국토부 공개 실거래 기준 · {unit === "dong" ? "읍면동" : "시군구"} 단위 순위이며 개인 정보 아님 · 과거 실거래 흐름이고 미래 예측·투자권유 아님.
+        {unit === "dong" && " 상승 모멘텀은 시군구 단위 추세를 동에 적용한 값."}
       </p>
 
       {toast && (

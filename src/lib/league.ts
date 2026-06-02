@@ -1,13 +1,15 @@
-// 동네 자존심 리그 — 시군구 4개 보드 순위. 번들 leagueTable.json(빌드시 굽힘) 읽음, DB0·순수.
-// 컴플라이언스: 동네(시군구) 줄세우기지 개인 아님. 과거 실거래 지수 기반·미래예측 아님.
+// 동네 리그 — 동(읍면동)·시군구 2단위 × 4개 보드 순위. 번들 leagueTable.json(빌드시 굽힘) 읽음, DB0·순수.
+// 컴플라이언스: 동네 줄세우기지 개인 아님. 과거 실거래 지수 기반·미래예측 아님.
 
 import table from "@/data/leagueTable.json";
 
 export type BoardId = "momentum" | "trades" | "value" | "fresh";
+export type LeagueUnit = "dong" | "sigungu";
 
 export interface LeagueRegion {
   sigungu: string;
-  momentumPct: number; // 최근 3개월 상승률(%)
+  dongName: string | null; // 동 단위면 동 이름, 시군구 단위면 null
+  momentumPct: number; // 최근 3개월 상승률(%)  ※동은 부모 시군구 값 차용
   trades: number; // median window 총 거래수
   complexCount: number;
   pricePerPy: number; // 만원/평
@@ -37,25 +39,43 @@ export const BOARDS: Board[] = [
 ];
 
 export const LEAGUE_AS_OF: string = table.asOf;
-export const LEAGUE_TOTAL: number = table.total;
-const REGIONS: LeagueRegion[] = table.regions as LeagueRegion[];
 
-export function getRegions(): LeagueRegion[] {
-  return REGIONS;
+const POOLS: Record<LeagueUnit, LeagueRegion[]> = {
+  dong: table.regions as LeagueRegion[],
+  sigungu: table.sigunguRegions as LeagueRegion[],
+};
+
+export function totalOf(unit: LeagueUnit): number {
+  return POOLS[unit].length;
 }
 
-export function allSigungu(): string[] {
-  return REGIONS.map((r) => r.sigungu).sort((a, b) => a.localeCompare(b, "ko"));
+/** 지역 고유 id — 선택값·localStorage 용. 동은 "시군구|동", 시군구는 "시군구". */
+export function regionId(r: LeagueRegion): string {
+  return r.dongName ? `${r.sigungu}|${r.dongName}` : r.sigungu;
+}
+
+/** 화면 표시명 — "강남구 대치동" 또는 "강남구". */
+export function regionLabel(r: LeagueRegion): string {
+  return r.dongName ? `${r.sigungu} ${r.dongName}` : r.sigungu;
+}
+
+export function getRegions(unit: LeagueUnit): LeagueRegion[] {
+  return POOLS[unit];
+}
+
+/** 선택 드롭다운용 — 라벨 가나다 정렬 전체 목록. */
+export function listRegions(unit: LeagueUnit): LeagueRegion[] {
+  return [...POOLS[unit]].sort((a, b) => regionLabel(a).localeCompare(regionLabel(b), "ko"));
 }
 
 /** 보드 순위표(상위→하위). */
-export function getBoard(id: BoardId, limit?: number): LeagueRegion[] {
-  const sorted = [...REGIONS].sort((a, b) => a.ranks[id] - b.ranks[id]);
+export function getBoard(id: BoardId, unit: LeagueUnit, limit?: number): LeagueRegion[] {
+  const sorted = [...POOLS[unit]].sort((a, b) => a.ranks[id] - b.ranks[id]);
   return limit ? sorted.slice(0, limit) : sorted;
 }
 
-export function getRegion(sigungu: string): LeagueRegion | null {
-  return REGIONS.find((r) => r.sigungu === sigungu) ?? null;
+export function getRegion(id: string, unit: LeagueUnit): LeagueRegion | null {
+  return POOLS[unit].find((r) => regionId(r) === id) ?? null;
 }
 
 /** 그 동네가 가장 잘하는(순위 가장 높은) 보드 — 긍정 프레이밍용. */
