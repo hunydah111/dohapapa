@@ -250,14 +250,28 @@ export function scoreBuildingAge(buildYear: number | null): ScoreResult {
 // ── 거래 많은 단지(대단지·인기) 점수 ─────────────────────────────────────────
 
 /**
- * 최근 6개월 거래량을 "대단지·인기 단지" 프록시로 점수화한다.
- * (세대수 데이터 도입 전 근사 — 거래가 활발할수록 규모·환금성이 큰 경향)
+ * 대단지 점수 — 실제 세대수가 있으면 그걸로(정직), 없으면 거래량 프록시로 근사한다.
  *
- * WHY 바닥(50): 거래가 적다=나쁜 단지가 아니다(매물이 귀할 수도). price-first 철학상
- * 거래량은 품질 신호로 약하므로, buildingAge(60 중립화)와 같은 논리로 바닥을 50에 둬
- * "거래 적은 정상 단지"가 빈 막대(0%)로 깎여 보이지 않게 한다. 거래 8건→50점, ~50건↑→100점.
+ * 세대수 도입 전엔 "최근 6개월 거래량"을 규모·환금성 프록시로 썼다(거래 활발 = 규모 큰 경향).
+ * K-apt 세대수가 채워진 단지는 그 값을 직접 쓴다. 둘 다 바닥 50 — price-first 철학상 규모는
+ * 품질 신호로 약하므로(소규모도 정상 단지) buildingAge(60 중립)와 같은 논리로 빈 막대 방지.
  */
-export function scoreLargeComplex(transactionCount: number): ScoreResult {
+export function scoreLargeComplex(
+  transactionCount: number,
+  totalHouseholds?: number | null,
+): ScoreResult {
+  if (totalHouseholds != null && totalHouseholds > 0) {
+    const h = totalHouseholds;
+    let score: number;
+    if (h >= 2000) score = 100;
+    else if (h >= 1500) score = 92;
+    else if (h >= 1000) score = 83;
+    else if (h >= 700) score = 73;
+    else if (h >= 500) score = 64;
+    else if (h >= 300) score = 56;
+    else score = 50;
+    return { score, reason: `총 ${h.toLocaleString()}세대${h >= 1000 ? " 대단지" : ""}` };
+  }
   const score = Math.max(
     50,
     Math.min(100, Math.round(50 + (transactionCount - 8) * 1.2)),

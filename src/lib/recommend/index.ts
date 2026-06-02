@@ -710,7 +710,7 @@ export async function recommendComplexes(
         profile.hasSchoolAgedChild,
       );
       const ageResult = scoreBuildingAge(complex.buildYear);
-      const largeResult = scoreLargeComplex(totalTransactions);
+      const largeResult = scoreLargeComplex(totalTransactions, complex.totalHouseholds);
 
       const scores: Record<CandidateSignalKey, number> = {
         commute: commuteResult.score,
@@ -818,6 +818,7 @@ export async function recommendComplexes(
         estimateBasis: rep.estimateBasis,
         priceFromPresale: rep.presale,
         buildYear: complex.buildYear,
+        totalHouseholds: complex.totalHouseholds,
         isChopumah,
         pricierThanPeers,
         scores,

@@ -40,6 +40,7 @@ npx tsx --env-file=.env.local scripts/fetch-molit.ts --gu=all   # complexes + tr
 npx tsx --env-file=.env.local scripts/fetch-presale.ts --gu=all # ADD 분양권/입주권 deals (idempotent; needs MOLIT_API_KEY)
 npx tsx --env-file=.env.local scripts/geocode-complexes.ts      # fills latitude/longitude (needs KAKAO_REST_KEY)
 npx tsx --env-file=.env.local scripts/enrich-schools.ts         # fills nearestElemSchoolM for 초품아 scoring
+npx tsx --env-file=.env.local scripts/enrich-households.ts      # fills totalHouseholds (세대수) from K-apt — idempotent; needs KAPT_API_KEY (or reuses MOLIT key)
 npx tsx --env-file=.env.local scripts/build-trend-index.ts      # bakes src/data/trendIndex.json (commit it)
 npx tsx --env-file=.env.local scripts/build-snapshot.ts         # bakes src/data/complexSnapshot.json (commit it) — runtime reads this, NOT the DB
 npx tsx scripts/build-league.ts                                 # bakes src/data/leagueTable.json (동네 자존심 리그) — reads bundled trendIndex+snapshot, no DB/env
@@ -53,7 +54,8 @@ Unlike the others, `fetch-presale.ts` is **additive and idempotent** (it only de
 
 `.env.local` (see `.env.example`). All keys are optional — the app degrades gracefully:
 - `DATABASE_URL` / `DIRECT_URL` — **Postgres (Neon)** for both dev and prod. `DATABASE_URL` is the pooled connection (runtime, `-pooler` host, `pgbouncer=true`); `DIRECT_URL` is the direct connection used by `prisma migrate`. Prisma CLI reads `.env` not `.env.local`, so run migrations with the env injected (e.g. `set -a; . ./.env.local; set +a; npx prisma migrate dev`). The old SQLite `dev.db` is retired (kept locally as a backup only).
-- `MOLIT_API_KEY` — only needed by `fetch-molit.ts`.
+- `MOLIT_API_KEY` — needed by `fetch-molit.ts` / `fetch-presale.ts`. Also reused by `enrich-households.ts` if `KAPT_API_KEY` is unset (same data.go.kr portal key, but the K-apt API must be 활용신청'd for that account).
+- `KAPT_API_KEY` — optional, for `enrich-households.ts` (세대수 from K-apt 공동주택 기본정보). Falls back to `MOLIT_API_KEY`. Without either, 세대수 stays null and 대단지 점수 degrades to the 거래량 proxy; the UI simply hides the "N세대" chip.
 - `KAKAO_REST_KEY` — one key serves both geocoding (`src/lib/geocode.ts`) and commute routing (`src/lib/commute/kakaoProvider.ts`). **Without it, commute times fall back to the haversine `mockProvider`** and geocoding uses a built-in dictionary.
 - `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_CONTACT_EMAIL`, `NEXT_PUBLIC_GA_MEASUREMENT_ID` — SEO/analytics, fallbacks exist.
 

@@ -255,6 +255,14 @@ export function CandidateCard({
           <span className="text-sm" style={{ color: "#6b6157" }}>
             전용 {candidate.representativeArea}㎡
           </span>
+          {candidate.totalHouseholds != null && candidate.totalHouseholds > 0 && (
+            <>
+              <span style={{ color: "#c7c7cc" }}>·</span>
+              <span className="text-sm" style={{ color: "#6b6157" }}>
+                {candidate.totalHouseholds.toLocaleString()}세대
+              </span>
+            </>
+          )}
           <span style={{ color: "#c7c7cc" }}>·</span>
           <span
             className="font-jua text-[20px] tabular-nums tracking-tight"

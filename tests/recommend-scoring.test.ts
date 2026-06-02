@@ -4,6 +4,7 @@ import {
   scoreBudgetFit,
   scoreSchool,
   scoreBuildingAge,
+  scoreLargeComplex,
 } from "@/lib/recommend/scoring";
 import type { CoupleProfile } from "@/types/profile";
 import type { CommuteLeg } from "@/types/recommendation";
@@ -332,6 +333,30 @@ describe("scoreBuildingAge", () => {
       const { score, reason } = scoreBuildingAge(year);
       expect(inRange(score)).toBe(true);
       expect(reason.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+// ── scoreLargeComplex ─────────────────────────────────────────────────────────
+
+describe("scoreLargeComplex", () => {
+  it("세대수 있으면 그 값으로(클수록 높음) + reason에 세대수 노출", () => {
+    const big = scoreLargeComplex(10, 3000);
+    const small = scoreLargeComplex(10, 200);
+    expect(big.score).toBeGreaterThan(small.score);
+    expect(big.reason).toContain("3,000세대");
+    expect(big.reason).toContain("대단지");
+  });
+
+  it("세대수 없으면 거래량 프록시로 폴백 + 바닥 50", () => {
+    expect(scoreLargeComplex(8, null).reason).toContain("거래");
+    expect(scoreLargeComplex(0, null).score).toBe(50); // 거래 적어도 바닥 50
+    expect(scoreLargeComplex(0).score).toBe(50); // 인자 생략도 동일
+  });
+
+  it("두 경로 모두 [0,100] 범위", () => {
+    for (const [tx, h] of [[5, null], [200, null], [10, 50], [10, 9999]] as [number, number | null][]) {
+      expect(inRange(scoreLargeComplex(tx, h).score)).toBe(true);
     }
   });
 });

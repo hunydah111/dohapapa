@@ -189,6 +189,8 @@ export interface ComplexCandidate {
   priceFromPresale?: boolean;
   /** 단지 준공년도 — UI 에 "○○○○년식" 으로 표시. null = 정보 없음. */
   buildYear: number | null;
+  /** 총 세대수(K-apt). UI 에 "N세대" 표시·대단지 점수. null = 미수집(거래량 프록시로 대체). */
+  totalHouseholds: number | null;
   /** 초품아 여부 — 초등학교가 단지에서 직선 150m 이내. */
   isChopumah: boolean;
   /** 같은 동·비슷한 연식 단지보다 ㎡당 단가가 높음 — '동네 인기단지' 배지용. */
