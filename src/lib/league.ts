@@ -3,7 +3,7 @@
 
 import table from "@/data/leagueTable.json";
 
-export type BoardId = "momentum" | "trades" | "value" | "stability";
+export type BoardId = "momentum" | "trades" | "value" | "fresh";
 
 export interface LeagueRegion {
   sigungu: string;
@@ -11,7 +11,8 @@ export interface LeagueRegion {
   trades: number; // median window 총 거래수
   complexCount: number;
   pricePerPy: number; // 만원/평
-  volatility: number; // 평형 변동성 평균(낮을수록 안정)
+  recentSharePct: number; // 최근 10년 신축 비율(%)
+  medianBuildYear: number; // 동네 아파트 준공연도 중앙값
   ranks: Record<BoardId, number>;
 }
 
@@ -31,8 +32,8 @@ export const BOARDS: Board[] = [
     stat: (r) => `${r.trades.toLocaleString()}건` },
   { id: "value", emoji: "🌙", label: "가성비 강세", desc: "저렴한데 잘 버티고 오르는 동네",
     stat: (r) => `평당 ${r.pricePerPy.toLocaleString()}만` },
-  { id: "stability", emoji: "🐢", label: "꾸준왕", desc: "가격이 가장 안 흔들린 동네",
-    stat: (r) => `변동 ${r.volatility}` },
+  { id: "fresh", emoji: "✨", label: "신축 강세", desc: "최근 10년 새 아파트가 많은 동네",
+    stat: (r) => `신축 ${r.recentSharePct}%` },
 ];
 
 export const LEAGUE_AS_OF: string = table.asOf;

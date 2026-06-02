@@ -10,7 +10,7 @@ import {
   type BoardId,
 } from "@/lib/league";
 
-const BOARD_IDS: BoardId[] = ["momentum", "trades", "value", "stability"];
+const BOARD_IDS: BoardId[] = ["momentum", "trades", "value", "fresh"];
 
 describe("league 데이터 무결성", () => {
   it("보드 4개, 각 id 고유 + 라벨·이모지 존재", () => {

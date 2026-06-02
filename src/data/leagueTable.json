@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-31T08:45:15.923Z",
+  "generatedAt": "2026-06-02T01:43:14.141Z",
   "asOf": "2026-05",
   "momentumWindow": "2026-02~2026-05",
   "total": 81,
@@ -10,12 +10,13 @@
       "trades": 378,
       "complexCount": 69,
       "pricePerPy": 3514,
-      "volatility": 0.047,
+      "recentSharePct": 14,
+      "medianBuildYear": 2004,
       "ranks": {
         "momentum": 63,
         "trades": 76,
         "value": 67,
-        "stability": 31
+        "fresh": 52
       }
     },
     {
@@ -24,12 +25,13 @@
       "trades": 609,
       "complexCount": 80,
       "pricePerPy": 4069,
-      "volatility": 0.047,
+      "recentSharePct": 28,
+      "medianBuildYear": 2007,
       "ranks": {
         "momentum": 64,
         "trades": 70,
         "value": 71,
-        "stability": 28
+        "fresh": 23
       }
     },
     {
@@ -38,12 +40,13 @@
       "trades": 865,
       "complexCount": 138,
       "pricePerPy": 6405,
-      "volatility": 0.054,
+      "recentSharePct": 9,
+      "medianBuildYear": 2003,
       "ranks": {
         "momentum": 75,
         "trades": 65,
         "value": 79,
-        "stability": 57
+        "fresh": 71
       }
     },
     {
@@ -52,12 +55,13 @@
       "trades": 1856,
       "complexCount": 140,
       "pricePerPy": 7150,
-      "volatility": 0.069,
+      "recentSharePct": 16,
+      "medianBuildYear": 2003,
       "ranks": {
         "momentum": 19,
         "trades": 33,
         "value": 73,
-        "stability": 80
+        "fresh": 47
       }
     },
     {
@@ -66,12 +70,13 @@
       "trades": 1203,
       "complexCount": 160,
       "pricePerPy": 5090,
-      "volatility": 0.067,
+      "recentSharePct": 16,
+      "medianBuildYear": 2003,
       "ranks": {
         "momentum": 70,
         "trades": 57,
         "value": 75,
-        "stability": 79
+        "fresh": 44
       }
     },
     {
@@ -80,12 +85,13 @@
       "trades": 1823,
       "complexCount": 200,
       "pricePerPy": 3581,
-      "volatility": 0.052,
+      "recentSharePct": 28,
+      "medianBuildYear": 2008,
       "ranks": {
         "momentum": 33,
         "trades": 34,
         "value": 57,
-        "stability": 49
+        "fresh": 18
       }
     },
     {
@@ -94,12 +100,13 @@
       "trades": 1543,
       "complexCount": 190,
       "pricePerPy": 2916,
-      "volatility": 0.037,
+      "recentSharePct": 13,
+      "medianBuildYear": 2004,
       "ranks": {
         "momentum": 6,
         "trades": 44,
         "value": 9,
-        "stability": 1
+        "fresh": 62
       }
     },
     {
@@ -108,12 +115,13 @@
       "trades": 2001,
       "complexCount": 145,
       "pricePerPy": 3667,
-      "volatility": 0.049,
+      "recentSharePct": 13,
+      "medianBuildYear": 2005,
       "ranks": {
         "momentum": 8,
         "trades": 30,
         "value": 34,
-        "stability": 41
+        "fresh": 57
       }
     },
     {
@@ -122,12 +130,13 @@
       "trades": 778,
       "complexCount": 76,
       "pricePerPy": 2518,
-      "volatility": 0.041,
+      "recentSharePct": 16,
+      "medianBuildYear": 2004,
       "ranks": {
         "momentum": 14,
         "trades": 68,
         "value": 26,
-        "stability": 6
+        "fresh": 45
       }
     },
     {
@@ -136,12 +145,13 @@
       "trades": 1289,
       "complexCount": 144,
       "pricePerPy": 2313,
-      "volatility": 0.048,
+      "recentSharePct": 8,
+      "medianBuildYear": 2001,
       "ranks": {
         "momentum": 10,
         "trades": 53,
         "value": 10,
-        "stability": 37
+        "fresh": 77
       }
     },
     {
@@ -150,12 +160,13 @@
       "trades": 2923,
       "complexCount": 222,
       "pricePerPy": 3017,
-      "volatility": 0.048,
+      "recentSharePct": 7,
+      "medianBuildYear": 1999,
       "ranks": {
         "momentum": 48,
         "trades": 9,
         "value": 58,
-        "stability": 35
+        "fresh": 79
       }
     },
     {
@@ -164,12 +175,13 @@
       "trades": 1714,
       "complexCount": 246,
       "pricePerPy": 2972,
-      "volatility": 0.038,
+      "recentSharePct": 28,
+      "medianBuildYear": 2007,
       "ranks": {
         "momentum": 43,
         "trades": 38,
         "value": 55,
-        "stability": 3
+        "fresh": 22
       }
     },
     {
@@ -178,12 +190,13 @@
       "trades": 1577,
       "complexCount": 181,
       "pricePerPy": 3806,
-      "volatility": 0.048,
+      "recentSharePct": 17,
+      "medianBuildYear": 2004,
       "ranks": {
         "momentum": 3,
         "trades": 42,
         "value": 21,
-        "stability": 34
+        "fresh": 42
       }
     },
     {
@@ -192,12 +205,13 @@
       "trades": 2356,
       "complexCount": 224,
       "pricePerPy": 5032,
-      "volatility": 0.056,
+      "recentSharePct": 12,
+      "medianBuildYear": 2004,
       "ranks": {
         "momentum": 37,
         "trades": 19,
         "value": 69,
-        "stability": 67
+        "fresh": 66
       }
     },
     {
@@ -206,12 +220,13 @@
       "trades": 2050,
       "complexCount": 298,
       "pricePerPy": 3104,
-      "volatility": 0.048,
+      "recentSharePct": 7,
+      "medianBuildYear": 2003,
       "ranks": {
         "momentum": 65,
         "trades": 28,
         "value": 66,
-        "stability": 36
+        "fresh": 78
       }
     },
     {
@@ -220,12 +235,13 @@
       "trades": 2600,
       "complexCount": 348,
       "pricePerPy": 3492,
-      "volatility": 0.047,
+      "recentSharePct": 14,
+      "medianBuildYear": 2004,
       "ranks": {
         "momentum": 45,
         "trades": 14,
         "value": 61,
-        "stability": 21
+        "fresh": 53
       }
     },
     {
@@ -234,12 +250,13 @@
       "trades": 2111,
       "complexCount": 243,
       "pricePerPy": 2814,
-      "volatility": 0.043,
+      "recentSharePct": 9,
+      "medianBuildYear": 2002,
       "ranks": {
         "momentum": 7,
         "trades": 26,
         "value": 11,
-        "stability": 9
+        "fresh": 73
       }
     },
     {
@@ -248,12 +265,13 @@
       "trades": 652,
       "complexCount": 85,
       "pricePerPy": 2452,
-      "volatility": 0.042,
+      "recentSharePct": 13,
+      "medianBuildYear": 2002,
       "ranks": {
         "momentum": 35,
         "trades": 69,
         "value": 43,
-        "stability": 7
+        "fresh": 59
       }
     },
     {
@@ -262,12 +280,13 @@
       "trades": 2279,
       "complexCount": 230,
       "pricePerPy": 4950,
-      "volatility": 0.055,
+      "recentSharePct": 13,
+      "medianBuildYear": 2001,
       "ranks": {
         "momentum": 41,
         "trades": 24,
         "value": 70,
-        "stability": 62
+        "fresh": 58
       }
     },
     {
@@ -276,12 +295,13 @@
       "trades": 1680,
       "complexCount": 164,
       "pricePerPy": 4939,
-      "volatility": 0.056,
+      "recentSharePct": 12,
+      "medianBuildYear": 2003,
       "ranks": {
         "momentum": 25,
         "trades": 40,
         "value": 64,
-        "stability": 65
+        "fresh": 64
       }
     },
     {
@@ -290,12 +310,13 @@
       "trades": 1260,
       "complexCount": 178,
       "pricePerPy": 3217,
-      "volatility": 0.051,
+      "recentSharePct": 9,
+      "medianBuildYear": 2004,
       "ranks": {
         "momentum": 9,
         "trades": 54,
         "value": 25,
-        "stability": 46
+        "fresh": 72
       }
     },
     {
@@ -304,12 +325,13 @@
       "trades": 1726,
       "complexCount": 348,
       "pricePerPy": 6142,
-      "volatility": 0.051,
+      "recentSharePct": 13,
+      "medianBuildYear": 2004,
       "ranks": {
         "momentum": 72,
         "trades": 36,
         "value": 78,
-        "stability": 47
+        "fresh": 61
       }
     },
     {
@@ -318,12 +340,13 @@
       "trades": 2003,
       "complexCount": 323,
       "pricePerPy": 7732,
-      "volatility": 0.049,
+      "recentSharePct": 11,
+      "medianBuildYear": 2003,
       "ranks": {
         "momentum": 80,
         "trades": 29,
         "value": 81,
-        "stability": 38
+        "fresh": 68
       }
     },
     {
@@ -332,12 +355,13 @@
       "trades": 2507,
       "complexCount": 292,
       "pricePerPy": 5155,
-      "volatility": 0.063,
+      "recentSharePct": 14,
+      "medianBuildYear": 2003,
       "ranks": {
         "momentum": 68,
         "trades": 16,
         "value": 74,
-        "stability": 76
+        "fresh": 55
       }
     },
     {
@@ -346,12 +370,13 @@
       "trades": 2291,
       "complexCount": 330,
       "pricePerPy": 3678,
-      "volatility": 0.053,
+      "recentSharePct": 16,
+      "medianBuildYear": 2004,
       "ranks": {
         "momentum": 55,
         "trades": 23,
         "value": 62,
-        "stability": 54
+        "fresh": 46
       }
     },
     {
@@ -360,12 +385,13 @@
       "trades": 1478,
       "complexCount": 138,
       "pricePerPy": 1881,
-      "volatility": 0.053,
+      "recentSharePct": 8,
+      "medianBuildYear": 1999,
       "ranks": {
         "momentum": 1,
         "trades": 48,
         "value": 1,
-        "stability": 56
+        "fresh": 75
       }
     },
     {
@@ -374,12 +400,13 @@
       "trades": 2586,
       "complexCount": 163,
       "pricePerPy": 1708,
-      "volatility": 0.047,
+      "recentSharePct": 15,
+      "medianBuildYear": 2002,
       "ranks": {
         "momentum": 16,
         "trades": 15,
         "value": 12,
-        "stability": 26
+        "fresh": 50
       }
     },
     {
@@ -388,12 +415,13 @@
       "trades": 1407,
       "complexCount": 97,
       "pricePerPy": 2000,
-      "volatility": 0.052,
+      "recentSharePct": 19,
+      "medianBuildYear": 2003,
       "ranks": {
         "momentum": 27,
         "trades": 49,
         "value": 30,
-        "stability": 51
+        "fresh": 39
       }
     },
     {
@@ -402,12 +430,13 @@
       "trades": 2919,
       "complexCount": 133,
       "pricePerPy": 2635,
-      "volatility": 0.046,
+      "recentSharePct": 15,
+      "medianBuildYear": 2003,
       "ranks": {
         "momentum": 17,
         "trades": 11,
         "value": 35,
-        "stability": 16
+        "fresh": 49
       }
     },
     {
@@ -416,12 +445,13 @@
       "trades": 966,
       "complexCount": 79,
       "pricePerPy": 3367,
-      "volatility": 0.056,
+      "recentSharePct": 33,
+      "medianBuildYear": 2007,
       "ranks": {
         "momentum": 29,
         "trades": 62,
         "value": 52,
-        "stability": 64
+        "fresh": 12
       }
     },
     {
@@ -430,12 +460,13 @@
       "trades": 784,
       "complexCount": 74,
       "pricePerPy": 2821,
-      "volatility": 0.052,
+      "recentSharePct": 20,
+      "medianBuildYear": 2005,
       "ranks": {
         "momentum": 51,
         "trades": 66,
         "value": 56,
-        "stability": 53
+        "fresh": 33
       }
     },
     {
@@ -444,12 +475,13 @@
       "trades": 2684,
       "complexCount": 176,
       "pricePerPy": 6419,
-      "volatility": 0.065,
+      "recentSharePct": 6,
+      "medianBuildYear": 1995,
       "ranks": {
         "momentum": 67,
         "trades": 13,
         "value": 77,
-        "stability": 78
+        "fresh": 80
       }
     },
     {
@@ -458,12 +490,13 @@
       "trades": 1657,
       "complexCount": 153,
       "pricePerPy": 1945,
-      "volatility": 0.038,
+      "recentSharePct": 24,
+      "medianBuildYear": 2006,
       "ranks": {
         "momentum": 5,
         "trades": 41,
         "value": 3,
-        "stability": 2
+        "fresh": 29
       }
     },
     {
@@ -472,12 +505,13 @@
       "trades": 2500,
       "complexCount": 162,
       "pricePerPy": 3405,
-      "volatility": 0.055,
+      "recentSharePct": 15,
+      "medianBuildYear": 1999,
       "ranks": {
         "momentum": 21,
         "trades": 18,
         "value": 50,
-        "stability": 60
+        "fresh": 48
       }
     },
     {
@@ -486,12 +520,13 @@
       "trades": 1028,
       "complexCount": 74,
       "pricePerPy": 1410,
-      "volatility": 0.047,
+      "recentSharePct": 12,
+      "medianBuildYear": 1999,
       "ranks": {
         "momentum": 81,
         "trades": 60,
         "value": 76,
-        "stability": 25
+        "fresh": 65
       }
     },
     {
@@ -500,12 +535,13 @@
       "trades": 1258,
       "complexCount": 64,
       "pricePerPy": 1988,
-      "volatility": 0.039,
+      "recentSharePct": 27,
+      "medianBuildYear": 2004,
       "ranks": {
         "momentum": 40,
         "trades": 56,
         "value": 41,
-        "stability": 5
+        "fresh": 25
       }
     },
     {
@@ -514,12 +550,13 @@
       "trades": 2330,
       "complexCount": 182,
       "pricePerPy": 1925,
-      "volatility": 0.047,
+      "recentSharePct": 18,
+      "medianBuildYear": 1999,
       "ranks": {
         "momentum": 23,
         "trades": 21,
         "value": 23,
-        "stability": 29
+        "fresh": 40
       }
     },
     {
@@ -528,12 +565,13 @@
       "trades": 1260,
       "complexCount": 97,
       "pricePerPy": 1727,
-      "volatility": 0.046,
+      "recentSharePct": 11,
+      "medianBuildYear": 1995,
       "ranks": {
         "momentum": 78,
         "trades": 55,
         "value": 72,
-        "stability": 18
+        "fresh": 70
       }
     },
     {
@@ -542,12 +580,13 @@
       "trades": 1692,
       "complexCount": 154,
       "pricePerPy": 1498,
-      "volatility": 0.05,
+      "recentSharePct": 3,
+      "medianBuildYear": 1995,
       "ranks": {
         "momentum": 74,
         "trades": 39,
         "value": 65,
-        "stability": 45
+        "fresh": 81
       }
     },
     {
@@ -556,12 +595,13 @@
       "trades": 1357,
       "complexCount": 131,
       "pricePerPy": 1182,
-      "volatility": 0.05,
+      "recentSharePct": 28,
+      "medianBuildYear": 2003,
       "ranks": {
         "momentum": 66,
         "trades": 52,
         "value": 48,
-        "stability": 43
+        "fresh": 19
       }
     },
     {
@@ -570,12 +610,13 @@
       "trades": 4117,
       "complexCount": 213,
       "pricePerPy": 2045,
-      "volatility": 0.051,
+      "recentSharePct": 14,
+      "medianBuildYear": 2005,
       "ranks": {
         "momentum": 4,
         "trades": 3,
         "value": 2,
-        "stability": 48
+        "fresh": 54
       }
     },
     {
@@ -584,12 +625,13 @@
       "trades": 3502,
       "complexCount": 220,
       "pricePerPy": 3171,
-      "volatility": 0.055,
+      "recentSharePct": 13,
+      "medianBuildYear": 2003,
       "ranks": {
         "momentum": 13,
         "trades": 6,
         "value": 39,
-        "stability": 63
+        "fresh": 60
       }
     },
     {
@@ -598,12 +640,13 @@
       "trades": 2340,
       "complexCount": 247,
       "pricePerPy": 2087,
-      "volatility": 0.043,
+      "recentSharePct": 21,
+      "medianBuildYear": 2003,
       "ranks": {
         "momentum": 34,
         "trades": 20,
         "value": 37,
-        "stability": 10
+        "fresh": 32
       }
     },
     {
@@ -612,12 +655,13 @@
       "trades": 1380,
       "complexCount": 172,
       "pricePerPy": 1722,
-      "volatility": 0.039,
+      "recentSharePct": 40,
+      "medianBuildYear": 2008,
       "ranks": {
         "momentum": 62,
         "trades": 51,
         "value": 51,
-        "stability": 4
+        "fresh": 7
       }
     },
     {
@@ -626,12 +670,13 @@
       "trades": 549,
       "complexCount": 144,
       "pricePerPy": 1560,
-      "volatility": 0.044,
+      "recentSharePct": 35,
+      "medianBuildYear": 2005,
       "ranks": {
         "momentum": 60,
         "trades": 72,
         "value": 46,
-        "stability": 11
+        "fresh": 11
       }
     },
     {
@@ -640,12 +685,13 @@
       "trades": 779,
       "complexCount": 71,
       "pricePerPy": 1487,
-      "volatility": 0.046,
+      "recentSharePct": 42,
+      "medianBuildYear": 2010,
       "ranks": {
         "momentum": 36,
         "trades": 67,
         "value": 24,
-        "stability": 15
+        "fresh": 5
       }
     },
     {
@@ -654,12 +700,13 @@
       "trades": 891,
       "complexCount": 60,
       "pricePerPy": 1330,
-      "volatility": 0.046,
+      "recentSharePct": 40,
+      "medianBuildYear": 2008,
       "ranks": {
         "momentum": 69,
         "trades": 63,
         "value": 54,
-        "stability": 17
+        "fresh": 6
       }
     },
     {
@@ -668,12 +715,13 @@
       "trades": 1397,
       "complexCount": 69,
       "pricePerPy": 1497,
-      "volatility": 0.046,
+      "recentSharePct": 22,
+      "medianBuildYear": 2004,
       "ranks": {
         "momentum": 12,
         "trades": 50,
         "value": 5,
-        "stability": 19
+        "fresh": 31
       }
     },
     {
@@ -682,12 +730,13 @@
       "trades": 4547,
       "complexCount": 135,
       "pricePerPy": 3031,
-      "volatility": 0.045,
+      "recentSharePct": 51,
+      "medianBuildYear": 2016,
       "ranks": {
         "momentum": 11,
         "trades": 2,
         "value": 33,
-        "stability": 12
+        "fresh": 3
       }
     },
     {
@@ -696,12 +745,13 @@
       "trades": 2913,
       "complexCount": 266,
       "pricePerPy": 1403,
-      "volatility": 0.046,
+      "recentSharePct": 28,
+      "medianBuildYear": 2004,
       "ranks": {
         "momentum": 28,
         "trades": 12,
         "value": 17,
-        "stability": 20
+        "fresh": 21
       }
     },
     {
@@ -710,12 +760,13 @@
       "trades": 2062,
       "complexCount": 88,
       "pricePerPy": 3108,
-      "volatility": 0.054,
+      "recentSharePct": 19,
+      "medianBuildYear": 2005,
       "ranks": {
         "momentum": 22,
         "trades": 27,
         "value": 45,
-        "stability": 58
+        "fresh": 34
       }
     },
     {
@@ -724,12 +775,13 @@
       "trades": 3952,
       "complexCount": 308,
       "pricePerPy": 962,
-      "volatility": 0.055,
+      "recentSharePct": 39,
+      "medianBuildYear": 2010,
       "ranks": {
         "momentum": 39,
         "trades": 4,
         "value": 14,
-        "stability": 59
+        "fresh": 8
       }
     },
     {
@@ -738,12 +790,13 @@
       "trades": 571,
       "complexCount": 64,
       "pricePerPy": 659,
-      "volatility": 0.076,
+      "recentSharePct": 8,
+      "medianBuildYear": 2002,
       "ranks": {
         "momentum": 79,
         "trades": 71,
         "value": 68,
-        "stability": 81
+        "fresh": 76
       }
     },
     {
@@ -752,12 +805,13 @@
       "trades": 202,
       "complexCount": 19,
       "pricePerPy": 8186,
-      "volatility": 0.053,
+      "recentSharePct": 58,
+      "medianBuildYear": 2020,
       "ranks": {
         "momentum": 73,
         "trades": 79,
         "value": 80,
-        "stability": 55
+        "fresh": 1
       }
     },
     {
@@ -766,12 +820,13 @@
       "trades": 2158,
       "complexCount": 130,
       "pricePerPy": 3043,
-      "volatility": 0.055,
+      "recentSharePct": 12,
+      "medianBuildYear": 2001,
       "ranks": {
         "momentum": 18,
         "trades": 25,
         "value": 42,
-        "stability": 61
+        "fresh": 67
       }
     },
     {
@@ -780,12 +835,13 @@
       "trades": 4869,
       "complexCount": 337,
       "pricePerPy": 1512,
-      "volatility": 0.052,
+      "recentSharePct": 15,
+      "medianBuildYear": 2004,
       "ranks": {
         "momentum": 31,
         "trades": 1,
         "value": 20,
-        "stability": 52
+        "fresh": 51
       }
     },
     {
@@ -794,12 +850,13 @@
       "trades": 1482,
       "complexCount": 107,
       "pricePerPy": 1250,
-      "volatility": 0.049,
+      "recentSharePct": 30,
+      "medianBuildYear": 2009,
       "ranks": {
         "momentum": 61,
         "trades": 47,
         "value": 44,
-        "stability": 39
+        "fresh": 17
       }
     },
     {
@@ -808,12 +865,13 @@
       "trades": 3131,
       "complexCount": 262,
       "pricePerPy": 1467,
-      "volatility": 0.047,
+      "recentSharePct": 28,
+      "medianBuildYear": 1999,
       "ranks": {
         "momentum": 42,
         "trades": 7,
         "value": 31,
-        "stability": 32
+        "fresh": 20
       }
     },
     {
@@ -822,12 +880,13 @@
       "trades": 1726,
       "complexCount": 123,
       "pricePerPy": 2015,
-      "volatility": 0.047,
+      "recentSharePct": 11,
+      "medianBuildYear": 2003,
       "ranks": {
         "momentum": 57,
         "trades": 37,
         "value": 49,
-        "stability": 22
+        "fresh": 69
       }
     },
     {
@@ -836,12 +895,13 @@
       "trades": 1025,
       "complexCount": 85,
       "pricePerPy": 2610,
-      "volatility": 0.042,
+      "recentSharePct": 19,
+      "medianBuildYear": 2002,
       "ranks": {
         "momentum": 50,
         "trades": 61,
         "value": 53,
-        "stability": 8
+        "fresh": 37
       }
     },
     {
@@ -850,12 +910,13 @@
       "trades": 1735,
       "complexCount": 106,
       "pricePerPy": 4707,
-      "volatility": 0.057,
+      "recentSharePct": 53,
+      "medianBuildYear": 2016,
       "ranks": {
         "momentum": 2,
         "trades": 35,
         "value": 28,
-        "stability": 68
+        "fresh": 2
       }
     },
     {
@@ -864,12 +925,13 @@
       "trades": 1528,
       "complexCount": 107,
       "pricePerPy": 1298,
-      "volatility": 0.046,
+      "recentSharePct": 32,
+      "medianBuildYear": 2009,
       "ranks": {
         "momentum": 56,
         "trades": 45,
         "value": 38,
-        "stability": 14
+        "fresh": 13
       }
     },
     {
@@ -878,12 +940,13 @@
       "trades": 1104,
       "complexCount": 138,
       "pricePerPy": 847,
-      "volatility": 0.06,
+      "recentSharePct": 19,
+      "medianBuildYear": 2002,
       "ranks": {
         "momentum": 76,
         "trades": 59,
         "value": 60,
-        "stability": 75
+        "fresh": 36
       }
     },
     {
@@ -892,12 +955,13 @@
       "trades": 1140,
       "complexCount": 78,
       "pricePerPy": 820,
-      "volatility": 0.059,
+      "recentSharePct": 27,
+      "medianBuildYear": 2004,
       "ranks": {
         "momentum": 59,
         "trades": 58,
         "value": 32,
-        "stability": 74
+        "fresh": 24
       }
     },
     {
@@ -906,12 +970,13 @@
       "trades": 2501,
       "complexCount": 163,
       "pricePerPy": 1616,
-      "volatility": 0.047,
+      "recentSharePct": 31,
+      "medianBuildYear": 2010,
       "ranks": {
         "momentum": 20,
         "trades": 17,
         "value": 13,
-        "stability": 24
+        "fresh": 16
       }
     },
     {
@@ -920,12 +985,13 @@
       "trades": 1505,
       "complexCount": 111,
       "pricePerPy": 1501,
-      "volatility": 0.047,
+      "recentSharePct": 37,
+      "medianBuildYear": 2005,
       "ranks": {
         "momentum": 52,
         "trades": 46,
         "value": 40,
-        "stability": 27
+        "fresh": 9
       }
     },
     {
@@ -934,12 +1000,13 @@
       "trades": 1567,
       "complexCount": 114,
       "pricePerPy": 1042,
-      "volatility": 0.052,
+      "recentSharePct": 32,
+      "medianBuildYear": 2007,
       "ranks": {
         "momentum": 38,
         "trades": 43,
         "value": 15,
-        "stability": 50
+        "fresh": 14
       }
     },
     {
@@ -948,12 +1015,13 @@
       "trades": 459,
       "complexCount": 48,
       "pricePerPy": 735,
-      "volatility": 0.058,
+      "recentSharePct": 19,
+      "medianBuildYear": 2002,
       "ranks": {
         "momentum": 30,
         "trades": 73,
         "value": 7,
-        "stability": 71
+        "fresh": 38
       }
     },
     {
@@ -962,12 +1030,13 @@
       "trades": 422,
       "complexCount": 40,
       "pricePerPy": 779,
-      "volatility": 0.058,
+      "recentSharePct": 23,
+      "medianBuildYear": 2006,
       "ranks": {
         "momentum": 77,
         "trades": 74,
         "value": 63,
-        "stability": 70
+        "fresh": 30
       }
     },
     {
@@ -976,12 +1045,13 @@
       "trades": 131,
       "complexCount": 24,
       "pricePerPy": 531,
-      "volatility": 0.059,
+      "recentSharePct": 17,
+      "medianBuildYear": 1999,
       "ranks": {
         "momentum": 26,
         "trades": 80,
         "value": 4,
-        "stability": 73
+        "fresh": 43
       }
     },
     {
@@ -990,12 +1060,13 @@
       "trades": 261,
       "complexCount": 35,
       "pricePerPy": 708,
-      "volatility": 0.058,
+      "recentSharePct": 31,
+      "medianBuildYear": 2008,
       "ranks": {
         "momentum": 46,
         "trades": 77,
         "value": 18,
-        "stability": 72
+        "fresh": 15
       }
     },
     {
@@ -1004,12 +1075,13 @@
       "trades": 408,
       "complexCount": 47,
       "pricePerPy": 1379,
-      "volatility": 0.045,
+      "recentSharePct": 43,
+      "medianBuildYear": 2011,
       "ranks": {
         "momentum": 32,
         "trades": 75,
         "value": 19,
-        "stability": 13
+        "fresh": 4
       }
     },
     {
@@ -1018,12 +1090,13 @@
       "trades": 891,
       "complexCount": 69,
       "pricePerPy": 1203,
-      "volatility": 0.056,
+      "recentSharePct": 35,
+      "medianBuildYear": 2007,
       "ranks": {
         "momentum": 71,
         "trades": 64,
         "value": 59,
-        "stability": 66
+        "fresh": 10
       }
     },
     {
@@ -1032,12 +1105,13 @@
       "trades": 244,
       "complexCount": 24,
       "pricePerPy": 1060,
-      "volatility": 0.047,
+      "recentSharePct": 13,
+      "medianBuildYear": 2003,
       "ranks": {
         "momentum": 53,
         "trades": 78,
         "value": 29,
-        "stability": 33
+        "fresh": 63
       }
     },
     {
@@ -1046,12 +1120,13 @@
       "trades": 1948,
       "complexCount": 299,
       "pricePerPy": 971,
-      "volatility": 0.049,
+      "recentSharePct": 25,
+      "medianBuildYear": 2007,
       "ranks": {
         "momentum": 44,
         "trades": 31,
         "value": 22,
-        "stability": 42
+        "fresh": 27
       }
     },
     {
@@ -1060,12 +1135,13 @@
       "trades": 3084,
       "complexCount": 182,
       "pricePerPy": 1896,
-      "volatility": 0.05,
+      "recentSharePct": 26,
+      "medianBuildYear": 2006,
       "ranks": {
         "momentum": 58,
         "trades": 8,
         "value": 47,
-        "stability": 44
+        "fresh": 26
       }
     },
     {
@@ -1074,12 +1150,13 @@
       "trades": 2298,
       "complexCount": 225,
       "pricePerPy": 1192,
-      "volatility": 0.047,
+      "recentSharePct": 19,
+      "medianBuildYear": 2007,
       "ranks": {
         "momentum": 24,
         "trades": 22,
         "value": 8,
-        "stability": 23
+        "fresh": 35
       }
     },
     {
@@ -1088,12 +1165,13 @@
       "trades": 2922,
       "complexCount": 288,
       "pricePerPy": 1333,
-      "volatility": 0.047,
+      "recentSharePct": 18,
+      "medianBuildYear": 2007,
       "ranks": {
         "momentum": 15,
         "trades": 10,
         "value": 6,
-        "stability": 30
+        "fresh": 41
       }
     },
     {
@@ -1102,12 +1180,13 @@
       "trades": 1880,
       "complexCount": 189,
       "pricePerPy": 1185,
-      "volatility": 0.057,
+      "recentSharePct": 8,
+      "medianBuildYear": 1992,
       "ranks": {
         "momentum": 49,
         "trades": 32,
         "value": 27,
-        "stability": 69
+        "fresh": 74
       }
     },
     {
@@ -1116,12 +1195,13 @@
       "trades": 3785,
       "complexCount": 300,
       "pricePerPy": 1263,
-      "volatility": 0.049,
+      "recentSharePct": 25,
+      "medianBuildYear": 2006,
       "ranks": {
         "momentum": 54,
         "trades": 5,
         "value": 36,
-        "stability": 40
+        "fresh": 28
       }
     },
     {
@@ -1130,12 +1210,13 @@
       "trades": 94,
       "complexCount": 15,
       "pricePerPy": 653,
-      "volatility": 0.065,
+      "recentSharePct": 13,
+      "medianBuildYear": 2004,
       "ranks": {
         "momentum": 47,
         "trades": 81,
         "value": 16,
-        "stability": 77
+        "fresh": 56
       }
     }
   ]

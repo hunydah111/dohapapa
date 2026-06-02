@@ -207,7 +207,7 @@ export function LandingHero({
             <span className="text-[20px]" aria-hidden>🚩</span>
             <span className="flex flex-col items-start leading-tight">
               <span className="text-[10.5px] font-bold" style={{ color: "#5f8a6a" }}>
-                상승·거래·가성비·꾸준 4부문
+                상승·거래·가성비·신축 4부문
               </span>
               <span className="text-[15px] font-extrabold" style={{ color: "#3f7a52" }}>
                 우리 동네 이 달 몇 위?
