@@ -20,6 +20,18 @@
         "sigungu": "수원시 장안구",
         "pct": 4.9
       }
+    },
+    {
+      "date": "2026-06-07",
+      "latestDealDate": "2026-06-06",
+      "txCount": 147957,
+      "newTx": -428740,
+      "complexCount": 10249,
+      "asOf": "2026-06",
+      "topMomentum": {
+        "sigungu": "화성시 동탄구",
+        "pct": 8.4
+      }
     }
   ]
 }
