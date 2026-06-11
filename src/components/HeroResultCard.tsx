@@ -1,8 +1,7 @@
 import type { ComplexCandidate } from "@/types/recommendation";
-import type { HomeType } from "@/lib/homeType";
 import { formatKrwHuman } from "@/lib/format";
 import { budgetTier } from "@/lib/budgetPercentile";
-import { SITE_URL, SITE_DOMAIN } from "@/lib/site";
+import { SITE_DOMAIN } from "@/lib/site";
 import { BijiCard } from "./BijiCard";
 import { composeBijiName } from "@/lib/bijiName";
 import { pickTierImage } from "@/lib/budgetPercentile";
@@ -38,11 +37,9 @@ function discoveryLine(c: ComplexCandidate): string {
 }
 
 // 결과 공개 히어로 카드 — BijiCard 등급 + 1순위 단지 (시크·유머러스 톤).
-// 2026-05-27 v1.5: MBTI 클리셰(유형 칩·희귀도) 제거. homeType은 보조 공유 링크에서만.
+// 2026-06-11: 공유 동선 일원화 — 등급/유형 공유 버튼 제거, 친구 비교 보내기 하나만.
 export function HeroResultCard({
   candidate,
-  homeType,
-  onShare,
   onShareFriend,
   friendTag,
   budgetTopPercent,
@@ -50,8 +47,6 @@ export function HeroResultCard({
   bijiDistribution,
 }: {
   candidate: ComplexCandidate;
-  homeType: HomeType;
-  onShare: (url?: string) => void;
   /** 친구한테 보내기 — 자기 결과를 친구 비교 링크로 인코딩해 공유. */
   onShareFriend?: () => void;
   /** 친구가 비교용으로 보낸 비지 (URL ?f=). 있으면 결과 위에 비교 카드 노출. */
@@ -72,16 +67,6 @@ export function HeroResultCard({
 }) {
   const friendName = friendTag ? composeBijiName(friendTag.sigungu, friendTag.tier) : null;
   const friendImage = friendTag ? pickTierImage(friendTag.tier.image, friendTag.sigungu) : null;
-  // 유형 카드 공유 링크 — 프로필 없이 유형만(바이럴 안전). /s/{slug} 에 동적 OG 카드.
-  const typeShareUrl = `${SITE_URL}/s/${homeType.slug}`;
-  // 비버 등급 공유 링크 — 등급+시군구만(소득·자산·직장 X). /s/b/{grade}/{region} 동적 OG 카드.
-  // 닿는 동네 = 1순위 후보 시군구("이 동네가 잡혔어요"의 그 동네). 백분위 데이터 있을 때만.
-  const gradeShareUrl =
-    budgetTopPercent != null
-      ? `${SITE_URL}/s/b/${budgetTier(budgetTopPercent).slug}/${encodeURIComponent(
-          candidate.sigungu,
-        )}`
-      : null;
   const totalCommute = candidate.commuteLegs.reduce(
     (sum, leg) => sum + leg.minutes,
     0,
@@ -247,35 +232,18 @@ export function HeroResultCard({
         return null;
       })()}
 
-      {/* 공유 — 친구 비교 보내기가 주(主), 비버 등급 카드는 보조. 모두 소득·자산 미포함(바이럴 안전). */}
-      {gradeShareUrl ? (
+      {/* 공유 — 단일 동선: 친구 비교 보내기. 소득·자산 미포함(바이럴 안전). */}
+      {onShareFriend && (
         <div className="mt-4 flex flex-col items-start gap-2">
           <p className="text-[13px] font-bold text-amber-100">
             친구는 무슨 비버? · 보내서 비지 옆에 나란히
           </p>
-          {onShareFriend && (
-            <button
-              type="button"
-              onClick={onShareFriend}
-              className="inline-flex items-center gap-2 rounded-full bg-amber-200 px-5 py-2.5 text-sm font-bold text-coral-800 shadow-lg transition-transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-white/70"
-            >
-              👬 친구한테 보내고 비교
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="h-4 w-4"
-              >
-                <path d="M13 4.5a2.5 2.5 0 11.702 1.737L6.97 9.604a2.518 2.518 0 010 .792l6.733 3.367a2.5 2.5 0 11-.671 1.341l-6.733-3.367a2.5 2.5 0 110-3.475l6.733-3.366A2.52 2.52 0 0113 4.5z" />
-              </svg>
-            </button>
-          )}
           <button
             type="button"
-            onClick={() => onShare(gradeShareUrl)}
-            className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-coral-700 shadow-lg transition-transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-white/70"
+            onClick={onShareFriend}
+            className="inline-flex items-center gap-2 rounded-full bg-amber-200 px-5 py-2.5 text-sm font-bold text-coral-800 shadow-lg transition-transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-white/70"
           >
-            🦫 내 비버 등급 공유하기
+            👬 친구한테 보내고 비교
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
@@ -285,35 +253,11 @@ export function HeroResultCard({
               <path d="M13 4.5a2.5 2.5 0 11.702 1.737L6.97 9.604a2.518 2.518 0 010 .792l6.733 3.367a2.5 2.5 0 11-.671 1.341l-6.733-3.367a2.5 2.5 0 110-3.475l6.733-3.366A2.52 2.52 0 0113 4.5z" />
             </svg>
           </button>
-          <button
-            type="button"
-            onClick={() => onShare(typeShareUrl)}
-            className="text-[12px] font-semibold text-white/80 underline underline-offset-2 transition-colors hover:text-white focus:outline-none"
-          >
-            유형 카드로 공유하기
-          </button>
+          <p className="text-[11px] leading-snug text-white/70">
+            🦫 등급·동네만 공유됨 — 소득·자산·직장 정보는 안 담김.
+          </p>
         </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => onShare(typeShareUrl)}
-          className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-coral-700 shadow-lg transition-transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-white/70"
-        >
-          내 유형 카드 공유하기
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className="h-4 w-4"
-          >
-            <path d="M13 4.5a2.5 2.5 0 11.702 1.737L6.97 9.604a2.518 2.518 0 010 .792l6.733 3.367a2.5 2.5 0 11-.671 1.341l-6.733-3.367a2.5 2.5 0 110-3.475l6.733-3.366A2.52 2.52 0 0113 4.5z" />
-          </svg>
-        </button>
       )}
-
-      <p className="mt-2 text-[11px] leading-snug text-white/70">
-        🦫 등급·동네만 공유됨 — 소득·자산·직장 정보는 안 담김.
-      </p>
 
       {/* 브랜드 워터마크 — 이 카드를 캡쳐해 공유해도 출처가 따라가게(V4). */}
       <div className="mt-3 flex items-center justify-center gap-1.5 border-t border-white/15 pt-2.5">

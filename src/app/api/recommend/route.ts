@@ -2,10 +2,6 @@ import { z } from "zod";
 import { recommendComplexes } from "@/lib/recommend";
 import type { RecommendOptions } from "@/lib/recommend";
 import type { CoupleProfile } from "@/types/profile";
-import { getHomeType } from "@/lib/homeType";
-import { incrementTypeCount } from "@/lib/typeStats";
-import { recordNeighborhoods } from "@/lib/neighborhoodChart";
-import { recordPopularComplexes } from "@/lib/popularComplexChart";
 import { recordBijiDistribution, getBijiDistribution } from "@/lib/bijiDistribution";
 import { budgetTier, budgetTopPercent } from "@/lib/budgetPercentile";
 
@@ -196,24 +192,12 @@ export async function POST(req: Request): Promise<Response> {
     const result = await recommendComplexes(profile, opts);
 
     // 집계 — pass-1(최초 검색)에서만. 2-pass 대중교통 재랭킹(restrictToComplexIds)은
-    // 같은 세션의 재계산이라 중복 카운트 방지로 건너뛴다. 모두 비-PII(슬러그·시군구만).
+    // 같은 세션의 재계산이라 중복 카운트 방지로 건너뛴다. 비-PII(시군구·등급만).
     if (!opts.restrictToComplexIds) {
-      await incrementTypeCount(getHomeType(profile).slug);
-      // 주간 동네 인기차트 — 상위 후보의 시군구만 집계. 결과 0건이면 가장 가까운 후보로.
       const src =
         result.candidates.length > 0
           ? result.candidates
           : result.closestCandidates;
-      await recordNeighborhoods(src.map((c) => c.sigungu));
-      // 주간 인기 아파트 차트 — 상위 단지 집계(비-PII: 단지명·시군구·동만).
-      await recordPopularComplexes(
-        src.map((c) => ({
-          complexId: c.complexId,
-          complexName: c.complexName,
-          sigungu: c.sigungu,
-          dongName: c.dongName,
-        })),
-      );
       // 동네 비지 분포 — top 후보 시군구 + 사용자 등급 누적. 분포 조회는 record 직후라
       // 사용자 본인 카운트도 표시 분포에 포함됨 (자연스러움).
       const topPct = budgetTopPercent(result.budget.netPurchasePowerKrw);

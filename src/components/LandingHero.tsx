@@ -1,10 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { HeroNumber } from "@/components/ui/HeroNumber";
-import { NeighborhoodChart } from "@/components/NeighborhoodChart";
-import { PopularComplexChart } from "@/components/PopularComplexChart";
-import { LivePulse } from "@/components/LivePulse";
-import { getLivePulse } from "@/lib/livePulse";
 import { POLICY_META } from "@/lib/policyLoan";
 import type { FriendTag } from "@/lib/friendShare";
 import { composeBijiName } from "@/lib/bijiName";
@@ -124,10 +120,6 @@ export function LandingHero({
         내 통장에 맞는 단지만 잡아줌
       </p>
 
-      {/* 라이브 펄스 — "이 사이트 살아있다·매주 갱신된다"를 어느 진입에서도 1초 인지.
-          번들 데이터(주간 크론 자동 갱신)에서 매주 바뀌는 값만 회전 노출. DB0·API0. */}
-      <LivePulse data={getLivePulse()} />
-
       {/* 단일 메인 CTA — 한 화면 한 결정 (토스/Mercury 패턴) */}
       <div className="mx-auto mt-7 w-full max-w-sm">
         <Button onClick={onStart} fullWidth>
@@ -155,75 +147,6 @@ export function LandingHero({
           <br />
           국토부 공개 실거래 기반 · 정책 {POLICY_VERIFIED_SHORT} 점검
         </p>
-        {/* ── 놀이 섹션 — 데일리 리텐션 훅 묶음. 검색·플랜(1차 결정)과 구분선으로 분리해
-            "탭할 게 5개" 산만함 대신 하나의 놀이터로 인지시킴. 카드 3색은 3게임 구분 신호로 유지. */}
-        <div className="mt-7">
-          <div className="flex items-center gap-2.5">
-            <span className="h-px flex-1" style={{ background: "#e6dcc9" }} />
-            <span className="text-[11.5px] font-bold tracking-tight" style={{ color: "#9a8f82" }}>🎮 잠깐, 놀고 갈래?</span>
-            <span className="h-px flex-1" style={{ background: "#e6dcc9" }} />
-          </div>
-
-          {/* 부동산 촉 — 시세 감각 entry */}
-          <Link
-            href="/play"
-            className="mx-auto mt-3 flex w-full items-center gap-2.5 rounded-2xl border border-coral-200 px-4 py-3 shadow-sm transition-transform hover:scale-[1.02]"
-            style={{ background: "linear-gradient(100deg,#fff1ea,#ffe1d3)" }}
-          >
-            <span className="text-[20px]" aria-hidden>🎯</span>
-            <span className="flex flex-col items-start leading-tight">
-              <span className="text-[10.5px] font-bold" style={{ color: "#d98a5a" }}>
-                7문제 시세 감각 테스트 · 동네가 시장 이길까?
-              </span>
-              <span className="text-[15px] font-extrabold" style={{ color: "#e8662f" }}>
-                내 부동산 촉, 몇 단?
-              </span>
-            </span>
-            <span className="ml-auto text-[16px] font-bold" style={{ color: "#e8662f" }} aria-hidden>→</span>
-          </Link>
-          {/* 부동산 성향 테스트 */}
-          <Link
-            href="/persona"
-            className="mx-auto mt-2 flex w-full items-center gap-2.5 rounded-2xl border border-[#e3d5bd] px-4 py-3 shadow-sm transition-transform hover:scale-[1.02]"
-            style={{ background: "linear-gradient(100deg,#fbf4e8,#f5e7cc)" }}
-          >
-            <span className="text-[20px]" aria-hidden>🦫</span>
-            <span className="flex flex-col items-start leading-tight">
-              <span className="text-[10.5px] font-bold" style={{ color: "#b08948" }}>
-                10문항 성향 테스트 · 영끌? 가성비?
-              </span>
-              <span className="text-[15px] font-extrabold" style={{ color: "#9a5a1e" }}>
-                나는 무슨 부동산 비지?
-              </span>
-            </span>
-            <span className="ml-auto text-[16px] font-bold" style={{ color: "#b08948" }} aria-hidden>→</span>
-          </Link>
-          {/* 동네 자랑 리그 */}
-          <Link
-            href="/league"
-            className="mx-auto mt-2 flex w-full items-center gap-2.5 rounded-2xl border border-[#cfe0d2] px-4 py-3 shadow-sm transition-transform hover:scale-[1.02]"
-            style={{ background: "linear-gradient(100deg,#eef6ef,#dcecdf)" }}
-          >
-            <span className="text-[20px]" aria-hidden>🚩</span>
-            <span className="flex flex-col items-start leading-tight">
-              <span className="text-[10.5px] font-bold" style={{ color: "#5f8a6a" }}>
-                상승·거래·가성비·신축 4부문
-              </span>
-              <span className="text-[15px] font-extrabold" style={{ color: "#3f7a52" }}>
-                우리 동네, 이 달의 자랑은?
-              </span>
-            </span>
-            <span className="ml-auto text-[16px] font-bold" style={{ color: "#5f8a6a" }} aria-hidden>→</span>
-          </Link>
-
-          {/* 놀이터 푸터 — 리텐션 약속 한 줄 + 도감 discovery 흡수 */}
-          <p className="mt-3 text-center text-[11px] leading-relaxed" style={{ color: "#b3a99c" }}>
-            매일 와도 새 판 · 30초 안에 결과 카톡 공유 ·{" "}
-            <Link href="/biji" className="font-semibold underline-offset-2 hover:underline" style={{ color: "#b89a6a" }}>
-              비지 11종 도감 →
-            </Link>
-          </p>
-        </div>
       </div>
 
       {/* 예시 결과 미니카드 — 첫 fold 아래(스크롤 보상). 3티어 칩 통합 위치 */}
@@ -279,9 +202,6 @@ export function LandingHero({
         </div>
       </div>
 
-      {/* 이번 주 인기 동네·아파트(멜론식) — 데이터 빈약하면 각 컴포넌트가 스스로 숨음 */}
-      <NeighborhoodChart />
-      <PopularComplexChart />
     </section>
   );
 }
