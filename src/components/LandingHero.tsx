@@ -72,48 +72,49 @@ export function LandingHero({
         }}
       />
 
-      {/* 시네마틱 히어로 — 밤 한강을 혼자 보는 비지 위에 카피를 얹는다.
-          이미지가 '배너'가 아니라 '감정'이 되게: 하단 그라데이션 + 좌하단 화이트 카피.
-          object-cover 고정 높이로 첫 fold 안에 카피+CTA가 같이 들어온다. */}
-      <div className={`biji-pop-in relative left-1/2 mb-6 w-screen -translate-x-1/2 overflow-hidden rounded-b-[26px] shadow-md sm:left-auto sm:mx-auto sm:mt-0 sm:w-full sm:max-w-2xl sm:translate-x-0 sm:rounded-3xl sm:ring-1 sm:ring-black/5 ${friendTag ? "" : "-mt-10"}`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/biji/biji-hangang.png"
-          alt="한강에서 밤의 서울을 바라보는 비지"
-          width={1200}
-          height={731}
-          className="block h-[400px] w-full object-cover object-[50%_38%] sm:h-[430px]"
-          draggable={false}
-        />
-        {/* 밤하늘 → 카피 가독 그라데이션 */}
-        <div
-          aria-hidden
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(to top, rgba(12,16,28,0.82) 0%, rgba(12,16,28,0.35) 34%, transparent 60%)",
-          }}
-        />
-        {/* 오버레이 카피 — 무심한 팩트 한 줄. 감정은 이미지 몫, 텍스트는 건조하게. */}
-        <div className="absolute inset-x-0 bottom-0 px-6 pb-6 text-left sm:px-9 sm:pb-8">
-          <h1 className="font-jua break-keep text-[1.9rem] leading-[1.26] tracking-tight text-white sm:text-[2.3rem]">
-            통장 까면,
-            <br />
-            동네 나온다.
-          </h1>
-        </div>
+      {/* 히어로 — 토스/당근 패턴: 큰 타이포가 메시지 전부, 비주얼은 제품(판정 카드) 그 자체.
+          일러스트·오버레이·슬로건 배너 없음. 타이포(잉크 단색) → 제품 카드 → CTA 순. */}
+      <div className={`mx-auto max-w-md ${friendTag ? "pt-2" : "pt-8 sm:pt-12"}`}>
+        <h1
+          className="font-jua break-keep text-[2.5rem] leading-[1.18] tracking-tight sm:text-[3.1rem]"
+          style={{ color: "#2c2118" }}
+        >
+          통장 까면,
+          <br />
+          동네 나온다.
+        </h1>
+        <p
+          className="mx-auto mt-4 max-w-sm break-keep text-[15px] leading-relaxed sm:text-[16px]"
+          style={{ color: "#8a7d6e" }}
+        >
+          닿는 단지 · 모자라면 D-며칠 · 놓친 나라 돈까지
+        </p>
       </div>
 
-      {/* 서브 — 결과물 3개 나열, 수식 없이. */}
-      <p
-        className="mx-auto max-w-sm break-keep text-[14.5px] leading-relaxed text-balance sm:text-[15.5px]"
-        style={{ color: "#8a7d6e" }}
-      >
-        닿는 단지 · 모자라면 D-며칠 · 놓친 나라 돈까지
-      </p>
+      {/* 제품 = 비주얼 — 토스가 앱 스크린샷 놓는 자리에 진짜 판정 카드(D-day 포함). */}
+      <div className="relative mx-auto mt-9 w-full max-w-[252px]">
+        <div className="rotate-[2.5deg] transition-transform duration-300 hover:rotate-0">
+          <BijiCard
+            tier={EXAMPLE_TIER}
+            sigungu="마포구"
+            dongName="아현동"
+            areaM2={84}
+            chips={["🚇 통근 28분"]}
+            dday={{
+              caption: "마포구 중위 입성까지",
+              headline: "D-3,044",
+              verdict: "버틸 만한 싸움이다.",
+            }}
+            popIn={false}
+          />
+        </div>
+        <span className="absolute -right-2 -top-2 rounded-full bg-[#3a2c1d] px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
+          예시
+        </span>
+      </div>
 
       {/* 단일 CTA — 한 화면 한 결정. 분기 없음. */}
-      <div className="mx-auto mt-6 w-full max-w-sm">
+      <div className="mx-auto mt-9 w-full max-w-sm">
         <Button onClick={onStart} fullWidth>
           30초, 통장 판독 받기 →
         </Button>
@@ -127,21 +128,6 @@ export function LandingHero({
           <br />
           국토부 공개 실거래 기반 · 정책 {POLICY_VERIFIED_SHORT} 점검
         </p>
-      </div>
-
-      {/* 예시 판정 카드 — "끝나면 이 카드가 나온다" 미리보기. 캡처 단위를 첫 화면에서 학습시킴. */}
-      <div className="mx-auto mt-10 w-full max-w-[240px]">
-        <p className="mb-3 text-[12px] font-semibold" style={{ color: "#9a8f82" }}>
-          30초 뒤, 너의 카드 <span className="rounded-full bg-[#f7ead0] px-2 py-0.5 text-[10px] font-bold text-[#9a5a1e]">예시</span>
-        </p>
-        <BijiCard
-          tier={EXAMPLE_TIER}
-          sigungu="마포구"
-          dongName="아현동"
-          areaM2={84}
-          chips={["🚇 통근 28분", "🏫 초품아"]}
-          popIn={false}
-        />
       </div>
     </section>
   );
