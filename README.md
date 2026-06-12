@@ -116,6 +116,27 @@ dohapapa/
     └── data-sources.md
 ```
 
+## 계측 5지표 + 수익화 점화 기준 (2026-06-12 한 방 스펙)
+
+GA4 이벤트 5종 — 전부 비-PII(소득·자산·직장 미포함):
+
+| 이벤트 | 의미 | 위치 |
+|---|---|---|
+| `result_card_created` | 판정 카드 생성 (깔때기 바닥) | HomeExperience.handleResult |
+| `share_click` | 공유 클릭 (`method`: friend_throw / result_link) | handleShareFriend·handleShare |
+| `friend_visit` | 도전장 링크(?f=) 유입 | HomeExperience mount |
+| `friend_convert` | 도전장 유입자가 입력 완료 (K팩터 분자) | handleResult + ?f= |
+| `policy_cta_click` | 정책대출 CTA 클릭 (`context`: result / plan) | PolicyLoanCta |
+
+**돈 구석 점화 기준 — 셋 다 충족 전에는 PolicyLoanCta의 href(기금e든든 공식)를 제휴 링크로 바꾸지 않는다:**
+
+1. **볼륨**: 주간 `result_card_created` 수백 건(≥300) 4주 연속
+2. **인텐트**: `policy_cta_click` / 노출 CTR 두 자릿수(≥10%) 안정
+3. **리걸 게이트(필수)**: 금소법상 "광고 매체 vs 광고 주체" 구분·미등록자 대출성 상품 광고 가능 범위 **법률 검토 완료** — href 교체 전 선행 조건
+
+점화 시에도 워딩 불변: "자격 가능성 안내 · 최종 심사는 기관" 유지, 추천·중개·확실·보장 표현 금지.
+플랜B: 정책대출 자격자가 기금e든든으로 직행해 CTA 인텐트가 어긋나면, 화력을 /plan 갭 화면(목표를 정한 뜨거운 리드)으로 이동.
+
 ## 법적 입장
 
 본 서비스는 국토교통부 공개 실거래가 API(공공데이터포털, 무료)를 주요 데이터 소스로 사용합니다. 네이버 부동산·직방·다방 등 민간 포털 크롤링은 수행하지 않습니다. 결과 화면에 표시되는 정보는 중개·투자자문·대출모집이 아닌 참고용 정보 제공이며, 법적 컴플라이언스 세부 내용은 [`docs/legal.md`](docs/legal.md)를 참조하십시오.

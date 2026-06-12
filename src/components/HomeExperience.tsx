@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { computeDdayForSigungu, computeConquest } from "@/lib/plan/dday";
+import { track } from "@/lib/track";
 import type { ReactNode } from "react";
 import { ProfileForm } from "@/components/ProfileForm";
 import type {
@@ -139,8 +140,11 @@ export function HomeExperience() {
   // window 접근이라 SSR 시 null → client mount 시 URL 읽기 (의도적 set-state-in-effect).
   const [friendTag, setFriendTag] = useState<FriendTag | null>(null);
   useEffect(() => {
+    const tag = readFriendFromLocation();
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setFriendTag(readFriendFromLocation());
+    setFriendTag(tag);
+    // 계측 ③ — 도전장 링크(?f=) 유입. 등급 슬러그만(비-PII).
+    if (tag) track("friend_visit", { tier: tag.tier.slug });
   }, []);
 
   // 조건 수정 패널 상태
@@ -171,6 +175,9 @@ export function HomeExperience() {
     (result: RecommendationResult, profile: CoupleProfile) => {
       setState({ result, profile });
       setPanelOpen(false);
+      // 계측 ①② — 판정 카드 생성 + (도전장 유입자라면) 입력 완료 전환. 비-PII.
+      track("result_card_created", { has_candidates: result.candidates.length > 0 });
+      if (readFriendFromLocation()) track("friend_convert");
       // 재방문 이어보기(R2) — 비민감 검색 취향만 기기에 저장(소득·자산·직장·예산·가족 제외).
       saveSearchPrefs(profile);
       // 조건 수정 패널 기본값을 현재 프로필로 초기화 (만원 단위).
@@ -417,6 +424,7 @@ export function HomeExperience() {
   // shareUrl 미지정 = 전체 결과 링크(부부 공유, 프로필 해시 포함). 지정 시 유형 카드(/s/) 등.
   async function handleShare(shareUrl?: string) {
     if (!state) return;
+    track("share_click", { method: "result_link" });
     const url = shareUrl ?? window.location.href;
     // /s/b/ = 비버 등급 카드(등급+동네만), /s/{type} = 유형 카드, 그 외 = 전체 결과(프로필 해시).
     const isGradeCard = !!shareUrl && shareUrl.includes("/s/b/");
@@ -497,6 +505,8 @@ export function HomeExperience() {
     if (!state) return;
     const result = state.result;
     if (!result.candidates[0]) return;
+    // 계측 ④ — 판정 던지기 클릭.
+    track("share_click", { method: "friend_throw" });
     const topPct = budgetTopPercent(result.budget.netPurchasePowerKrw);
     if (topPct == null) {
       setShareToast("백분위 데이터 부족 — 다른 시간에 다시 시도");
