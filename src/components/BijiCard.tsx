@@ -122,9 +122,10 @@ export interface BijiCardProps {
   chips?: string[];
   /**
    * D-day 메인 숫자 — "한 방" 카드의 심장. headline 예: "D-2,847" / "지금 입성 가능" / "D-아득".
-   * caption 예: "마포구 중위 입성까지". 있으면 비지 영역이 살짝 줄어 텍스트 영역이 커진다.
+   * caption 예: "마포구 중위 입성까지". verdict = 자조 한 줄("서울이 나를 거부함 🦫").
+   * 있으면 비지 영역이 살짝 줄어 텍스트 영역이 커진다.
    */
-  dday?: { headline: string; caption: string };
+  dday?: { headline: string; caption: string; verdict?: string | null };
   /** 카드 폭을 부모 max-w로 끌어쓰기 — 기본 max-w-sm. */
   className?: string;
   /** 첫 등장 모션. 기본 true. */
@@ -303,7 +304,7 @@ export function BijiCard({
           )}
         </div>
 
-        {/* D-day — 카드의 심장. 캡션(어디까지) + 메인 숫자(Jua 영웅화). 캡처 단위 완성. */}
+        {/* D-day — 카드의 심장. 캡션(어디까지) + 메인 숫자(Jua 영웅화) + 자조 한 줄. 캡처 단위 완성. */}
         {dday && (
           <div className="mt-1 min-w-0">
             <p className={`text-[10px] font-semibold ${colors.muted} truncate`}>
@@ -318,13 +319,18 @@ export function BijiCard({
             >
               {dday.headline}
             </p>
+            {dday.verdict && (
+              <p className={`mt-0.5 text-[10.5px] font-semibold ${colors.secondary} truncate`}>
+                {dday.verdict}
+              </p>
+            )}
           </div>
         )}
 
-        {/* 라이프스타일 칩 — 최대 2개 (D-day 있으면 1개로 양보). */}
-        {chips && chips.length > 0 && (
+        {/* 라이프스타일 칩 — 최대 2개 (D-day 있으면 verdict에 자리 양보, 0개). */}
+        {chips && chips.length > 0 && !dday && (
           <div className="mt-1 flex flex-wrap gap-1">
-            {chips.slice(0, dday ? 1 : 2).map((chip, i) => (
+            {chips.slice(0, 2).map((chip, i) => (
               <span
                 key={i}
                 className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${colors.chipBg}`}

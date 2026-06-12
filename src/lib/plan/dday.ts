@@ -9,6 +9,7 @@
 import type { CoupleProfile, AreaRangeKey } from "@/types/profile";
 import { AREA_RANGES, AREA_RANGE_ORDER } from "@/types/profile";
 import { estimateBudget } from "@/lib/budget";
+import { estimateAcquisitionCosts } from "@/lib/acquisitionCost";
 import regionPrices from "@/data/regionPrices.json";
 import { computePlan, DEFAULT_APPRECIATION, regionScenarios } from "./index";
 
@@ -137,4 +138,42 @@ export function computeDdayForSigungu(
     days,
     capped,
   };
+}
+
+export interface Conquest {
+  /** 같은 평형 데이터가 있는 수도권 시군구 수. */
+  total: number;
+  /** 그중 지금(중위가 기준) 입성 가능한 곳 수. */
+  affordableNow: number;
+  bandLabel: string;
+}
+
+/**
+ * vs 지도 정복 게이지 — "수도권 N곳 중 지금 입성 가능 M곳".
+ * 비교 대상이 사람이 아니라 지도라 박탈감이 호기심("나는 몇 곳?")으로 빠진다.
+ * 시나리오 없음 — 지금 구매력 vs 시군구 중위가 단순 비교 (예측 0).
+ */
+export function computeConquest(
+  profile: CoupleProfile,
+  areaM2?: number | null,
+): Conquest | null {
+  const band =
+    bandOfArea(areaM2) ?? profile.preferredAreaRanges?.[0] ?? "p26_31";
+  let total = 0;
+  let affordableNow = 0;
+  for (const [sgg, cells] of Object.entries(REGIONS)) {
+    const cell = cells[band];
+    if (!cell || !(cell.medianKrw > 0) || cell.sampleCount < 5) continue;
+    total += 1;
+    const budget = estimateBudget(profile, {
+      targetPriceKrw: cell.medianKrw,
+      sigungu: sgg,
+    });
+    const loan = budget.safeLine?.loanEstimateKrw ?? budget.loanEstimateKrw;
+    const acq = estimateAcquisitionCosts(cell.medianKrw, profile).totalKrw;
+    const purchaseNow = Math.max(0, budget.totalEquityKrw) + loan - acq;
+    if (purchaseNow >= cell.medianKrw) affordableNow += 1;
+  }
+  if (total < 10) return null; // 데이터 빈약하면 게이지 숨김
+  return { total, affordableNow, bandLabel: AREA_RANGES[band].label };
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ComplexCandidate } from "@/types/recommendation";
-import type { DdayResult } from "@/lib/plan/dday";
+import type { DdayResult, Conquest } from "@/lib/plan/dday";
+import { verdictLine } from "@/lib/verdict";
 import { formatKrwHuman } from "@/lib/format";
 import { budgetTier } from "@/lib/budgetPercentile";
 import { SITE_DOMAIN } from "@/lib/site";
@@ -43,6 +44,7 @@ function discoveryLine(c: ComplexCandidate): string {
 export function HeroResultCard({
   candidate,
   dday,
+  conquest,
   onShareFriend,
   friendTag,
   budgetTopPercent,
@@ -52,6 +54,8 @@ export function HeroResultCard({
   candidate: ComplexCandidate;
   /** D-day(1순위 시군구 중위 입성) — null/undefined면 카드에서 생략. */
   dday?: DdayResult | null;
+  /** vs 지도 정복 게이지 — "수도권 N곳 중 입성 가능 M곳". null이면 생략. */
+  conquest?: Conquest | null;
   /** 친구한테 보내기 — 자기 결과를 친구 비교 링크로 인코딩해 공유. */
   onShareFriend?: () => void;
   /** 친구가 비교용으로 보낸 비지 (URL ?f=). 있으면 결과 위에 비교 카드 노출. */
@@ -73,16 +77,19 @@ export function HeroResultCard({
   const friendName = friendTag ? composeBijiName(friendTag.sigungu, friendTag.tier) : null;
   const friendImage = friendTag ? pickTierImage(friendTag.tier.image, friendTag.sigungu) : null;
 
-  // D-day 표시 변환 — 지금 가능(긍정) / D-숫자 / D-아득(박탈감 캡). 카드 캡션은 짧게.
+  // D-day 표시 변환 — 지금 가능(긍정) / D-숫자 / D-아득(박탈감 캡) + 자조 verdict 한 줄.
   const ddayDisplay = dday
-    ? dday.months === 0
-      ? { caption: `${dday.sigungu} 중위 단지`, headline: "지금 입성 가능" }
-      : dday.capped
-        ? { caption: `${dday.sigungu} 중위 입성까지`, headline: "D-아득" }
-        : {
-            caption: `${dday.sigungu} 중위 입성까지`,
-            headline: `D-${dday.days!.toLocaleString()}`,
-          }
+    ? {
+        ...(dday.months === 0
+          ? { caption: `${dday.sigungu} 중위 단지`, headline: "지금 입성 가능" }
+          : dday.capped
+            ? { caption: `${dday.sigungu} 중위 입성까지`, headline: "D-아득" }
+            : {
+                caption: `${dday.sigungu} 중위 입성까지`,
+                headline: `D-${dday.days!.toLocaleString()}`,
+              }),
+        verdict: verdictLine(dday),
+      }
     : undefined;
   // /plan 프리필 — 결과카드가 유일한 plan 진입점 (한 방 스펙).
   const planHref = dday
@@ -191,6 +198,31 @@ export function HeroResultCard({
                   ⏳ D-day 줄이는 법 보기 →
                 </Link>
               )}
+
+              {/* vs 지도 정복 게이지 — 비교 대상은 사람이 아니라 지도. "나는 몇 곳?" 호기심 훅. */}
+              {conquest && (
+                <div className="mt-3 w-full max-w-[260px]">
+                  <p className="text-center text-[12px] font-bold text-white/90">
+                    수도권 {conquest.total}곳 중 지금 입성 가능{" "}
+                    <span className="text-amber-200">{conquest.affordableNow}곳</span>
+                  </p>
+                  <div
+                    className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-white/20"
+                    role="img"
+                    aria-label={`수도권 ${conquest.total}곳 중 ${conquest.affordableNow}곳 입성 가능`}
+                  >
+                    <div
+                      className="h-full rounded-full bg-amber-200"
+                      style={{
+                        width: `${Math.min(100, Math.round((conquest.affordableNow / conquest.total) * 100))}%`,
+                      }}
+                    />
+                  </div>
+                  <p className="mt-1 text-center text-[10px] text-white/50">
+                    {conquest.bandLabel} 중위가 기준 추정
+                  </p>
+                </div>
+              )}
               {/* 동네 비지 분포 — MIN 충족 시만. 본인 등급과 top 비교해 위트 톤 차등. */}
               {bijiDistribution?.topLabel && bijiDistribution.topPercent != null && (() => {
                 const t = budgetTier(budgetTopPercent ?? 100);
@@ -272,18 +304,18 @@ export function HeroResultCard({
         return null;
       })()}
 
-      {/* 공유 — 단일 동선: 친구 비교 보내기. 소득·자산 미포함(바이럴 안전). */}
+      {/* 공유 — 단일 동선: 자조 초대("나 까였다, 너도 까봐"). 소득·자산 미포함(바이럴 안전). */}
       {onShareFriend && (
         <div className="mt-4 flex flex-col items-start gap-2">
           <p className="text-[13px] font-bold text-amber-100">
-            친구는 무슨 비버? · 보내서 비지 옆에 나란히
+            이 카드, 단톡방에 던져봐
           </p>
           <button
             type="button"
             onClick={onShareFriend}
             className="inline-flex items-center gap-2 rounded-full bg-amber-200 px-5 py-2.5 text-sm font-bold text-coral-800 shadow-lg transition-transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-white/70"
           >
-            👬 친구한테 보내고 비교
+            🦫 내 판정 던지기
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
@@ -291,10 +323,10 @@ export function HeroResultCard({
               className="h-4 w-4"
             >
               <path d="M13 4.5a2.5 2.5 0 11.702 1.737L6.97 9.604a2.518 2.518 0 010 .792l6.733 3.367a2.5 2.5 0 11-.671 1.341l-6.733-3.367a2.5 2.5 0 110-3.475l6.733-3.366A2.52 2.52 0 0113 4.5z" />
-            </svg>
+          </svg>
           </button>
           <p className="text-[11px] leading-snug text-white/70">
-            🦫 등급·동네만 공유됨 — 소득·자산·직장 정보는 안 담김.
+            🦫 등급·동네·D-day만 공유됨 — 소득·자산·직장 정보는 안 담김.
           </p>
         </div>
       )}

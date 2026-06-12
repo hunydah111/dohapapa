@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { computeDdayForSigungu } from "@/lib/plan/dday";
+import { computeDdayForSigungu, computeConquest } from "@/lib/plan/dday";
 import type { ReactNode } from "react";
 import { ProfileForm } from "@/components/ProfileForm";
 import type {
@@ -491,9 +491,8 @@ export function HomeExperience() {
     window.history.replaceState(null, "", url.toString());
   }
 
-  // 친구한테 보내기 — 자기 결과를 친구 비교용 URL로 인코딩해 공유.
-  // 자기 비지 정체성(tier slug + sigungu)만 URL에 담음 — 소득·자산·직장 전혀 X.
-  // 친구가 그 URL 열면 LandingHero 배너 + 친구 검색 완료 시 비교 카드 노출.
+  // 판정 던지기 — 자기 판정(tier + sigungu + D-day)을 자조 초대 URL로 인코딩해 공유.
+  // 소득·자산·직장 전혀 X. 친구가 열면 LandingHero 배너 + OG에 판정 카드 노출.
   async function handleShareFriend() {
     if (!state) return;
     const result = state.result;
@@ -506,10 +505,23 @@ export function HomeExperience() {
     }
     const tier = budgetTier(topPct);
     const sigungu = result.candidates[0].sigungu;
-    const friendUrl = buildFriendUrl(SITE_URL, tier, sigungu);
+    const dday = computeDdayForSigungu(
+      state.profile,
+      sigungu,
+      result.candidates[0].representativeArea,
+    );
+    const friendUrl = buildFriendUrl(SITE_URL, tier, sigungu, dday);
+    const ddayText =
+      dday == null
+        ? ""
+        : dday.months === 0
+          ? " · 지금 입성 가능"
+          : dday.capped
+            ? " · D-아득"
+            : ` · D-${dday.days!.toLocaleString()}`;
     const shareData = {
-      title: `친구야 너도 비지 찾아봐! ${sigungu} ${tier.label}`,
-      text: "비집고에서 내 비지 찾고 너랑 비교해보자~",
+      title: `내 판정 떴다 — ${sigungu} ${tier.label}${ddayText}`,
+      text: "통장 까면 동네 나온다. 너도 30초 까봐 🦫",
       url: friendUrl,
     };
     if (typeof navigator.share === "function") {
@@ -522,7 +534,7 @@ export function HomeExperience() {
     }
     try {
       await navigator.clipboard.writeText(friendUrl);
-      setShareToast("친구 비교 링크 복사됨 — 카톡에 붙여넣기");
+      setShareToast("판정 링크 복사됨 — 단톡방에 붙여넣기");
     } catch {
       setShareToast("링크 복사 실패 — 주소창 링크 직접 보내기");
     }
@@ -901,6 +913,10 @@ export function HomeExperience() {
           dday={computeDdayForSigungu(
             state.profile,
             result.candidates[0].sigungu,
+            result.candidates[0].representativeArea,
+          )}
+          conquest={computeConquest(
+            state.profile,
             result.candidates[0].representativeArea,
           )}
           onShareFriend={handleShareFriend}

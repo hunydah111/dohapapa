@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/Button";
 import { BijiCard } from "@/components/BijiCard";
 import { POLICY_META } from "@/lib/policyLoan";
 import { budgetTier } from "@/lib/budgetPercentile";
-import type { FriendTag } from "@/lib/friendShare";
+import { friendDdayLabel, type FriendTag } from "@/lib/friendShare";
 import { composeBijiName } from "@/lib/bijiName";
 import { pickTierImage } from "@/lib/budgetPercentile";
 
@@ -46,12 +46,17 @@ export function LandingHero({
             draggable={false}
           />
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold text-coral-700">👬 친구가 너랑 비교하재</p>
+            <p className="text-[11px] font-semibold text-coral-700">🦫 친구가 판정 까고 던졌다</p>
             <p className="mt-0.5 truncate text-[15px] font-bold text-[#3a2c1d]" title={friendName}>
               {friendName}
+              {friendDdayLabel(friendTag) && (
+                <span className="ml-1.5 font-jua text-[14px]" style={{ color: "#e8662f" }}>
+                  {friendDdayLabel(friendTag)}
+                </span>
+              )}
             </p>
             <p className="mt-0.5 text-[11px] leading-snug text-[#8a7d6e]">
-              너도 30초컷 판독 끝내면 비지 옆에 나란히!
+              너도 30초 까보고 옆에 서봐.
             </p>
           </div>
         </div>
