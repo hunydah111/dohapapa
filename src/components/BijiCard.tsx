@@ -120,6 +120,11 @@ export interface BijiCardProps {
   areaM2?: number | null;
   /** 라이프스타일 칩(최대 3개 권장) — 예: ["🏫 초품아", "🌊 한강변", "🚗 자차 25분"]. */
   chips?: string[];
+  /**
+   * D-day 메인 숫자 — "한 방" 카드의 심장. headline 예: "D-2,847" / "지금 입성 가능" / "D-아득".
+   * caption 예: "마포구 중위 입성까지". 있으면 비지 영역이 살짝 줄어 텍스트 영역이 커진다.
+   */
+  dday?: { headline: string; caption: string };
   /** 카드 폭을 부모 max-w로 끌어쓰기 — 기본 max-w-sm. */
   className?: string;
   /** 첫 등장 모션. 기본 true. */
@@ -144,6 +149,7 @@ export function BijiCard({
   dongName,
   areaM2,
   chips,
+  dday,
   className = "",
   popIn = true,
 }: BijiCardProps) {
@@ -249,9 +255,8 @@ export function BijiCard({
         </div>
       )}
 
-      {/* 비지 영역 (상단 65%) — 흰 배경 박스 (Polaroid 풍). 원본 jpg의 흰 bg 자연 블렌딩 +
-          비지 안 흰 영역(수트·이빨)이 카드 컬러 그라데이션과 충돌하던 문제 해소. */}
-      <div className="absolute inset-x-0 top-0 h-[65%] overflow-hidden bg-white">
+      {/* 비지 영역 (상단 65% — D-day 있으면 57%로 양보) — 흰 배경 박스 (Polaroid 풍). */}
+      <div className={`absolute inset-x-0 top-0 ${dday ? "h-[57%]" : "h-[65%]"} overflow-hidden bg-white`}>
         <Ornament kind={tier.theme.ornament} accent={tier.theme.accent} />
 
         {/* 등급 라벨 캡 — 상단 우측. 흰 배경 위라 textTone 무관하게 다크 칩 고정. */}
@@ -277,8 +282,8 @@ export function BijiCard({
         />
       </div>
 
-      {/* 텍스트 영역 (하단 35%) */}
-      <div className="absolute inset-x-0 bottom-0 flex h-[35%] flex-col justify-between px-4 pb-3 pt-2.5">
+      {/* 텍스트 영역 (하단 35% — D-day 있으면 43%) */}
+      <div className={`absolute inset-x-0 bottom-0 flex ${dday ? "h-[43%]" : "h-[35%]"} flex-col justify-between px-4 pb-3 pt-2.5`}>
         {/* 합성 이름 — 길이별 fontSize 자동(자연어 형태라 "강남 저스틴비버" 8자도 가능). */}
         <div className="min-w-0">
           <h3
@@ -298,10 +303,28 @@ export function BijiCard({
           )}
         </div>
 
-        {/* 라이프스타일 칩 — 최대 2개 (정신없음 차단). */}
+        {/* D-day — 카드의 심장. 캡션(어디까지) + 메인 숫자(Jua 영웅화). 캡처 단위 완성. */}
+        {dday && (
+          <div className="mt-1 min-w-0">
+            <p className={`text-[10px] font-semibold ${colors.muted} truncate`}>
+              {dday.caption}
+            </p>
+            <p
+              className="font-jua leading-none tracking-tight"
+              style={{
+                fontSize: dday.headline.length >= 8 ? "1.35rem" : "1.7rem",
+                color: tier.theme.nameColor ?? tier.theme.accent,
+              }}
+            >
+              {dday.headline}
+            </p>
+          </div>
+        )}
+
+        {/* 라이프스타일 칩 — 최대 2개 (D-day 있으면 1개로 양보). */}
         {chips && chips.length > 0 && (
           <div className="mt-1 flex flex-wrap gap-1">
-            {chips.slice(0, 2).map((chip, i) => (
+            {chips.slice(0, dday ? 1 : 2).map((chip, i) => (
               <span
                 key={i}
                 className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${colors.chipBg}`}

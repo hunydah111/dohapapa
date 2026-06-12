@@ -1,4 +1,6 @@
+import Link from "next/link";
 import type { ComplexCandidate } from "@/types/recommendation";
+import type { DdayResult } from "@/lib/plan/dday";
 import { formatKrwHuman } from "@/lib/format";
 import { budgetTier } from "@/lib/budgetPercentile";
 import { SITE_DOMAIN } from "@/lib/site";
@@ -40,6 +42,7 @@ function discoveryLine(c: ComplexCandidate): string {
 // 2026-06-11: 공유 동선 일원화 — 등급/유형 공유 버튼 제거, 친구 비교 보내기 하나만.
 export function HeroResultCard({
   candidate,
+  dday,
   onShareFriend,
   friendTag,
   budgetTopPercent,
@@ -47,6 +50,8 @@ export function HeroResultCard({
   bijiDistribution,
 }: {
   candidate: ComplexCandidate;
+  /** D-day(1순위 시군구 중위 입성) — null/undefined면 카드에서 생략. */
+  dday?: DdayResult | null;
   /** 친구한테 보내기 — 자기 결과를 친구 비교 링크로 인코딩해 공유. */
   onShareFriend?: () => void;
   /** 친구가 비교용으로 보낸 비지 (URL ?f=). 있으면 결과 위에 비교 카드 노출. */
@@ -67,6 +72,25 @@ export function HeroResultCard({
 }) {
   const friendName = friendTag ? composeBijiName(friendTag.sigungu, friendTag.tier) : null;
   const friendImage = friendTag ? pickTierImage(friendTag.tier.image, friendTag.sigungu) : null;
+
+  // D-day 표시 변환 — 지금 가능(긍정) / D-숫자 / D-아득(박탈감 캡). 카드 캡션은 짧게.
+  const ddayDisplay = dday
+    ? dday.months === 0
+      ? { caption: `${dday.sigungu} 중위 단지`, headline: "지금 입성 가능" }
+      : dday.capped
+        ? { caption: `${dday.sigungu} 중위 입성까지`, headline: "D-아득" }
+        : {
+            caption: `${dday.sigungu} 중위 입성까지`,
+            headline: `D-${dday.days!.toLocaleString()}`,
+          }
+    : undefined;
+  // /plan 프리필 — 결과카드가 유일한 plan 진입점 (한 방 스펙).
+  const planHref = dday
+    ? `/plan?price=${dday.targetKrw}&name=${encodeURIComponent(
+        `${dday.sigungu} ${dday.bandLabel} 중위`,
+      )}&sgg=${encodeURIComponent(dday.sigungu)}&area=${candidate.representativeArea}`
+    : null;
+
   const totalCommute = candidate.commuteLegs.reduce(
     (sum, leg) => sum + leg.minutes,
     0,
@@ -134,6 +158,7 @@ export function HeroResultCard({
                 dongName={candidate.dongName}
                 areaM2={candidate.representativeArea}
                 chips={chips}
+                dday={ddayDisplay}
                 className="w-full"
               />
               {/* 카드 아래 단 한 줄 보조 — 구매력 + 백분위(있을 때) + 면책 한 줄 통합.
@@ -150,7 +175,22 @@ export function HeroResultCard({
               )}
               <p className="mt-1 px-2 text-center text-[11px] leading-relaxed text-white/50">
                 국토부 실거래가 기반 추정{PRICE_AS_OF ? ` · ${PRICE_AS_OF} 반영` : ""} · 미래가치 예측 아님
+                {dday && dday.months !== 0 && (
+                  <>
+                    <br />
+                    D-day: 현재가 고정 · 월 저축 {formatKrwHuman(dday.monthlySavingKrw)} 가정
+                  </>
+                )}
               </p>
+              {/* plan 진입 — 결과카드가 유일한 입구. 숫자에 절망 말고 레버로. */}
+              {planHref && dday && dday.months !== 0 && (
+                <Link
+                  href={planHref}
+                  className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1.5 text-[12px] font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/70"
+                >
+                  ⏳ D-day 줄이는 법 보기 →
+                </Link>
+              )}
               {/* 동네 비지 분포 — MIN 충족 시만. 본인 등급과 top 비교해 위트 톤 차등. */}
               {bijiDistribution?.topLabel && bijiDistribution.topPercent != null && (() => {
                 const t = budgetTier(budgetTopPercent ?? 100);

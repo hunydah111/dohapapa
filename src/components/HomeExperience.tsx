@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { computeDdayForSigungu } from "@/lib/plan/dday";
 import type { ReactNode } from "react";
 import { ProfileForm } from "@/components/ProfileForm";
 import type {
@@ -897,6 +898,11 @@ export function HomeExperience() {
       {result.candidates.length > 0 && (
         <HeroResultCard
           candidate={result.candidates[0]}
+          dday={computeDdayForSigungu(
+            state.profile,
+            result.candidates[0].sigungu,
+            result.candidates[0].representativeArea,
+          )}
           onShareFriend={handleShareFriend}
           friendTag={friendTag}
           budgetTopPercent={budgetTopPercent(result.budget.netPurchasePowerKrw)}
