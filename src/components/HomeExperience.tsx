@@ -919,6 +919,7 @@ export function HomeExperience() {
             state.profile,
             result.candidates[0].representativeArea,
           )}
+          policyMatches={result.budget.policyLoanMatches}
           onShareFriend={handleShareFriend}
           friendTag={friendTag}
           budgetTopPercent={budgetTopPercent(result.budget.netPurchasePowerKrw)}

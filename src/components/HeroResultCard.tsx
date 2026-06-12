@@ -1,5 +1,6 @@
 import Link from "next/link";
-import type { ComplexCandidate } from "@/types/recommendation";
+import type { ComplexCandidate, PolicyLoanMatch } from "@/types/recommendation";
+import { PolicyLoanCta } from "@/components/PolicyLoanCta";
 import type { DdayResult, Conquest } from "@/lib/plan/dday";
 import { verdictLine } from "@/lib/verdict";
 import { formatKrwHuman } from "@/lib/format";
@@ -45,6 +46,7 @@ export function HeroResultCard({
   candidate,
   dday,
   conquest,
+  policyMatches,
   onShareFriend,
   friendTag,
   budgetTopPercent,
@@ -56,6 +58,8 @@ export function HeroResultCard({
   dday?: DdayResult | null;
   /** vs 지도 정복 게이지 — "수도권 N곳 중 입성 가능 M곳". null이면 생략. */
   conquest?: Conquest | null;
+  /** 정책대출 자격 판정(budget.policyLoanMatches) — eligible 있으면 톨게이트 CTA 노출. */
+  policyMatches?: PolicyLoanMatch[] | null;
   /** 친구한테 보내기 — 자기 결과를 친구 비교 링크로 인코딩해 공유. */
   onShareFriend?: () => void;
   /** 친구가 비교용으로 보낸 비지 (URL ?f=). 있으면 결과 위에 비교 카드 노출. */
@@ -245,6 +249,11 @@ export function HeroResultCard({
             </div>
           );
         })()}
+
+      {/* 💰 돈 구석 — 판정 직후 정책대출 톨게이트 (Phase 0: 공식 링크 + 계측만). */}
+      <div className="mt-4">
+        <PolicyLoanCta matches={policyMatches} context="result" tone="hero" />
+      </div>
 
       {/* 구분선 */}
       <div className="my-4 h-px w-full bg-white/20" />
