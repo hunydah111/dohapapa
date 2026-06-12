@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { BijiCard } from "@/components/BijiCard";
 import { POLICY_META } from "@/lib/policyLoan";
@@ -17,8 +18,23 @@ const POLICY_VERIFIED_SHORT: string = (() => {
 //  • 동선 1개: 통장 판독 CTA. 놀이터·차트·플랜 분기 없음 (plan 진입은 결과카드에서만).
 //  • 예시 BijiCard 1장 — "이게 네 판정 카드다" 미리보기 (캡처 단위 인지).
 
-// 예시 카드 — 상위 23%(비버) × 마포구. 실존 등급 시스템 그대로 사용해 결과와 톤 일치.
-const EXAMPLE_TIER = budgetTier(23);
+// 예시 카드 풀 — 새로고침마다 랜덤 1장. 실존 등급 시스템(budgetTier) 그대로,
+// 등급 스펙트럼 전체(퀸~아기)와 D-day 3상태(지금/숫자/아득)를 다 보여줘
+// "내 건 뭘까" 호기심을 만든다. verdict는 결과 화면과 동일 톤(자조·건조).
+const EXAMPLES = [
+  { pct: 23, sigungu: "마포구", dong: "아현동", area: 84, chip: "🚇 통근 28분",
+    dday: { caption: "마포구 중위 입성까지", headline: "D-3,044", verdict: "버틸 만한 싸움이다." } },
+  { pct: 1, sigungu: "서초구", dong: "반포동", area: 84, chip: "🌊 한강뷰",
+    dday: { caption: "서초구 중위 단지", headline: "지금 입성 가능", verdict: "통장 좀 치네. 인정." } },
+  { pct: 85, sigungu: "강남구", dong: "대치동", area: 59, chip: "🏫 초품아",
+    dday: { caption: "강남구 중위 입성까지", headline: "D-아득", verdict: "서울이 나를 거부함 🦫" } },
+  { pct: 8, sigungu: "성동구", dong: "옥수동", area: 84, chip: "🚇 통근 19분",
+    dday: { caption: "성동구 중위 입성까지", headline: "D-1,204", verdict: "적금 만기 몇 번이면 끝." } },
+  { pct: 50, sigungu: "노원구", dong: "상계동", area: 59, chip: "🌳 공원 옆",
+    dday: { caption: "노원구 중위 입성까지", headline: "D-5,114", verdict: "길다. 근데 0은 아니다." } },
+  { pct: 35, sigungu: "수원시 영통구", dong: "광교동", area: 84, chip: "🚗 자차 31분",
+    dday: { caption: "영통구 중위 입성까지", headline: "D-2,190", verdict: "루틴만 지키면 닿는다." } },
+] as const;
 
 export function LandingHero({
   onStart,
@@ -31,6 +47,15 @@ export function LandingHero({
   const friendImage = friendTag
     ? pickTierImage(friendTag.tier.image, friendTag.sigungu)
     : null;
+
+  // 예시 카드 — 새로고침마다 랜덤. SSR/CSR 일치를 위해 첫 렌더는 0번 고정,
+  // 마운트 후 랜덤 스왑(key 변화로 pop-in 재생 — 스왑이 버그가 아니라 연출로 보이게).
+  const [exampleIdx, setExampleIdx] = useState(0);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 랜덤은 클라이언트에서만 (hydration 안전)
+    setExampleIdx(Math.floor(Math.random() * EXAMPLES.length));
+  }, []);
+  const ex = EXAMPLES[exampleIdx];
 
   return (
     <section className="relative px-1 pt-6 pb-4 text-center sm:pt-10">
@@ -91,21 +116,19 @@ export function LandingHero({
         </p>
       </div>
 
-      {/* 제품 = 비주얼 — 토스가 앱 스크린샷 놓는 자리에 진짜 판정 카드(D-day 포함). */}
+      {/* 제품 = 비주얼 — 토스가 앱 스크린샷 놓는 자리에 진짜 판정 카드(D-day 포함).
+          새로고침마다 다른 등급·동네·D-day (EXAMPLES 랜덤). */}
       <div className="relative mx-auto mt-9 w-full max-w-[252px]">
         <div className="rotate-[2.5deg] transition-transform duration-300 hover:rotate-0">
           <BijiCard
-            tier={EXAMPLE_TIER}
-            sigungu="마포구"
-            dongName="아현동"
-            areaM2={84}
-            chips={["🚇 통근 28분"]}
-            dday={{
-              caption: "마포구 중위 입성까지",
-              headline: "D-3,044",
-              verdict: "버틸 만한 싸움이다.",
-            }}
-            popIn={false}
+            key={exampleIdx}
+            tier={budgetTier(ex.pct)}
+            sigungu={ex.sigungu}
+            dongName={ex.dong}
+            areaM2={ex.area}
+            chips={[ex.chip]}
+            dday={ex.dday}
+            popIn
           />
         </div>
         <span className="absolute -right-2 -top-2 rounded-full bg-[#3a2c1d] px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
