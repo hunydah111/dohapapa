@@ -48,7 +48,7 @@ export function PolicyLoanCta({
   return (
     <div className={`${box} px-4 py-3.5 text-left`}>
       <p className={`text-[11px] font-bold uppercase tracking-wider ${heading}`}>
-        💰 놓치고 있을 수 있는 나라 돈
+        💰 놓치고 있을 수 있는 정책대출
       </p>
       <ul className="mt-1.5 flex flex-col gap-1">
         {top.map((m) => (

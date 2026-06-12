@@ -6,7 +6,7 @@ import { PlanExperience } from "@/components/plan/PlanExperience";
 export const metadata: Metadata = {
   title: "내 집 마련 플랜 — 언제 살 수 있을까?",
   description:
-    "내 돈+나라돈으로 그 집을 언제쯤 살 수 있는지, 저축·부업·정책대출 레버로 시점을 당겨보는 계산기. 국토부 실거래가 기반 추정.",
+    "내 돈과 정책대출로 그 집을 언제쯤 살 수 있는지, 저축·부업·정책대출 레버로 시점을 당겨보는 계산기. 국토부 실거래가 기반 추정.",
   alternates: { canonical: "/plan" },
   openGraph: {
     title: "내 집 마련 플랜 — 언제 살 수 있을까?",

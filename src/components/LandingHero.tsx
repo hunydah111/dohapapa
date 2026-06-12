@@ -112,7 +112,7 @@ export function LandingHero({
           className="mx-auto mt-4 max-w-sm break-keep text-[15px] leading-relaxed sm:text-[16px]"
           style={{ color: "#8a7d6e" }}
         >
-          닿는 단지 · 모자라면 D-며칠 · 놓친 나라 돈까지
+          닿는 단지 · 모자라면 D-며칠 · 놓친 정책대출까지
         </p>
       </div>
 
