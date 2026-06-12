@@ -98,6 +98,9 @@ export default function RootLayout({
               © {new Date().getFullYear()} 비집고 — 정보 제공 도구
             </p>
             <nav className="flex flex-wrap gap-4" style={{ color: "#6b6157" }}>
+              <Link href="/biji" className="hover:text-coral-600">
+                비지 도감
+              </Link>
               <Link href="/privacy" className="hover:text-coral-600">
                 개인정보처리방침
               </Link>

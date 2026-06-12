@@ -23,9 +23,11 @@ const saveLegSchema = z.object({
   minutes: z.number().int().positive().max(600),
 });
 
+// max 40 — 클라 재정렬 풀(RERANK_POOL_MAX=12) × 직장 2(맞벌이) = 24 legs + 여유.
+// (기존 20은 맞벌이 대중교통에서 항상 400 → 캐시 미적재 → ODsay 쿼터 2배 소모 버그)
 const bodySchema = z.discriminatedUnion("op", [
-  z.object({ op: z.literal("lookup"), legs: z.array(lookupLegSchema).min(1).max(20) }),
-  z.object({ op: z.literal("save"), legs: z.array(saveLegSchema).min(1).max(20) }),
+  z.object({ op: z.literal("lookup"), legs: z.array(lookupLegSchema).min(1).max(40) }),
+  z.object({ op: z.literal("save"), legs: z.array(saveLegSchema).min(1).max(40) }),
 ]);
 
 // 직장 좌표를 소수점 3자리(~100m)로 반올림 — 인근 직장끼리 캐시 공유 + 좌표 익명화.
