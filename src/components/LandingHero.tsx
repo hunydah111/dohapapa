@@ -94,27 +94,22 @@ export function LandingHero({
               "linear-gradient(to top, rgba(12,16,28,0.82) 0%, rgba(12,16,28,0.35) 34%, transparent 60%)",
           }}
         />
-        {/* 오버레이 카피 — 이미지의 감정을 그대로 문장으로. */}
+        {/* 오버레이 카피 — 무심한 팩트 한 줄. 감정은 이미지 몫, 텍스트는 건조하게. */}
         <div className="absolute inset-x-0 bottom-0 px-6 pb-6 text-left sm:px-9 sm:pb-8">
-          <h1 className="font-jua break-keep text-[1.72rem] leading-[1.3] tracking-tight text-white sm:text-[2.1rem]">
-            저 불빛 중에
+          <h1 className="font-jua break-keep text-[1.9rem] leading-[1.26] tracking-tight text-white sm:text-[2.3rem]">
+            통장 까면,
             <br />
-            내 집은 없다.
-            <span className="ml-2 text-amber-200/95">아직은.</span>
+            동네 나온다.
           </h1>
         </div>
       </div>
 
-      {/* 서브 — 한 문장, 볼드 노이즈 없이. 위계는 단 하나(D-며칠). */}
+      {/* 서브 — 결과물 3개 나열, 수식 없이. */}
       <p
-        className="mx-auto max-w-sm break-keep text-[15px] leading-relaxed text-balance sm:text-[16px]"
-        style={{ color: "#6b6157" }}
+        className="mx-auto max-w-sm break-keep text-[14.5px] leading-relaxed text-balance sm:text-[15.5px]"
+        style={{ color: "#8a7d6e" }}
       >
-        지금 통장이 닿는 단지부터, 모자라면{" "}
-        <span className="font-jua text-[16px]" style={{ color: "#e8662f" }}>
-          D-며칠
-        </span>
-        인지까지. 30초면 나온다.
+        닿는 단지 · 모자라면 D-며칠 · 놓친 나라 돈까지
       </p>
 
       {/* 단일 CTA — 한 화면 한 결정. 분기 없음. */}
