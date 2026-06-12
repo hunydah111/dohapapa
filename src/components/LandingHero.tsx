@@ -72,37 +72,49 @@ export function LandingHero({
         }}
       />
 
-      {/* 브랜드 히어로 — 한강에서 서울을 바라보며 '비집고' 들어갈 집을 그리는 비지. */}
-      <div className={`biji-pop-in relative left-1/2 mb-5 w-screen -translate-x-1/2 overflow-hidden rounded-b-[26px] shadow-md sm:left-auto sm:mx-auto sm:mt-0 sm:w-full sm:max-w-2xl sm:translate-x-0 sm:rounded-3xl sm:ring-1 sm:ring-black/5 ${friendTag ? "" : "-mt-10"}`}>
+      {/* 시네마틱 히어로 — 밤 한강을 혼자 보는 비지 위에 카피를 얹는다.
+          이미지가 '배너'가 아니라 '감정'이 되게: 하단 그라데이션 + 좌하단 화이트 카피.
+          object-cover 고정 높이로 첫 fold 안에 카피+CTA가 같이 들어온다. */}
+      <div className={`biji-pop-in relative left-1/2 mb-6 w-screen -translate-x-1/2 overflow-hidden rounded-b-[26px] shadow-md sm:left-auto sm:mx-auto sm:mt-0 sm:w-full sm:max-w-2xl sm:translate-x-0 sm:rounded-3xl sm:ring-1 sm:ring-black/5 ${friendTag ? "" : "-mt-10"}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/biji/biji-hangang.png"
-          alt="한강에서 서울 도심을 바라보는 비지 — 비집고 들어갈 집을 그리며"
+          alt="한강에서 밤의 서울을 바라보는 비지"
           width={1200}
           height={731}
-          className="block w-full"
+          className="block h-[400px] w-full object-cover object-[50%_38%] sm:h-[430px]"
           draggable={false}
         />
+        {/* 밤하늘 → 카피 가독 그라데이션 */}
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to top, rgba(12,16,28,0.82) 0%, rgba(12,16,28,0.35) 34%, transparent 60%)",
+          }}
+        />
+        {/* 오버레이 카피 — 이미지의 감정을 그대로 문장으로. */}
+        <div className="absolute inset-x-0 bottom-0 px-6 pb-6 text-left sm:px-9 sm:pb-8">
+          <h1 className="font-jua break-keep text-[1.72rem] leading-[1.3] tracking-tight text-white sm:text-[2.1rem]">
+            저 불빛 중에
+            <br />
+            내 집은 없다.
+            <span className="ml-2 text-amber-200/95">아직은.</span>
+          </h1>
+        </div>
       </div>
 
-      {/* 훅 — 현실 직시 한 방. 매물 구경(타사)과 "내 것이 되는가"(비집고)의 단절을 찌른다. */}
-      <h1
-        className="font-jua mx-auto mt-2 max-w-md break-keep text-[1.85rem] leading-[1.22] tracking-tight text-balance sm:text-[2.3rem]"
-        style={{ color: "#3a2c1d" }}
-      >
-        호갱노노 백날 봐도,
-        <br />
-        <span style={{ color: "#e8662f" }}>그 집은 네 집이 아니야.</span>
-      </h1>
-
-      {/* 서브 — 판독이 까주는 것 3가지: 닿는 단지 · D-day · 정책대출 자격. */}
+      {/* 서브 — 한 문장, 볼드 노이즈 없이. 위계는 단 하나(D-며칠). */}
       <p
-        className="mx-auto mt-4 max-w-sm break-keep text-[14.5px] leading-relaxed text-balance sm:text-[15.5px]"
+        className="mx-auto max-w-sm break-keep text-[15px] leading-relaxed text-balance sm:text-[16px]"
         style={{ color: "#6b6157" }}
       >
-        네 통장이 <b style={{ color: "#3a2c1d" }}>진짜 닿는 단지</b> — 안 닿으면{" "}
-        <b style={{ color: "#3a2c1d" }}>며칠 모자란지(D-day)</b>, 놓친{" "}
-        <b style={{ color: "#3a2c1d" }}>정책대출 자격</b>까지.
+        지금 통장이 닿는 단지부터, 모자라면{" "}
+        <span className="font-jua text-[16px]" style={{ color: "#e8662f" }}>
+          D-며칠
+        </span>
+        인지까지. 30초면 나온다.
       </p>
 
       {/* 단일 CTA — 한 화면 한 결정. 분기 없음. */}
@@ -125,7 +137,7 @@ export function LandingHero({
       {/* 예시 판정 카드 — "끝나면 이 카드가 나온다" 미리보기. 캡처 단위를 첫 화면에서 학습시킴. */}
       <div className="mx-auto mt-10 w-full max-w-[240px]">
         <p className="mb-3 text-[12px] font-semibold" style={{ color: "#9a8f82" }}>
-          판독 끝나면 나오는 카드 <span className="rounded-full bg-[#f7ead0] px-2 py-0.5 text-[10px] font-bold text-[#9a5a1e]">예시</span>
+          30초 뒤, 너의 카드 <span className="rounded-full bg-[#f7ead0] px-2 py-0.5 text-[10px] font-bold text-[#9a5a1e]">예시</span>
         </p>
         <BijiCard
           tier={EXAMPLE_TIER}
