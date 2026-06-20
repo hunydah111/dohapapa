@@ -44,6 +44,18 @@
         "sigungu": "화성시 동탄구",
         "pct": 8.7
       }
+    },
+    {
+      "date": "2026-06-21",
+      "latestDealDate": "2026-06-20",
+      "txCount": 160786,
+      "newTx": 6360,
+      "complexCount": 10420,
+      "asOf": "2026-06",
+      "topMomentum": {
+        "sigungu": "화성시 동탄구",
+        "pct": 10
+      }
     }
   ]
 }
