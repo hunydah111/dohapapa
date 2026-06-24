@@ -51,7 +51,6 @@ export function HeroResultCard({
   friendTag,
   budgetTopPercent,
   budgetNetKrw,
-  bijiDistribution,
 }: {
   candidate: ComplexCandidate;
   /** D-day(1순위 시군구 중위 입성) — null/undefined면 카드에서 생략. */
@@ -68,15 +67,6 @@ export function HeroResultCard({
   budgetTopPercent?: number | null;
   /** 추정 구매력(원) — 백분위 밴드 숫자 표시용. */
   budgetNetKrw?: number;
-  /** 동네 비지 분포 — top 후보 시군구 매칭자의 등급 분포 (MIN 미만이면 생략). */
-  bijiDistribution?: {
-    sigungu: string;
-    total: number;
-    topSlug: string | null;
-    topLabel: string | null;
-    topPercent: number | null;
-    viewerPercent: number | null;
-  };
 }) {
   const friendName = friendTag ? composeBijiName(friendTag.sigungu, friendTag.tier) : null;
   const friendImage = friendTag ? pickTierImage(friendTag.tier.image, friendTag.sigungu) : null;
@@ -227,25 +217,6 @@ export function HeroResultCard({
                   </p>
                 </div>
               )}
-              {/* 동네 비지 분포 — MIN 충족 시만. 본인 등급과 top 비교해 위트 톤 차등. */}
-              {bijiDistribution?.topLabel && bijiDistribution.topPercent != null && (() => {
-                const t = budgetTier(budgetTopPercent ?? 100);
-                const sgg = bijiDistribution.sigungu;
-                const top = bijiDistribution.topLabel;
-                const topPct = bijiDistribution.topPercent;
-                const meIsTop = bijiDistribution.topSlug === t.slug;
-                const mePct = bijiDistribution.viewerPercent ?? 0;
-                return (
-                  <p className="mt-2 px-2 text-center text-[11.5px] leading-relaxed text-white/85">
-                    {meIsTop
-                      ? <>🏆 <b className="text-amber-100">{sgg}에서 가장 흔한 비지가 너야!</b> ({t.label} {topPct}%)</>
-                      : mePct >= 15
-                        ? <>{sgg} 매칭 중 흔한 건 <b className="text-amber-100">{top} ({topPct}%)</b> · 너 같은 {t.label}은 {mePct}%</>
-                        : <>✨ <b className="text-amber-100">{sgg}에서 너는 희귀해</b> ({t.label} {mePct}%) · 흔한 건 {top} ({topPct}%)</>
-                    }
-                  </p>
-                );
-              })()}
             </div>
           );
         })()}
@@ -313,18 +284,14 @@ export function HeroResultCard({
         return null;
       })()}
 
-      {/* 공유 — 단일 동선: 자조 초대("나 까였다, 너도 까봐"). 소득·자산 미포함(바이럴 안전). */}
+      {/* 공유 — 자연스러운 결과 공유. 소득·자산 미포함(바이럴 안전). */}
       {onShareFriend && (
         <div className="mt-4 flex flex-col items-start gap-2">
-          <p className="text-[13px] font-bold text-amber-100">
-            이 카드, 단톡방에 던져봐
-          </p>
           <button
             type="button"
             onClick={onShareFriend}
             className="inline-flex items-center gap-2 rounded-full bg-amber-200 px-5 py-2.5 text-sm font-bold text-coral-800 shadow-lg transition-transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-white/70"
           >
-            🦫 내 판정 던지기
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
@@ -332,10 +299,11 @@ export function HeroResultCard({
               className="h-4 w-4"
             >
               <path d="M13 4.5a2.5 2.5 0 11.702 1.737L6.97 9.604a2.518 2.518 0 010 .792l6.733 3.367a2.5 2.5 0 11-.671 1.341l-6.733-3.367a2.5 2.5 0 110-3.475l6.733-3.366A2.52 2.52 0 0113 4.5z" />
-          </svg>
+            </svg>
+            내 결과 공유하기
           </button>
           <p className="text-[11px] leading-snug text-white/70">
-            🦫 등급·동네·D-day만 공유됨 — 소득·자산·직장 정보는 안 담김.
+            등급·동네·D-day만 공유돼요 — 소득·자산·직장 정보는 안 담겨요.
           </p>
         </div>
       )}
