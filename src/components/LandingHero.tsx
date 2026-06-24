@@ -112,7 +112,7 @@ export function LandingHero({
           className="mx-auto mt-4 max-w-sm break-keep text-[15px] leading-relaxed sm:text-[16px]"
           style={{ color: "#8a7d6e" }}
         >
-          가능 아파트 · 모자라면 D-며칠 · 놓친 정책대출까지
+          가능 아파트 · 돈 모자라면 D-며칠 · 놓친 정책대출까지
         </p>
       </div>
 
