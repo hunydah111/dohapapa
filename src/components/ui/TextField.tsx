@@ -43,8 +43,17 @@ export function TextField({
         <input
           id={id}
           type={type}
+          inputMode={type === "number" ? "numeric" : undefined}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            const raw = e.target.value;
+            // number 칸: 맨 앞 0 제거("0150" → "150"). 단독 "0"·소수("0.5")는 보존.
+            const next =
+              type === "number"
+                ? raw.replace(/^0+(?=\d)/, "")
+                : raw;
+            onChange(next);
+          }}
           placeholder={placeholder}
           autoFocus={autoFocus}
           className={

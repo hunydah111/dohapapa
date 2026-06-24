@@ -1453,7 +1453,7 @@ function NumField({
         type="number"
         inputMode="numeric"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => onChange(e.target.value.replace(/^0+(?=\d)/, ""))}
         className="rounded-xl border border-[#e5e5ea] bg-white px-3 py-2 text-sm tabular-nums focus:border-coral-400 focus:outline-none"
       />
       <span
