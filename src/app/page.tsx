@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { HomeExperience } from "@/components/HomeExperience";
 import { DailyFront } from "@/components/DailyFront";
-import { decodeFriend, FRIEND_PARAM } from "@/lib/friendShare";
-import { composeBijiName } from "@/lib/bijiName";
+import { decodeFriend, friendReachName, FRIEND_PARAM } from "@/lib/friendShare";
 import { SITE_URL } from "@/lib/site";
 
 // apex(bijigo.kr)가 정본. www·옛 도메인(homenasia.kr 등)은 Vercel에서 bijigo.kr로 308 리다이렉트.
@@ -22,7 +21,7 @@ export async function generateMetadata({
   if (!tag) {
     return { alternates: { canonical: "/" } };
   }
-  const friendName = composeBijiName(tag.sigungu, tag.tier);
+  const friendName = friendReachName(tag)!;
   const ogImage = `${SITE_URL}/api/og-friend?f=${encodeURIComponent(friendRaw!)}`;
   return {
     alternates: { canonical: "/" },

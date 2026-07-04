@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/Button";
 import { BijiCard } from "@/components/BijiCard";
 import { POLICY_META } from "@/lib/policyLoan";
 import { budgetTier } from "@/lib/budgetPercentile";
-import { friendDdayLabel, type FriendTag } from "@/lib/friendShare";
-import { composeBijiName } from "@/lib/bijiName";
+import { friendDdayLabel, friendReachName, type FriendTag } from "@/lib/friendShare";
 
 // 정책(대출·세제) 점검 시점 — "2026-05-25" → "2026.5".
 const POLICY_VERIFIED_SHORT: string = (() => {
@@ -17,21 +16,22 @@ const POLICY_VERIFIED_SHORT: string = (() => {
 //  • 동선 1개: 통장 판독 CTA. 놀이터·차트·플랜 분기 없음 (plan 진입은 결과카드에서만).
 //  • 예시 BijiCard 1장 — "이게 네 판정 카드다" 미리보기 (캡처 단위 인지).
 
-// 예시 카드 풀 — 새로고침마다 랜덤 1장. 실존 등급 시스템(budgetTier) 그대로,
-// 등급 스펙트럼 전체(퀸~아기)와 D-day 3상태(지금/숫자/아득)를 다 보여줘
+// 예시 카드 풀 — 새로고침마다 랜덤 1장. 색 테마 스펙트럼(budgetTier pct)과
+// 사정권 라벨 4단계(입성·사정권·문밖·아득) + D-day 3상태(지금/숫자/아득)를 다 보여줘
 // "내 건 뭘까" 호기심을 만든다. verdict는 결과 화면과 동일 톤(자조·건조).
+// hero = "{시군구} {사정권 라벨}" — D-day와 일치(≤3,650일 사정권 · 초과 문밖 · 캡 아득).
 const EXAMPLES = [
-  { pct: 23, sigungu: "마포구", dong: "아현동", area: 84, chip: "🚇 통근 28분",
+  { pct: 23, sigungu: "마포구", dong: "아현동", area: 84, chip: "🚇 통근 28분", hero: "마포구 사정권",
     dday: { caption: "마포구 중위 입성까지", headline: "D-3,044", verdict: "버틸 만한 싸움이다." } },
-  { pct: 1, sigungu: "서초구", dong: "반포동", area: 84, chip: "🌊 한강뷰",
+  { pct: 1, sigungu: "서초구", dong: "반포동", area: 84, chip: "🌊 한강뷰", hero: "서초구 입성",
     dday: { caption: "서초구 중위 단지", headline: "지금 입성 가능", verdict: "통장 좀 치네. 인정." } },
-  { pct: 85, sigungu: "강남구", dong: "대치동", area: 59, chip: "🏫 초품아",
+  { pct: 85, sigungu: "강남구", dong: "대치동", area: 59, chip: "🏫 초품아", hero: "강남구 아득",
     dday: { caption: "강남구 중위 입성까지", headline: "D-아득", verdict: "서울이 나를 거부함 🦫" } },
-  { pct: 8, sigungu: "성동구", dong: "옥수동", area: 84, chip: "🚇 통근 19분",
+  { pct: 8, sigungu: "성동구", dong: "옥수동", area: 84, chip: "🚇 통근 19분", hero: "성동구 사정권",
     dday: { caption: "성동구 중위 입성까지", headline: "D-1,204", verdict: "적금 만기 몇 번이면 끝." } },
-  { pct: 50, sigungu: "노원구", dong: "상계동", area: 59, chip: "🌳 공원 옆",
+  { pct: 50, sigungu: "노원구", dong: "상계동", area: 59, chip: "🌳 공원 옆", hero: "노원구 문밖",
     dday: { caption: "노원구 중위 입성까지", headline: "D-5,114", verdict: "길다. 근데 0은 아니다." } },
-  { pct: 35, sigungu: "수원시 영통구", dong: "광교동", area: 84, chip: "🚗 자차 31분",
+  { pct: 35, sigungu: "수원시 영통구", dong: "광교동", area: 84, chip: "🚗 자차 31분", hero: "영통구 사정권",
     dday: { caption: "영통구 중위 입성까지", headline: "D-2,190", verdict: "루틴만 지키면 닿는다." } },
 ] as const;
 
@@ -42,7 +42,7 @@ export function LandingHero({
   onStart: () => void;
   friendTag?: FriendTag | null;
 }) {
-  const friendName = friendTag ? composeBijiName(friendTag.sigungu, friendTag.tier) : null;
+  const friendName = friendReachName(friendTag);
 
   // 예시 카드 — 새로고침마다 랜덤. SSR/CSR 일치를 위해 첫 렌더는 0번 고정,
   // 마운트 후 랜덤 스왑(key 변화로 pop-in 재생 — 스왑이 버그가 아니라 연출로 보이게).
@@ -64,7 +64,7 @@ export function LandingHero({
             style={{ color: "#e8662f" }}
             aria-hidden="true"
           >
-            {friendTag.tier.label}
+            {friendTag.reach?.label ?? "판정"}
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-semibold text-coral-700">🦫 친구가 판정 까고 던졌다</p>
@@ -119,6 +119,7 @@ export function LandingHero({
           <BijiCard
             key={exampleIdx}
             tier={budgetTier(ex.pct)}
+            heroName={ex.hero}
             sigungu={ex.sigungu}
             dongName={ex.dong}
             areaM2={ex.area}

@@ -7,8 +7,8 @@ import { formatKrwHuman } from "@/lib/format";
 import { budgetTier } from "@/lib/budgetPercentile";
 import { SITE_DOMAIN } from "@/lib/site";
 import { BijiCard } from "./BijiCard";
-import { composeBijiName } from "@/lib/bijiName";
-import type { FriendTag } from "@/lib/friendShare";
+import { composeReachName, reachFromDday } from "@/lib/bijiName";
+import { friendReachName, type FriendTag } from "@/lib/friendShare";
 import { classifyRegulation } from "@/lib/regulation";
 import dataMeta from "@/data/dataMeta.json";
 
@@ -67,7 +67,7 @@ export function HeroResultCard({
   /** 추정 구매력(원) — 백분위 밴드 숫자 표시용. */
   budgetNetKrw?: number;
 }) {
-  const friendName = friendTag ? composeBijiName(friendTag.sigungu, friendTag.tier) : null;
+  const friendName = friendReachName(friendTag);
 
   // D-day 표시 변환 — 지금 가능(긍정) / D-숫자 / D-아득(박탈감 캡) + 자조 verdict 한 줄.
   const ddayDisplay = dday
@@ -111,7 +111,7 @@ export function HeroResultCard({
       style={{ background: "#fe7644" }}
     >
 
-      {/* 친구 비교 — URL ?f= 친구 등급 있을 때만. 자기 카드 위에 친구 등급 미니(텍스트)로 노출. */}
+      {/* 친구 비교 — URL ?f= 친구 판정 있을 때만. 자기 카드 위에 친구 판정 미니(텍스트)로 노출. */}
       {friendTag && friendName && (
         <div className="mb-3 flex items-center gap-3 rounded-2xl bg-white/15 px-3 py-2.5 backdrop-blur-sm">
           <span
@@ -119,10 +119,10 @@ export function HeroResultCard({
             style={{ color: "#e8662f" }}
             aria-hidden="true"
           >
-            {friendTag.tier.label}
+            {friendTag.reach?.label ?? "판정"}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-100">👬 친구 등급</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-100">👬 친구 판정</p>
             <p className="mt-0.5 truncate text-[14px] font-extrabold text-white" title={friendName}>
               {friendName}
             </p>
@@ -153,6 +153,10 @@ export function HeroResultCard({
             <div className="mx-auto mt-3.5 flex w-full max-w-[280px] flex-col items-center">
               <BijiCard
                 tier={t}
+                heroName={composeReachName(
+                  candidate.sigungu,
+                  dday ? reachFromDday(dday) : null,
+                )}
                 sigungu={candidate.sigungu}
                 dongName={candidate.dongName}
                 areaM2={candidate.representativeArea}

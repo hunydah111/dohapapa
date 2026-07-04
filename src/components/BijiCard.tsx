@@ -1,12 +1,13 @@
 import type { BudgetTier, BijiOrnament } from "@/lib/budgetPercentile";
-import { composeBijiName } from "@/lib/bijiName";
+import { composeReachName } from "@/lib/bijiName";
 import { SITE_DOMAIN } from "@/lib/site";
 
-// 등급 트레이딩 카드 — 숫자·표·타이포 중심 (2026-07 캐릭터 강등: 그림→말투).
-// 일러스트 없이 등급명(타이포)이 카드의 얼굴. 등급별 배경/장식은 tier.theme(budgetPercentile.ts)가 진실.
+// 판정 트레이딩 카드 — 숫자·표·타이포 중심 (2026-07 캐릭터 강등: 그림→말투).
+// 2026-07-04 비버 완전 퇴장: 히어로 타이포는 사정권 라벨("마포구 사정권").
+// tier는 배경/장식 색 테마로만 잔존(budgetPercentile.ts가 진실) — 등급명 노출 금지.
 //
-// 박스 비율: 5:7 (포커 카드). 상단 = 등급 무드 영역(등급명 초대형 + drip), 하단 = 이름·D-day·칩·워터마크.
-// 이미지가 없어도 타이포 위계(등급명 > 합성 이름 > D-day 숫자)로 카드 밀도를 채운다.
+// 박스 비율: 5:7 (포커 카드). 상단 = 무드 영역(히어로 이름 초대형), 하단 = D-day·칩·워터마크.
+// 이미지가 없어도 타이포 위계(히어로 이름 > D-day 숫자)로 카드 밀도를 채운다.
 
 // 카드 코너에 등급별 미세 장식(추상 SVG — 별·하트·점). pointer-events none.
 function Ornament({ kind, accent }: { kind: BijiOrnament; accent: string }) {
@@ -101,9 +102,14 @@ function Ornament({ kind, accent }: { kind: BijiOrnament; accent: string }) {
 }
 
 export interface BijiCardProps {
-  /** 등급 정보 (테마 포함). */
+  /** 색 테마 소스 — budgetPercentile tier. 이름은 안 쓴다(테마 전용). */
   tier: BudgetTier;
-  /** 시군구 — 합성 이름·표시용. 없으면 라벨로 폴백(국민·아기 등급은 항상 라벨). */
+  /**
+   * 카드 히어로 타이포 — "{시군구} {사정권 라벨}" (예 "마포구 사정권").
+   * 미지정 시 sigungu 기반 중립 폴백("마포구 판정").
+   */
+  heroName?: string;
+  /** 시군구 — 히어로 이름 폴백·메타 표시용. */
   sigungu?: string | null;
   /** 동(읍·면) 이름. 표시용 — 없으면 시군구만. */
   dongName?: string | null;
@@ -136,6 +142,7 @@ function textColors(tier: BudgetTier) {
 
 export function BijiCard({
   tier,
+  heroName,
   sigungu,
   dongName,
   areaM2,
@@ -145,7 +152,8 @@ export function BijiCard({
   popIn = true,
 }: BijiCardProps) {
   const colors = textColors(tier);
-  const name = composeBijiName(sigungu ?? null, tier);
+  // 히어로 이름 — 사정권 라벨 합성이 정본. 미지정 호출부는 중립 "판정" 폴백.
+  const name = heroName ?? composeReachName(sigungu ?? null, null);
   const meta = [sigungu, dongName, areaM2 ? `전용 ${areaM2}㎡` : null].filter(Boolean).join(" · ");
   const accentColor = tier.theme.nameColor ?? tier.theme.accent;
 
@@ -153,7 +161,7 @@ export function BijiCard({
     <section
       className={`relative overflow-hidden rounded-3xl shadow-card ${popIn ? "biji-pop-in" : ""} ${className}`}
       style={{ background: tier.theme.cardBg, aspectRatio: "5 / 7" }}
-      aria-label={`${name} 등급 카드`}
+      aria-label={`${name} 판정 카드`}
     >
       {/* 코너 글로우 — 등급별 무드. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ background: tier.theme.glow }} />
@@ -161,10 +169,10 @@ export function BijiCard({
       <Ornament kind={tier.theme.ornament} accent={tier.theme.accent} />
 
       <div className="absolute inset-0 flex flex-col justify-between px-5 pb-4 pt-5">
-        {/* ── 상단: 합성 이름(동네+등급)이 카드의 얼굴 — 타이포 초대형 ── */}
+        {/* ── 상단: 히어로 이름("{시군구} {사정권 라벨}")이 카드의 얼굴 — 타이포 초대형 ── */}
         <div className="min-w-0">
           <p className={`text-[11px] font-bold uppercase tracking-widest ${colors.muted}`}>
-            내 비버 등급
+            내 판정
           </p>
           <h3
             className="font-jua mt-1 break-keep leading-[1.06] tracking-tight"
@@ -176,9 +184,6 @@ export function BijiCard({
           >
             {name}
           </h3>
-          <p className={`mt-1.5 text-[11.5px] font-semibold leading-snug ${colors.secondary}`}>
-            {tier.drip}
-          </p>
           {meta && (
             <p className={`mt-1 text-[11.5px] ${colors.muted} truncate`} title={meta}>
               {meta}

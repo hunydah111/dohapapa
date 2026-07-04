@@ -1,15 +1,15 @@
-// 친구 비교용 OG 이미지 (1200×630) — `?f={slug}.{sigungu}` 받아서 친구 등급 카드 동적 생성.
-// 카톡 미리보기에서 "[강남구 퀸비버] 친구가 너랑 비교하래!" 텍스트 hook → 클릭 유발.
-// 타이포그래피 중심 (2026-07 캐릭터 강등: 일러스트 제거) — 등급 이름 초대형 + D-day + 워드마크.
+// 친구 비교용 OG 이미지 (1200×630) — `?f={slug}.{sigungu}` 받아서 친구 판정 카드 동적 생성.
+// 카톡 미리보기에서 "[마포구 사정권] 친구가 판정 까고 던졌다" 텍스트 hook → 클릭 유발.
+// 타이포그래피 중심 (2026-07 비버 퇴장) — 사정권 라벨 초대형 + D-day + 워드마크.
+// 레거시 slug(queen 등) 링크도 파싱됨 — tier는 배경 색 테마로만, 이름은 라벨/판정.
 //
 // page.tsx의 generateMetadata에서 openGraph.images로 이 URL을 가리킴. 친구 URL마다 다른
-// 등급/시군구라 변주는 자동. 캐시 키는 ?f= 값 그대로.
+// 라벨/시군구라 변주는 자동. 캐시 키는 ?f= 값 그대로.
 
 import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { decodeFriend, friendDdayLabel } from "@/lib/friendShare";
-import { composeBijiName } from "@/lib/bijiName";
+import { decodeFriend, friendDdayLabel, friendReachName } from "@/lib/friendShare";
 import { BEAVER_TIERS } from "@/lib/budgetPercentile";
 import { SITE_DOMAIN } from "@/lib/site";
 
@@ -22,9 +22,9 @@ export async function GET(request: Request) {
   const friendParam = url.searchParams.get("f");
   const tag = decodeFriend(friendParam);
   // 잘못된/없는 ?f= → 폴백: 기본 비집고 브랜드 OG (단순). 깨진 링크에서도 안전.
+  // tier는 색 테마 전용 — 새 slug 링크(tier=null)는 중립(gukmin) 테마.
   const tier = tag?.tier ?? BEAVER_TIERS.gukmin;
-  const sigungu = tag?.sigungu ?? "수도권";
-  const name = tag ? composeBijiName(sigungu, tier) : "비집고";
+  const name = tag ? friendReachName(tag)! : "비집고";
   const ddayLabel = friendDdayLabel(tag);
 
   const font = await readFile(join(process.cwd(), "assets/BlackHanSans-Regular.ttf"));

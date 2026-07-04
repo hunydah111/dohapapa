@@ -20,13 +20,13 @@ import { BudgetTrendCard } from "./BudgetTrendCard";
 import { LandingHero } from "./LandingHero";
 import { RequiredRegionPicker } from "./RequiredRegionPicker";
 import { budgetTopPercent } from "@/lib/budgetPercentile";
+import { reachFromDday } from "@/lib/bijiName";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { Card } from "@/components/ui/Card";
 import { formatKrwHuman } from "@/lib/format";
 import { SHARE_PARAM, encodeProfile, decodeProfile } from "@/lib/shareLink";
 import { readFriendFromLocation, buildFriendUrl, type FriendTag } from "@/lib/friendShare";
-import { budgetTier } from "@/lib/budgetPercentile";
 import { SITE_URL } from "@/lib/site";
 import {
   saveSearchPrefs,
@@ -193,8 +193,8 @@ export function HomeExperience() {
     const tag = readFriendFromLocation();
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setFriendTag(tag);
-    // 계측 ③ — 도전장 링크(?f=) 유입. 등급 슬러그만(비-PII).
-    if (tag) track("friend_visit", { tier: tag.tier.slug });
+    // 계측 ③ — 도전장 링크(?f=) 유입. 라벨/레거시 슬러그만(비-PII).
+    if (tag) track("friend_visit", { tier: tag.reach?.slug ?? tag.tier?.slug ?? "unknown" });
   }, []);
 
   // 조건 수정 패널 상태
@@ -481,13 +481,13 @@ export function HomeExperience() {
     if (!state) return;
     track("share_click", { method: "result_link" });
     const url = shareUrl ?? window.location.href;
-    // /s/b/ = 비버 등급 카드(등급+동네만), /s/{type} = 유형 카드, 그 외 = 전체 결과(프로필 해시).
+    // /s/b/ = 판정 카드(라벨+동네만), /s/{type} = 유형 카드, 그 외 = 전체 결과(프로필 해시).
     const isGradeCard = !!shareUrl && shareUrl.includes("/s/b/");
     const isTypeCard = !!shareUrl && shareUrl.includes("/s/") && !isGradeCard;
     const shareData = {
       title: "비집고",
       text: isGradeCard
-        ? "내 비버 등급 나왔다 🦫 — 너도 해봐!"
+        ? "내 판정 나왔다 — 너도 해봐! 🦫"
         : isTypeCard
           ? "내 집 찾기 유형 나왔다 — 너도 해봐! 🦫"
           : "내 통장이 닿는 집, 비집고 — 내 결과 보기",
@@ -511,7 +511,7 @@ export function HomeExperience() {
       await navigator.clipboard.writeText(url);
       setShareToast(
         isGradeCard
-          ? "비버 등급 카드 링크 복사됨 · 친구에게 보내보자~ 🦫"
+          ? "판정 카드 링크 복사됨 · 친구에게 보내보자~ 🦫"
           : isTypeCard
             ? "유형 카드 링크 복사됨 · 친구에게 보내보자~ 🦫"
             : "링크 복사됨 ⚠️ 소득·자산·직장 정보 담겨있음 — 믿는 사람에게만",
@@ -554,7 +554,7 @@ export function HomeExperience() {
     window.history.replaceState(null, "", url.toString());
   }
 
-  // 판정 던지기 — 자기 판정(tier + sigungu + D-day)을 자조 초대 URL로 인코딩해 공유.
+  // 판정 던지기 — 자기 판정(사정권 라벨 + sigungu + D-day)을 자조 초대 URL로 인코딩해 공유.
   // 소득·자산·직장 전혀 X. 친구가 열면 LandingHero 배너 + OG에 판정 카드 노출.
   async function handleShareFriend() {
     if (!state) return;
@@ -562,20 +562,14 @@ export function HomeExperience() {
     if (!result.candidates[0]) return;
     // 계측 ④ — 판정 던지기 클릭.
     track("share_click", { method: "friend_throw" });
-    const topPct = budgetTopPercent(result.budget.netPurchasePowerKrw);
-    if (topPct == null) {
-      setShareToast("백분위 데이터 부족 — 다른 시간에 다시 시도");
-      setTimeout(() => setShareToast(null), 3000);
-      return;
-    }
-    const tier = budgetTier(topPct);
     const sigungu = result.candidates[0].sigungu;
     const dday = computeDdayForSigungu(
       state.profile,
       sigungu,
       result.candidates[0].representativeArea,
     );
-    const friendUrl = buildFriendUrl(SITE_URL, tier, sigungu, dday);
+    const reach = reachFromDday(dday);
+    const friendUrl = buildFriendUrl(SITE_URL, sigungu, dday);
     const ddayText =
       dday == null
         ? ""
@@ -585,7 +579,7 @@ export function HomeExperience() {
             ? " · D-아득"
             : ` · D-${dday.days!.toLocaleString()}`;
     const shareData = {
-      title: `내 판정 떴다 — ${sigungu} ${tier.label}${ddayText}`,
+      title: `내 판정 떴다 — ${sigungu} ${reach.label}${ddayText}`,
       text: "통장 까면 동네 나온다. 너도 30초 까봐 🦫",
       url: friendUrl,
     };

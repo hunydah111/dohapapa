@@ -54,6 +54,7 @@ async function main() {
           floor: d.floor,
           dealingGbn: d.dealingGbn,
           canceled: d.canceled,
+          buildYear: d.buildYear,
         });
       }
     } catch (e) {
@@ -145,6 +146,8 @@ async function main() {
           scopeDealCount: boot ? boot.scopeDealCount : patch.scopeDealCount,
           nerf: boot ? boot.nerf : patch.nerf,
           buff: boot ? boot.buff : patch.buff,
+          major: boot ? boot.major : patch.major,
+          temp: boot ? boot.temp : patch.temp,
           latestDealDate: latest || null,
         },
         null,
@@ -159,7 +162,7 @@ async function main() {
     );
     const p = boot ?? patch;
     console.log(
-      `dailyPatch(${boot ? "창간호" : "일간"}): 스코프 ${p.scopeDealCount}건 · 신규 ${p.newDealCount} · 너프 ${p.nerf.length} · 버프 ${p.buff.length}`,
+      `dailyPatch(${boot ? "창간호" : "일간"}): 스코프 ${p.scopeDealCount}건 · 신규 ${p.newDealCount} · 너프 ${p.nerf.length} · 버프 ${p.buff.length} · 주요 ${p.major.length} · 온도 ${p.temp ? `${p.temp.above}:${p.temp.below}/${p.temp.matched}` : "표본부족"}`,
     );
   }
 }

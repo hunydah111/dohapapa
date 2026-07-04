@@ -1,16 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getTierBySlug } from "@/lib/budgetPercentile";
+import { getTierBySlug, BEAVER_TIERS } from "@/lib/budgetPercentile";
+import { getReachBySlug, composeReachName, type ReachLabel } from "@/lib/bijiName";
 import { isKnownSigungu, normalizeSigungu } from "@/lib/molit";
 import { BijiCard } from "@/components/BijiCard";
 
-// 비버 등급 공유 링크 진입 페이지 — "나는 ○○비버! 내 예산이면 △△구까지" + "나도 찾기" CTA.
-// 담기는 것: 등급(6단계) + 시군구 1개뿐. 소득·자산·직장 없음 — 바이럴 안전.
+// 판정 공유 링크 진입 페이지 — "{시군구} {사정권 라벨}" 카드 + "나도 판정" CTA.
+// 담기는 것: 사정권 라벨 + 시군구 1개뿐. 소득·자산·직장 없음 — 바이럴 안전.
+//
+// slug 이중 해석 (2026-07-04 비버 퇴장):
+//  - 새 slug: ipseong/sajeonggwon/munbak/adeuk → 사정권 라벨 그대로.
+//  - 레거시 slug: queen/rain/... (+justin 등 alias) → 404 차단용으로만 해석.
+//    tier는 카드 색 테마로만 쓰고 이름(비버 등급명)은 노출하지 않는다 — 라벨은 중립 "판정".
 
-/** region 파라미터를 안전하게 디코드·검증·정규화. 알려진 시군구가 아니면 '수도권'으로 폴백.
- *  단축 라벨("원미구")이 들어오면 풀네임("부천시 원미구")로 정규화 — 화면 표시는 풀네임 그대로,
- *  composeBijiName이 다시 짧게 잘라서 보여줌. */
+/** region 파라미터를 안전하게 디코드·검증·정규화. 알려진 시군구가 아니면 '수도권'으로 폴백. */
 function safeRegion(raw: string): string {
   try {
     const decoded = decodeURIComponent(raw);
@@ -20,17 +24,27 @@ function safeRegion(raw: string): string {
   }
 }
 
+/** slug → {reach(새) | null, 레거시 tier | null}. 둘 다 null이면 미지 slug. */
+function resolveGrade(grade: string): { reach: ReachLabel | null; legacy: boolean } | null {
+  const reach = getReachBySlug(grade);
+  if (reach) return { reach, legacy: false };
+  if (getTierBySlug(grade)) return { reach: null, legacy: true };
+  return null;
+}
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ grade: string; region: string }>;
 }): Promise<Metadata> {
   const { grade, region: rawRegion } = await params;
-  const tier = getTierBySlug(grade);
-  if (!tier) return { title: "비집고 — 내 통장으로 비집고 들어갈 집" };
+  const resolved = resolveGrade(grade);
+  if (!resolved) return { title: "비집고 — 내 통장으로 비집고 들어갈 집" };
   const region = safeRegion(rawRegion);
-  const title = `나는 ${tier.label} — 내 통장으로 ${region}까지`;
-  const description = `${tier.drip} — 비집고에서 내 통장으로 비집고 들어갈 집 잡기.`;
+  const title = resolved.reach
+    ? `나는 ${region} ${resolved.reach.label} — 내 통장 판정`
+    : `내 판정 — 내 통장으로 ${region}까지`;
+  const description = "통장 까면 동네 나온다 — 비집고에서 30초 판정.";
   const path = `/s/b/${grade}/${encodeURIComponent(region)}`;
   return {
     title: `${title} | 비집고`,
@@ -49,39 +63,38 @@ export default async function Page({
   params: Promise<{ grade: string; region: string }>;
 }) {
   const { grade, region: rawRegion } = await params;
-  const tier = getTierBySlug(grade);
-  if (!tier) notFound();
+  const resolved = resolveGrade(grade);
+  if (!resolved) notFound();
   const region = safeRegion(rawRegion);
 
-  // 시군구 폴백("수도권") 시엔 합성 이름이 라벨로 되돌아가게 sigungu=null로 넘김.
+  // 색 테마 — 레거시 링크는 원래 tier 테마 유지, 새 링크는 중립(gukmin) 테마.
+  const themeTier = getTierBySlug(grade) ?? BEAVER_TIERS.gukmin;
+  // 시군구 폴백("수도권") 시엔 히어로 이름이 라벨 단독이 되게 sigungu=null로 넘김.
   const cardSigungu = region === "수도권" ? null : region;
-  // 공유 진입은 위 isFlex 단계 정보만 있고 라이프스타일·평형은 없음 — 칩 비움.
+  const heroName = composeReachName(cardSigungu, resolved.reach);
 
   return (
     <main className="mx-auto flex min-h-[80vh] w-full max-w-lg flex-col items-center justify-center gap-5 px-5 py-12 text-center">
       <div className="w-full max-w-[300px]">
-        <BijiCard tier={tier} sigungu={cardSigungu} className="w-full" />
+        <BijiCard tier={themeTier} heroName={heroName} sigungu={cardSigungu} className="w-full" />
       </div>
 
       <p className="text-[17px] font-semibold leading-relaxed" style={{ color: "#3a322c" }}>
         내 통장으로 {region}까지 닿음
       </p>
-      <p className="text-[14px] leading-relaxed" style={{ color: "#6b6157" }}>
-        “{tier.drip}”
-      </p>
 
       <p className="mt-1 text-[17px] font-bold" style={{ color: "#e8662f" }}>
-        너는 무슨 비버? 👀
+        너는 어디까지 닿나? 👀
       </p>
 
       <Link
         href="/"
         className="mt-2 inline-flex items-center justify-center rounded-full bg-coral-600 px-7 py-3.5 text-base font-bold text-white shadow-lg transition-transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-coral-500"
       >
-        나도 내 비버 찾기 →
+        나도 30초 판정 →
       </Link>
       <p className="text-[12px]" style={{ color: "#9a8f82" }}>
-        등급·동네만 담김 (소득·자산·직장 X) · 국토부 공개 실거래가 · 무료
+        판정·동네만 담김 (소득·자산·직장 X) · 국토부 공개 실거래가 · 무료
       </p>
       <p className="text-[11px]" style={{ color: "#b3a99c" }}>
         실거래가 기반 추정 · 미래가치 예측 X · 부동산 중개·투자자문 아님

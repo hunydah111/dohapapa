@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { composeBijiName, sigunguShortLabel } from "@/lib/bijiName";
+import {
+  composeBijiName,
+  composeReachName,
+  getReachBySlug,
+  reachFromDday,
+  sigunguShortLabel,
+  REACH_LABELS,
+  REACH_THRESHOLD_DAYS,
+} from "@/lib/bijiName";
 import { BEAVER_TIERS, getTierBySlug } from "@/lib/budgetPercentile";
 
 describe("sigunguShortLabel", () => {
@@ -26,7 +34,66 @@ describe("sigunguShortLabel", () => {
   });
 });
 
-describe("composeBijiName", () => {
+// ── 사정권 라벨 4단계 (2026-07-04 비버 퇴장) ──────────────────────────────────
+
+describe("reachFromDday — D-day 기반 사정권 라벨", () => {
+  const base = { months: 100, days: 3044, capped: false };
+
+  it("months===0 → 입성", () => {
+    expect(reachFromDday({ months: 0, days: 0, capped: false }).slug).toBe("ipseong");
+  });
+
+  it("days ≤ 3,650 → 사정권 (경계 포함)", () => {
+    expect(reachFromDday(base).slug).toBe("sajeonggwon");
+    expect(reachFromDday({ ...base, days: REACH_THRESHOLD_DAYS }).slug).toBe("sajeonggwon");
+  });
+
+  it("days > 3,650 (캡 미만) → 문밖", () => {
+    expect(reachFromDday({ ...base, days: REACH_THRESHOLD_DAYS + 1 }).slug).toBe("munbak");
+    expect(reachFromDday({ ...base, days: 9999 }).slug).toBe("munbak");
+  });
+
+  it("capped(D-아득)·미도달 → 아득", () => {
+    expect(reachFromDday({ months: 500, days: 15220, capped: true }).slug).toBe("adeuk");
+    expect(reachFromDday({ months: null, days: null, capped: true }).slug).toBe("adeuk");
+  });
+
+  it("dday 자체가 없으면(데이터 부족) 보수적으로 아득", () => {
+    expect(reachFromDday(null).slug).toBe("adeuk");
+    expect(reachFromDday(undefined).slug).toBe("adeuk");
+  });
+});
+
+describe("getReachBySlug / composeReachName", () => {
+  it("새 slug 4종 해석", () => {
+    expect(getReachBySlug("ipseong")?.label).toBe("입성");
+    expect(getReachBySlug("sajeonggwon")?.label).toBe("사정권");
+    expect(getReachBySlug("munbak")?.label).toBe("문밖");
+    expect(getReachBySlug("adeuk")?.label).toBe("아득");
+  });
+
+  it("미지 slug·레거시 비버 slug는 null (레거시는 getTierBySlug 담당)", () => {
+    expect(getReachBySlug("queen")).toBeNull();
+    expect(getReachBySlug("unknown")).toBeNull();
+    expect(getReachBySlug("")).toBeNull();
+  });
+
+  it("히어로 이름 — '{시군구 짧은 라벨} {라벨}'", () => {
+    expect(composeReachName("마포구", REACH_LABELS.sajeonggwon)).toBe("마포구 사정권");
+    expect(composeReachName("성남시 분당구", REACH_LABELS.ipseong)).toBe("분당구 입성");
+    expect(composeReachName("광명시", REACH_LABELS.adeuk)).toBe("광명시 아득");
+  });
+
+  it("reach 없으면(레거시 링크) 중립 '판정', 시군구 없으면 라벨 단독", () => {
+    expect(composeReachName("마포구", null)).toBe("마포구 판정");
+    expect(composeReachName(null, REACH_LABELS.munbak)).toBe("문밖");
+    expect(composeReachName(null, null)).toBe("판정");
+  });
+});
+
+// ── 레거시 (비버 등급명 — deprecated, 하위호환 참조용) ───────────────────────
+
+describe("composeBijiName (deprecated — 레거시 참조용)", () => {
   it("flex 등급은 '동네 등급비버' 자연어 형태 (구·시·군 보존)", () => {
     expect(composeBijiName("강남구", BEAVER_TIERS.queen)).toBe("강남구 퀸비버");
     expect(composeBijiName("성남시 분당구", BEAVER_TIERS.rain)).toBe("분당구 비  버");
