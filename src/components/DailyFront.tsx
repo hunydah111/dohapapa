@@ -22,7 +22,7 @@ interface PatchItem {
   band: string;
   priceKrw: number;
   medianKrw: number;
-  /** 중위가 대비 이탈률(소수) — nerf 양수, buff 음수. */
+  /** 단지 자기 시세 대비 이탈률(소수) — nerf 양수, buff 음수. */
   pct: number;
   dealDate: string;
 }
@@ -90,7 +90,7 @@ function PatchLine({ item }: { item: PatchItem }) {
       </span>
       <span className="text-[#6b6157]">
         {" "}
-        — 중위가 대비{" "}
+        — 단지 시세 대비{" "}
         <span
           className="font-bold"
           style={{ color: isNerf ? NERF_COLOR : BUFF_COLOR }}

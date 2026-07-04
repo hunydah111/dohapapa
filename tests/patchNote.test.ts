@@ -5,7 +5,7 @@ import {
   PATCH_SCOPE_DAYS,
   PATCH_TOP_N,
   type PatchDealInput,
-  type RegionMedianLookup,
+  type ComplexMedianLookup,
 } from "@/lib/patchNote";
 
 const TODAY = "2026-07-04";
@@ -23,14 +23,14 @@ function makeDeal(overrides: Partial<PatchDealInput> = {}): PatchDealInput {
   };
 }
 
-// 강남구 84㎡ 밴드 중위가 10억, 표본 충분 — 단순 스텁
-const lookup: RegionMedianLookup = (sigungu) =>
-  sigungu === "강남구"
+// 강남구 소재 단지는 자기 중위가 10억, 표본 충분 — 단순 스텁 (단지 자기 시세 기준)
+const lookup: ComplexMedianLookup = (d) =>
+  d.sigunguName === "강남구"
     ? { medianKrw: 1_000_000_000, sampleCount: 30 }
     : null;
 
 describe("patchNote.computePatch", () => {
-  it("중위가 +7% 이상 신규 거래는 너프, -7% 이하는 버프", () => {
+  it("단지 시세 +7% 이상 신규 거래는 너프, -7% 이하는 버프", () => {
     const r = computePatch({
       deals: [
         makeDeal({ apartmentName: "급등단지", priceKrw: 1_120_000_000 }), // +12%
@@ -98,11 +98,11 @@ describe("patchNote.computePatch", () => {
     void PATCH_SCOPE_DAYS; // 문서화용 상수 참조
   });
 
-  it("노이즈 컷: ±45% 초과 괴리·표본 부족·초저가는 제외", () => {
-    const sparseLookup: RegionMedianLookup = (sigungu) =>
-      sigungu === "강남구"
+  it("노이즈 컷: ±35% 초과 괴리·표본 부족·초저가는 제외", () => {
+    const sparseLookup: ComplexMedianLookup = (d) =>
+      d.sigunguName === "강남구"
         ? { medianKrw: 1_000_000_000, sampleCount: 30 }
-        : sigungu === "표본부족구"
+        : d.sigunguName === "표본부족구"
           ? { medianKrw: 500_000_000, sampleCount: 2 }
           : null;
     const r = computePatch({

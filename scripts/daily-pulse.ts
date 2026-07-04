@@ -11,8 +11,8 @@
 import { writeFileSync, readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { LAWD_CODES, fetchDealsForRange } from "@/lib/molit";
-import { computePatch, type PatchDealInput, PATCH_SCOPE_DAYS } from "@/lib/patchNote";
-import regionPrices from "@/data/regionPrices.json";
+import { computePatch, type PatchDealInput, type ComplexMedianLookup, PATCH_SCOPE_DAYS } from "@/lib/patchNote";
+import complexSnapshot from "@/data/complexSnapshot.json";
 
 const arg = (k: string) => process.argv.find((a) => a.startsWith(`--${k}=`))?.split("=").slice(1).join("=");
 const MONTHS_BACK = Number(arg("months") ?? 2); // 현재월 포함 뒤로 N개월(지연 신고 포착)
@@ -91,14 +91,30 @@ async function main() {
       : {};
     const firstRun = !existsSync(SEEN_PATH);
 
-    const regions = (regionPrices as { regions: Record<string, Record<string, { medianKrw: number; sampleCount: number } | undefined>> }).regions;
+    // 단지 자기 시세 인덱스 — "시군구|공백제거단지명" → 평형별 중위가.
+    // (시군구 중위가 대비는 구조적 이탈만 잡아서 폐기 — patchNote.ts 상단 주석 참조)
+    type SnapMedian = { area: number; medianKrw: number; count: number; lowConfidence?: boolean };
+    const cxIndex = new Map<string, SnapMedian[]>();
+    for (const c of (complexSnapshot as unknown as { complexes: { name: string; sigungu: string; medians: SnapMedian[] }[] }).complexes) {
+      cxIndex.set(`${c.sigungu}|${c.name.replace(/\s+/g, "")}`, c.medians);
+    }
+    const lookupMedian: ComplexMedianLookup = (d) => {
+      const ms = cxIndex.get(`${d.sigunguName}|${d.apartmentName.replace(/\s+/g, "")}`);
+      if (!ms) return null;
+      // 같은 평형 최근접(±3㎡) 중위가. 신뢰 낮은 셀은 스킵.
+      let best: SnapMedian | null = null;
+      for (const m of ms) {
+        const diff = Math.abs(m.area - d.area);
+        if (diff <= 3 && (!best || diff < Math.abs(best.area - d.area))) best = m;
+      }
+      if (!best || best.lowConfidence) return null;
+      return { medianKrw: best.medianKrw, sampleCount: best.count };
+    };
+
     const patch = computePatch({
       deals: patchDeals,
       seenKeys: new Set(prevSeen.keys ?? []),
-      lookupMedian: (sigungu, band) => {
-        const cell = regions[sigungu]?.[band];
-        return cell ? { medianKrw: cell.medianKrw, sampleCount: cell.sampleCount } : null;
-      },
+      lookupMedian,
       todayISO: today,
     });
 
@@ -110,10 +126,7 @@ async function main() {
       ? computePatch({
           deals: patchDeals,
           seenKeys: new Set<string>(),
-          lookupMedian: (sigungu, band) => {
-            const cell = regions[sigungu]?.[band];
-            return cell ? { medianKrw: cell.medianKrw, sampleCount: cell.sampleCount } : null;
-          },
+          lookupMedian,
           todayISO: today,
           scopeDays: BOOTSTRAP_SCOPE_DAYS,
         })

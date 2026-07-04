@@ -1,5 +1,9 @@
-// 비집고 패치노트 v0 — "오늘 처음 확인된 실거래"를 시군구×평형 중위가와 대조해
-// 너프(중위가 대비 급등 공개)·버프(급락 공개)로 분류한다.
+// 비집고 패치노트 v0 — "오늘 처음 확인된 실거래"를 **그 단지 자기 시세(단지×평형 중위가)**와
+// 대조해 너프(단지 시세 대비 급등 공개)·버프(급락 공개)로 분류한다.
+//
+// ⚠️ 기준 선택의 이유(2026-07-04 창간호 1차분 교훈): 시군구 중위가 대비로 재면
+// "그 동네에서 원래 비싼/싼 단지"가 매일 상위를 도배한다(구조적 이탈 ≠ 뉴스).
+// 신고가성/급락성은 반드시 단지 자신의 최근 시세를 기준으로 잰다.
 //
 // 정직성 규약:
 // - MOLIT는 '신고일'을 주지 않는다. "오늘 공개"는 "오늘 폴링에서 처음 확인"의 뜻이며,
@@ -24,15 +28,15 @@ export interface PatchDealInput {
   floor: number | null;
 }
 
-export interface RegionMedianCell {
+export interface ComplexMedianCell {
   medianKrw: number;
   sampleCount: number;
 }
 
-export type RegionMedianLookup = (
-  sigungu: string,
-  band: string,
-) => RegionMedianCell | null;
+/** 거래 → 그 단지×평형의 자기 중위가. 단지를 못 찾으면 null(해당 거래는 스킵). */
+export type ComplexMedianLookup = (
+  deal: PatchDealInput,
+) => ComplexMedianCell | null;
 
 export interface PatchItem {
   kind: "nerf" | "buff";
@@ -43,7 +47,7 @@ export interface PatchItem {
   band: string;
   priceKrw: number;
   medianKrw: number;
-  /** (price − median) / median. 너프 양수, 버프 음수. */
+  /** (price − 단지 자기 중위가) / 단지 자기 중위가. 너프 양수, 버프 음수. */
   pct: number;
   dealDate: string;
 }
@@ -61,12 +65,12 @@ export interface PatchResult {
 
 /** 계약일 기준 스코프 일수 — 이보다 오래된 거래는 패치 대상 아님. */
 export const PATCH_SCOPE_DAYS = 14;
-/** 중위가 대비 이 비율 이상이면 너프/버프로 분류. */
+/** 단지 자기 시세 대비 이 비율 이상이면 너프/버프로 분류. */
 export const PATCH_MIN_PCT = 0.07;
-/** 이 비율을 넘는 괴리는 노이즈(증여성·특수거래·입력오류 의심)로 컷. */
-export const PATCH_NOISE_MAX_PCT = 0.45;
-/** 중위가 표본이 이보다 적으면 대조 자체를 신뢰하지 않음. */
-export const PATCH_MIN_SAMPLE = 5;
+/** 단지 자기 시세에서 이 비율을 넘는 괴리는 노이즈(증여성·특수거래·입력오류 의심)로 컷. */
+export const PATCH_NOISE_MAX_PCT = 0.35;
+/** 단지×평형 중위가 표본이 이보다 적으면 대조 자체를 신뢰하지 않음(단지 단위라 작게). */
+export const PATCH_MIN_SAMPLE = 3;
 /** 초저가(원) 컷 — 지분·특수 거래 방어. */
 export const PATCH_MIN_PRICE_KRW = 50_000_000;
 /** 너프/버프 각각 상위 N건. */
@@ -94,7 +98,7 @@ export function computePatch(opts: {
   deals: PatchDealInput[];
   /** 직전 폴링까지 확인된 거래 키 (없으면 빈 Set = 첫 실행) */
   seenKeys: ReadonlySet<string>;
-  lookupMedian: RegionMedianLookup;
+  lookupMedian: ComplexMedianLookup;
   /** 기준일 YYYY-MM-DD (크론 TZ=Asia/Seoul 기준 오늘) */
   todayISO: string;
   /** 계약일 스코프 오버라이드 — 창간호(부트스트랩)는 3일로 좁혀 씀. 기본 PATCH_SCOPE_DAYS. */
@@ -120,7 +124,7 @@ export function computePatch(opts: {
     if (d.priceKrw < PATCH_MIN_PRICE_KRW) continue;
     const band = bandOfArea(d.area);
     if (!band) continue;
-    const cell = lookupMedian(d.sigunguName, band);
+    const cell = lookupMedian(d);
     if (!cell || cell.sampleCount < PATCH_MIN_SAMPLE || cell.medianKrw <= 0) continue;
 
     const pct = (d.priceKrw - cell.medianKrw) / cell.medianKrw;
