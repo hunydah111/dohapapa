@@ -25,17 +25,17 @@ export async function generateMetadata({
   const ogImage = `${SITE_URL}/api/og-friend?f=${encodeURIComponent(friendRaw!)}`;
   return {
     alternates: { canonical: "/" },
-    title: `${friendName} 친구가 너랑 비교하래 · 비집고`,
-    description: "내 통장으로 살 집 어디까지? 30초컷으로 비지 찾고 친구랑 나란히 세워보자.",
+    title: `${friendName} 친구가 판정 까고 던졌다 · 비집고`,
+    description: "통장 까면 동네 나온다 — 닿는 단지·D-day·정책대출 자격 30초 판독.",
     openGraph: {
-      title: `${friendName} 친구가 너랑 비교하래`,
-      description: "비집고 30초컷 검색하고 비지 옆에 나란히!",
-      images: [{ url: ogImage, width: 1200, height: 630, alt: `${friendName} — 비교중` }],
+      title: `${friendName} — 친구가 판정 까고 던졌다`,
+      description: "통장 까면 동네 나온다. 너도 30초 까봐 🦫",
+      images: [{ url: ogImage, width: 1200, height: 630, alt: `${friendName} 판정 카드` }],
     },
     twitter: {
       card: "summary_large_image",
-      title: `${friendName} 친구가 너랑 비교하래`,
-      description: "비집고에서 너도 비지 찾기",
+      title: `${friendName} — 친구가 판정 까고 던졌다`,
+      description: "통장 까면 동네 나온다. 너도 30초 까봐 🦫",
       images: [ogImage],
     },
   };

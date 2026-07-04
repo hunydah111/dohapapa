@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { computeDdayForSigungu, computeConquest } from "@/lib/plan/dday";
+import { track } from "@/lib/track";
 import type { ReactNode } from "react";
 import { ProfileForm } from "@/components/ProfileForm";
 import type {
@@ -16,10 +18,8 @@ import { CandidateCard } from "./CandidateCard";
 import { HeroResultCard } from "./HeroResultCard";
 import { BudgetTrendCard } from "./BudgetTrendCard";
 import { LandingHero } from "./LandingHero";
-import { QuickComplexCheck } from "./QuickComplexCheck";
 import { Homi } from "./Homi";
 import { RequiredRegionPicker } from "./RequiredRegionPicker";
-import { getHomeType } from "@/lib/homeType";
 import { budgetTopPercent } from "@/lib/budgetPercentile";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
@@ -140,8 +140,11 @@ export function HomeExperience() {
   // window 접근이라 SSR 시 null → client mount 시 URL 읽기 (의도적 set-state-in-effect).
   const [friendTag, setFriendTag] = useState<FriendTag | null>(null);
   useEffect(() => {
+    const tag = readFriendFromLocation();
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setFriendTag(readFriendFromLocation());
+    setFriendTag(tag);
+    // 계측 ③ — 도전장 링크(?f=) 유입. 등급 슬러그만(비-PII).
+    if (tag) track("friend_visit", { tier: tag.tier.slug });
   }, []);
 
   // 조건 수정 패널 상태
@@ -172,6 +175,9 @@ export function HomeExperience() {
     (result: RecommendationResult, profile: CoupleProfile) => {
       setState({ result, profile });
       setPanelOpen(false);
+      // 계측 ①② — 판정 카드 생성 + (도전장 유입자라면) 입력 완료 전환. 비-PII.
+      track("result_card_created", { has_candidates: result.candidates.length > 0 });
+      if (readFriendFromLocation()) track("friend_convert");
       // 재방문 이어보기(R2) — 비민감 검색 취향만 기기에 저장(소득·자산·직장·예산·가족 제외).
       saveSearchPrefs(profile);
       // 조건 수정 패널 기본값을 현재 프로필로 초기화 (만원 단위).
@@ -418,6 +424,7 @@ export function HomeExperience() {
   // shareUrl 미지정 = 전체 결과 링크(부부 공유, 프로필 해시 포함). 지정 시 유형 카드(/s/) 등.
   async function handleShare(shareUrl?: string) {
     if (!state) return;
+    track("share_click", { method: "result_link" });
     const url = shareUrl ?? window.location.href;
     // /s/b/ = 비버 등급 카드(등급+동네만), /s/{type} = 유형 카드, 그 외 = 전체 결과(프로필 해시).
     const isGradeCard = !!shareUrl && shareUrl.includes("/s/b/");
@@ -492,13 +499,14 @@ export function HomeExperience() {
     window.history.replaceState(null, "", url.toString());
   }
 
-  // 친구한테 보내기 — 자기 결과를 친구 비교용 URL로 인코딩해 공유.
-  // 자기 비지 정체성(tier slug + sigungu)만 URL에 담음 — 소득·자산·직장 전혀 X.
-  // 친구가 그 URL 열면 LandingHero 배너 + 친구 검색 완료 시 비교 카드 노출.
+  // 판정 던지기 — 자기 판정(tier + sigungu + D-day)을 자조 초대 URL로 인코딩해 공유.
+  // 소득·자산·직장 전혀 X. 친구가 열면 LandingHero 배너 + OG에 판정 카드 노출.
   async function handleShareFriend() {
     if (!state) return;
     const result = state.result;
     if (!result.candidates[0]) return;
+    // 계측 ④ — 판정 던지기 클릭.
+    track("share_click", { method: "friend_throw" });
     const topPct = budgetTopPercent(result.budget.netPurchasePowerKrw);
     if (topPct == null) {
       setShareToast("백분위 데이터 부족 — 다른 시간에 다시 시도");
@@ -507,10 +515,23 @@ export function HomeExperience() {
     }
     const tier = budgetTier(topPct);
     const sigungu = result.candidates[0].sigungu;
-    const friendUrl = buildFriendUrl(SITE_URL, tier, sigungu);
+    const dday = computeDdayForSigungu(
+      state.profile,
+      sigungu,
+      result.candidates[0].representativeArea,
+    );
+    const friendUrl = buildFriendUrl(SITE_URL, tier, sigungu, dday);
+    const ddayText =
+      dday == null
+        ? ""
+        : dday.months === 0
+          ? " · 지금 입성 가능"
+          : dday.capped
+            ? " · D-아득"
+            : ` · D-${dday.days!.toLocaleString()}`;
     const shareData = {
-      title: `친구야 너도 비지 찾아봐! ${sigungu} ${tier.label}`,
-      text: "비집고에서 내 비지 찾고 너랑 비교해보자~",
+      title: `내 판정 떴다 — ${sigungu} ${tier.label}${ddayText}`,
+      text: "통장 까면 동네 나온다. 너도 30초 까봐 🦫",
       url: friendUrl,
     };
     if (typeof navigator.share === "function") {
@@ -523,7 +544,7 @@ export function HomeExperience() {
     }
     try {
       await navigator.clipboard.writeText(friendUrl);
-      setShareToast("친구 비교 링크 복사됨 — 카톡에 붙여넣기");
+      setShareToast("판정 링크 복사됨 — 단톡방에 붙여넣기");
     } catch {
       setShareToast("링크 복사 실패 — 주소창 링크 직접 보내기");
     }
@@ -778,10 +799,6 @@ export function HomeExperience() {
           }}
           friendTag={friendTag}
         />
-        {/* 역방향 진입(#4) — 풀 폼 전, 관심 단지 단답으로 깔때기 입구 확장. */}
-        <div className="mt-6">
-          <QuickComplexCheck />
-        </div>
       </>
     );
   }
@@ -903,13 +920,20 @@ export function HomeExperience() {
       {result.candidates.length > 0 && (
         <HeroResultCard
           candidate={result.candidates[0]}
-          homeType={getHomeType(state.profile)}
-          onShare={handleShare}
+          dday={computeDdayForSigungu(
+            state.profile,
+            result.candidates[0].sigungu,
+            result.candidates[0].representativeArea,
+          )}
+          conquest={computeConquest(
+            state.profile,
+            result.candidates[0].representativeArea,
+          )}
+          policyMatches={result.budget.policyLoanMatches}
           onShareFriend={handleShareFriend}
           friendTag={friendTag}
           budgetTopPercent={budgetTopPercent(result.budget.netPurchasePowerKrw)}
           budgetNetKrw={result.budget.netPurchasePowerKrw}
-          bijiDistribution={result.bijiDistribution}
         />
       )}
 

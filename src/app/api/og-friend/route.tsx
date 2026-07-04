@@ -7,7 +7,7 @@
 import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { decodeFriend } from "@/lib/friendShare";
+import { decodeFriend, friendDdayLabel } from "@/lib/friendShare";
 import { composeBijiName } from "@/lib/bijiName";
 import { pickTierImage, BEAVER_TIERS } from "@/lib/budgetPercentile";
 import { SITE_DOMAIN } from "@/lib/site";
@@ -24,6 +24,7 @@ export async function GET(request: Request) {
   const tier = tag?.tier ?? BEAVER_TIERS.gukmin;
   const sigungu = tag?.sigungu ?? "수도권";
   const name = tag ? composeBijiName(sigungu, tier) : "비집고 비버";
+  const ddayLabel = friendDdayLabel(tag);
 
   const font = await readFile(join(process.cwd(), "assets/BlackHanSans-Regular.ttf"));
   const tierImagePath = pickTierImage(tier.image, sigungu);
@@ -83,11 +84,11 @@ export async function GET(request: Request) {
               marginBottom: 10,
             }}
           >
-            👬 친구가 너랑 비교하래
+            🦫 친구가 판정 까고 던졌다
           </div>
           <div
             style={{
-              fontSize: name.length >= 6 ? 96 : 120,
+              fontSize: name.length >= 8 ? 68 : name.length >= 6 ? 84 : 110,
               lineHeight: 1.02,
               marginTop: 4,
               color: tier.theme.nameColor ?? (tier.theme.textTone === "light" ? "#ffffff" : tier.theme.accent),
@@ -95,16 +96,29 @@ export async function GET(request: Request) {
           >
             {name}
           </div>
+          {ddayLabel && (
+            <div
+              style={{
+                fontSize: 64,
+                lineHeight: 1.05,
+                marginTop: 14,
+                color: tier.theme.textTone === "light" ? "#ffe9a8" : "#c4521f",
+              }}
+            >
+              {ddayLabel}
+            </div>
+          )}
           <div
             style={{
-              fontSize: 36,
-              marginTop: 24,
+              display: "flex",
+              flexDirection: "column",
+              fontSize: 34,
+              marginTop: 22,
               color: tier.theme.textTone === "light" ? "#ffffff" : "#3a2c1d",
             }}
           >
-            너도 비집고에서 30초컷,
-            <br />
-            비지 옆에 나란히 세워봐
+            <div>통장 까면 동네 나온다.</div>
+            <div>너도 30초 까봐.</div>
           </div>
 
           {/* 워드마크 */}

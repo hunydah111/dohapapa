@@ -4,7 +4,6 @@ import "./globals.css";
 import { Homi } from "@/components/Homi";
 import { Analytics } from "@/components/Analytics";
 import { SITE_URL } from "@/lib/site";
-import { getDailyPulse, fmtDot } from "@/lib/updateLog";
 
 export const metadata: Metadata = {
   // og:image 등 메타 URL을 절대경로로 만들어 카카오톡·SNS가 썸네일을 가져갈 수 있게 한다.
@@ -94,26 +93,14 @@ export default function RootLayout({
 
         {/* ── 푸터 ── */}
         <footer className="mt-12 border-t border-black/[0.06] bg-white/60">
-          {/* 전역 신선도 배지 — 어느 페이지를 봐도 "이 데이터 매일 갱신된다"가 보인다(B1). */}
-          <div className="mx-auto max-w-2xl px-4 pt-5">
-            <Link
-              href="/updates"
-              className="inline-flex items-center gap-2 rounded-full border border-[#cfe0d2] bg-[#f6fbf7] px-3 py-1.5 text-[11.5px] font-semibold transition-colors hover:bg-white"
-              style={{ color: "#3f7a52" }}
-            >
-              <span className="relative flex h-2 w-2" aria-hidden>
-                <span className="live-dot absolute inline-flex h-full w-full rounded-full" style={{ background: "#4f9d54" }} />
-                <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: "#4f9d54" }} />
-              </span>
-              국토부 실거래 매일 자동 갱신 · {fmtDot(getDailyPulse().checkedAt)} 확인
-              <span aria-hidden style={{ color: "#9bb3a0" }}>›</span>
-            </Link>
-          </div>
           <div className="mx-auto flex max-w-2xl flex-col gap-3 px-4 py-6 text-xs sm:flex-row sm:items-center sm:justify-between">
             <p style={{ color: "#9a8f82" }}>
               © {new Date().getFullYear()} 비집고 — 정보 제공 도구
             </p>
             <nav className="flex flex-wrap gap-4" style={{ color: "#6b6157" }}>
+              <Link href="/biji" className="hover:text-coral-600">
+                비지 도감
+              </Link>
               <Link href="/privacy" className="hover:text-coral-600">
                 개인정보처리방침
               </Link>

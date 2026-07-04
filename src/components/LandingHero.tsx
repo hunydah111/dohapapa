@@ -1,12 +1,9 @@
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { HeroNumber } from "@/components/ui/HeroNumber";
-import { NeighborhoodChart } from "@/components/NeighborhoodChart";
-import { PopularComplexChart } from "@/components/PopularComplexChart";
-import { LivePulse } from "@/components/LivePulse";
-import { getLivePulse } from "@/lib/livePulse";
+import { BijiCard } from "@/components/BijiCard";
 import { POLICY_META } from "@/lib/policyLoan";
-import type { FriendTag } from "@/lib/friendShare";
+import { budgetTier } from "@/lib/budgetPercentile";
+import { friendDdayLabel, type FriendTag } from "@/lib/friendShare";
 import { composeBijiName } from "@/lib/bijiName";
 import { pickTierImage } from "@/lib/budgetPercentile";
 
@@ -16,20 +13,28 @@ const POLICY_VERIFIED_SHORT: string = (() => {
   return `${y}.${Number(m)}`;
 })();
 
-// 첫 화면(랜딩) — sober-warm 톤. 정체성(한강·비집고·코랄)은 보존하되 절제.
-// 변경 핵심(2026-05-26 디자인 라운드 F2):
-//  • CTA 2개 → 1개(plan은 텍스트 링크로 약화) — 당근/토스 패턴
-//  • 3티어 칩 → 예시 카드로 통합 (한 fold 요소 수 감축)
-//  • 안내 3줄 → 신뢰 1줄로 압축
-//  • 페이지 배경에 페일 코랄 wash (Mercury 페이지별 페일 액센트 패턴)
+// 첫 화면(랜딩) — 2026-06-11 "한 방" 개편: 판정기 포지션.
+//  • 훅: 도발(현실 직시) → CTA 한 방. 헷지 톤("재미로") 전부 제거 — 판정기는 사과하지 않는다.
+//  • 동선 1개: 통장 판독 CTA. 놀이터·차트·플랜 분기 없음 (plan 진입은 결과카드에서만).
+//  • 예시 BijiCard 1장 — "이게 네 판정 카드다" 미리보기 (캡처 단위 인지).
 
-function MiniBadge({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex items-center rounded-full bg-[#f3ece4] px-2.5 py-1 text-[11px] font-semibold text-[#6b6157]">
-      {children}
-    </span>
-  );
-}
+// 예시 카드 풀 — 새로고침마다 랜덤 1장. 실존 등급 시스템(budgetTier) 그대로,
+// 등급 스펙트럼 전체(퀸~아기)와 D-day 3상태(지금/숫자/아득)를 다 보여줘
+// "내 건 뭘까" 호기심을 만든다. verdict는 결과 화면과 동일 톤(자조·건조).
+const EXAMPLES = [
+  { pct: 23, sigungu: "마포구", dong: "아현동", area: 84, chip: "🚇 통근 28분",
+    dday: { caption: "마포구 중위 입성까지", headline: "D-3,044", verdict: "버틸 만한 싸움이다." } },
+  { pct: 1, sigungu: "서초구", dong: "반포동", area: 84, chip: "🌊 한강뷰",
+    dday: { caption: "서초구 중위 단지", headline: "지금 입성 가능", verdict: "통장 좀 치네. 인정." } },
+  { pct: 85, sigungu: "강남구", dong: "대치동", area: 59, chip: "🏫 초품아",
+    dday: { caption: "강남구 중위 입성까지", headline: "D-아득", verdict: "서울이 나를 거부함 🦫" } },
+  { pct: 8, sigungu: "성동구", dong: "옥수동", area: 84, chip: "🚇 통근 19분",
+    dday: { caption: "성동구 중위 입성까지", headline: "D-1,204", verdict: "적금 만기 몇 번이면 끝." } },
+  { pct: 50, sigungu: "노원구", dong: "상계동", area: 59, chip: "🌳 공원 옆",
+    dday: { caption: "노원구 중위 입성까지", headline: "D-5,114", verdict: "길다. 근데 0은 아니다." } },
+  { pct: 35, sigungu: "수원시 영통구", dong: "광교동", area: 84, chip: "🚗 자차 31분",
+    dday: { caption: "영통구 중위 입성까지", headline: "D-2,190", verdict: "루틴만 지키면 닿는다." } },
+] as const;
 
 export function LandingHero({
   onStart,
@@ -42,6 +47,15 @@ export function LandingHero({
   const friendImage = friendTag
     ? pickTierImage(friendTag.tier.image, friendTag.sigungu)
     : null;
+
+  // 예시 카드 — 새로고침마다 랜덤. SSR/CSR 일치를 위해 첫 렌더는 0번 고정,
+  // 마운트 후 랜덤 스왑(key 변화로 pop-in 재생 — 스왑이 버그가 아니라 연출로 보이게).
+  const [exampleIdx, setExampleIdx] = useState(0);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 랜덤은 클라이언트에서만 (hydration 안전)
+    setExampleIdx(Math.floor(Math.random() * EXAMPLES.length));
+  }, []);
+  const ex = EXAMPLES[exampleIdx];
 
   return (
     <section className="relative px-1 pt-6 pb-4 text-center sm:pt-10">
@@ -57,12 +71,17 @@ export function LandingHero({
             draggable={false}
           />
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold text-coral-700">👬 친구가 너랑 비교하재</p>
+            <p className="text-[11px] font-semibold text-coral-700">🦫 친구가 판정 까고 던졌다</p>
             <p className="mt-0.5 truncate text-[15px] font-bold text-[#3a2c1d]" title={friendName}>
               {friendName}
+              {friendDdayLabel(friendTag) && (
+                <span className="ml-1.5 font-jua text-[14px]" style={{ color: "#e8662f" }}>
+                  {friendDdayLabel(friendTag)}
+                </span>
+              )}
             </p>
             <p className="mt-0.5 text-[11px] leading-snug text-[#8a7d6e]">
-              너도 30초컷 검색 끝내면 비지 옆에 나란히!
+              너도 30초 까보고 옆에 서봐.
             </p>
           </div>
         </div>
@@ -78,210 +97,61 @@ export function LandingHero({
         }}
       />
 
-      {/* 브랜드 히어로 — 한강에서 서울을 바라보며 '비집고' 들어갈 집을 그리는 비지.
-          모바일: 위·좌·우 풀블리드(검은 하늘이 화면 끝까지)
-          데스크탑: 페이지 컨테이너에 맞춘 max-w-2xl(672px). 도미네이트 X.
-          친구 배너 있을 때만 -mt-10 제거 — 그 자리에 배너가 차지하므로 hangang 끌어올림 X (overlap 방지). */}
-      <div className={`biji-pop-in relative left-1/2 mb-5 w-screen -translate-x-1/2 overflow-hidden rounded-b-[26px] shadow-md sm:left-auto sm:mx-auto sm:mt-0 sm:w-full sm:max-w-2xl sm:translate-x-0 sm:rounded-3xl sm:ring-1 sm:ring-black/5 ${friendTag ? "" : "-mt-10"}`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/biji/biji-hangang.png"
-          alt="한강에서 서울 도심을 바라보는 비지 — 비집고 들어갈 집을 그리며"
-          width={1200}
-          height={731}
-          className="block w-full"
-          draggable={false}
-        />
+      {/* 히어로 — 토스/당근 패턴: 큰 타이포가 메시지 전부, 비주얼은 제품(판정 카드) 그 자체.
+          일러스트·오버레이·슬로건 배너 없음. 타이포(잉크 단색) → 제품 카드 → CTA 순. */}
+      <div className={`mx-auto max-w-md ${friendTag ? "pt-2" : "pt-8 sm:pt-12"}`}>
+        <h1
+          className="font-jua break-keep text-[2.5rem] leading-[1.18] tracking-tight sm:text-[3.1rem]"
+          style={{ color: "#2c2118" }}
+        >
+          통장 까면,
+          <br />
+          동네 나온다.
+        </h1>
+        <p
+          className="mx-auto mt-4 max-w-sm break-keep text-[15px] leading-relaxed sm:text-[16px]"
+          style={{ color: "#8a7d6e" }}
+        >
+          가능 아파트 · 돈 모자라면 D-며칠 · 놓친 정책대출까지
+        </p>
       </div>
 
-      {/* 캐치프레이즈 — 시크 위트 3줄. 사용자 핵심 인용 — 머리는 차갑게 / 비집고 / 통장은 뜨겁게 */}
-      <p
-        className="font-jua mx-auto mt-3 text-[15px] sm:text-[17px]"
-        style={{ color: "#8a7d6e" }}
-      >
-        머리는 차갑게
-      </p>
-      <h1
-        className="font-jua -mt-0.5 text-[3rem] leading-[1] tracking-tight sm:text-[3.6rem]"
-        style={{ color: "#e8662f" }}
-      >
-        비집고
-      </h1>
-      <p
-        className="font-jua mx-auto mt-0 text-[15px] sm:text-[17px]"
-        style={{ color: "#8a7d6e" }}
-      >
-        통장은 뜨겁게
-      </p>
+      {/* 제품 = 비주얼 — 토스가 앱 스크린샷 놓는 자리에 진짜 판정 카드(D-day 포함).
+          새로고침마다 다른 등급·동네·D-day (EXAMPLES 랜덤). */}
+      <div className="relative mx-auto mt-9 w-full max-w-[252px]">
+        <div className="rotate-[2.5deg] transition-transform duration-300 hover:rotate-0">
+          <BijiCard
+            key={exampleIdx}
+            tier={budgetTier(ex.pct)}
+            sigungu={ex.sigungu}
+            dongName={ex.dong}
+            areaM2={ex.area}
+            chips={[ex.chip]}
+            dday={ex.dday}
+            popIn
+          />
+        </div>
+        <span className="absolute -right-2 -top-2 rounded-full bg-[#3a2c1d] px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
+          예시
+        </span>
+      </div>
 
-      {/* 기능 한 줄 — 무엇을 해주는지 3초 안에 (정량 단정·위트 톤) */}
-      <p
-        className="mx-auto mt-4 max-w-sm text-[14px] leading-relaxed text-balance sm:text-[15px]"
-        style={{ color: "#6b6157" }}
-      >
-        수도권 아파트단지 1만 곳
-        <br />
-        내 통장에 맞는 단지만 잡아줌
-      </p>
-
-      {/* 라이브 펄스 — "이 사이트 살아있다·매주 갱신된다"를 어느 진입에서도 1초 인지.
-          번들 데이터(주간 크론 자동 갱신)에서 매주 바뀌는 값만 회전 노출. DB0·API0. */}
-      <LivePulse data={getLivePulse()} />
-
-      {/* 단일 메인 CTA — 한 화면 한 결정 (토스/Mercury 패턴) */}
-      <div className="mx-auto mt-7 w-full max-w-sm">
+      {/* 단일 CTA — 한 화면 한 결정. 분기 없음. */}
+      <div className="mx-auto mt-9 w-full max-w-sm">
         <Button onClick={onStart} fullWidth>
-          30초컷, 내 집 잡기 →
+          30초, 통장 판독 받기 →
         </Button>
-        {/* 비집고 두 축의 다른 한 쪽 — primary CTA 아래 풀너비 세컨더리 버튼(약화하되 또렷이 보이게) */}
-        <Link
-          href="/plan"
-          className="mt-2.5 flex w-full items-center justify-center rounded-2xl border-2 border-coral-300 bg-white px-4 py-3 text-[15px] font-bold transition-colors hover:border-coral-500"
-          style={{ color: "#c4521f" }}
-        >
-          내집마련플랜 D-day 계산해보자 →
-        </Link>
-        {/* 플랜 CTA 보조 카피 — 무엇을 답해주는지 한 줄(목표집·내 예산·언제) */}
-        <p className="mt-1.5 text-center text-[12.5px] font-medium" style={{ color: "#9a8f82" }}>
-          목표 아파트, 내 예산으로 언제?
-        </p>
 
-        {/* 신뢰 한 줄 (3줄 → 1줄 압축) — 가입·민감정보·데이터·정책 점검 한 호흡 */}
+        {/* 신뢰 1줄 — CTA 직하단 고정 (입력 직전 불안 차단). */}
         <p
-          className="mx-auto mt-5 max-w-xs text-[11.5px] leading-relaxed"
+          className="mx-auto mt-3 max-w-xs text-[11.5px] leading-relaxed"
           style={{ color: "#9a8f82" }}
         >
           가입·로그인 없음 · 민감정보 저장 안 함
           <br />
           국토부 공개 실거래 기반 · 정책 {POLICY_VERIFIED_SHORT} 점검
         </p>
-        {/* ── 놀이 섹션 — 데일리 리텐션 훅 묶음. 검색·플랜(1차 결정)과 구분선으로 분리해
-            "탭할 게 5개" 산만함 대신 하나의 놀이터로 인지시킴. 카드 3색은 3게임 구분 신호로 유지. */}
-        <div className="mt-7">
-          <div className="flex items-center gap-2.5">
-            <span className="h-px flex-1" style={{ background: "#e6dcc9" }} />
-            <span className="text-[11.5px] font-bold tracking-tight" style={{ color: "#9a8f82" }}>🎮 잠깐, 놀고 갈래?</span>
-            <span className="h-px flex-1" style={{ background: "#e6dcc9" }} />
-          </div>
-
-          {/* 부동산 촉 — 시세 감각 entry */}
-          <Link
-            href="/play"
-            className="mx-auto mt-3 flex w-full items-center gap-2.5 rounded-2xl border border-coral-200 px-4 py-3 shadow-sm transition-transform hover:scale-[1.02]"
-            style={{ background: "linear-gradient(100deg,#fff1ea,#ffe1d3)" }}
-          >
-            <span className="text-[20px]" aria-hidden>🎯</span>
-            <span className="flex flex-col items-start leading-tight">
-              <span className="text-[10.5px] font-bold" style={{ color: "#d98a5a" }}>
-                7문제 시세 감각 테스트 · 동네가 시장 이길까?
-              </span>
-              <span className="text-[15px] font-extrabold" style={{ color: "#e8662f" }}>
-                내 부동산 촉, 몇 단?
-              </span>
-            </span>
-            <span className="ml-auto text-[16px] font-bold" style={{ color: "#e8662f" }} aria-hidden>→</span>
-          </Link>
-          {/* 부동산 성향 테스트 */}
-          <Link
-            href="/persona"
-            className="mx-auto mt-2 flex w-full items-center gap-2.5 rounded-2xl border border-[#e3d5bd] px-4 py-3 shadow-sm transition-transform hover:scale-[1.02]"
-            style={{ background: "linear-gradient(100deg,#fbf4e8,#f5e7cc)" }}
-          >
-            <span className="text-[20px]" aria-hidden>🦫</span>
-            <span className="flex flex-col items-start leading-tight">
-              <span className="text-[10.5px] font-bold" style={{ color: "#b08948" }}>
-                10문항 성향 테스트 · 영끌? 가성비?
-              </span>
-              <span className="text-[15px] font-extrabold" style={{ color: "#9a5a1e" }}>
-                나는 무슨 부동산 비지?
-              </span>
-            </span>
-            <span className="ml-auto text-[16px] font-bold" style={{ color: "#b08948" }} aria-hidden>→</span>
-          </Link>
-          {/* 동네 자랑 리그 */}
-          <Link
-            href="/league"
-            className="mx-auto mt-2 flex w-full items-center gap-2.5 rounded-2xl border border-[#cfe0d2] px-4 py-3 shadow-sm transition-transform hover:scale-[1.02]"
-            style={{ background: "linear-gradient(100deg,#eef6ef,#dcecdf)" }}
-          >
-            <span className="text-[20px]" aria-hidden>🚩</span>
-            <span className="flex flex-col items-start leading-tight">
-              <span className="text-[10.5px] font-bold" style={{ color: "#5f8a6a" }}>
-                상승·거래·가성비·신축 4부문
-              </span>
-              <span className="text-[15px] font-extrabold" style={{ color: "#3f7a52" }}>
-                우리 동네, 이 달의 자랑은?
-              </span>
-            </span>
-            <span className="ml-auto text-[16px] font-bold" style={{ color: "#5f8a6a" }} aria-hidden>→</span>
-          </Link>
-
-          {/* 놀이터 푸터 — 리텐션 약속 한 줄 + 도감 discovery 흡수 */}
-          <p className="mt-3 text-center text-[11px] leading-relaxed" style={{ color: "#b3a99c" }}>
-            매일 와도 새 판 · 30초 안에 결과 카톡 공유 ·{" "}
-            <Link href="/biji" className="font-semibold underline-offset-2 hover:underline" style={{ color: "#b89a6a" }}>
-              비지 11종 도감 →
-            </Link>
-          </p>
-        </div>
       </div>
-
-      {/* 예시 결과 미니카드 — 첫 fold 아래(스크롤 보상). 3티어 칩 통합 위치 */}
-      <div className="mx-auto mt-10 w-full max-w-sm">
-        <p className="mb-3 text-[12px] font-semibold" style={{ color: "#9a8f82" }}>
-          이렇게 잡아줘
-        </p>
-        <div
-          className="relative rounded-3xl bg-white p-5 text-left"
-          style={{
-            boxShadow:
-              "0 1px 2px rgba(0,0,0,0.04), 0 12px 32px -12px rgba(0,0,0,0.08)",
-          }}
-        >
-          <span className="absolute right-4 top-4 rounded-full bg-[#f7ead0] px-2.5 py-0.5 text-[10px] font-bold text-[#9a5a1e]">
-            예시 화면
-          </span>
-          {/* 3티어 미리보기 통합 — 카드 안에서 "균형형이 강조됨"으로 자연스럽게 */}
-          <div className="flex items-center gap-1.5 text-[11px] font-bold">
-            <span className="rounded-full bg-[#f5f3ee] px-2 py-0.5" style={{ color: "#9a8f82" }}>
-              안정
-            </span>
-            <span className="rounded-full bg-coral-600 px-2.5 py-0.5 text-white">
-              균형
-            </span>
-            <span className="rounded-full bg-[#f5f3ee] px-2 py-0.5" style={{ color: "#9a8f82" }}>
-              도전
-            </span>
-            <span className="ml-auto text-[10px] font-medium" style={{ color: "#9a8f82" }}>
-              3티어로 정리
-            </span>
-          </div>
-          <h3 className="mt-3 text-[18px] font-bold leading-snug" style={{ color: "#3a322c" }}>
-            ○○○아파트{" "}
-            <span className="text-[13px] font-medium" style={{ color: "#9a8f82" }}>
-              전용 84㎡
-            </span>
-          </h3>
-          {/* 가격 영웅화 — 비집고 시그니처(Jua + 페일 골드, 당근에 없는 황토 톤) */}
-          <div className="mt-3">
-            <HeroNumber
-              value="12억 1,000만"
-              caption="추정 현재가 · 국토부 실거래 환산"
-              size="hero"
-              tone="gold"
-            />
-          </div>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            <MiniBadge>통근 28분</MiniBadge>
-            <MiniBadge>초품아</MiniBadge>
-            <MiniBadge>종합 88점</MiniBadge>
-          </div>
-        </div>
-      </div>
-
-      {/* 이번 주 인기 동네·아파트(멜론식) — 데이터 빈약하면 각 컴포넌트가 스스로 숨음 */}
-      <NeighborhoodChart />
-      <PopularComplexChart />
     </section>
   );
 }

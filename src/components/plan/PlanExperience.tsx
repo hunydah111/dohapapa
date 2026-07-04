@@ -12,6 +12,7 @@ import {
 } from "@/types/profile";
 import { estimateBudget } from "@/lib/budget";
 import { evaluatePolicyLoans } from "@/lib/policyLoan";
+import { PolicyLoanCta } from "@/components/PolicyLoanCta";
 import { estimateCapitalGainsTax } from "@/lib/capitalGainsTax";
 import {
   computePlan,
@@ -1061,6 +1062,9 @@ export function PlanExperience() {
         );
       })()}
 
+      {/* 💰 돈 구석 — 갭 확인 직후(목표 정한 뜨거운 리드)에 정책대출 톨게이트. */}
+      <PolicyLoanCta matches={budget.policyLoanMatches} context="plan" tone="plain" />
+
       {/* 동네 사다리 — "지금 어디" 가 아니라 "시간이 갈수록 어디로 올라가나" (트라젝토리 #1) */}
       <TrajectorySection ladder={ladder} monthlySavingKrw={saveKrw} />
 
@@ -1449,7 +1453,7 @@ function NumField({
         type="number"
         inputMode="numeric"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => onChange(e.target.value.replace(/^0+(?=\d)/, ""))}
         className="rounded-xl border border-[#e5e5ea] bg-white px-3 py-2 text-sm tabular-nums focus:border-coral-400 focus:outline-none"
       />
       <span
