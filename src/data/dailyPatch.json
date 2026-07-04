@@ -1,10 +1,132 @@
 {
-  "generatedAt": null,
-  "scopeDays": 14,
-  "seeded": true,
-  "newDealCount": 0,
-  "scopeDealCount": 0,
-  "nerf": [],
-  "buff": [],
-  "latestDealDate": null
+  "generatedAt": "2026-07-04",
+  "scopeDays": 3,
+  "mode": "bootstrap",
+  "newDealCount": 487,
+  "scopeDealCount": 487,
+  "nerf": [
+    {
+      "kind": "nerf",
+      "sigungu": "관악구",
+      "dong": "봉천동",
+      "apt": "봉천우성",
+      "areaM2": 84.96,
+      "band": "p32_35",
+      "priceKrw": 1170000000,
+      "medianKrw": 807070000,
+      "pct": 0.4496883789510204,
+      "dealDate": "2026-07-01"
+    },
+    {
+      "kind": "nerf",
+      "sigungu": "고양시 덕양구",
+      "dong": "도내동",
+      "apt": "도래울센트럴파크(CentralPark)",
+      "areaM2": 84.68,
+      "band": "p32_35",
+      "priceKrw": 745000000,
+      "medianKrw": 515720000,
+      "pct": 0.4445823314977119,
+      "dealDate": "2026-07-02"
+    },
+    {
+      "kind": "nerf",
+      "sigungu": "부천시 원미구",
+      "dong": "중동",
+      "apt": "중흥마을(주공)",
+      "areaM2": 58.71,
+      "band": "p19_25",
+      "priceKrw": 585000000,
+      "medianKrw": 405060000,
+      "pct": 0.44423048437268553,
+      "dealDate": "2026-07-01"
+    },
+    {
+      "kind": "nerf",
+      "sigungu": "화성시 병점구",
+      "dong": "능동",
+      "apt": "서동탄역양우내안애",
+      "areaM2": 55.98,
+      "band": "p19_25",
+      "priceKrw": 460000000,
+      "medianKrw": 319640000,
+      "pct": 0.4391190088849956,
+      "dealDate": "2026-07-01"
+    },
+    {
+      "kind": "nerf",
+      "sigungu": "파주시",
+      "dong": "다율동",
+      "apt": "해오름마을14단지푸르지오파르세나",
+      "areaM2": 84.982,
+      "band": "p32_35",
+      "priceKrw": 533000000,
+      "medianKrw": 370960000,
+      "pct": 0.43681259434979514,
+      "dealDate": "2026-07-01"
+    }
+  ],
+  "buff": [
+    {
+      "kind": "buff",
+      "sigungu": "용인시 기흥구",
+      "dong": "지곡동",
+      "apt": "써니밸리II",
+      "areaM2": 84.9852,
+      "band": "p32_35",
+      "priceKrw": 300000000,
+      "medianKrw": 545070000,
+      "pct": -0.44961197644339257,
+      "dealDate": "2026-07-03"
+    },
+    {
+      "kind": "buff",
+      "sigungu": "파주시",
+      "dong": "문산읍 당동리",
+      "apt": "자연앤꿈에그린6단지아파트",
+      "areaM2": 84.93,
+      "band": "p32_35",
+      "priceKrw": 208800000,
+      "medianKrw": 370960000,
+      "pct": -0.4371360793616562,
+      "dealDate": "2026-07-03"
+    },
+    {
+      "kind": "buff",
+      "sigungu": "계양구",
+      "dong": "계산동",
+      "apt": "일신",
+      "areaM2": 36.99,
+      "band": "under18",
+      "priceKrw": 77000000,
+      "medianKrw": 134960000,
+      "pct": -0.42946058091286304,
+      "dealDate": "2026-07-01"
+    },
+    {
+      "kind": "buff",
+      "sigungu": "파주시",
+      "dong": "문산읍 선유리",
+      "apt": "두산위브",
+      "areaM2": 84.9815,
+      "band": "p32_35",
+      "priceKrw": 213000000,
+      "medianKrw": 370960000,
+      "pct": -0.42581410394651714,
+      "dealDate": "2026-07-01"
+    },
+    {
+      "kind": "buff",
+      "sigungu": "시흥시",
+      "dong": "거모동",
+      "apt": "동하시티주상복합",
+      "areaM2": 84.845,
+      "band": "p32_35",
+      "priceKrw": 240000000,
+      "medianKrw": 411100000,
+      "pct": -0.4162004378496716,
+      "dealDate": "2026-07-01"
+    }
+  ],
+  "latestDealDate": "2026-07-03"
 }
