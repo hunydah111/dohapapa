@@ -52,6 +52,8 @@ async function main() {
           sigunguName: d.sigunguName,
           dongName: d.dongName,
           floor: d.floor,
+          dealingGbn: d.dealingGbn,
+          canceled: d.canceled,
         });
       }
     } catch (e) {

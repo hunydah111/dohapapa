@@ -133,6 +133,8 @@ const MolitItemSchema = z
     umdNm: z.string().optional().default(""),
     buildYear: z.union([z.number(), z.string()]).optional().nullable(),
     ownershipGbn: z.string().optional().nullable(), // 분양권전매(SilvTrade)만: "분"|"입"
+    dealingGbn: z.string().optional().nullable(), // 거래유형: "중개거래" | "직거래" (2023 개정판)
+    cdealType: z.string().optional().nullable(), // 해제여부: "O" = 해제된 거래
   })
   .passthrough()  // tolerate extra fields the API may add without breaking schema
   .transform((item) => {
@@ -170,6 +172,14 @@ const MolitItemSchema = z
         ? item.ownershipGbn.trim()
         : undefined;
 
+    const dealingGbn =
+      typeof item.dealingGbn === "string" && item.dealingGbn.trim() !== ""
+        ? item.dealingGbn.trim()
+        : undefined;
+    // 해제여부 — "O"(또는 값 존재)면 계약 해제된 거래.
+    const canceled =
+      typeof item.cdealType === "string" && item.cdealType.trim() !== "";
+
     return {
       _aptNm: item.aptNm,
       _dealDate: dealDate,
@@ -179,6 +189,8 @@ const MolitItemSchema = z
       _umdNm: item.umdNm,
       _buildYear: buildYear,
       _ownershipGbn: ownershipGbn,
+      _dealingGbn: dealingGbn,
+      _canceled: canceled,
     };
   });
 
@@ -202,6 +214,8 @@ function toDeal(
     dongName: transformed._umdNm,
     buildYear: transformed._buildYear,
     ownershipGbn: transformed._ownershipGbn,
+    dealingGbn: transformed._dealingGbn,
+    canceled: transformed._canceled,
   };
 }
 

@@ -26,6 +26,10 @@ export interface PatchDealInput {
   sigunguName: string;
   dongName: string;
   floor: number | null;
+  /** 거래유형 — "직거래"는 증여성 의심으로 너프/버프 분류에서 제외(스코프·seen엔 포함). */
+  dealingGbn?: string;
+  /** 해제된 거래 — 스코프에서 아예 제외(유효 거래 아님). */
+  canceled?: boolean;
 }
 
 export interface ComplexMedianCell {
@@ -107,8 +111,9 @@ export function computePatch(opts: {
   const { deals, seenKeys, lookupMedian, todayISO } = opts;
   const scopeDays = opts.scopeDays ?? PATCH_SCOPE_DAYS;
 
-  // 1) 스코프: 계약일이 오늘로부터 scopeDays 이내 (미래 날짜는 데이터 오류로 제외)
+  // 1) 스코프: 계약일이 오늘로부터 scopeDays 이내 (미래 날짜·해제 거래는 제외)
   const scope = deals.filter((d) => {
+    if (d.canceled) return false;
     const age = daysBetweenISO(d.dealDateISO, todayISO);
     return age >= 0 && age <= scopeDays;
   });
@@ -121,6 +126,8 @@ export function computePatch(opts: {
   // 3) 중위가 대조 → 분류
   const classified: PatchItem[] = [];
   for (const d of fresh) {
+    // 직거래 = 가족 간 증여성 거래 가능성 — 시세 신호로 안 씀 (특히 급락 버프 오염 방지)
+    if (d.dealingGbn === "직거래") continue;
     if (d.priceKrw < PATCH_MIN_PRICE_KRW) continue;
     const band = bandOfArea(d.area);
     if (!band) continue;

@@ -16,6 +16,10 @@ export interface MolitDeal {
    * 원본 ownershipGbn: "분"(분양권) | "입"(입주권). 매매 적재 시엔 없음.
    */
   ownershipGbn?: string;
+  /** 거래유형 — "중개거래" | "직거래" (2023 개정판 필드). 없으면 undefined. */
+  dealingGbn?: string;
+  /** 해제여부 — true = 계약 해제된 거래(cdealType "O"). */
+  canceled?: boolean;
 }
 
 export interface MolitFetchOptions {

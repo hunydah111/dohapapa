@@ -157,6 +157,37 @@ describe("patchNote.computePatch", () => {
     expect([...pcts].sort((a, b) => b - a)).toEqual(pcts);
   });
 
+  it("직거래는 분류에서 제외(스코프·seen엔 포함), 해제 거래는 스코프에서 제외", () => {
+    const direct = makeDeal({
+      apartmentName: "가족거래단지",
+      priceKrw: 700_000_000, // -30% 급락처럼 보이지만 직거래
+      dealingGbn: "직거래",
+    });
+    const canceledDeal = makeDeal({
+      apartmentName: "해제단지",
+      priceKrw: 1_200_000_000,
+      canceled: true,
+    });
+    const normal = makeDeal({
+      apartmentName: "정상중개단지",
+      priceKrw: 1_120_000_000,
+      dealingGbn: "중개거래",
+    });
+    const r = computePatch({
+      deals: [direct, canceledDeal, normal],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    // 해제는 스코프 밖, 직거래·정상은 스코프 안
+    expect(r.scopeDealCount).toBe(2);
+    // 분류는 정상 중개거래만
+    expect(r.buff).toHaveLength(0);
+    expect(r.nerf.map((i) => i.apt)).toEqual(["정상중개단지"]);
+    // 직거래도 seen엔 남아 내일 중복 등장 방지
+    expect(r.nextSeenKeys).toContain(dealKey(direct));
+  });
+
   it("scopeDays 오버라이드(창간호 3일): 3일 밖 거래는 제외, 안은 포함", () => {
     const inside = makeDeal({
       apartmentName: "창간호단지",
