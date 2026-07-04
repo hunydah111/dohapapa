@@ -97,13 +97,16 @@ export function computePatch(opts: {
   lookupMedian: RegionMedianLookup;
   /** 기준일 YYYY-MM-DD (크론 TZ=Asia/Seoul 기준 오늘) */
   todayISO: string;
+  /** 계약일 스코프 오버라이드 — 창간호(부트스트랩)는 3일로 좁혀 씀. 기본 PATCH_SCOPE_DAYS. */
+  scopeDays?: number;
 }): PatchResult {
   const { deals, seenKeys, lookupMedian, todayISO } = opts;
+  const scopeDays = opts.scopeDays ?? PATCH_SCOPE_DAYS;
 
-  // 1) 스코프: 계약일이 오늘로부터 PATCH_SCOPE_DAYS 이내 (미래 날짜는 데이터 오류로 제외)
+  // 1) 스코프: 계약일이 오늘로부터 scopeDays 이내 (미래 날짜는 데이터 오류로 제외)
   const scope = deals.filter((d) => {
     const age = daysBetweenISO(d.dealDateISO, todayISO);
-    return age >= 0 && age <= PATCH_SCOPE_DAYS;
+    return age >= 0 && age <= scopeDays;
   });
 
   const nextSeenKeys = Array.from(new Set(scope.map(dealKey))).sort();

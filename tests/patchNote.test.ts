@@ -157,6 +157,28 @@ describe("patchNote.computePatch", () => {
     expect([...pcts].sort((a, b) => b - a)).toEqual(pcts);
   });
 
+  it("scopeDays 오버라이드(창간호 3일): 3일 밖 거래는 제외, 안은 포함", () => {
+    const inside = makeDeal({
+      apartmentName: "창간호단지",
+      dealDateISO: "2026-07-02", // 2일 전
+      priceKrw: 1_150_000_000,
+    });
+    const outside = makeDeal({
+      apartmentName: "스코프밖단지",
+      dealDateISO: "2026-06-28", // 6일 전 — 기본 14일엔 들지만 3일엔 제외
+      priceKrw: 1_150_000_000,
+    });
+    const r = computePatch({
+      deals: [inside, outside],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+      scopeDays: 3,
+    });
+    expect(r.scopeDealCount).toBe(1);
+    expect(r.nerf.map((i) => i.apt)).toEqual(["창간호단지"]);
+  });
+
   it("dealKey는 층·가격까지 포함해 같은 날 같은 단지의 다른 거래를 구분", () => {
     const a = makeDeal({ floor: 3 });
     const b = makeDeal({ floor: 20 });

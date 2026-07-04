@@ -102,18 +102,34 @@ async function main() {
       todayISO: today,
     });
 
+    // 첫 실행 = 창간호(부트스트랩): seen이 없어 "오늘 신규"를 못 재므로, 대신
+    // "최근 3일 계약 공개분"을 정직하게 라벨링해 발행한다. seen은 전체 스코프로 시딩
+    // → 다음 실행부터 자동으로 일간(신규 공개 diff) 모드.
+    const BOOTSTRAP_SCOPE_DAYS = 3;
+    const boot = firstRun
+      ? computePatch({
+          deals: patchDeals,
+          seenKeys: new Set<string>(),
+          lookupMedian: (sigungu, band) => {
+            const cell = regions[sigungu]?.[band];
+            return cell ? { medianKrw: cell.medianKrw, sampleCount: cell.sampleCount } : null;
+          },
+          todayISO: today,
+          scopeDays: BOOTSTRAP_SCOPE_DAYS,
+        })
+      : null;
+
     writeFileSync(
       PATCH_PATH,
       JSON.stringify(
         {
           generatedAt: today,
-          scopeDays: PATCH_SCOPE_DAYS,
-          // 첫 실행은 seen 시딩만 — 전부가 '신규'로 보이는 왜곡 방지. 내일부터 진짜.
-          seeded: firstRun,
-          newDealCount: firstRun ? 0 : patch.newDealCount,
-          scopeDealCount: patch.scopeDealCount,
-          nerf: firstRun ? [] : patch.nerf,
-          buff: firstRun ? [] : patch.buff,
+          scopeDays: boot ? BOOTSTRAP_SCOPE_DAYS : PATCH_SCOPE_DAYS,
+          mode: boot ? "bootstrap" : "daily",
+          newDealCount: boot ? boot.newDealCount : patch.newDealCount,
+          scopeDealCount: boot ? boot.scopeDealCount : patch.scopeDealCount,
+          nerf: boot ? boot.nerf : patch.nerf,
+          buff: boot ? boot.buff : patch.buff,
           latestDealDate: latest || null,
         },
         null,
@@ -126,8 +142,9 @@ async function main() {
       JSON.stringify({ updatedAt: today, keys: patch.nextSeenKeys }) + "\n",
       "utf8",
     );
+    const p = boot ?? patch;
     console.log(
-      `dailyPatch: 스코프 ${patch.scopeDealCount}건 · 신규 ${firstRun ? "(시딩)" : patch.newDealCount} · 너프 ${patch.nerf.length} · 버프 ${patch.buff.length}`,
+      `dailyPatch(${boot ? "창간호" : "일간"}): 스코프 ${p.scopeDealCount}건 · 신규 ${p.newDealCount} · 너프 ${p.nerf.length} · 버프 ${p.buff.length}`,
     );
   }
 }

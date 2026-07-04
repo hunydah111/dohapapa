@@ -30,7 +30,10 @@ interface PatchItem {
 interface DailyPatch {
   generatedAt: string | null;
   scopeDays: number;
-  seeded: boolean;
+  /** 구버전 placeholder 호환 — 새 파이프라인은 mode 를 쓴다. */
+  seeded?: boolean;
+  /** "bootstrap" = 창간호(최근 N일 계약 공개분), "daily" = 오늘 신규 공개 diff. */
+  mode?: "bootstrap" | "daily";
   newDealCount: number;
   scopeDealCount: number;
   nerf: PatchItem[];
@@ -104,8 +107,8 @@ function PatchLine({ item }: { item: PatchItem }) {
 export function DailyFront() {
   const isEmpty =
     patch.generatedAt === null ||
-    patch.seeded ||
     (patch.nerf.length === 0 && patch.buff.length === 0);
+  const isBootstrap = patch.mode === "bootstrap";
 
   const nerfTop = patch.nerf.slice(0, 3);
   const buffTop = patch.buff.slice(0, 3);
@@ -133,10 +136,11 @@ export function DailyFront() {
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="text-[14px] font-bold text-[#3a2c1d]">
             📋 비집고 패치노트
-            {patch.generatedAt && !patch.seeded && (
+            {patch.generatedAt && (
               <span className="font-semibold text-[#8a7d6e]">
                 {" "}
                 · {md(patch.generatedAt)}
+                {isBootstrap && " 창간호"}
               </span>
             )}
           </h2>
@@ -168,7 +172,9 @@ export function DailyFront() {
               )}
             </p>
             <p className="mt-1 text-[12px]" style={{ color: "#8a7d6e" }}>
-              첫 패치노트는 내일 새벽 5:30에 나옵니다
+              {patch.generatedAt === null
+                ? "첫 패치노트는 곧 나옵니다"
+                : "오늘은 중위가를 흔든 거래가 없어요 · 내일 새벽 5:30 갱신"}
             </p>
           </div>
         ) : (
@@ -182,7 +188,11 @@ export function DailyFront() {
               ))}
             </ul>
             <p className="mt-2 text-[12px]" style={{ color: "#8a7d6e" }}>
-              오늘 신규 공개 {patch.newDealCount.toLocaleString("ko-KR")}건
+              {isBootstrap ? (
+                <>최근 {patch.scopeDays}일 계약 공개분 {patch.scopeDealCount.toLocaleString("ko-KR")}건 기준</>
+              ) : (
+                <>오늘 신규 공개 {patch.newDealCount.toLocaleString("ko-KR")}건</>
+              )}
               {patch.latestDealDate && (
                 <> · 최신 계약 {md(patch.latestDealDate)}</>
               )}
