@@ -18,6 +18,7 @@ function makeDday(over: Partial<DdayResult> = {}): DdayResult {
     bandLabel: "32~35평",
     targetKrw: 1_200_000_000,
     monthlySavingKrw: 2_000_000,
+    gapKrw: 200_000_000, // months(100) × 월저축 근사 — 픽스처용
     months: 100,
     days: 3044,
     capped: false,

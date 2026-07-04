@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { HomeExperience } from "@/components/HomeExperience";
+import { DailyFront } from "@/components/DailyFront";
 import { decodeFriend, FRIEND_PARAM } from "@/lib/friendShare";
 import { composeBijiName } from "@/lib/bijiName";
 import { SITE_URL } from "@/lib/site";
@@ -44,8 +45,14 @@ export async function generateMetadata({
 export default function HomePage() {
   return (
     <div className="relative mx-auto max-w-2xl px-4 pt-4">
-      {/* ── 메인 경험 (랜딩 히어로 → 폼 → 결과) ── */}
-      <HomeExperience />
+      {/* ── 오늘의 1면 — 0입력 데일리 스트립 (패치노트·환산·문턱 게이지) ── */}
+      <DailyFront />
+
+      {/* ── 메인 경험 (랜딩 히어로 → 폼 → 결과) ──
+          id=biji-verdict: DailyFront 판정 훅·게이지 "대안 동네 보기"의 스크롤 목적지. */}
+      <div id="biji-verdict" className="scroll-mt-4">
+        <HomeExperience />
+      </div>
 
       {/* ── 면책 안내 ── */}
       <p

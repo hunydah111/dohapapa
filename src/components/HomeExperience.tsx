@@ -34,6 +34,11 @@ import {
   resumeLabel,
   type SearchPrefs,
 } from "@/lib/searchPrefs";
+import {
+  saveLocalProfile,
+  loadLocalProfile,
+  clearLocalProfile,
+} from "@/lib/localProfile";
 import { MiniMap, KAKAO_JS_ENABLED } from "./MiniMap";
 import { useNeighborhood } from "./NeighborhoodSection";
 
@@ -126,6 +131,52 @@ function markRealTransit(
   };
 }
 
+// ── 문턱 게이지 옵트인 토글 — 결과 화면(HeroResultCard 아래) ─────────────────
+// 무저장 원칙 예외는 딱 하나: 사용자가 이 체크박스를 직접 켰을 때 localStorage 에만.
+// 켜면 프로필+1순위 시군구 저장 → 홈 상단 문턱 게이지가 "오늘 시세"로 재계산.
+// 끄면 즉시 삭제. 문구 "이 폰에만 저장 · 서버 미전송" 필수 (제품 원칙).
+function LocalProfileOptIn({
+  profile,
+  sigungu,
+}: {
+  profile: CoupleProfile;
+  sigungu?: string;
+}) {
+  const [on, setOn] = useState(false);
+  // 이미 옵트인된 기기면 체크 상태 복원 — localStorage 는 마운트 후에만.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 외부(localStorage) 동기화
+    setOn(loadLocalProfile() !== null);
+  }, []);
+  const toggle = () => {
+    if (on) {
+      clearLocalProfile();
+      setOn(false);
+    } else {
+      saveLocalProfile(profile, sigungu);
+      setOn(true);
+    }
+  };
+  return (
+    <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[#ecd9b3] bg-[#fdf6e7] px-4 py-3">
+      <input
+        type="checkbox"
+        checked={on}
+        onChange={toggle}
+        className="mt-0.5 h-4 w-4 shrink-0 accent-coral-600"
+      />
+      <span className="flex min-w-0 flex-col">
+        <span className="text-[13px] font-bold text-[#3a2c1d]">
+          다음에 오면 오늘 시세로 다시 계산
+        </span>
+        <span className="text-[11px]" style={{ color: "#8a7d6e" }}>
+          이 폰에만 저장 · 서버 미전송{on ? " · 저장됨 (해제하면 즉시 삭제)" : ""}
+        </span>
+      </span>
+    </label>
+  );
+}
+
 export function HomeExperience() {
   const [state, setState] = useState<ResultState | null>(null);
   const [autoLoading, setAutoLoading] = useState(false);
@@ -179,6 +230,11 @@ export function HomeExperience() {
       if (readFriendFromLocation()) track("friend_convert");
       // 재방문 이어보기(R2) — 비민감 검색 취향만 기기에 저장(소득·자산·직장·예산·가족 제외).
       saveSearchPrefs(profile);
+      // 문턱 게이지 — 이미 옵트인된 기기라면 최신 판정 프로필로 갱신(1순위 시군구 포함).
+      // 옵트인 안 했으면 아무것도 저장하지 않는다.
+      if (loadLocalProfile() !== null) {
+        saveLocalProfile(profile, result.candidates[0]?.sigungu);
+      }
       // 조건 수정 패널 기본값을 현재 프로필로 초기화 (만원 단위).
       // 간단(simple) 모드는 예산 드라이버가 availableBudgetKrw 이므로 그 값을 보여준다
       // (seedMoneyKrw 는 simple 에서 무시되므로 보여주면 사용자가 혼동·미반영됨).
@@ -939,6 +995,12 @@ export function HomeExperience() {
           budgetNetKrw={result.budget.netPurchasePowerKrw}
         />
       )}
+
+      {/* 문턱 게이지 옵트인 — 다음 방문 때 홈 상단에서 오늘 시세로 재계산 (기기 저장) */}
+      <LocalProfileOptIn
+        profile={state.profile}
+        sigungu={result.candidates[0]?.sigungu}
+      />
 
       {/* 입지 미스 솔직 안내 — 고른 분위기가 결과에 안 잡혔을 때 + 단지 위치 지도 버튼 */}
       {result.vibeNote && (

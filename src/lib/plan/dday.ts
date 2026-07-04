@@ -47,6 +47,8 @@ export interface DdayResult {
   targetKrw: number;
   /** 가정 월저축(원) — 소득 기반 디폴트. */
   monthlySavingKrw: number;
+  /** 부족액(원) = max(0, 목표가 − 지금 구매가능가). 0이면 지금 닿음. */
+  gapKrw: number;
   /** 도달 개월. 0 = 지금 가능. null = 40년+ 미도달. */
   months: number | null;
   /** 표시용 일수 (months × 30.44 반올림). null = 미도달. */
@@ -134,6 +136,7 @@ export function computeDdayForSigungu(
     bandLabel: AREA_RANGES[band].label,
     targetKrw: target,
     monthlySavingKrw,
+    gapKrw: plan.gapKrw,
     months,
     days,
     capped,
