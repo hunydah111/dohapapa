@@ -144,13 +144,14 @@ const SCEN_INFO: Record<ScenarioKey, { label: string; hint: string }> = {
   up: { label: "상승", hint: "오를 때" },
 };
 
-// 결과에 따라 반응하는 비버 — MZ 시크 톤. 끝은 희망(멀어도 같이 세보자).
-function heroBeaver(months: number | null, basics: boolean): { src: string; word: string } {
-  if (basics) return { src: "biji-wallet-empty", word: "저축시작,\n할수있어!" };
-  if (months === null) return { src: "biji-think-cool", word: "동네 다시\n골라야겠는데" };
-  if (months <= 36) return { src: "biji-cheer-cocky", word: "레고레고~" };
-  if (months <= 84) return { src: "biji-running", word: "이대로\n쭉 ㄱㄱ" };
-  return { src: "biji-clock-sigh", word: "오래걸려도\n포기X" };
+// 결과에 따라 반응하는 한 마디 — MZ 시크 톤. 끝은 희망(멀어도 같이 세보자).
+// (캐릭터 강등: 마스코트 그림은 떠났지만 말투는 남는다.)
+function heroWord(months: number | null, basics: boolean): string {
+  if (basics) return "저축시작, 할수있어!";
+  if (months === null) return "동네 다시 골라야겠는데";
+  if (months <= 36) return "레고레고~";
+  if (months <= 84) return "이대로 쭉 ㄱㄱ";
+  return "오래걸려도 포기X";
 }
 
 // ── R3 재방문 — "살아있는 D-day": 저장된 플랜으로 경과월만큼 모았다면 시점 재계산 ──
@@ -603,62 +604,12 @@ export function PlanExperience() {
                 })()}
               </>
             )}
-          </div>
-          <div className="flex w-[78px] shrink-0 flex-col items-center justify-end">
-            {(() => {
-              const hero = heroBeaver(selectedMonths, guide.tone === "needBasics");
-              // 시크 비지 5장 모두 자체 모션 비디오 있음 — 자리에 따라 자동 video 분기.
-              // 임시 비활성화 — colorkey 알파 비디오 문제(눈 빨강·흰 잔여) 해결 라운드까지 PNG만.
-              const HAS_VIDEO = new Set<string>();
-              if (HAS_VIDEO.has(hero.src)) {
-                return (
-                  <>
-                    {/* key={hero.src} — src 변경 시 <video> 강제 re-mount해 새 source 로드.
-                        (video 태그는 src 변경만으론 reload 안 함 — 시나리오별 모션 안 바뀜 원인.) */}
-                    <video
-                      key={hero.src}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      preload="auto"
-                      width={72}
-                      height={72}
-                      className="biji-motion-video h-[72px] w-[72px] drop-shadow-md"
-                      aria-label="비집고 비지"
-                    >
-                      <source src={`/biji/${hero.src}.webm`} type="video/webm" />
-                      <source src={`/biji/${hero.src}.mp4`} type="video/mp4" />
-                    </video>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={`/biji/${hero.src}.png?v=16`}
-                      alt="비집고 비지"
-                      width={72}
-                      height={72}
-                      className="biji-motion-fallback h-[72px] w-[72px] drop-shadow-md"
-                      draggable={false}
-                    />
-                  </>
-                );
-              }
-              return (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={`/biji/${hero.src}.png?v=16`}
-                  alt="비집고 비지"
-                  width={72}
-                  height={72}
-                  className="h-[72px] w-[72px] drop-shadow-md"
-                  draggable={false}
-                />
-              );
-            })()}
+            {/* 반응 한 마디 — 말풍선 → 콜아웃 박스 (그림 없이 말투 유지) */}
             <span
-              className="mt-1 whitespace-pre-line rounded-2xl bg-white/20 px-2 py-1 text-center text-[10px] font-semibold leading-tight"
+              className="mt-3 inline-flex rounded-2xl border border-white/30 bg-white/20 px-3 py-1.5 text-[12px] font-semibold leading-tight"
               style={{ backdropFilter: "blur(2px)" }}
             >
-              {heroBeaver(selectedMonths, guide.tone === "needBasics").word}
+              {heroWord(selectedMonths, guide.tone === "needBasics")}
             </span>
           </div>
         </div>
@@ -667,14 +618,6 @@ export function PlanExperience() {
       {/* R3 재방문 — 지난번보다 당겨진 D-day */}
       {revisit && (
         <section className="flex items-center gap-3 rounded-3xl border border-[#ecd9b3] bg-[#fdf6e7]/80 p-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/biji/biji-compare.png"
-            alt=""
-            aria-hidden
-            className="h-14 w-auto shrink-0"
-            draggable={false}
-          />
           <div className="min-w-0">
             <p className="text-[12px]" style={{ color: "#6e5b46" }}>
               지난번 플랜이야 · 계획대로 <b>{revisit.months}개월</b> 모았다면
@@ -912,14 +855,6 @@ export function PlanExperience() {
         }}
       >
         <div className="flex items-center gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/biji/biji-talk.png"
-            alt=""
-            aria-hidden
-            className="h-11 w-auto shrink-0"
-            draggable={false}
-          />
           <p className="text-xs font-medium" style={{ color: "#6e5b46" }}>
             집값이 앞으로 어떻게 될까요?{" "}
             <span style={{ color: "#9c8a72" }}>· 가정(예측 아님), 골라보세요</span>
@@ -1012,14 +947,6 @@ export function PlanExperience() {
               <p className="text-[12px] font-semibold" style={{ color: t.text }}>
                 저축 vs 집값 경주
               </p>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/biji/biji-point-up.png"
-                alt=""
-                aria-hidden
-                className="h-12 w-auto drop-shadow"
-                draggable={false}
-              />
             </div>
             <PlanRaceChart result={plan} focus={scenarioKey} dark={t.dark} />
         <details className="mt-3 rounded-2xl bg-white/10 p-3 [&_summary::-webkit-details-marker]:hidden">
@@ -1181,19 +1108,15 @@ export function PlanExperience() {
         </div>
       </section>
 
-      {/* 도달의 모습 — 비지가 새 집 앞에서 (끝은 희망) */}
-      <section className="overflow-hidden rounded-3xl border border-coral-100 shadow-sm">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/biji/biji-newhome.png?v=2"
-          alt="입주 후 한강 뷰를 바라보는 비지 뒷모습"
-          className="block w-full"
-          draggable={false}
-        />
-        <p
-          className="px-4 py-2.5 text-center text-[12px] font-semibold"
-          style={{ background: "#fff4ef", color: "#9a5a1e" }}
-        >
+      {/* 도달의 모습 — 끝은 희망 (텍스트 콜아웃) */}
+      <section
+        className="rounded-3xl border border-coral-100 px-4 py-4 text-center shadow-sm"
+        style={{ background: "#fff4ef" }}
+      >
+        <p className="font-jua text-[17px]" style={{ color: "#e8662f" }}>
+          도착하면 한강 뷰다
+        </p>
+        <p className="mt-1 text-[12px] font-semibold" style={{ color: "#9a5a1e" }}>
           응원할게 🔑
         </p>
       </section>
@@ -1201,14 +1124,6 @@ export function PlanExperience() {
       {/* R3 저장 — 한 달 뒤 다시 보기(이 기기에만) */}
       <section className="rounded-3xl border border-coral-100 bg-white p-5 shadow-sm">
         <div className="flex items-center gap-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/biji/biji-calendar.png"
-            alt=""
-            aria-hidden
-            className="h-14 w-auto shrink-0"
-            draggable={false}
-          />
           <div className="min-w-0">
             <h2 className="text-[15px] font-bold" style={{ color: "#3a2c1d" }}>
               한 달 뒤 다시 보기

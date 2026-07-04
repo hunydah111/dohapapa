@@ -1,6 +1,5 @@
 import type { BudgetEstimate, PolicyLoanMatch } from "@/types/recommendation";
 import { Card } from "@/components/ui/Card";
-import { Homi } from "@/components/Homi";
 import { MonthlyBurden } from "@/components/MonthlyBurden";
 import { POLICY_META, policyFreshness } from "@/lib/policyLoan";
 import { formatKrwHuman } from "@/lib/format";
@@ -28,19 +27,10 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
     eligibleLoans.find((m) => m.productName === appliedName) ?? eligibleLoans[0] ?? null;
   const restEligible = eligibleLoans.filter((m) => m !== conclusionLoan);
 
-  // 예산 상황별 비지 — 빠듯/음수면 빈 지갑, 아니면 계산기(분석).
-  const budgetMood =
-    budget.netPurchasePowerKrw <= 0 ||
-    budget.totalEquityKrw < 0 ||
-    homeSaleNegative
-      ? "walletEmpty"
-      : "calc";
-
   return (
     <Card>
-      {/* 섹션 제목 — 비지가 예산 분석 */}
+      {/* 섹션 제목 */}
       <div className="mb-6 flex items-center gap-3">
-        <Homi mood={budgetMood} size={46} className="shrink-0" />
         <div>
           <h2 className="text-lg font-bold" style={{ color: "#3a322c" }}>
             예산 분석

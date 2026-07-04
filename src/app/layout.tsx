@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
-import { Homi } from "@/components/Homi";
 import { Analytics } from "@/components/Analytics";
 import { SITE_URL } from "@/lib/site";
 
@@ -11,7 +10,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "비집고 — 내 통장으로 어디 살 수 있을까?",
   description:
-    "비버 비지가 직장·예산·학군 조건으로 국토부 실거래가에서 살 만한 아파트 단지를 비집고 찾아주는 정보 제공 도구.",
+    "직장·예산·학군 조건으로 국토부 실거래가에서 내 통장이 닿는 아파트 단지를 비집고 찾아주는 정보 제공 도구.",
   openGraph: {
     title: "비집고",
     description: "내 통장으로 어디 살 수 있을까?",
@@ -66,10 +65,7 @@ export default function RootLayout({
               aria-label="비집고 홈으로"
               className="flex items-center gap-2.5 rounded-lg transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-coral-500"
             >
-              {/* 마스코트 비지 얼굴 — 로고 */}
-              <Homi mood="face" size={28} className="shrink-0" />
-
-              {/* 브랜드명 */}
+              {/* 브랜드명 — 워드마크가 로고 (타이포 중심) */}
               <span
                 className="font-jua text-[18px] tracking-tight"
                 style={{ color: "#e8662f" }}
@@ -98,9 +94,6 @@ export default function RootLayout({
               © {new Date().getFullYear()} 비집고 — 정보 제공 도구
             </p>
             <nav className="flex flex-wrap gap-4" style={{ color: "#6b6157" }}>
-              <Link href="/biji" className="hover:text-coral-600">
-                비지 도감
-              </Link>
               <Link href="/privacy" className="hover:text-coral-600">
                 개인정보처리방침
               </Link>

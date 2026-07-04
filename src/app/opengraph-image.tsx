@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { SITE_DOMAIN } from "@/lib/site";
 
 // 카카오톡·페이스북·X 등에서 링크 공유 시 보이는 썸네일(1200×630).
-// 비집고 브랜드: 따뜻한 코랄. 상단 = 브랜드 로고(아파트+비버) + 호기심 후크 카피 + 3-티어 칩,
+// 타이포그래피 중심 (2026-07 캐릭터 강등: 일러스트 제거) — 우드톤 배경 위 큰 카피 + 3-티어 칩,
 // 하단 = 코랄 밴드에 흰 워드마크(축소 시에도 대비 확보). 한글은 Black Han Sans(OFL) 번들 폰트.
 export const contentType = "image/png";
 
@@ -14,7 +14,7 @@ const ALT = "비집고 — 내 돈으로 살 집 어디까지?";
 // og:image URL에 버전 경로(/opengraph-image/<id>)를 박는다. 카카오·페북·폰 로컬은 이미지 URL
 // 글자 단위로 캐싱하므로, 디자인을 바꾸면 OG_VERSION을 올려 "한 번도 본 적 없는 새 URL"로 강제
 // 교체 → 모든 캐시 계층이 새로 긁어간다. (카카오 OG 디버거 캐시 초기화로도 안 풀릴 때의 확실한 우회)
-const OG_VERSION = "4";
+const OG_VERSION = "5";
 
 export function generateImageMetadata() {
   return [
@@ -31,10 +31,6 @@ export default async function Image() {
   const font = await readFile(
     join(process.cwd(), "assets/BlackHanSans-Regular.ttf"),
   );
-  const logoBuf = await readFile(
-    join(process.cwd(), "public/biji/biji-hero.png"),
-  );
-  const logo = `data:image/png;base64,${logoBuf.toString("base64")}`;
 
   const chip = (label: string, bg: string) => (
     <div
@@ -59,39 +55,29 @@ export default async function Image() {
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          background: "#f5ecd9",
+          background: "#FBF3E4",
           fontFamily: "BlackHanSans",
         }}
       >
-        {/* 상단: 브랜드 로고 + 후크 카피 */}
+        {/* 상단: 후크 카피 — 타이포가 메시지 전부 */}
         <div
           style={{
             display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
+            flexDirection: "column",
+            justifyContent: "center",
             flex: 1,
-            padding: "20px 44px 8px",
+            padding: "20px 72px 8px",
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={logo}
-            width={440}
-            height={440}
-            style={{ objectFit: "contain" }}
-            alt=""
-          />
-          <div style={{ display: "flex", flexDirection: "column", flex: 1, marginLeft: 32 }}>
-            <div style={{ fontSize: 90, color: "#3a322c", lineHeight: 1.12 }}>머리는 차갑게</div>
-            <div style={{ fontSize: 90, color: "#3a322c", lineHeight: 1.12 }}>통장은 뜨겁게</div>
-            <div style={{ display: "flex", flexDirection: "row", gap: 14, marginTop: 26 }}>
-              {chip("안정형", "#e0a23a")}
-              {chip("균형형", "#fe7644")}
-              {chip("도전형", "#3a322c")}
-            </div>
-            <div style={{ fontSize: 34, color: "#6b6157", marginTop: 26 }}>
-              수도권 아파트단지 1만 곳 · 30초컷
-            </div>
+          <div style={{ fontSize: 116, color: "#6B4226", lineHeight: 1.12 }}>통장 까면,</div>
+          <div style={{ fontSize: 116, color: "#FF8A4C", lineHeight: 1.12 }}>동네 나온다.</div>
+          <div style={{ display: "flex", flexDirection: "row", gap: 14, marginTop: 30 }}>
+            {chip("안정형", "#e0a23a")}
+            {chip("균형형", "#FF8A4C")}
+            {chip("도전형", "#6B4226")}
+          </div>
+          <div style={{ fontSize: 34, color: "#6B4226", marginTop: 28, opacity: 0.75 }}>
+            수도권 아파트단지 1만 곳 · 30초컷
           </div>
         </div>
 

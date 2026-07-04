@@ -18,7 +18,6 @@ import { CandidateCard } from "./CandidateCard";
 import { HeroResultCard } from "./HeroResultCard";
 import { BudgetTrendCard } from "./BudgetTrendCard";
 import { LandingHero } from "./LandingHero";
-import { Homi } from "./Homi";
 import { RequiredRegionPicker } from "./RequiredRegionPicker";
 import { budgetTopPercent } from "@/lib/budgetPercentile";
 import { Button } from "@/components/ui/Button";
@@ -435,7 +434,7 @@ export function HomeExperience() {
         ? "내 비버 등급 나왔다 🦫 — 너도 해봐!"
         : isTypeCard
           ? "내 집 찾기 유형 나왔다 — 너도 해봐! 🦫"
-          : "비버 비지가 찾아준 내 집 — 내 결과 보기",
+          : "내 통장이 닿는 집, 비집고 — 내 결과 보기",
       url,
     };
 
@@ -750,7 +749,9 @@ export function HomeExperience() {
   if (state === null && autoLoading) {
     return (
       <div className="flex flex-col items-center gap-2 rounded-3xl border border-[#ecd9b3] bg-[#fdf6e7]/70 px-6 py-12 text-center">
-        <Homi mood="running" size={92} />
+        <span className="flex h-5 w-5" aria-hidden="true">
+          <span className="inline-flex h-full w-full animate-ping rounded-full bg-coral-400 opacity-75" />
+        </span>
         <p className="text-sm font-semibold" style={{ color: "#7a4e15" }}>공유 링크 분석 중…</p>
         <p className="text-xs" style={{ color: "#9a8f82" }}>잠시만 기다려 주세요</p>
       </div>
@@ -835,7 +836,7 @@ export function HomeExperience() {
           버튼을 아랫줄로 내리고, 텍스트는 nowrap, 버튼군은 shrink-0 으로 보존. */}
         <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-2">
         <div className="flex items-center gap-1.5 min-w-0">
-          <Homi mood="search" size={26} className="shrink-0" />
+          <span aria-hidden="true" className="shrink-0 text-[15px]">🔍</span>
           <p
             className="text-sm font-semibold whitespace-nowrap"
             style={{ color: "#6b6157" }}
@@ -898,7 +899,9 @@ export function HomeExperience() {
       {reanalyzing && (
         <div className="fixed inset-x-0 bottom-20 z-50 flex justify-center px-4">
           <div className="flex items-center gap-2 rounded-full bg-coral-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg">
-            <Homi mood="running" size={30} />
+            <span className="flex h-3 w-3" aria-hidden="true">
+              <span className="inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+            </span>
             다시 찾는 중…
           </div>
         </div>
@@ -909,7 +912,7 @@ export function HomeExperience() {
         <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
           <div className="flex items-center gap-2 rounded-full bg-coral-600 px-5 py-3 text-sm font-medium text-white shadow-lg">
             {shareToast.includes("복사됨") && (
-              <Homi mood="thumbsup" size={28} className="shrink-0" />
+              <span aria-hidden="true" className="shrink-0">👍</span>
             )}
             <span>{shareToast}</span>
           </div>
@@ -999,7 +1002,6 @@ export function HomeExperience() {
       {result.candidates.length > 0 ? (
         <section className="flex flex-col gap-5">
           <div className="flex items-center gap-3">
-            <Homi mood="cheer" size={56} className="shrink-0" />
             <div>
               <h2 className="text-xl font-bold" style={{ color: "#3a322c" }}>
                 조건에 맞는 단지 잡았어
@@ -1026,7 +1028,6 @@ export function HomeExperience() {
       ) : (
         /* 0건 화면 */
         <Card>
-          <Homi mood="crying" size={96} className="mx-auto mb-1" />
           <h2
             className="text-xl font-bold mb-2 text-center"
             style={{ color: "#3a322c" }}
@@ -1339,7 +1340,6 @@ export function HomeExperience() {
       {result.closestCandidates.length > 0 && (
         <section className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
-            <Homi mood="map" size={44} className="shrink-0" />
             <div>
               <h2 className="text-lg font-bold" style={{ color: "#3a322c" }}>
                 조건과 가장 가까운 후보
@@ -1566,7 +1566,6 @@ export function HomeExperience() {
 
             {reanalyzeError && (
               <div className="flex items-center gap-2.5 rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-                <Homi mood="flustered" size={34} className="shrink-0" />
                 <span>{reanalyzeError}</span>
               </div>
             )}

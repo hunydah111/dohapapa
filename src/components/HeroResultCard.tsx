@@ -8,7 +8,6 @@ import { budgetTier } from "@/lib/budgetPercentile";
 import { SITE_DOMAIN } from "@/lib/site";
 import { BijiCard } from "./BijiCard";
 import { composeBijiName } from "@/lib/bijiName";
-import { pickTierImage } from "@/lib/budgetPercentile";
 import type { FriendTag } from "@/lib/friendShare";
 import { classifyRegulation } from "@/lib/regulation";
 import dataMeta from "@/data/dataMeta.json";
@@ -69,7 +68,6 @@ export function HeroResultCard({
   budgetNetKrw?: number;
 }) {
   const friendName = friendTag ? composeBijiName(friendTag.sigungu, friendTag.tier) : null;
-  const friendImage = friendTag ? pickTierImage(friendTag.tier.image, friendTag.sigungu) : null;
 
   // D-day 표시 변환 — 지금 가능(긍정) / D-숫자 / D-아득(박탈감 캡) + 자조 verdict 한 줄.
   const ddayDisplay = dday
@@ -113,18 +111,18 @@ export function HeroResultCard({
       style={{ background: "#fe7644" }}
     >
 
-      {/* 친구 비교 — URL ?f= 친구 비지 있을 때만. 자기 카드 위에 친구 비지 미니로 노출. */}
-      {friendTag && friendName && friendImage && (
+      {/* 친구 비교 — URL ?f= 친구 등급 있을 때만. 자기 카드 위에 친구 등급 미니(텍스트)로 노출. */}
+      {friendTag && friendName && (
         <div className="mb-3 flex items-center gap-3 rounded-2xl bg-white/15 px-3 py-2.5 backdrop-blur-sm">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={`${friendImage}?v=4`}
-            alt={`친구의 비지: ${friendName}`}
-            className="h-12 w-12 shrink-0 rounded-lg bg-white object-contain ring-1 ring-white/40"
-            draggable={false}
-          />
+          <span
+            className="font-jua flex h-12 min-w-12 shrink-0 items-center justify-center rounded-lg bg-white px-1.5 text-[13px] leading-tight ring-1 ring-white/40"
+            style={{ color: "#e8662f" }}
+            aria-hidden="true"
+          >
+            {friendTag.tier.label}
+          </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-100">👬 친구 비지</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-100">👬 친구 등급</p>
             <p className="mt-0.5 truncate text-[14px] font-extrabold text-white" title={friendName}>
               {friendName}
             </p>
@@ -310,15 +308,6 @@ export function HeroResultCard({
 
       {/* 브랜드 워터마크 — 이 카드를 캡쳐해 공유해도 출처가 따라가게(V4). */}
       <div className="mt-3 flex items-center justify-center gap-1.5 border-t border-white/15 pt-2.5">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/biji/biji-face.png?v=2"
-          alt=""
-          width={18}
-          height={18}
-          className="h-[18px] w-[18px]"
-          draggable={false}
-        />
         <span className="text-[12px] font-extrabold tracking-tight text-white/90">
           비집고
         </span>

@@ -42,7 +42,6 @@ import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { Segmented } from "@/components/ui/Segmented";
 import { StepDots } from "@/components/ui/StepDots";
-import { Homi } from "@/components/Homi";
 import { RequiredRegionPicker } from "@/components/RequiredRegionPicker";
 import { vibeReflectionLabel } from "@/lib/recommend/locationVibe";
 import { formatKrwHuman } from "@/lib/format";
@@ -1348,7 +1347,7 @@ export function ProfileForm({
             className="flex w-full items-center justify-between rounded-3xl border-2 border-coral-300 bg-coral-50 px-5 py-4 text-left transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-coral-500"
           >
             <span className="flex items-center gap-3">
-              <Homi mood="calc" size={40} className="shrink-0" />
+              <span aria-hidden="true" className="shrink-0 text-2xl">🧮</span>
               <span className="flex flex-col">
                 <span className="text-[15px] font-bold text-coral-800">
                   {detailedBudget ? "대출까지 계산받기" : "간단 입력 (예산만)"}
@@ -1733,10 +1732,12 @@ export function ProfileForm({
             })}
           </div>
 
-          {/* 분석 중 안내 — 호미가 돋보기 들고 두리번 */}
+          {/* 분석 중 안내 */}
           {submitting && (
             <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-[#fdf6e7] border border-[#ecd9b3] px-4 py-5">
-              <Homi mood="running" size={88} />
+              <span className="flex h-5 w-5" aria-hidden="true">
+                <span className="inline-flex h-full w-full animate-ping rounded-full bg-coral-400 opacity-75" />
+              </span>
               <p className="text-[14px] font-semibold" style={{ color: "#7a4e15" }}>
                 열심히 찾는 중…
               </p>
@@ -1746,10 +1747,9 @@ export function ProfileForm({
             </div>
           )}
 
-          {/* 에러 — 비지가 화남 */}
+          {/* 에러 */}
           {submitError && (
             <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-red-50 border border-red-200 text-[14px] text-red-700 leading-snug">
-              <Homi mood="angry" size={36} className="shrink-0" />
               <span>{submitError}</span>
             </div>
           )}

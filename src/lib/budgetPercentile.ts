@@ -74,9 +74,6 @@ export interface BeaverTierTheme {
   accent: string;
   /** 큰 이름 텍스트 색 override (옵션 — 미지정 시 textTone에 따라 자동). */
   nameColor?: string;
-  /** 단일 이미지 등급의 탭 반응 애니메이션 CSS 클래스 (이스터에그).
-   *  array 변주 등급은 cycle이 우선, 이 필드는 무시됨. */
-  tapAnimation?: "biji-tap-wiggle" | "biji-tap-shine" | "biji-tap-flip";
 }
 
 export interface BudgetTier {
@@ -88,9 +85,6 @@ export interface BudgetTier {
   drip: string;
   /** true면 "상위 N%" 노출, false(최하위)면 숫자 숨김. */
   isFlex: boolean;
-  /** 공유 OG·카드용 비버 이미지 (public/biji/tier/…). 등급별 무드.
-   *  배열이면 시드(시군구)로 결정적 랜덤 픽 — 동일 지역은 항상 같은 비지로 일관성 유지. */
-  image: string | string[];
   /** 트레이딩 카드 시각 테마. */
   theme: BeaverTierTheme;
 }
@@ -98,7 +92,6 @@ export interface BudgetTier {
 export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
   queen: {
     slug: "queen", emoji: "🎤", label: "퀸비버", drip: "갈라쇼 라인 — 최정상", isFlex: true,
-    image: "/biji/tier/queen.png",
     theme: {
       // 실버 그라데이션 — 갈라쇼/럭셔리 메탈 톤. Freddie 마이크·체인 실버 톤과 호응.
       // 라벨 텍스트는 dark charcoal로 silver bg 위 가독 OK (별도 nameColor override).
@@ -108,12 +101,10 @@ export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
       ornament: "gold-stars", // 무대 스포트라이트 큰 별 — 최정상 갈라쇼 무드
       accent: "#909296", // 실버 — corner 별 ornament 색
       nameColor: "#2c2c30", // dark charcoal — silver bg 위 큰 이름 가독성
-      tapAnimation: "biji-tap-wiggle", // 콧수염 흔드는 듯한 살짝 회전
     },
   },
   rain: {
     slug: "rain", emoji: "🕶️", label: "비  버", drip: "1일 1비집고 — 슈퍼 라인", isFlex: true,
-    image: "/biji/tier/rain.png",
     theme: {
       // 깡 noir — 검정 가죽 자켓 + 골드 체인. 깊은 black + 따뜻한 우디 base.
       cardBg: "linear-gradient(155deg, #14100c 0%, #2c2218 50%, #5a4838 100%)",
@@ -121,12 +112,10 @@ export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
       glow: "radial-gradient(circle at 80% 10%, rgba(224,162,58,0.4) 0%, rgba(224,162,58,0) 65%)",
       ornament: "flames",
       accent: "#e0a23a",
-      tapAnimation: "biji-tap-shine", // 선글라스 반짝 — brightness/saturate flash
     },
   },
   bieber: {
     slug: "bieber", emoji: "🎤", label: "저스틴비버", drip: "글로벌 — 인기 라인", isFlex: true,
-    image: "/biji/tier/bieber.png",
     theme: {
       // 2010 리즈 시절 매거진 화보 — 하늘색 데님 셔츠 분위기, 청량 + 따뜻 미디엄
       cardBg: "linear-gradient(160deg, #f6faff 0%, #d8e8f4 55%, #a8c8e0 100%)",
@@ -134,18 +123,10 @@ export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
       glow: "radial-gradient(circle at 50% 0%, rgba(168,200,224,0.5) 0%, rgba(168,200,224,0) 65%)",
       ornament: "hearts",
       accent: "#4a7ba8",
-      tapAnimation: "biji-tap-flip", // 헤어 한 번 휘날리는 듯한 살짝 기울기
     },
   },
   gukmin: {
     slug: "gukmin", emoji: "🦫", label: "비버", drip: "표준 라인 — 부업 한 칸 늘리자~", isFlex: false,
-    // 가장 많은 비버류라 시각 단조 차단 — 시군구 시드로 결정적 랜덤 픽 4장 (norm/blossom/grass/leaf).
-    image: [
-      "/biji/tier/norm.png",
-      "/biji/tier/blossom.png",
-      "/biji/tier/grass.png",
-      "/biji/tier/leaf.png",
-    ],
     theme: {
       cardBg: "linear-gradient(160deg, #fffdf8 0%, #efe2cf 60%, #d9c5a4 100%)",
       textTone: "dark",
@@ -156,12 +137,6 @@ export const BEAVER_TIERS: Record<BeaverTierSlug, BudgetTier> = {
   },
   baby: {
     slug: "baby", emoji: "🐣", label: "아기비버", drip: "출발선 — 우선 현금흐름 잡자", isFlex: false,
-    // 3장 변주 (기존 baby + pinkbaby + bluebaby) — 시군구 시드 결정적 픽.
-    image: [
-      "/biji/tier/baby.png",
-      "/biji/tier/pinkbaby.png",
-      "/biji/tier/bluebaby.png",
-    ],
     theme: {
       cardBg: "linear-gradient(160deg, #fffdf8 0%, #ffe6dc 55%, #ffccb7 100%)",
       textTone: "dark",
@@ -198,22 +173,4 @@ export function getTierBySlug(slug: string): BudgetTier | null {
   const aliased = LEGACY_SLUG_ALIAS[slug];
   if (aliased) return BEAVER_TIERS[aliased];
   return null;
-}
-
-// 문자열 결정적 해시 — 시군구 같은 시드로 array 변주 픽.
-function djb2Hash(s: string): number {
-  let h = 5381;
-  for (let i = 0; i < s.length; i++) h = ((h << 5) + h) ^ s.charCodeAt(i);
-  return Math.abs(h);
-}
-
-/**
- * tier.image가 array면 시드(시군구) 기반 결정적 픽, 단일 string이면 그대로.
- * 시드 없거나 빈 array면 첫 번째 폴백. SSR/CSR 동일 결과 (hydration safe).
- */
-export function pickTierImage(image: string | string[], seed?: string | null): string {
-  if (typeof image === "string") return image;
-  if (image.length === 0) return "";
-  if (image.length === 1 || !seed) return image[0];
-  return image[djb2Hash(seed) % image.length];
 }

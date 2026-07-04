@@ -5,7 +5,6 @@ import { POLICY_META } from "@/lib/policyLoan";
 import { budgetTier } from "@/lib/budgetPercentile";
 import { friendDdayLabel, type FriendTag } from "@/lib/friendShare";
 import { composeBijiName } from "@/lib/bijiName";
-import { pickTierImage } from "@/lib/budgetPercentile";
 
 // 정책(대출·세제) 점검 시점 — "2026-05-25" → "2026.5".
 const POLICY_VERIFIED_SHORT: string = (() => {
@@ -44,9 +43,6 @@ export function LandingHero({
   friendTag?: FriendTag | null;
 }) {
   const friendName = friendTag ? composeBijiName(friendTag.sigungu, friendTag.tier) : null;
-  const friendImage = friendTag
-    ? pickTierImage(friendTag.tier.image, friendTag.sigungu)
-    : null;
 
   // 예시 카드 — 새로고침마다 랜덤. SSR/CSR 일치를 위해 첫 렌더는 0번 고정,
   // 마운트 후 랜덤 스왑(key 변화로 pop-in 재생 — 스왑이 버그가 아니라 연출로 보이게).
@@ -59,17 +55,17 @@ export function LandingHero({
 
   return (
     <section className="relative px-1 pt-6 pb-4 text-center sm:pt-10">
-      {/* 친구 비교 배너 — URL ?f= 친구 비지 있을 때만. 친구가 너랑 비교하자고 보낸 링크임을
+      {/* 친구 비교 배너 — URL ?f= 친구 등급 있을 때만. 친구가 너랑 비교하자고 보낸 링크임을
           1초 안에 인지시키는 funnel 진입 hook. */}
-      {friendTag && friendName && friendImage && (
+      {friendTag && friendName && (
         <div className="biji-pop-in relative mx-auto mb-5 flex max-w-sm items-center gap-3 rounded-2xl border-2 border-coral-300 bg-coral-50 p-3 text-left shadow-sm">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={`${friendImage}?v=4`}
-            alt={`친구의 비지: ${friendName}`}
-            className="h-14 w-14 shrink-0 rounded-xl bg-white object-contain ring-1 ring-coral-200"
-            draggable={false}
-          />
+          <span
+            className="font-jua flex h-14 min-w-14 shrink-0 items-center justify-center rounded-xl bg-white px-2 text-[14px] leading-tight ring-1 ring-coral-200"
+            style={{ color: "#e8662f" }}
+            aria-hidden="true"
+          >
+            {friendTag.tier.label}
+          </span>
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-semibold text-coral-700">🦫 친구가 판정 까고 던졌다</p>
             <p className="mt-0.5 truncate text-[15px] font-bold text-[#3a2c1d]" title={friendName}>
