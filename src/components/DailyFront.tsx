@@ -17,7 +17,15 @@
 import { Noto_Serif_KR } from "next/font/google";
 import dailyPatchRaw from "@/data/dailyPatch.json";
 import dailyPulseRaw from "@/data/dailyPulse.json";
-import { pickHeadline, type MajorItem, type PatchTemp, type RegionPulse } from "@/lib/patchNote";
+import {
+  pickHeadline,
+  type MajorItem,
+  type PatchTemp,
+  type RegionPulse,
+  type CancellationItem,
+  type BusiestRegion,
+  type HeadlinesResult,
+} from "@/lib/patchNote";
 import { ThresholdGauge, DailyFrontPing } from "./ThresholdGauge";
 import { DealMiniMap } from "./DealMiniMap";
 
@@ -55,6 +63,10 @@ interface PatchItem {
   /** 단지 좌표 — 행 미니맵·카카오맵 링크용. 스냅샷 미등재면 null. */
   lat?: number | null;
   lng?: number | null;
+  /** 층 — 행 메타 "12층" 태그. 구 스키마엔 없음. */
+  floor?: number | null;
+  /** 최근접 지하철역 거리(m) — 행 메타 "역 350m" 태그. 구 스키마엔 없음. */
+  nearestSubwayM?: number | null;
 }
 
 interface DailyPatch {
@@ -62,8 +74,12 @@ interface DailyPatch {
   scopeDays: number;
   /** 구버전 placeholder 호환 — 새 파이프라인은 mode 를 쓴다. */
   seeded?: boolean;
-  /** "bootstrap" = 창간호(최근 N일 계약 공개분), "daily" = 오늘 신규 공개 diff. */
-  mode?: "bootstrap" | "daily";
+  /** "bootstrap" = 창간호, "daily" = 오늘 신규 공개 diff,
+   *  "merged" = 주말 저볼륨 합산(최근 2~3일 공개분 — 라벨 병기 의무). */
+  mode?: "bootstrap" | "daily" | "merged";
+  /** merged 합산 구간 — "주말 합산 · {M/D}~{M/D} 공개분" 라벨용. merged 아닐 땐 null. */
+  mergedFromDate?: string | null;
+  mergedToDate?: string | null;
   newDealCount: number;
   scopeDealCount: number;
   nerf: PatchItem[];
@@ -76,6 +92,12 @@ interface DailyPatch {
   weakRegions?: RegionPulse[];
   /** 대칭 강세 집계 — 데이터만, UI 비게재([강세 거래] 실명이 담당). */
   strongRegions?: RegionPulse[];
+  /** [오늘의 해제] — 구 스키마엔 없음. 0건이면 코너 생략. */
+  cancellations?: CancellationItem[];
+  /** 오늘 최다 공개 동네 — 구 스키마엔 없음. 비면 줄 생략. */
+  busiestRegions?: BusiestRegion[];
+  /** 헤드라인 묶음(톱 1 + 서브 ≤3) — 구 스키마엔 없음 → 기존 단일 헤드라인 로직 폴백. */
+  headlines?: HeadlinesResult;
   latestDealDate: string | null;
 }
 
@@ -132,6 +154,21 @@ function sqm(area: number): string {
 function pctAbs(pct: number): string {
   const s = (Math.abs(pct) * 100).toFixed(1);
   return s.endsWith(".0") ? s.slice(0, -2) : s;
+}
+
+/** 역거리 태그 상한(m) — 1km 초과면 "역세권" 정보가치가 없어 생략. */
+const SUBWAY_TAG_MAX_M = 1000;
+
+/** 층·역거리 메타 태그 — "12층 · 역 350m". 없는 값은 생략, 둘 다 없으면 null. */
+function floorSubwayTag(
+  floor?: number | null,
+  nearestSubwayM?: number | null,
+): string | null {
+  const parts: string[] = [];
+  if (floor != null) parts.push(`${floor}층`);
+  if (nearestSubwayM != null && nearestSubwayM <= SUBWAY_TAG_MAX_M)
+    parts.push(`역 ${Math.round(nearestSubwayM)}m`);
+  return parts.length > 0 ? parts.join(" · ") : null;
 }
 
 // ── 조판 부품 ─────────────────────────────────────────────────────────────────
@@ -222,6 +259,7 @@ function DealDetails({
  *  서브라인: 기준점(기간 내 최고 거래가) 병기 — 스냅샷 1년 최고 우선, 없으면 폴링창 2개월. */
 function MajorRow({ item, divider }: { item: MajorItem; divider: boolean }) {
   const refMax = item.windowMaxKrw ?? null;
+  const tag = floorSubwayTag(item.floor, item.nearestSubwayM);
   return (
     <div
       className={`py-[5.5px] tabular-nums ${divider ? "border-t border-dotted" : ""}`}
@@ -231,7 +269,7 @@ function MajorRow({ item, divider }: { item: MajorItem; divider: boolean }) {
         <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
           {item.dong} {item.apt}{" "}
           <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
-            {sqm(item.areaM2)}㎡
+            {sqm(item.areaM2)}㎡{tag ? ` · ${tag}` : ""}
           </span>
           <RowHint />
         </span>
@@ -262,6 +300,7 @@ function MajorRow({ item, divider }: { item: MajorItem; divider: boolean }) {
 /** [강세 거래] 행 — ▲ 먹 (빨간 경보색 금지). 비교는 전부 실거래 팩트(직전 거래, 날짜 병기).
  *  하락 실명 행은 폐지(주민 비하 금지) — 하락은 [약세 동네] 시군구 집계로만 다룬다. */
 function StrongRow({ item, divider }: { item: PatchItem; divider: boolean }) {
+  const tag = floorSubwayTag(item.floor, item.nearestSubwayM);
   return (
     <div
       className={`py-[5.5px] tabular-nums ${divider ? "border-t border-dotted" : ""}`}
@@ -274,7 +313,7 @@ function StrongRow({ item, divider }: { item: PatchItem; divider: boolean }) {
           </span>
           {item.sigungu} {item.apt}{" "}
           <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
-            {sqm(item.areaM2)}㎡
+            {sqm(item.areaM2)}㎡{tag ? ` · ${tag}` : ""}
           </span>
           <RowHint />
         </span>
@@ -287,6 +326,39 @@ function StrongRow({ item, divider }: { item: PatchItem; divider: boolean }) {
         직전 {md(item.prevDate!)} {eok(item.prevKrw!)} → {eok(item.priceKrw)} · 계약{" "}
         {md(item.dealDate)}
       </div>
+    </div>
+  );
+}
+
+/** [오늘의 해제] 행 — 국토부 공개 행정 사실만 인쇄. 해제 사유는 데이터에 없으므로
+ *  어떤 해석·단정도 붙이지 않는다("조작" 류 단어 금지). 경보색 금지 — 먹 톤. */
+function CancellationRow({ item, divider }: { item: CancellationItem; divider: boolean }) {
+  const tag = floorSubwayTag(item.floor, item.nearestSubwayM);
+  return (
+    <div
+      className={`py-[5.5px] tabular-nums ${divider ? "border-t border-dotted" : ""}`}
+      style={divider ? { borderColor: RULE } : undefined}
+    >
+      <div className="flex items-baseline gap-2">
+        <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
+          {item.dong} {item.apt}{" "}
+          <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
+            {sqm(item.areaM2)}㎡{tag ? ` · ${tag}` : ""}
+          </span>
+        </span>
+        <span className="shrink-0 text-right text-[13px] font-bold" style={{ color: INK }}>
+          {eok(item.priceKrw)}
+        </span>
+        <span className="w-[62px] shrink-0 text-right text-[11px]" style={{ color: INK_SOFT }}>
+          계약 {md(item.dealDate)}
+        </span>
+      </div>
+      {/* 최고가 공개 이력 — wasTopInWindow(다른 유효 거래 전부보다 높았음)일 때만 인쇄. */}
+      {item.wasTopInWindow && (
+        <div className="mt-[1px] text-[11px] leading-[1.5]" style={{ color: INK_SOFT }}>
+          — 해제 전까지 이 단지 최고가로 공개돼 있었음
+        </div>
+      )}
     </div>
   );
 }
@@ -323,21 +395,31 @@ export function DailyFront() {
   // 발행 전(generatedAt null) = 창간 전 폴백 지면.
   const isPrelaunch = patch.generatedAt === null;
   const isBootstrap = patch.mode === "bootstrap";
-  // "오늘 공개 N건" — 창간호는 스코프 공개분, 일간은 신규 diff.
+  // 주말 저볼륨 합산 — 최근 2~3일 공개분을 합쳐 판독. 라벨 병기 의무(정직성).
+  const isMerged =
+    patch.mode === "merged" && !!patch.mergedFromDate && !!patch.mergedToDate;
+  /** merged 각주 접미 — "각 각주"에 합산 구간을 병기(사장 지시). */
+  const mergedNote = isMerged
+    ? ` · 주말 합산 ${md(patch.mergedFromDate!)}~${md(patch.mergedToDate!)} 공개분`
+    : "";
+  // "오늘 공개 N건" — 창간호는 스코프 공개분, 일간/합산은 신규 diff.
   const openCount = isBootstrap ? patch.scopeDealCount : patch.newDealCount;
 
   // 하위호환 — 구 스키마(major/temp 없음)에서도 절대 깨지지 않는다.
   const major = patch.major; // undefined = 구 스키마, [] = 오늘 없음
   const temp = patch.temp ?? null;
 
+  // 헤드라인 — 새 스키마는 빌드타임 headlines(톱+서브) 사용, 구 스키마는 기존 단일 로직 폴백.
   const headline = isPrelaunch
     ? null
-    : pickHeadline({
+    : patch.headlines?.top ??
+      pickHeadline({
         major: major ?? [],
         nerf: patch.nerf,
         newDealCount: openCount,
         todayISO: patch.generatedAt!,
       });
+  const subHeadlines = patch.headlines?.subs ?? []; // 구 스키마 → [] = 섹션 생략
 
   const majorVisible = major?.slice(0, MAJOR_VISIBLE) ?? [];
   const majorRest = major?.slice(MAJOR_VISIBLE) ?? [];
@@ -352,6 +434,8 @@ export function DailyFront() {
   // 구 스키마(직전 거래 필드 없는 nerf만 있음) — 새 기준 데이터가 올 때까지 예고 문구.
   const strongLegacy = strongs.length === 0 && patch.nerf.length > 0;
   const weakRegions = patch.weakRegions ?? []; // 구 스키마(undefined)·표본 없음([]) → 코너 생략
+  const cancellations = patch.cancellations ?? []; // 구 스키마·0건 → 코너 생략
+  const busiestRegions = patch.busiestRegions ?? []; // 구 스키마·비면 줄 생략
 
   // 온도 게이지 분할 — 위(먹) : 중립(괘선) : 아래(그린), matched 대비 비율.
   const tempPct = temp
@@ -378,7 +462,16 @@ export function DailyFront() {
           className="flex justify-between pb-1.5 text-[10.5px] tracking-[0.05em] tabular-nums"
           style={{ color: INK_SOFT }}
         >
-          <span>{isPrelaunch ? "창간 준비호" : koDate(patch.generatedAt!)}</span>
+          <span>
+            {isPrelaunch ? "창간 준비호" : koDate(patch.generatedAt!)}
+            {/* 주말 합산 라벨 — 헤더 날짜 옆 병기(정직성 의무). */}
+            {isMerged && (
+              <>
+                {" "}
+                · 주말 합산 {md(patch.mergedFromDate!)}~{md(patch.mergedToDate!)} 공개분
+              </>
+            )}
+          </span>
           <span>오늘의 판 · 매일 새벽 5:30 발행</span>
         </div>
 
@@ -438,12 +531,44 @@ export function DailyFront() {
               >
                 {headline!.text}
               </h3>
+
+              {/* 서브 헤드라인 — 세그먼트 칩([서울]·[경기·인천]·[9억 이하], CornerLabel보다
+                  작게) + 명조 볼드 소형. 서브 0개면 섹션 자체 생략(구 스키마 포함). */}
+              {subHeadlines.length > 0 && (
+                <div className="mt-2 flex flex-col gap-[5px]">
+                  {subHeadlines.map((s) => (
+                    <div key={s.label} className="flex items-baseline gap-1.5">
+                      <span
+                        className="shrink-0 px-1.5 py-[2px] text-[9.5px] font-bold tracking-[0.12em]"
+                        style={{ background: INK, color: PAPER }}
+                      >
+                        {s.label}
+                      </span>
+                      <span
+                        className={`${serif.className} min-w-0 text-[13.5px] font-bold leading-[1.45] break-keep`}
+                        style={{ color: INK }}
+                      >
+                        {s.text}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <p className="mb-0 mt-1.5 text-[12.5px] leading-[1.6]" style={{ color: INK_SOFT }}>
                 {isBootstrap ? (
                   <>
                     최근 {patch.scopeDays}일 계약 공개분{" "}
                     <b className="tabular-nums" style={{ color: INK }}>
                       {patch.scopeDealCount.toLocaleString("ko-KR")}건
+                    </b>{" "}
+                    판독 결과
+                  </>
+                ) : isMerged ? (
+                  <>
+                    주말 합산 {md(patch.mergedFromDate!)}~{md(patch.mergedToDate!)} 공개{" "}
+                    <b className="tabular-nums" style={{ color: INK }}>
+                      {patch.newDealCount.toLocaleString("ko-KR")}건
                     </b>{" "}
                     판독 결과
                   </>
@@ -470,7 +595,8 @@ export function DailyFront() {
                     <b style={{ color: INK }}>{tempPct.above}%</b> : 낮게{" "}
                     <b style={{ color: GREEN }}>{tempPct.below}%</b>{" "}
                     <span className="text-[10.5px]">
-                      (직전 실거래가 있는 거래 {temp.matched.toLocaleString("ko-KR")}건 기준)
+                      (직전 실거래가 있는 거래 {temp.matched.toLocaleString("ko-KR")}건 기준
+                      {mergedNote})
                     </span>
                   </p>
                   <div
@@ -488,6 +614,26 @@ export function DailyFront() {
                     <span style={{ width: `${tempPct.below}%`, background: GREEN }} />
                   </div>
                 </div>
+              )}
+
+              {/* 오늘 최다 공개 동네 — fresh 유효 거래 시군구 상위 3(3건 이상만).
+                  동네명은 추후 링크 예정이라 span으로 감싸 둔다. 구 스키마·비면 생략. */}
+              {busiestRegions.length > 0 && (
+                <p
+                  className="mb-0 mt-2 text-[12px] leading-[1.6] tabular-nums"
+                  style={{ color: INK_SOFT }}
+                >
+                  {isMerged ? "이번 합산에서" : "오늘"} 가장 많이 공개된 동네 —{" "}
+                  {busiestRegions.map((r, i) => (
+                    <span key={r.sigungu}>
+                      {i > 0 && " · "}
+                      <span data-region={r.sigungu} style={{ color: INK }} className="font-bold">
+                        {r.sigungu}
+                      </span>{" "}
+                      {r.count.toLocaleString("ko-KR")}건
+                    </span>
+                  ))}
+                </p>
               )}
             </>
           )}
@@ -555,7 +701,10 @@ export function DailyFront() {
                       </div>
                     </details>
                   )}
-                  <CornerNote>오늘 공개된 수도권 15억 이상 중개거래 전부 · 직거래·해제 제외.</CornerNote>
+                  <CornerNote>
+                    {isMerged ? "합산 기간에" : "오늘"} 공개된 수도권 15억 이상 중개거래 전부 ·
+                    직거래·해제 제외{mergedNote}.
+                  </CornerNote>
                 </>
               )}
             </section>
@@ -578,12 +727,12 @@ export function DailyFront() {
                   </div>
                   <CornerNote>
                     비교는 <b style={{ color: INK }}>같은 단지·평형의 최근 60일 내 직전 실거래</b>{" "}
-                    기준 · 단지 최근 거래 기록과 대조해 선별 · 오늘 공개{" "}
+                    기준 · 단지 최근 거래 기록과 대조해 선별 · {isMerged ? "합산" : "오늘"} 공개{" "}
                     {openCount.toLocaleString("ko-KR")}건 중{" "}
                     <b className="tabular-nums" style={{ color: INK }}>
                       {strongs.length}건
                     </b>{" "}
-                    · 직거래·해제 제외.
+                    · 직거래·해제 제외{mergedNote}.
                   </CornerNote>
                 </>
               )}
@@ -600,8 +749,37 @@ export function DailyFront() {
                   ))}
                 </div>
                 <CornerNote>
-                  오늘 공개된 중개거래의 직전 실거래(같은 단지·평형, 최근 60일 내) 대비 평균 ·
-                  5건 이상 동네만.
+                  {isMerged ? "합산 기간에" : "오늘"} 공개된 중개거래의 직전 실거래(같은
+                  단지·평형, 최근 60일 내) 대비 평균 · 5건 이상 동네만{mergedNote}.
+                </CornerNote>
+              </section>
+            )}
+
+            {/* ── [오늘의 해제] — 신고가-해제 감시. 국토부 공개 행정 사실만 인쇄, 사유
+                단정 금지("조작" 류 단어 금지 — 편집 헌장). 0건·구 스키마면 코너 생략. ── */}
+            {cancellations.length > 0 && (
+              <section className="px-0.5 pb-3.5 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
+                <CornerLabel>오늘의 해제</CornerLabel>
+                <p className="m-0 text-[12.5px] leading-[1.6]" style={{ color: INK_SOFT }}>
+                  {isMerged
+                    ? `주말 합산 ${md(patch.mergedFromDate!)}~${md(patch.mergedToDate!)} 해제 신고`
+                    : "오늘 해제 신고"}{" "}
+                  <b className="tabular-nums" style={{ color: INK }}>
+                    {cancellations.length.toLocaleString("ko-KR")}건
+                  </b>
+                </p>
+                <div>
+                  {cancellations.map((item, i) => (
+                    <CancellationRow
+                      key={`${item.apt}-${item.dealDate}-${item.priceKrw}-${i}`}
+                      item={item}
+                      divider={i > 0}
+                    />
+                  ))}
+                </div>
+                <CornerNote>
+                  계약 해제는 국토부 공개 행정 사실이며, 해제 사유는 알 수 없습니다 · 국토부는
+                  신고가 신고 후 해제 행위를 별도 조사하고 있습니다{mergedNote}.
                 </CornerNote>
               </section>
             )}

@@ -58,6 +58,13 @@ const CODE_TO_GU: Record<string, string> = Object.fromEntries(
 // 알려진 시군구 이름 집합 — 공유 카드(/s/b/[grade]/[region]) 의 region 화이트리스트 검증용.
 export const SIGUNGU_NAMES: ReadonlySet<string> = new Set(Object.keys(LAWD_CODES));
 
+// 서울 25개 구 — LAWD_CD 앞 2자리 "11"(서울특별시)로 판별. 헤드라인 [서울] 세그먼트용.
+export const SEOUL_SIGUNGU: ReadonlySet<string> = new Set(
+  Object.entries(LAWD_CODES)
+    .filter(([, code]) => code.startsWith("11"))
+    .map(([name]) => name),
+);
+
 // 단축형·명시 접두형·공백제거형 → 풀네임 정규화 매핑.
 // 사용자가 어떤 형식으로 입력해도(원미구·서울 중구·인천중구·부천시원미구) 다 매칭.
 // 충돌 케이스(중구는 서울·인천 둘 다 있음)는 *명시 접두형*으로 분기 — "서울중구" → "중구"(서울),
