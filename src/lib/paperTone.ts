@@ -31,3 +31,8 @@ export const GREEN = "#2e7d52";
  *  주의: 경보·조바심 용도의 빨강은 여전히 금지 — UP은 오직 '상승 수치·기호'에만 쓴다. */
 export const UP = "#c9252d";
 export const DOWN = "#2563a8";
+
+/** 제호(코랄 플레이트) 전용 고딕 스택 — 시안 B 확정(2026-07-06): 명조 제호 폐지,
+ *  고딕 블랙(weight 900 · letter-spacing .18em). 지면 제호·헤더 미니 플레이트·
+ *  BijiCard 워터마크가 공유한다. 명조(serif)는 헤드라인·판정서 등급명 전용으로 존치. */
+export const PLATE_FONT = 'Pretendard, "Malgun Gothic", sans-serif';

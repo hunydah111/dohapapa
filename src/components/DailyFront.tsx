@@ -18,6 +18,7 @@
 
 import dailyPatchRaw from "@/data/dailyPatch.json";
 import dailyPulseRaw from "@/data/dailyPulse.json";
+import tempSeriesRaw from "@/data/tempSeries.json";
 import {
   pickHeadline,
   type MajorItem,
@@ -27,10 +28,23 @@ import {
   type BusiestRegion,
   type HeadlinesResult,
 } from "@/lib/patchNote";
+import type { TempSeriesFile } from "@/lib/tempSeries";
+import { TILE_MAP, TILE_GRID_COLS, tileLevel } from "@/lib/tileMap";
 import { ThresholdGauge, DailyFrontPing } from "./ThresholdGauge";
 import { DealMiniMap } from "./DealMiniMap";
 // 명조·조판 토큰 — 공유 모듈(단일 소스, 2026-07-06 홈 하부 톤 통일). 중복 선언 금지.
-import { serif, PAPER, INK, INK_SOFT, RULE, CORAL, UP, DOWN } from "@/lib/paperTone";
+// 제호는 시안 B(2026-07-06)부터 고딕 블랙(PLATE_FONT) — 명조는 헤드라인·등급명 전용.
+import {
+  serif,
+  PAPER,
+  INK,
+  INK_SOFT,
+  RULE,
+  CORAL,
+  UP,
+  DOWN,
+  PLATE_FONT,
+} from "@/lib/paperTone";
 
 interface PatchItem {
   kind: "nerf" | "buff";
@@ -90,6 +104,9 @@ interface DailyPatch {
   cancellations?: CancellationItem[];
   /** 오늘 최다 공개 동네 — 구 스키마엔 없음. 비면 줄 생략. */
   busiestRegions?: BusiestRegion[];
+  /** [오늘의 거래 지도] — fresh 유효 거래의 시군구별 전체 집계(0건 제외).
+   *  구 스키마엔 없음 → 지도 코너 자체를 조용히 생략. */
+  regionCounts?: Record<string, number>;
   /** 헤드라인 묶음(톱 1 + 서브 ≤3) — 구 스키마엔 없음 → 기존 단일 헤드라인 로직 폴백. */
   headlines?: HeadlinesResult;
   latestDealDate: string | null;
@@ -105,6 +122,7 @@ interface DailyPulse {
 // placeholder(빈 배열)는 never[] 로 추론되므로 명시 캐스팅.
 const patch = dailyPatchRaw as unknown as DailyPatch;
 const pulse = dailyPulseRaw as unknown as DailyPulse;
+const tempSeries = tempSeriesRaw as unknown as TempSeriesFile;
 
 // ── 포맷터 ────────────────────────────────────────────────────────────────────
 /** "2026-06-28" → "6/28". 깨진 값은 그대로 반환. */
@@ -205,6 +223,207 @@ function CornerNote({ children }: { children: React.ReactNode }) {
   );
 }
 
+// ── [오늘의 거래 지도] — 수도권 82개 시군구 타일 격자 (시안 B, 서버 렌더 · JS 0) ──────
+/** 타일 농도색 — 시안 B 범례: 0건=바탕 / 1~2 / 3~6 / 7건+(먹·흰글자). 인덱스 = tileLevel. */
+const TILE_FILL = ["#f3efe6", "#e4ddc9", "#c9bfa0", INK] as const;
+const TILE_BORDER = "#e3ddcd";
+/** 강세/약세 링 — 방향색 3px + 안쪽 종이색 1.5px 분리선(이중 inset — 먹 타일 위에서도 보임). */
+function tileRing(color: string): string {
+  return `inset 0 0 0 3px ${color}, inset 0 0 0 4.5px ${PAPER}`;
+}
+
+/** 거래 지도 본체 — 각 타일 = /r/[시군구] 링크. 농도 = 오늘 공개 건수,
+ *  링 = 강세(UP)·약세(DOWN) 발생 시군구(강세 우선). 링 타일은 굵은 글씨. */
+function TradeMap({
+  regionCounts,
+  strongSet,
+  weakSet,
+}: {
+  regionCounts: Record<string, number>;
+  strongSet: ReadonlySet<string>;
+  weakSet: ReadonlySet<string>;
+}) {
+  return (
+    <div
+      className="grid gap-[2px]"
+      style={{ gridTemplateColumns: `repeat(${TILE_GRID_COLS}, minmax(0, 1fr))` }}
+    >
+      {Object.entries(TILE_MAP).map(([sigungu, tile]) => {
+        const count = regionCounts[sigungu] ?? 0;
+        const level = tileLevel(count);
+        const ring = strongSet.has(sigungu) ? UP : weakSet.has(sigungu) ? DOWN : null;
+        return (
+          <a
+            key={sigungu}
+            href={`/r/${encodeURIComponent(sigungu)}`}
+            title={`${sigungu} ${count}건 — 동네면`}
+            className={`flex aspect-square items-center justify-center text-center text-[8px] leading-[1.05] tracking-[-0.02em] ${
+              ring ? "font-extrabold" : "font-bold"
+            }`}
+            style={{
+              gridColumn: tile.col,
+              gridRow: tile.row,
+              background: TILE_FILL[level],
+              color: level === 3 ? PAPER : level >= 1 ? INK : INK_SOFT,
+              border: `1px solid ${TILE_BORDER}`,
+              boxShadow: ring ? tileRing(ring) : undefined,
+            }}
+          >
+            {tile.label}
+          </a>
+        );
+      })}
+    </div>
+  );
+}
+
+/** 범례 견본칩 — 시안 B 그대로(10px 사각 + 링 견본은 2.5px inset). */
+function TileSwatch({ bg, ring }: { bg: string; ring?: string }) {
+  return (
+    <i
+      aria-hidden="true"
+      className="mr-[3px] inline-block h-[10px] w-[10px] align-[-1px]"
+      style={{
+        background: bg,
+        border: `1px solid ${TILE_BORDER}`,
+        boxShadow: ring ? `inset 0 0 0 2.5px ${ring}` : undefined,
+      }}
+    />
+  );
+}
+
+function TradeMapLegend() {
+  return (
+    <div
+      className="mt-[7px] flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[9.5px]"
+      style={{ color: INK_SOFT }}
+    >
+      <span><TileSwatch bg={TILE_FILL[0]} />0건</span>
+      <span><TileSwatch bg={TILE_FILL[1]} />1~2</span>
+      <span><TileSwatch bg={TILE_FILL[2]} />3~6</span>
+      <span><TileSwatch bg={TILE_FILL[3]} />7건+</span>
+      <span><TileSwatch bg={PAPER} ring={UP} />강세 발생</span>
+      <span><TileSwatch bg={PAPER} ring={DOWN} />약세 발생</span>
+    </div>
+  );
+}
+
+/** "가장 많이 공개된 동네" 줄 — 지도 코너 아래 보조(시안 B), 구 스키마에선 헤드라인 블록.
+ *  data-region 은 기존 셀렉터 호환 유지. */
+function BusiestLine({
+  busiestRegions,
+  isMerged,
+}: {
+  busiestRegions: BusiestRegion[];
+  isMerged: boolean;
+}) {
+  return (
+    <p className="mb-0 mt-2 text-[12px] leading-[1.6] tabular-nums" style={{ color: INK_SOFT }}>
+      {isMerged ? "이번 합산에서" : "오늘"} 가장 많이 공개된 동네 —{" "}
+      {busiestRegions.map((r, i) => (
+        <span key={r.sigungu}>
+          {i > 0 && " · "}
+          <RegionLink sigungu={r.sigungu} data-region={r.sigungu} className="font-bold">
+            {r.sigungu}
+          </RegionLink>{" "}
+          {r.count.toLocaleString("ko-KR")}건
+        </span>
+      ))}
+    </p>
+  );
+}
+
+// ── 온도 추이 차트(최대 5년) — 시안 B 축 차트, 서버 SVG · 라이브러리 0 ────────────────
+/** 월별 above/matched 비율 곡선 + 50% 중립 점선 + 오늘 점(빨강). 계약월 기준.
+ *  x축 눈금은 데이터 길이에 적응 — 3년 이상이면 연 단위('25), 미만이면 3분위 월('25.7).
+ *  그릴 점이 2개 미만(표본 전무)이면 null — 게이지 바만 남는다. */
+function TempTrendChart({
+  series,
+  todayAbovePct,
+  mergedNote,
+}: {
+  series: TempSeriesFile;
+  todayAbovePct: number;
+  mergedNote: string;
+}) {
+  const n = series.months.length;
+  if (!series.generatedAt || n < 2) return null;
+  const X0 = 26;
+  const X1 = 356;
+  const TODAY_X = 384;
+  const yOf = (p: number) => 68 - (p / 100) * 60; // 0%→68, 50%→38, 100%→8
+  const xOf = (i: number) => X0 + (i * (X1 - X0)) / (n - 1);
+  const pts: { x: number; y: number }[] = [];
+  for (let i = 0; i < n; i++) {
+    if (!(series.matched[i] > 0)) continue; // 표본 0 달은 선에서 제외
+    pts.push({ x: xOf(i), y: yOf((series.above[i] / series.matched[i]) * 100) });
+  }
+  if (pts.length < 2) return null;
+  const todayY = yOf(todayAbovePct);
+  const line = [...pts, { x: TODAY_X, y: todayY }]
+    .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`)
+    .join(" ");
+  // x축 눈금 — 연 단위(1월 달) 또는 3분위. "오늘" 라벨(x=370)과 안 겹치는 범위.
+  const ticks: { x: number; label: string }[] = [];
+  if (n >= 36) {
+    for (let i = 0; i < n; i++) {
+      if (series.months[i].endsWith("-01"))
+        ticks.push({ x: xOf(i), label: `'${series.months[i].slice(2, 4)}` });
+    }
+  } else {
+    // 중복 인덱스 제거 — n이 아주 작으면(2~3) 3분위가 겹친다.
+    for (const i of [...new Set([0, Math.floor(n / 3), Math.floor((2 * n) / 3)])]) {
+      const ym = series.months[i];
+      ticks.push({ x: xOf(i), label: `'${ym.slice(2, 4)}.${Number(ym.slice(5, 7))}` });
+    }
+  }
+  // 짧은 구간(소급 수집 전) 안내 — 백필이 채워지면 자동으로 사라진다.
+  const shortWindow = n <= 13;
+  return (
+    <div className="mt-2">
+      <svg
+        viewBox="0 0 396 76"
+        className="block h-auto w-full"
+        role="img"
+        aria-label={`온도 추이 — 직전 거래보다 높게 팔린 비율(계약월 기준, ${series.months[0]}~). 오늘 ${todayAbovePct}%`}
+      >
+        <text x="0" y="12" fontSize="8.5" fill={INK_SOFT}>100%</text>
+        <text x="7" y="41" fontSize="8.5" fill={INK_SOFT}>50</text>
+        <text x="10" y="70" fontSize="8.5" fill={INK_SOFT}>0</text>
+        <line x1={X0} y1="8" x2="392" y2="8" stroke="#eee8da" strokeWidth="1" />
+        {/* 50% 중립 점선 */}
+        <line x1={X0} y1="38" x2="392" y2="38" stroke={RULE} strokeWidth="1" strokeDasharray="3 3" />
+        <line x1={X0} y1="68" x2="392" y2="68" stroke={RULE} strokeWidth="1" />
+        <polyline fill="none" stroke={INK} strokeWidth="1.8" points={line} />
+        {/* 오늘 점 (공개 기준) */}
+        <circle cx={TODAY_X} cy={todayY.toFixed(1)} r="3.4" fill={UP} />
+        <text
+          x="378"
+          y={todayY >= 52 ? (todayY - 7).toFixed(1) : (todayY + 13).toFixed(1)}
+          textAnchor="end"
+          fontSize="9"
+          fontWeight="700"
+          fill={UP}
+        >
+          오늘 {todayAbovePct}%
+        </text>
+        {ticks.map((t) => (
+          <text key={t.label} x={t.x.toFixed(1)} y="76" fontSize="8.5" fill={INK_SOFT}>
+            {t.label}
+          </text>
+        ))}
+        <text x="370" y="76" fontSize="8.5" fill={INK_SOFT}>오늘</text>
+      </svg>
+      <p className="m-0 mt-1 text-[10px] leading-[1.5]" style={{ color: INK_SOFT }}>
+        온도 추이 — 직전 거래보다 높게 팔린 비율. 점선 = 50% 균형선 · 선 = 계약월 기준 ·
+        붉은 점 = 오늘 공개분
+        {shortWindow && " · 국토부 수집 구간 기준 — 소급 수집 중"}
+        {mergedNote}.
+      </p>
+    </div>
+  );
+}
+
 /** 행 펼침 힌트 — details marker 대용 ▸ (group-open 시 90° 회전). */
 function RowHint() {
   return (
@@ -269,8 +488,20 @@ function DealDetails({
 }
 
 /** 주요 거래 행 — 점선 괘선 · 숫자 tabular-nums · 가격 우측 정렬.
- *  서브라인: 기준점(기간 내 최고 거래가) 병기 — 스냅샷 1년 최고 우선, 없으면 폴링창 2개월. */
-function MajorRow({ item, divider }: { item: MajorItem; divider: boolean }) {
+ *  가격 바(시안 B): 바 폭 = 오늘 major 최고가(maxKrw) 대비 비율, 붉은 눈금 = 그 단지
+ *  windowMaxKrw(기간 내 최고가) 위치 — 없으면 눈금 생략.
+ *  서브라인: 기준점(기간 내 최고 거래가) 병기 — 스냅샷 1년 최고 우선, 없으면 폴링창 2개월.
+ *  최고가 갱신이면 근거 병기 — "갱신 (종전 {억} · {M/D})" (2개월 기준일 때만 날짜 존재). */
+function MajorRow({
+  item,
+  divider,
+  maxKrw,
+}: {
+  item: MajorItem;
+  divider: boolean;
+  /** 오늘 major 최고가(원) — 가격 바 기준. 0이면 바 생략. */
+  maxKrw: number;
+}) {
   const refMax = item.windowMaxKrw ?? null;
   const tag = floorSubwayTag(item.floor, item.nearestSubwayM);
   return (
@@ -293,11 +524,38 @@ function MajorRow({ item, divider }: { item: MajorItem; divider: boolean }) {
           계약 {md(item.dealDate)}
         </span>
       </div>
+      {/* 가격 바 — 폭 = 오늘 최고가 대비. 붉은 눈금 = 그 단지 기간 내 최고가 위치(우측 클램프). */}
+      {maxKrw > 0 && (
+        <div className="relative mt-1 h-[4px]" style={{ background: "#efe9da" }}>
+          <span
+            className="absolute inset-y-0 left-0"
+            style={{
+              width: `${Math.min(100, (item.priceKrw / maxKrw) * 100).toFixed(2)}%`,
+              background: INK,
+            }}
+          />
+          {refMax !== null && (
+            <span
+              className="absolute top-[-3px] h-[10px] w-[2px]"
+              style={{
+                left: `${Math.min(99.5, (refMax / maxKrw) * 100).toFixed(2)}%`,
+                background: UP,
+              }}
+            />
+          )}
+        </div>
+      )}
       {/* 기준점 서브라인 — 비교 대상 없으면(신축 첫거래 등) 생략. */}
       {refMax !== null && item.refMaxPeriod && (
-        <div className="mt-[1px] text-[11px] leading-[1.5]" style={{ color: INK_SOFT }}>
-          {item.priceKrw >= refMax ? (
-            <b style={{ color: INK }}>— {item.refMaxPeriod} 내 최고가</b>
+        <div className="mt-[3px] text-[11px] leading-[1.5]" style={{ color: INK_SOFT }}>
+          {item.priceKrw > refMax ? (
+            <>
+              <b style={{ color: UP }}>— {item.refMaxPeriod} 내 최고가 갱신</b> (종전{" "}
+              {eok(refMax)}
+              {item.windowMaxDate ? ` · ${md(item.windowMaxDate)}` : ""})
+            </>
+          ) : item.priceKrw === refMax ? (
+            <b style={{ color: INK }}>— {item.refMaxPeriod} 내 최고가 동률</b>
           ) : (
             <>
               최근 {item.refMaxPeriod} 최고 {eok(refMax)}
@@ -450,6 +708,14 @@ export function DailyFront() {
   const cancellations = patch.cancellations ?? []; // 구 스키마·0건 → 코너 생략
   const busiestRegions = patch.busiestRegions ?? []; // 구 스키마·비면 줄 생략
 
+  // [오늘의 거래 지도] — 구 스키마(regionCounts 없음)면 코너 자체 생략(graceful).
+  // 링: 강세 = [강세 거래] 게재 시군구(직전 거래 팩트 있는 상승), 약세 = [약세 동네] 시군구.
+  const regionCounts = patch.regionCounts;
+  const strongMapSet = new Set(strongs.map((i) => i.sigungu));
+  const weakMapSet = new Set(weakRegions.map((r) => r.sigungu));
+  // 가격 바 기준 — 오늘 major 최고가(major는 가격 내림차순 정렬 상태).
+  const majorTopKrw = major && major.length > 0 ? major[0].priceKrw : 0;
+
   // 온도 게이지 분할 — 위(먹) : 중립(괘선) : 아래(그린), matched 대비 비율.
   const tempPct = temp
     ? {
@@ -489,15 +755,16 @@ export function DailyFront() {
         </div>
 
         {/* ── 제호 — 이코노미스트식 코랄 플레이트(2026-07-06 사장 지시, 判 도장 폐지).
-            각진 사각(라운드·회전 금지), 텍스트에 딱 맞는 패딩, 흰 명조 워드마크.
+            각진 사각(라운드·회전 금지), 텍스트에 딱 맞는 패딩, 흰 고딕 블랙 워드마크
+            (시안 B: 명조 제호 폐지 — 명조는 헤드라인·판정서 등급명 전용).
             대비: #e8571f 위 #fbfaf6 ≈ 3.5:1 — 34px 굵은 글씨(large text) AA 통과. ── */}
         <header
           className="flex items-center justify-between px-0.5 pb-2.5 pt-3"
           style={{ borderTop: `2.5px solid ${INK}`, borderBottom: `1px solid ${INK}` }}
         >
           <h2
-            className={`${serif.className} m-0 inline-block px-3 py-1.5 text-[34px] font-extrabold leading-none tracking-[0.16em]`}
-            style={{ background: CORAL, color: PAPER }}
+            className="m-0 inline-block px-3 py-1.5 text-[34px] leading-none tracking-[0.18em]"
+            style={{ background: CORAL, color: PAPER, fontFamily: PLATE_FONT, fontWeight: 900 }}
           >
             비집고
           </h2>
@@ -626,28 +893,20 @@ export function DailyFront() {
                     />
                     <span style={{ width: `${tempPct.below}%`, background: DOWN }} />
                   </div>
+
+                  {/* 온도 추이 차트(시안 B) — tempSeries 없으면(placeholder) 게이지 바만. */}
+                  <TempTrendChart
+                    series={tempSeries}
+                    todayAbovePct={tempPct.above}
+                    mergedNote={mergedNote}
+                  />
                 </div>
               )}
 
-              {/* 오늘 최다 공개 동네 — fresh 유효 거래 시군구 상위 3(3건 이상만).
-                  동네명은 동네면(/r/[시군구]) 링크 — data-region 은 기존 셀렉터 호환 유지.
-                  구 스키마·비면 생략. */}
-              {busiestRegions.length > 0 && (
-                <p
-                  className="mb-0 mt-2 text-[12px] leading-[1.6] tabular-nums"
-                  style={{ color: INK_SOFT }}
-                >
-                  {isMerged ? "이번 합산에서" : "오늘"} 가장 많이 공개된 동네 —{" "}
-                  {busiestRegions.map((r, i) => (
-                    <span key={r.sigungu}>
-                      {i > 0 && " · "}
-                      <RegionLink sigungu={r.sigungu} data-region={r.sigungu} className="font-bold">
-                        {r.sigungu}
-                      </RegionLink>{" "}
-                      {r.count.toLocaleString("ko-KR")}건
-                    </span>
-                  ))}
-                </p>
+              {/* 오늘 최다 공개 동네 — 지도 코너가 있으면 지도 아래 보조 줄로 이동(시안 B).
+                  지도 없는 구 스키마에서만 기존 자리(헤드라인 블록)에 남는다. */}
+              {busiestRegions.length > 0 && !regionCounts && (
+                <BusiestLine busiestRegions={busiestRegions} isMerged={isMerged} />
               )}
             </>
           )}
@@ -655,6 +914,29 @@ export function DailyFront() {
 
         {!isPrelaunch && (
           <>
+            {/* ── [오늘의 거래 지도] — 수도권 82개 시군구 타일 격자(시안 B).
+                농도 = 오늘 공개 건수, 링 = 강세·약세 발생, 타일 탭 = 동네면.
+                구 스키마(regionCounts 없음)면 코너 생략. ── */}
+            {regionCounts && (
+              <section className="px-0.5 pb-3.5 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
+                <CornerLabel>오늘의 거래 지도</CornerLabel>
+                <TradeMap
+                  regionCounts={regionCounts}
+                  strongSet={strongMapSet}
+                  weakSet={weakMapSet}
+                />
+                <TradeMapLegend />
+                {/* 기존 "가장 많이 공개된 동네" 줄 — 지도 아래 보조로 유지. */}
+                {busiestRegions.length > 0 && (
+                  <BusiestLine busiestRegions={busiestRegions} isMerged={isMerged} />
+                )}
+                <CornerNote>
+                  타일 = 수도권 82개 시군구(위치 근사) · 탭하면 동네면으로 ·{" "}
+                  {isMerged ? "합산 기간" : "오늘"} 공개된 거래 기준{mergedNote}.
+                </CornerNote>
+              </section>
+            )}
+
             {/* ── [주요 거래] — 오늘 공개된 수도권 15억 이상 전부 ── */}
             <section className="px-0.5 pb-3.5 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
               <CornerLabel>주요 거래</CornerLabel>
@@ -669,7 +951,7 @@ export function DailyFront() {
                     {majorVisible.map((item, i) => (
                       <div key={`${item.apt}-${item.dealDate}-${item.priceKrw}-${i}`}>
                         <DealDetails item={item}>
-                          <MajorRow item={item} divider={i > 0} />
+                          <MajorRow item={item} divider={i > 0} maxKrw={majorTopKrw} />
                         </DealDetails>
                         {i === 0 && (
                           <div
@@ -709,7 +991,7 @@ export function DailyFront() {
                             key={`${item.apt}-${item.dealDate}-${item.priceKrw}-r${i}`}
                             item={item}
                           >
-                            <MajorRow item={item} divider={i > 0} />
+                            <MajorRow item={item} divider={i > 0} maxKrw={majorTopKrw} />
                           </DealDetails>
                         ))}
                       </div>
@@ -717,7 +999,8 @@ export function DailyFront() {
                   )}
                   <CornerNote>
                     {isMerged ? "합산 기간에" : "오늘"} 공개된 수도권 15억 이상 중개거래 전부 ·
-                    직거래·해제 제외{mergedNote}.
+                    직거래·해제 제외 · 가격 바 = {isMerged ? "합산" : "오늘"} 최고가 대비 ·
+                    붉은 눈금 = 그 단지 기간(1년/2개월) 내 최고가 위치{mergedNote}.
                   </CornerNote>
                 </>
               )}

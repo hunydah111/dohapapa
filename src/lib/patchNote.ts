@@ -193,6 +193,10 @@ export interface PatchResult {
   cancellations: CancellationItem[];
   /** [오늘 최다 공개 동네] — fresh 유효 거래 시군구 집계 상위 3(count≥3만). */
   busiestRegions: BusiestRegion[];
+  /** [오늘의 거래 지도]용 — fresh 유효 거래(직거래 포함 — '공개' 건수 팩트)의
+   *  시군구별 전체 집계. busiestRegions와 같은 풀이되 문턱·상위N 없이 전부(0건은 제외).
+   *  키는 시군구 가나다순(결정적 직렬화). */
+  regionCounts: Record<string, number>;
   /** 스코프(최근 계약 14일) 안 거래 수 */
   scopeDealCount: number;
   /** 그중 오늘 처음 확인된 거래 수 */
@@ -433,6 +437,13 @@ export function computePatch(opts: {
     .sort((a, b) => b.count - a.count || a.sigungu.localeCompare(b.sigungu, "ko"))
     .slice(0, PATCH_BUSIEST_TOP_N);
 
+  // 2-c) [오늘의 거래 지도] — 같은 풀(busiestAgg)의 전체 집계, 문턱 없이(0건 자연 제외).
+  //      가나다순 키 — dailyPatch.json 직렬화가 결정적이도록.
+  const regionCounts: Record<string, number> = {};
+  for (const sigungu of [...busiestAgg.keys()].sort((a, b) => a.localeCompare(b, "ko"))) {
+    regionCounts[sigungu] = busiestAgg.get(sigungu)!;
+  }
+
   // 3) 중위가 대조 → 분류 (+ 주요 거래 · 오늘의 온도 동시 집계)
   const classified: PatchItem[] = [];
   const major: MajorItem[] = [];
@@ -594,6 +605,7 @@ export function computePatch(opts: {
     strongRegions,
     cancellations,
     busiestRegions,
+    regionCounts,
     scopeDealCount: scope.length,
     newDealCount: fresh.length,
     nextSeenKeys,

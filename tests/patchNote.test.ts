@@ -1092,6 +1092,66 @@ describe("patchNote.computePatch — busiestRegions", () => {
   });
 });
 
+// ── [오늘의 거래 지도] regionCounts (v2.4) ────────────────────────────────────
+
+describe("patchNote.computePatch — regionCounts", () => {
+  const noLookup: ComplexMedianLookup = () => null;
+  function freshIn(sigungu: string, n: number): PatchDealInput[] {
+    return Array.from({ length: n }, (_, i) =>
+      makeDeal({ apartmentName: `${sigungu}단지${i}`, sigunguName: sigungu, floor: i + 1 }),
+    );
+  }
+
+  it("fresh 유효 거래 전 시군구 집계 — 문턱·상위N 없이 전부, 0건은 키 자체가 없다", () => {
+    const r = computePatch({
+      deals: [
+        ...freshIn("수원시 팔달구", 10),
+        ...freshIn("고양시 일산동구", 7),
+        ...freshIn("은평구", 4),
+        ...freshIn("미추홀구", 1), // busiest 문턱(3) 미달이어도 지도엔 실린다
+      ],
+      seenKeys: new Set(),
+      lookupMedian: noLookup,
+      todayISO: TODAY,
+    });
+    expect(r.regionCounts).toEqual({
+      "고양시 일산동구": 7,
+      미추홀구: 1,
+      "수원시 팔달구": 10,
+      은평구: 4,
+    });
+    // 가나다순 직렬화(결정적) — dailyPatch.json diff 안정성.
+    expect(Object.keys(r.regionCounts)).toEqual(
+      [...Object.keys(r.regionCounts)].sort((a, b) => a.localeCompare(b, "ko")),
+    );
+  });
+
+  it("busiestRegions와 같은 풀 — 직거래 포함('공개' 팩트), seen·해제는 제외", () => {
+    const seenDeal = makeDeal({ apartmentName: "어제확인", sigunguName: "강남구", floor: 99 });
+    const r = computePatch({
+      deals: [
+        makeDeal({ apartmentName: "직거래건", sigunguName: "강남구", dealingGbn: "직거래" }),
+        seenDeal, // seen — 미집계
+        makeDeal({ apartmentName: "해제건", sigunguName: "송파구", floor: 98, canceled: true }),
+      ],
+      seenKeys: new Set([dealKey(seenDeal)]),
+      lookupMedian: noLookup,
+      todayISO: TODAY,
+    });
+    expect(r.regionCounts).toEqual({ 강남구: 1 });
+  });
+
+  it("fresh 0건이면 빈 객체 — 지면은 전 타일 바탕색", () => {
+    const r = computePatch({
+      deals: [],
+      seenKeys: new Set(),
+      lookupMedian: noLookup,
+      todayISO: TODAY,
+    });
+    expect(r.regionCounts).toEqual({});
+  });
+});
+
 // ── 주말 저볼륨 폴백 ④ — merged 합산 (v2.3) ───────────────────────────────────
 
 describe("patchNote — subtractRecentFromSeen (merged 폴백)", () => {

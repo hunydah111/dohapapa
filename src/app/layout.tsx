@@ -3,8 +3,9 @@ import Link from "next/link";
 import "./globals.css";
 import { Analytics } from "@/components/Analytics";
 import { SITE_URL } from "@/lib/site";
-// 지면 제호와 동일 명조·토큰 (공유 단일 소스) — 헤더 로고 = 제호 미니 버전.
-import { serif, PAPER, INK_SOFT, RULE, CORAL } from "@/lib/paperTone";
+// 지면 제호와 동일 토큰 (공유 단일 소스) — 헤더 로고 = 제호 미니 버전.
+// 제호는 시안 B(2026-07-06)부터 고딕 블랙(PLATE_FONT) — 명조 제호 폐지.
+import { PAPER, INK_SOFT, RULE, CORAL, PLATE_FONT } from "@/lib/paperTone";
 
 export const metadata: Metadata = {
   // og:image 등 메타 URL을 절대경로로 만들어 카카오톡·SNS가 썸네일을 가져갈 수 있게 한다.
@@ -71,10 +72,10 @@ export default function RootLayout({
               aria-label="비집고 홈으로"
               className="flex items-center gap-2.5 transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-coral-500"
             >
-              {/* 브랜드 마크 — 지면 제호(코랄 플레이트 흰 명조)의 미니 버전. 각진 사각, 라운드 금지. */}
+              {/* 브랜드 마크 — 지면 제호(코랄 플레이트 흰 고딕 블랙)의 미니 버전. 각진 사각, 라운드 금지. */}
               <span
-                className={`${serif.className} inline-block px-2 py-[3px] text-[15px] font-extrabold leading-none tracking-[0.16em]`}
-                style={{ background: CORAL, color: PAPER }}
+                className="inline-block px-2 py-[3px] text-[15px] leading-none tracking-[0.18em]"
+                style={{ background: CORAL, color: PAPER, fontFamily: PLATE_FONT, fontWeight: 900 }}
               >
                 비집고
               </span>

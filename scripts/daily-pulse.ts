@@ -239,6 +239,8 @@ async function main() {
           cancellations,
           // 오늘 최다 공개 동네 ② — fresh 유효 거래 시군구 상위 3.
           busiestRegions: active.busiestRegions,
+          // [오늘의 거래 지도] — fresh 유효 거래의 시군구별 전체 집계(0건 제외).
+          regionCounts: active.regionCounts,
           headlines,
           latestDealDate: latest || null,
         },

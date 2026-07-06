@@ -16,6 +16,18 @@ on:
         description: "실거래 재적재 개월 수 (기본 2 · 해제·직거래 정화 백필은 13)"
         required: false
         default: "2"
+      # 온도 5년 시계열(tempSeries)용 소급 수집 — 지정 월 구간(YYYYMM)만 원자 교체(멱등·재개
+      # 가능). ⚠️ MOLIT 일일 쿼터 불명 — 82구×12개월(약 1천 호출) 단위 조각 실행 권장.
+      # 일일 펄스(daily-pulse.yml, 매일 82×3호출)의 쿼터를 잠식하지 않게 하루 한 조각만.
+      # 예: 1차 backfill_from=202107 backfill_to=202206 → 2차 202207~202306 → …
+      backfill_from:
+        description: "소급 수집 시작 월 YYYYMM (backfill_to와 함께 지정 시에만 동작)"
+        required: false
+        default: ""
+      backfill_to:
+        description: "소급 수집 끝 월 YYYYMM (폐구간)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -46,6 +58,12 @@ jobs:
       # 1) 매매 실거래 — 최근 N개월(기본 2)만 시군구별 원자적 교체(멱등). 신규 단지는
       #    find-or-create. 수동 실행 시 refresh_months 로 창 확대 가능(정화 백필 13).
       - run: npx tsx scripts/fetch-molit.ts --gu=all --refresh-recent=${{ inputs.refresh_months || '2' }}
+      # 1b) 온도 5년 소급 백필 — workflow_dispatch에서 backfill_from/backfill_to(YYYYMM)를
+      #     지정한 회차만 실행. 그 월 구간을 시군구별 원자 교체(멱등) — 조각으로 끊어
+      #     여러 번 돌려도 안전(재개 가능). 크론(schedule) 회차엔 inputs가 비어 스킵.
+      #     ⚠️ MOLIT 쿼터 불명 — 82구×12개월(약 1천 호출) 조각 권장, 하루 한 조각.
+      - if: ${{ inputs.backfill_from != '' && inputs.backfill_to != '' }}
+        run: npx tsx scripts/fetch-molit.ts --gu=all --from=${{ inputs.backfill_from }} --to=${{ inputs.backfill_to }}
       # 2) 신규 단지만 좌표/학교거리 보강(증분, 저비용).
       - run: npx tsx scripts/geocode-complexes.ts
       - run: npx tsx scripts/enrich-schools.ts
@@ -63,6 +81,7 @@ jobs:
       - run: npx tsx scripts/daily-pulse.ts --gu=all --months=2
       # 4f) 동네면 시계열 — 시군구 × 최근 13개월 월 버킷(거래량 + 관측 중위가).
       #     DB(fetch-molit 적재분)에서 굽는다 — fetch-molit 다음이면 언제든 OK.
+      #     같은 스크립트가 온도 1년 시계열(tempSeries.json)도 함께 굽는다(시안 B 차트).
       - run: npx tsx scripts/build-region-series.ts
 
       # 5) 바뀐 데이터 JSON 만 커밋 → push 시 Vercel 자동 배포.
@@ -71,7 +90,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data/trendIndex.json src/data/dataMeta.json src/data/complexSnapshot.json src/data/rebWeekly.json src/data/dailyPulse.json src/data/regionSeries.json
+          git add src/data/trendIndex.json src/data/dataMeta.json src/data/complexSnapshot.json src/data/rebWeekly.json src/data/dailyPulse.json src/data/regionSeries.json src/data/tempSeries.json
           if git diff --staged --quiet; then
             echo "변경 없음 — 커밋 생략"
           else

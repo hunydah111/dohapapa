@@ -17,8 +17,12 @@
  *    있을 수 있다 — 정화 백필은 weekly-data-refresh workflow_dispatch 에서
  *    refresh_months=13 으로 1회 수동 실행(fetch-molit 이 그 창을 원자적 재적재).
  *
+ * 함께 굽는 것: 온도 시계열(src/data/tempSeries.json) — 직전 거래(같은 단지×평형 밴드,
+ *   60일 내) 대비 월별 above/below/matched, 최대 5년+당월(--months= 오버라이드).
+ *   같은 DB 조회를 재사용한다(추가 쿼리 0). 로직은 @/lib/tempSeries (순수 함수).
+ *
  * 실행: 주간 크론(.github/workflows/daily-data.yml) 전용 — DB(Neon)는 크론에서만 접근 가능.
- *   npx tsx scripts/build-region-series.ts
+ *   npx tsx scripts/build-region-series.ts [--months=61]
  */
 import { writeFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -31,39 +35,82 @@ import {
   type RegionSeriesFile,
   type RegionSeriesTx,
 } from "@/lib/regionSeries";
+import { bandOfArea } from "@/lib/plan/dday";
+import {
+  TEMP_SERIES_DEFAULT_MONTHS,
+  bucketTempSeries,
+  trimLeadingEmptyMonths,
+  type TempSeriesFile,
+  type TempSeriesTx,
+} from "@/lib/tempSeries";
 
 /** 매매 관측에서 제외하는 source — 분양권 전매(별도 시장) + 직거래(증여성 의심). */
 const EXCLUDED_SOURCES = new Set(["분양권", "입주권", "MOLIT_DIRECT"]);
+
+const argOf = (k: string) =>
+  process.argv.find((a) => a.startsWith(`--${k}=`))?.split("=")[1];
 
 async function main() {
   const months = lastMonths(new Date(), REGION_SERIES_MONTHS);
   // 첫 달 1일 0시(로컬=KST — 크론 TZ와 기존 적재분 일치) 이후 거래만.
   const [y, m] = months[0].split("-").map(Number);
   const since = new Date(y, m - 1, 1);
+  // 온도 시계열 창 — 기본 5년+당월(61). DB에 없는 앞쪽 달은 굽기 전에 잘라낸다
+  // (--months= 오버라이드 가능 — 소급 백필 진행 상황과 무관하게 멱등).
+  const tempMonthsWanted = Math.max(
+    1,
+    Number(argOf("months") ?? TEMP_SERIES_DEFAULT_MONTHS),
+  );
+  const tempMonthsAll = lastMonths(new Date(), tempMonthsWanted);
+  const [ty, tm] = tempMonthsAll[0].split("-").map(Number);
+  // 온도 시계열의 첫 달이 안 비틀리게 2개월(직전 거래 비교 창=60일) 더 이른 거래까지 가져온다.
+  // regionSeries 버킷은 months 밖 거래를 스스로 무시하므로 영향 없음.
+  const sincePrev = new Date(ty, tm - 3, 1);
 
   const { db } = await import("@/lib/db");
   let rows: RegionSeriesTx[];
+  let tempRows: TempSeriesTx[];
+  let validYms: string[]; // 유효 거래(밴드 무관)의 계약월 — 앞쪽 빈 달 잘라내기 판정용
   try {
     const txs = await db.transaction.findMany({
-      where: { dealDate: { gte: since } },
+      where: { dealDate: { gte: sincePrev } },
       select: {
+        id: true,
         priceKrw: true,
         dealDate: true,
+        area: true,
         source: true,
+        complexId: true,
         complex: { select: { sigungu: true } },
       },
     });
-    rows = txs
-      .filter(
-        (t) =>
-          !EXCLUDED_SOURCES.has(t.source) &&
-          SIGUNGU_NAMES.has(t.complex.sigungu),
-      )
+    const valid = txs.filter(
+      (t) =>
+        !EXCLUDED_SOURCES.has(t.source) && SIGUNGU_NAMES.has(t.complex.sigungu),
+    );
+    validYms = valid.map((t) => ymOf(t.dealDate));
+    rows = valid
+      .filter((t) => t.dealDate >= since)
       .map((t) => ({
         sigungu: t.complex.sigungu,
         ym: ymOf(t.dealDate),
         priceKrw: Number(t.priceKrw),
       }));
+    // 온도 시계열 입력 — 단지×평형 밴드 그룹. 밴드 밖 면적(초소형 등)은 스킵.
+    tempRows = valid.flatMap((t) => {
+      const band = bandOfArea(t.area);
+      if (!band) return [];
+      const d = t.dealDate;
+      const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      return [
+        {
+          groupKey: `${t.complexId}|${band}`,
+          id: t.id,
+          dealDateISO: iso,
+          priceKrw: Number(t.priceKrw),
+        },
+      ];
+    });
   } finally {
     await db.$disconnect();
   }
@@ -84,6 +131,34 @@ async function main() {
   const kb = Math.round(JSON.stringify(out).length / 102.4) / 10;
   console.log(
     `regionSeries: 시군구 ${Object.keys(regions).length}곳 · ${months[0]}~${months[months.length - 1]} · 유효 거래 ${totalDeals.toLocaleString()}건 · ${kb}KB → ${dest}`,
+  );
+
+  // ── 온도 시계열(최대 5년) — 직전 거래(같은 단지×밴드, 60일 내) 대비 월별 집계 ──
+  // DB에 데이터가 없는 앞쪽 달은 배열에서 제외(null 패딩 금지 — months = 실제 데이터 구간).
+  // 소급 백필(fetch-molit --from/--to)이 과거 월을 채우면 다음 주간 실행에서 자동 연장.
+  const monthTotals = tempMonthsAll.map(() => 0);
+  {
+    const totalIdx = new Map(tempMonthsAll.map((ym, i) => [ym, i]));
+    for (const ym of validYms) {
+      const i = totalIdx.get(ym);
+      if (i !== undefined) monthTotals[i] += 1;
+    }
+  }
+  const start = trimLeadingEmptyMonths(monthTotals);
+  const tempMonths = tempMonthsAll.slice(start);
+  const buckets = bucketTempSeries(tempRows, tempMonthsAll);
+  const tempOut: TempSeriesFile = {
+    generatedAt: new Date().toISOString(),
+    months: tempMonths,
+    above: buckets.above.slice(start),
+    below: buckets.below.slice(start),
+    matched: buckets.matched.slice(start),
+  };
+  const tempDest = resolve(process.cwd(), "src/data/tempSeries.json");
+  writeFileSync(tempDest, JSON.stringify(tempOut) + "\n", "utf8");
+  const totalMatched = tempOut.matched.reduce((a, b) => a + b, 0);
+  console.log(
+    `tempSeries: ${tempMonths[0] ?? "-"}~${tempMonths[tempMonths.length - 1] ?? "-"} (${tempMonths.length}/${tempMonthsWanted}개월) · matched ${totalMatched.toLocaleString()}건 → ${tempDest}`,
   );
 }
 

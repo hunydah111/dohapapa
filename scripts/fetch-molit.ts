@@ -5,11 +5,20 @@
  *
  * 사용법:
  *   npx tsx --env-file=.env.local scripts/fetch-molit.ts [--months=6] [--gu="강남구,..."|--gu=all]
+ *   npx tsx scripts/fetch-molit.ts --gu=all --refresh-recent=2          (주간 크론 — 증분)
+ *   npx tsx scripts/fetch-molit.ts --gu=all --from=202107 --to=202206   (소급 백필 — 조각)
  *
  * 기본값: months=3, gu=강남구,서초구,송파구
- * --gu=all (또는 --gu 생략 없이 명시) 시 LAWD_CODES 전체(서울25 + 경기47) 수집.
+ * --gu=all (또는 --gu 생략 없이 명시) 시 LAWD_CODES 전체(서울25 + 경기47 + 인천10) 수집.
  *
- * 주의: createMany 기반 일괄 삽입이라 DB 가 비어 있다고 가정한다.
+ * 소급 백필(--from/--to, YYYYMM 폐구간): 온도 5년 시계열(tempSeries)용 과거 월 수집.
+ *   증분과 같은 원자적 교체(ingestGuIncremental)를 "그 월 구간에만" 적용 — 멱등이라
+ *   조각 단위로 끊어 여러 번 실행해도 안전(재개 가능). 실행은 daily-data.yml
+ *   workflow_dispatch(backfill_from/backfill_to)에서 — 키는 크론 환경에만 있다.
+ *   ⚠️ MOLIT 일일 쿼터 불명 — 82구×12개월(약 1천 호출) 단위 조각 실행 권장.
+ *      일일 펄스(daily-pulse, 매일 82×3호출)의 쿼터를 잠식하지 않게 하루 한 조각만.
+ *
+ * 주의: 기본(full) 모드는 createMany 기반 일괄 삽입이라 DB 가 비어 있다고 가정한다.
  *       실데이터로 교체할 때는 먼저 scripts/wipe.ts 를 실행할 것.
  *       fetch 후 scripts/geocode-complexes.ts 로 단지 좌표를 채워야 한다.
  */
@@ -32,10 +41,14 @@ function parseArgs(): {
   months: number;
   guList: string[];
   refreshRecent: number | null;
+  backfillFrom: string | null;
+  backfillTo: string | null;
 } {
   let months = DEFAULT_MONTHS;
   let guList: string[] = DEFAULT_GU;
   let refreshRecent: number | null = null;
+  let backfillFrom: string | null = null;
+  let backfillTo: string | null = null;
 
   for (const arg of process.argv.slice(2)) {
     const monthsMatch = arg.match(/^--months=(\d+)$/);
@@ -47,6 +60,17 @@ function parseArgs(): {
     const rrMatch = arg.match(/^--refresh-recent=(\d+)$/);
     if (rrMatch) {
       refreshRecent = Math.max(1, parseInt(rrMatch[1], 10));
+      continue;
+    }
+    // 소급 백필(멱등·재개 가능) — 지정 월 구간(YYYYMM 폐구간)만 원자적 교체.
+    const fromMatch = arg.match(/^--from=(\d{6})$/);
+    if (fromMatch) {
+      backfillFrom = fromMatch[1];
+      continue;
+    }
+    const toMatch = arg.match(/^--to=(\d{6})$/);
+    if (toMatch) {
+      backfillTo = toMatch[1];
       continue;
     }
     const guMatch = arg.match(/^--gu=(.+)$/);
@@ -61,7 +85,20 @@ function parseArgs(): {
     console.warn(`알 수 없는 인수 무시됨: ${arg}`);
   }
 
-  return { months, guList, refreshRecent };
+  if ((backfillFrom === null) !== (backfillTo === null)) {
+    console.error("오류: --from/--to 는 반드시 함께(YYYYMM) 지정해야 합니다.");
+    process.exit(1);
+  }
+  if (backfillFrom && backfillTo && backfillFrom > backfillTo) {
+    console.error(`오류: --from(${backfillFrom}) 이 --to(${backfillTo}) 보다 뒤입니다.`);
+    process.exit(1);
+  }
+  if (backfillFrom && refreshRecent !== null) {
+    console.error("오류: --from/--to 와 --refresh-recent 는 동시에 쓸 수 없습니다.");
+    process.exit(1);
+  }
+
+  return { months, guList, refreshRecent, backfillFrom, backfillTo };
 }
 
 function monthsAgoYYYYMM(n: number): string {
@@ -178,15 +215,18 @@ async function ingestGu(
 }
 
 /**
- * 증분(멱등) 적재 — 한 시군구의 최근 창(fromDate 이후) MOLIT 매매를 원자적으로 교체한다.
- * 단지는 find-or-create(중복 생성 방지), 거래는 "그 시군구·fromDate 이후 삭제 → 재삽입"을
- * 한 트랜잭션으로 처리해 빈 구간 없이 멱등하게 만든다.
+ * 증분(멱등) 적재 — 한 시군구의 창(fromDate 이후, toDateExclusive 미만) MOLIT 매매를
+ * 원자적으로 교체한다. 단지는 find-or-create(중복 생성 방지), 거래는 "그 시군구·창 내
+ * 삭제 → 재삽입"을 한 트랜잭션으로 처리해 빈 구간 없이 멱등하게 만든다.
+ * toDateExclusive 생략 시 열린 창(fromDate~∞) — 주간 최근창 갱신용.
+ * toDateExclusive 지정 시 닫힌 창 — 소급 백필(조각 실행)이 창 밖 데이터를 건드리지 않게.
  * (TZ 주의: 워크플로에서 TZ=Asia/Seoul 로 실행해야 기존 KST 적재분과 dealDate 가 일치한다.)
  */
 async function ingestGuIncremental(
   gu: string,
   deals: MolitDeal[],
   fromDate: Date,
+  toDateExclusive?: Date,
 ): Promise<{ complexes: number; transactions: number }> {
   // 1. 단지 find-or-create (unique [sigungu,dongName,name] → skipDuplicates).
   const complexMap = new Map<
@@ -241,13 +281,15 @@ async function ingestGuIncremental(
     })
     .filter((x): x is NonNullable<typeof x> => x !== null);
 
-  // 2. 원자적 교체: 이 시군구의 fromDate 이후 매매(MOLIT + MOLIT_DIRECT) 삭제 → 재삽입.
+  // 2. 원자적 교체: 이 시군구의 창 내 매매(MOLIT + MOLIT_DIRECT) 삭제 → 재삽입.
   const CHUNK = 1000;
   const ops = [
     prisma.transaction.deleteMany({
       where: {
         source: { in: MOLIT_SOURCES },
-        dealDate: { gte: fromDate },
+        dealDate: toDateExclusive
+          ? { gte: fromDate, lt: toDateExclusive }
+          : { gte: fromDate },
         complex: { sigungu: gu },
       },
     }),
@@ -263,22 +305,34 @@ async function ingestGuIncremental(
 }
 
 async function main(): Promise<void> {
-  const { months, guList, refreshRecent } = parseArgs();
-  const incremental = refreshRecent !== null;
-  // 증분이면 최근 refreshRecent 개월(당월 포함), 아니면 기존 full 모드.
-  const fromYearMonth = incremental
-    ? monthsAgoYYYYMM(refreshRecent! - 1)
-    : monthsAgoYYYYMM(months);
-  const toYearMonth = currentYYYYMM();
+  const { months, guList, refreshRecent, backfillFrom, backfillTo } = parseArgs();
+  const backfill = backfillFrom !== null && backfillTo !== null;
+  const incremental = refreshRecent !== null || backfill;
+  // 백필이면 지정 월 구간(YYYYMM 폐구간), 증분이면 최근 refreshRecent 개월(당월 포함),
+  // 아니면 기존 full 모드.
+  const fromYearMonth = backfill
+    ? backfillFrom!
+    : refreshRecent !== null
+      ? monthsAgoYYYYMM(refreshRecent - 1)
+      : monthsAgoYYYYMM(months);
+  const toYearMonth = backfill ? backfillTo! : currentYYYYMM();
   // 삭제 하한 — fromYearMonth 1일 0시(로컬=KST). 이후 거래만 교체 대상.
   const fromDate = new Date(
     Number(fromYearMonth.slice(0, 4)),
     Number(fromYearMonth.slice(4, 6)) - 1,
     1,
   );
+  // 백필 전용 삭제 상한 — toYearMonth "다음 달" 1일 0시 미만. 구간 밖 적재분 보호.
+  const toDateExclusive = backfill
+    ? new Date(
+        Number(toYearMonth.slice(0, 4)),
+        Number(toYearMonth.slice(4, 6)), // 0-based라 그대로 쓰면 +1개월
+        1,
+      )
+    : undefined;
 
   console.log(
-    `MOLIT 실거래가 수집[${incremental ? "증분" : "전체"}]: ${fromYearMonth}~${toYearMonth}, 대상 ${guList.length}개 시군구`,
+    `MOLIT 실거래가 수집[${backfill ? "백필" : incremental ? "증분" : "전체"}]: ${fromYearMonth}~${toYearMonth}, 대상 ${guList.length}개 시군구`,
   );
 
   let totalComplexes = 0;
@@ -307,7 +361,7 @@ async function main(): Promise<void> {
     }
 
     const { complexes, transactions } = incremental
-      ? await ingestGuIncremental(gu, deals, fromDate)
+      ? await ingestGuIncremental(gu, deals, fromDate, toDateExclusive)
       : await ingestGu(gu, deals);
     totalComplexes += complexes;
     totalTransactions += transactions;
