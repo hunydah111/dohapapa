@@ -2,6 +2,8 @@
   "generatedAt": "2026-07-06",
   "scopeDays": 14,
   "mode": "daily",
+  "mergedFromDate": null,
+  "mergedToDate": null,
   "newDealCount": 23,
   "scopeDealCount": 4728,
   "nerf": [
@@ -22,7 +24,9 @@
       "pctVsPrev": 0.17692307692307693,
       "windowMaxKrw": 1300000000,
       "lat": 37.60208270344136,
-      "lng": 126.9360726516278
+      "lng": 126.9360726516278,
+      "floor": 19,
+      "nearestSubwayM": null
     }
   ],
   "buff": [
@@ -43,7 +47,9 @@
       "pctVsPrev": -0.13875598086124402,
       "windowMaxKrw": 209000000,
       "lat": 37.65036104815989,
-      "lng": 126.7796706405216
+      "lng": 126.7796706405216,
+      "floor": 1,
+      "nearestSubwayM": null
     },
     {
       "kind": "buff",
@@ -62,7 +68,9 @@
       "pctVsPrev": -0.022222222222222223,
       "windowMaxKrw": 925000000,
       "lat": 37.27037560840249,
-      "lng": 127.0212220437136
+      "lng": 127.0212220437136,
+      "floor": 7,
+      "nearestSubwayM": null
     }
   ],
   "major": [
@@ -83,7 +91,9 @@
       "windowMaxDate": "2026-05-13",
       "refMaxPeriod": "2개월",
       "lat": 37.40438036005426,
-      "lng": 127.1223959013565
+      "lng": 127.1223959013565,
+      "floor": 6,
+      "nearestSubwayM": null
     },
     {
       "sigungu": "은평구",
@@ -102,7 +112,9 @@
       "windowMaxDate": "2026-05-23",
       "refMaxPeriod": "2개월",
       "lat": 37.60208270344136,
-      "lng": 126.9360726516278
+      "lng": 126.9360726516278,
+      "floor": 19,
+      "nearestSubwayM": null
     }
   ],
   "temp": {
@@ -124,5 +136,33 @@
       "count": 9
     }
   ],
+  "cancellations": [],
+  "busiestRegions": [
+    {
+      "sigungu": "수원시 팔달구",
+      "count": 10
+    },
+    {
+      "sigungu": "고양시 일산동구",
+      "count": 7
+    },
+    {
+      "sigungu": "은평구",
+      "count": 4
+    }
+  ],
+  "headlines": {
+    "top": {
+      "kind": "nerf",
+      "text": "은평구 힐스테이트녹번, 두 달 내 최고가 — 직전 거래(5/23)보다 17.7% 높게 팔렸다"
+    },
+    "subs": [
+      {
+        "label": "경기·인천",
+        "kind": "top-major",
+        "text": "오늘 공개 최고가 — 아름마을(건영) 19.5억"
+      }
+    ]
+  },
   "latestDealDate": "2026-07-04"
 }
