@@ -89,7 +89,7 @@ export function BijiCard({
             className="text-[10px] font-bold tracking-[0.24em]"
             style={{ color: INK_SOFT }}
           >
-            내 판정
+            통장 판독 결과
           </p>
           <h3
             className={`${serif.className} mt-1.5 break-keep font-black leading-[1.14] tracking-tight`}

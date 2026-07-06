@@ -62,7 +62,7 @@ export default async function Image({
             justifyContent: "center",
           }}
         >
-          <div style={{ fontSize: 40, color: secondary }}>내 판정</div>
+          <div style={{ fontSize: 40, color: secondary }}>통장 판독 결과</div>
           <div
             style={{
               fontSize: name.length >= 7 ? 130 : 168,

@@ -37,11 +37,31 @@ const LINES: Record<Bucket, string[]> = {
     "숫자가 길지 길이 없진 않다.",
   ],
   far: [
-    "서울이 나를 거부",
+    "__REJECT__", // 동적 치환 — "{동네}가 나를 거부" (아래 rejectLine)
     "여긴 일단 다음 폴더에 저장.",
     "눈높이 말고 지도를 옮길 때.",
   ],
 };
+
+/** 시군구 → 구어 축약: "강남구"→"강남", "수원시 팔달구"→"팔달", "인천 서구"→"서구"(1자 방지). */
+function shortRegion(sigungu: string): string {
+  const last = sigungu.split(/\s+/).pop() ?? sigungu;
+  const stripped = last.replace(/(구|시|군)$/, "");
+  return stripped.length >= 2 ? stripped : last;
+}
+
+/** 받침 유무 조사 — "강남이" / "마포가". 한글 아닌 끝글자는 "이"로 폴백. */
+function iGa(word: string): string {
+  const code = word.codePointAt(word.length - 1) ?? 0;
+  if (code < 0xac00 || code > 0xd7a3) return "이";
+  return (code - 0xac00) % 28 > 0 ? "이" : "가";
+}
+
+/** "{동네}가 나를 거부" — 대상 동네 기준 (사장 지적: 강남 판정인데 "서울이"는 부정확). */
+function rejectLine(sigungu: string): string {
+  const s = shortRegion(sigungu);
+  return `${s}${iGa(s)} 나를 거부`;
+}
 
 /** 판정 카드 자조 한 줄. dday 없으면 null (카드는 조용히 생략). */
 export function verdictLine(dday: DdayResult | null | undefined): string | null {
@@ -50,5 +70,6 @@ export function verdictLine(dday: DdayResult | null | undefined): string | null 
   // 결정적 변주 — 시군구 코드포인트 합 (같은 동네·같은 상태 = 같은 문장)
   let seed = 0;
   for (const ch of dday.sigungu) seed += ch.codePointAt(0) ?? 0;
-  return lines[seed % lines.length];
+  const line = lines[seed % lines.length];
+  return line === "__REJECT__" ? rejectLine(dday.sigungu) : line;
 }

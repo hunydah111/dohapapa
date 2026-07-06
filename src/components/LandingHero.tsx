@@ -28,7 +28,7 @@ const EXAMPLES = [
   { pct: 1, sigungu: "서초구", dong: "반포동", area: 84, chip: "🌊 한강뷰", hero: "서초구 입성",
     dday: { caption: "서초구 중위 단지", headline: "지금 입성 가능", verdict: "지금 자산 기준, 가능." } },
   { pct: 85, sigungu: "강남구", dong: "대치동", area: 59, chip: "🏫 초품아", hero: "강남구 아득",
-    dday: { caption: "강남구 중위 입성까지", headline: "D-아득", verdict: "서울이 나를 거부" } },
+    dday: { caption: "강남구 중위 입성까지", headline: "D-아득", verdict: "강남이 나를 거부" } },
   { pct: 8, sigungu: "성동구", dong: "옥수동", area: 84, chip: "🚇 통근 19분", hero: "성동구 사정권",
     dday: { caption: "성동구 중위 입성까지", headline: "D-1,204", verdict: "적금 만기 몇 번이면 끝." } },
   { pct: 50, sigungu: "노원구", dong: "상계동", area: 59, chip: "🌳 공원 옆", hero: "노원구 문밖",
