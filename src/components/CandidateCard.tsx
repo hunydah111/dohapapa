@@ -133,7 +133,7 @@ export function CandidateCard({
         </span>
         <span
           className="text-sm font-semibold tabular-nums"
-          style={{ color: "#6b6157" }}
+          style={{ color: "#5d574c" }}
         >
           {RANK_LABELS[rank] ?? `${rank}위`}
         </span>
@@ -167,8 +167,8 @@ export function CandidateCard({
           )
         )}
         <span
-          className="ml-auto rounded-full bg-[#f3ece4] px-3 py-1 text-xs font-semibold tabular-nums"
-          style={{ color: "#6b6157" }}
+          className="ml-auto rounded-full bg-[#f4f2ea] px-3 py-1 text-xs font-semibold tabular-nums"
+          style={{ color: "#5d574c" }}
         >
           종합 {candidate.totalScore}점
         </span>
@@ -179,13 +179,13 @@ export function CandidateCard({
         <div className="flex flex-wrap items-start gap-2">
           <h3
             className="text-lg font-extrabold leading-tight tracking-tight"
-            style={{ color: "#3a322c" }}
+            style={{ color: "#191713" }}
           >
             {candidate.complexName}
             {candidate.buildYear !== null && (
               <span
                 className="ml-1.5 text-xs font-semibold tabular-nums"
-                style={{ color: "#9a8f82" }}
+                style={{ color: "#8a857a" }}
               >
                 ({candidate.buildYear}년식)
               </span>
@@ -214,7 +214,7 @@ export function CandidateCard({
           </a>
         </div>
         <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="text-sm" style={{ color: "#6b6157" }}>
+          <span className="text-sm" style={{ color: "#5d574c" }}>
             {candidate.sigungu}
           </span>
           {(() => {
@@ -225,7 +225,7 @@ export function CandidateCard({
             if (reg.landUseRestricted) {
               return (
                 <span
-                  className="inline-flex items-center rounded-full bg-[#fff4ef] px-2 py-0.5 text-[10.5px] font-semibold"
+                  className="inline-flex items-center rounded-full bg-[#fdf0e9] px-2 py-0.5 text-[10.5px] font-semibold"
                   style={{ color: "#c4521f" }}
                   title="2025.10.20~ 매수 시 사전허가 + 2년 실거주 의무"
                 >
@@ -237,8 +237,8 @@ export function CandidateCard({
             if (candidate.sigungu) {
               return (
                 <span
-                  className="inline-flex items-center rounded-full bg-[#f3ece4] px-2 py-0.5 text-[10.5px] font-semibold"
-                  style={{ color: "#6e5b46" }}
+                  className="inline-flex items-center rounded-full bg-[#f4f2ea] px-2 py-0.5 text-[10.5px] font-semibold"
+                  style={{ color: "#5d574c" }}
                   title="규제지역 미지정 — LTV 70% 적용, 단지 점수 −5(인기는 미만)"
                 >
                   비규제
@@ -248,17 +248,17 @@ export function CandidateCard({
             return null;
           })()}
           <span style={{ color: "#c7c7cc" }}>·</span>
-          <span className="text-sm" style={{ color: "#6b6157" }}>
+          <span className="text-sm" style={{ color: "#5d574c" }}>
             {candidate.dongName}
           </span>
           <span style={{ color: "#c7c7cc" }}>·</span>
-          <span className="text-sm" style={{ color: "#6b6157" }}>
+          <span className="text-sm" style={{ color: "#5d574c" }}>
             전용 {candidate.representativeArea}㎡
           </span>
           {candidate.totalHouseholds != null && candidate.totalHouseholds > 0 && (
             <>
               <span style={{ color: "#c7c7cc" }}>·</span>
-              <span className="text-sm" style={{ color: "#6b6157" }}>
+              <span className="text-sm" style={{ color: "#5d574c" }}>
                 {candidate.totalHouseholds.toLocaleString()}세대
               </span>
             </>
@@ -266,7 +266,7 @@ export function CandidateCard({
           <span style={{ color: "#c7c7cc" }}>·</span>
           <span
             className="font-jua text-[20px] tabular-nums tracking-tight"
-            style={{ color: "#b87914" }}
+            style={{ color: "#191713" }}
           >
             {showPriceRange
               ? `${formatEok(candidate.priceLowKrw!)}~${formatEok(candidate.priceHighKrw!)}`
@@ -274,14 +274,14 @@ export function CandidateCard({
           </span>
           <span
             className="text-[11px] font-medium -ml-1"
-            style={{ color: "#9a8f82" }}
+            style={{ color: "#8a857a" }}
           >
             {showPriceRange ? "추정" : "실거래 중위가"}
           </span>
           {/* 근거 배지 — 추정가가 무엇에 근거하는지 스캔 가능하게(거래건수·기간). */}
           <span
-            className="inline-flex items-center rounded-full bg-[#f3ece4] px-2 py-0.5 text-[11px] font-semibold"
-            style={{ color: "#9a8f82" }}
+            className="inline-flex items-center rounded-full bg-[#f4f2ea] px-2 py-0.5 text-[11px] font-semibold"
+            style={{ color: "#8a857a" }}
             title="추정가 산정 근거 — 국토교통부 공개 실거래 기준"
           >
             {candidate.priceEstimated
@@ -295,7 +295,7 @@ export function CandidateCard({
           candidate.priceFromPresale ||
           showPriceRange ||
           candidate.lowDataConfidence) && (
-          <p className="mt-1 text-[11px] leading-snug" style={{ color: "#9a8f82" }}>
+          <p className="mt-1 text-[11px] leading-snug" style={{ color: "#8a857a" }}>
             {candidate.priceEstimated
               ? `${candidate.estimateBasis ?? "주변 시세"} 환산 추정 · 실거래 미확정`
               : candidate.priceFromPresale
@@ -311,10 +311,10 @@ export function CandidateCard({
       <div
         className="rounded-2xl px-3.5 py-2.5"
         style={{
-          background: "linear-gradient(135deg, #fff4ef 0%, #f7ead0 100%)",
+          background: "linear-gradient(135deg, #fdf0e9 0%, #f4f2ea 100%)",
         }}
       >
-        <p className="text-[11px] font-bold mb-1.5" style={{ color: "#e8662f" }}>
+        <p className="text-[11px] font-bold mb-1.5" style={{ color: "#e8571f" }}>
           골라낸 이유
         </p>
         <dl className="flex flex-col gap-1">
@@ -322,11 +322,11 @@ export function CandidateCard({
             <div key={r.label} className="flex gap-2 text-[13px] leading-snug">
               <dt
                 className="w-12 flex-shrink-0 font-semibold"
-                style={{ color: "#9a8f82" }}
+                style={{ color: "#8a857a" }}
               >
                 {r.label}
               </dt>
-              <dd className="flex-1" style={{ color: "#3a322c" }}>
+              <dd className="flex-1" style={{ color: "#191713" }}>
                 {r.value}
               </dd>
             </div>
@@ -334,10 +334,10 @@ export function CandidateCard({
           {/* 솔직한 주의 한 줄 — "왜"와 짝. 있을 때만(억지 단점 X). */}
           {cautions.length > 0 && (
             <div className="mt-1 flex gap-2 border-t border-[rgba(232,102,47,0.12)] pt-1.5 text-[13px] leading-snug">
-              <dt className="w-12 flex-shrink-0 font-semibold" style={{ color: "#c2731a" }}>
+              <dt className="w-12 flex-shrink-0 font-semibold" style={{ color: "#191713" }}>
                 주의
               </dt>
-              <dd className="flex-1" style={{ color: "#7a5a2a" }}>
+              <dd className="flex-1" style={{ color: "#5d574c" }}>
                 {cautions.join(" · ")}
               </dd>
             </div>
@@ -370,8 +370,8 @@ export function CandidateCard({
         href={naverSearchUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-black/[0.08] bg-[#f3ece4] px-5 py-3 text-sm font-semibold transition-colors hover:bg-white hover:border-coral-300 hover:text-coral-700 focus:outline-none focus:ring-2 focus:ring-coral-500"
-        style={{ color: "#3a322c" }}
+        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-black/[0.08] bg-[#f4f2ea] px-5 py-3 text-sm font-semibold transition-colors hover:bg-white hover:border-coral-300 hover:text-coral-700 focus:outline-none focus:ring-2 focus:ring-coral-500"
+        style={{ color: "#191713" }}
       >
         네이버 부동산에서 매물 보기
         <svg
@@ -406,7 +406,7 @@ export function CandidateCard({
           },
         }}
         className="mt-1 block text-center text-xs font-semibold underline underline-offset-2 transition-colors hover:text-coral-700"
-        style={{ color: "#9a5a1e" }}
+        style={{ color: "#5d574c" }}
       >
         이 집 기준 D−몇 년? 잡아보자 →
       </Link>

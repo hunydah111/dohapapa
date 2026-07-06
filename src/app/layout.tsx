@@ -3,6 +3,8 @@ import Link from "next/link";
 import "./globals.css";
 import { Analytics } from "@/components/Analytics";
 import { SITE_URL } from "@/lib/site";
+// 지면 제호와 동일 명조·토큰 (공유 단일 소스) — 헤더 로고 = 제호 미니 버전.
+import { serif, PAPER, INK_SOFT, RULE, CORAL } from "@/lib/paperTone";
 
 export const metadata: Metadata = {
   // og:image 등 메타 URL을 절대경로로 만들어 카카오톡·SNS가 썸네일을 가져갈 수 있게 한다.
@@ -54,8 +56,12 @@ export default function RootLayout({
       <body className="min-h-screen flex flex-col overflow-x-clip antialiased">
         {/* ── 헤더 ── */}
         <header
-          className="sticky top-0 z-20 border-b border-black/[0.06] bg-white/85 backdrop-blur-md"
-          style={{ WebkitBackdropFilter: "blur(12px)" }}
+          className="sticky top-0 z-20 border-b backdrop-blur-md"
+          style={{
+            WebkitBackdropFilter: "blur(12px)",
+            borderColor: RULE,
+            background: "rgba(251,250,246,0.88)", // 종이 반투명
+          }}
         >
           <div className="mx-auto flex h-14 max-w-2xl items-center gap-2.5 px-4">
             {/* 로고+브랜드명 클릭 → 첫 화면(홈)으로. 풀 리로드로 결과 화면 상태까지 초기화한다. */}
@@ -63,12 +69,12 @@ export default function RootLayout({
             <a
               href="/"
               aria-label="비집고 홈으로"
-              className="flex items-center gap-2.5 rounded-lg transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-coral-500"
+              className="flex items-center gap-2.5 transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-coral-500"
             >
-              {/* 브랜드명 — 워드마크가 로고 (타이포 중심) */}
+              {/* 브랜드 마크 — 지면 제호(코랄 플레이트 흰 명조)의 미니 버전. 각진 사각, 라운드 금지. */}
               <span
-                className="font-jua text-[18px] tracking-tight"
-                style={{ color: "#e8662f" }}
+                className={`${serif.className} inline-block px-2 py-[3px] text-[15px] font-extrabold leading-none tracking-[0.16em]`}
+                style={{ background: CORAL, color: PAPER }}
               >
                 비집고
               </span>
@@ -77,7 +83,7 @@ export default function RootLayout({
             {/* 서브 태그라인 — 본문 카피와 중복 피하려 차별화(기능 요약) */}
             <span
               className="hidden text-xs sm:inline"
-              style={{ color: "#9a8f82" }}
+              style={{ color: INK_SOFT }}
             >
               예산으로 찾는 수도권 아파트
             </span>
@@ -88,12 +94,12 @@ export default function RootLayout({
         <main className="flex-1">{children}</main>
 
         {/* ── 푸터 ── */}
-        <footer className="mt-12 border-t border-black/[0.06] bg-white/60">
+        <footer className="mt-12 border-t" style={{ borderColor: RULE }}>
           <div className="mx-auto flex max-w-2xl flex-col gap-3 px-4 py-6 text-xs sm:flex-row sm:items-center sm:justify-between">
-            <p style={{ color: "#9a8f82" }}>
+            <p style={{ color: "#8a857a" }}>
               © {new Date().getFullYear()} 비집고 — 정보 제공 도구
             </p>
-            <nav className="flex flex-wrap gap-4" style={{ color: "#6b6157" }}>
+            <nav className="flex flex-wrap gap-4" style={{ color: INK_SOFT }}>
               <Link href="/privacy" className="hover:text-coral-600">
                 개인정보처리방침
               </Link>

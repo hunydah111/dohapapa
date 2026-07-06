@@ -99,7 +99,7 @@ export function MiniMap({
               position: pos,
               yAnchor: 2.1,
               zIndex: 3,
-              content: `<div style="padding:2px 7px;border-radius:9999px;background:#f2603c;color:#fff;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.25)">${p.rank ? p.rank + ". " : ""}${p.label}</div>`,
+              content: `<div style="padding:2px 7px;border-radius:9999px;background:#e8571f;color:#fff;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.25)">${p.rank ? p.rank + ". " : ""}${p.label}</div>`,
             });
             badge.setMap(map);
             bounds.extend(pos);
@@ -110,7 +110,7 @@ export function MiniMap({
             const tag = new maps.CustomOverlay({
               position: pos,
               zIndex: 2,
-              content: `<div style="display:flex;flex-direction:column;align-items:center"><div style="width:12px;height:12px;border-radius:9999px;background:#3a322c;border:2px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.3)"></div><div style="margin-top:2px;padding:1px 6px;border-radius:9999px;background:#3a322c;color:#fff;font-size:10px;font-weight:700;white-space:nowrap">🏢 ${wp.label}</div></div>`,
+              content: `<div style="display:flex;flex-direction:column;align-items:center"><div style="width:12px;height:12px;border-radius:9999px;background:#191713;border:2px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.3)"></div><div style="margin-top:2px;padding:1px 6px;border-radius:9999px;background:#191713;color:#fff;font-size:10px;font-weight:700;white-space:nowrap">🏢 ${wp.label}</div></div>`,
             });
             tag.setMap(map);
             bounds.extend(pos);

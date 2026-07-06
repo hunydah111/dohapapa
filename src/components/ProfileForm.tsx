@@ -122,11 +122,11 @@ function ToggleSwitch({
       className="flex items-center justify-between w-full text-left"
     >
       <div>
-        <p className="text-[15px] font-semibold text-[#3a322c] leading-snug">
+        <p className="text-[15px] font-semibold text-[#191713] leading-snug">
           {label}
         </p>
         {description && (
-          <p className="text-[13px] text-[#9a8f82] mt-0.5">{description}</p>
+          <p className="text-[13px] text-[#8a857a] mt-0.5">{description}</p>
         )}
       </div>
       <span
@@ -195,12 +195,12 @@ function WorkplaceInput({
 
   return (
     <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 flex flex-col gap-4 shadow-sm">
-      <p className="text-[15px] font-semibold text-[#3a322c]">{label}</p>
+      <p className="text-[15px] font-semibold text-[#191713]">{label}</p>
 
       {/* 직장 검색 / 선택 */}
       {hasSelected ? (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#fdf6e7] border border-[#ecd9b3]">
-          <span className="flex-1 text-[15px] text-[#3a322c] font-medium">
+        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#f4f2ea] border border-[#c9c3b4]">
+          <span className="flex-1 text-[15px] text-[#191713] font-medium">
             {state.selected!.label}
           </span>
           <button
@@ -220,18 +220,18 @@ function WorkplaceInput({
               onChange={(e) => onQueryChange(e.target.value)}
               placeholder="직장명 또는 주소 입력"
               autoFocus={autoFocus}
-              className="w-full px-4 py-3 rounded-2xl border border-[#d1d1d6] bg-white text-[#3a322c] placeholder-[#9a8f82] focus:outline-none focus:ring-2 focus:ring-coral-500 focus:border-transparent transition text-[15px]"
+              className="w-full px-4 py-3 rounded-2xl border border-[#d1d1d6] bg-white text-[#191713] placeholder-[#8a857a] focus:outline-none focus:ring-2 focus:ring-coral-500 focus:border-transparent transition text-[15px]"
             />
             {state.loading && (
-              <span className="absolute right-4 text-xs text-[#9a8f82]">
+              <span className="absolute right-4 text-xs text-[#8a857a]">
                 검색 중...
               </span>
             )}
           </div>
 
-          <p className="mt-2 text-[12px] text-[#9a8f82] leading-snug">
+          <p className="mt-2 text-[12px] text-[#8a857a] leading-snug">
             가게·회사명이 안 나오면{" "}
-            <span className="font-medium text-[#6b6157]">도로명주소</span>로 입력해
+            <span className="font-medium text-[#5d574c]">도로명주소</span>로 입력해
             보세요.
           </p>
 
@@ -241,7 +241,7 @@ function WorkplaceInput({
               <p className="mt-2 text-[13px] text-amber-600 leading-snug">
                 결과 없음 · 가게·회사명이 안 잡히면 도로명주소로
                 <br />
-                <span className="text-[#9a8f82]">
+                <span className="text-[#8a857a]">
                   예: 서울 강남구 테헤란로 152, 강남역, 판교
                 </span>
               </p>
@@ -254,11 +254,11 @@ function WorkplaceInput({
                   <button
                     type="button"
                     onClick={() => onSelect(r)}
-                    className="w-full text-left px-4 py-3 hover:bg-coral-50 transition-colors text-[14px] text-[#3a322c]"
+                    className="w-full text-left px-4 py-3 hover:bg-coral-50 transition-colors text-[14px] text-[#191713]"
                   >
                     <span className="font-medium">{r.label}</span>
                     {r.address && (
-                      <span className="ml-2 text-[#9a8f82]">{r.address}</span>
+                      <span className="ml-2 text-[#8a857a]">{r.address}</span>
                     )}
                   </button>
                 </li>
@@ -277,7 +277,7 @@ function WorkplaceInput({
         aria-disabled={!hasSelected}
       >
         <div>
-          <p className="text-[13px] text-[#6b6157] mb-2">통근 수단</p>
+          <p className="text-[13px] text-[#5d574c] mb-2">통근 수단</p>
           <Segmented<CommuteMode>
             options={[
               { value: "car", label: "자동차" },
@@ -288,7 +288,7 @@ function WorkplaceInput({
           />
         </div>
         <div>
-          <p className="text-[13px] text-[#6b6157] mb-2">
+          <p className="text-[13px] text-[#5d574c] mb-2">
             통근 허용시간 ({mode === "transit" ? "대중교통" : "자동차"} 기준)
           </p>
           <TextField
@@ -298,7 +298,7 @@ function WorkplaceInput({
             placeholder="60"
             suffix="분"
           />
-          <p className="mt-1.5 text-[12px] leading-snug text-[#9a8f82]">
+          <p className="mt-1.5 text-[12px] leading-snug text-[#8a857a]">
             {mode === "transit"
               ? "보통 40~60분(도보·환승 포함)을 많이 골라요."
               : "보통 30~50분을 많이 골라요."}{" "}
@@ -860,12 +860,12 @@ export function ProfileForm({
           type="button"
           onClick={() => window.history.back()}
           aria-label="이전 단계"
-          className="absolute left-0 top-1 inline-flex items-center gap-0.5 rounded-full px-2 py-1 text-[13px] font-semibold text-[#6b6157] transition-colors hover:text-coral-700 focus:outline-none focus:ring-2 focus:ring-coral-500"
+          className="absolute left-0 top-1 inline-flex items-center gap-0.5 rounded-full px-2 py-1 text-[13px] font-semibold text-[#5d574c] transition-colors hover:text-coral-700 focus:outline-none focus:ring-2 focus:ring-coral-500"
         >
           <span aria-hidden="true">←</span> 이전
         </button>
         <StepDots current={visualStep} total={visualTotal} />
-        <p className="text-[13px] text-[#9a8f82]">
+        <p className="text-[13px] text-[#8a857a]">
           {visualStep + 1}단계 / {visualTotal}
         </p>
       </div>
@@ -874,38 +874,28 @@ export function ProfileForm({
       {step === 1 && (
         <div className="flex flex-col gap-6">
           <div>
-            <h2 className="text-[22px] font-bold text-[#3a322c] leading-snug">
+            <h2 className="text-[22px] font-bold text-[#191713] leading-snug">
               가구 유형을 선택해 주세요
             </h2>
-            <p className="mt-1 text-[15px] text-[#6b6157]">
+            <p className="mt-1 text-[15px] text-[#5d574c]">
               통근 조건과 분석 방식이 달라집니다
             </p>
           </div>
 
-          {/* 가구 유형 카드 — 이모지 + 따뜻한 색감 칩으로 생기 부여, 가로 레이아웃으로 컴팩트하게 */}
+          {/* 가구 유형 카드 — 지면 통일(2026-07-06): 파스텔 각색 → 종이 바탕 + 괘선. 선택만 코랄. */}
           <div className="grid grid-cols-2 gap-2.5">
             {(Object.keys(HOUSEHOLD_TYPE_LABELS) as HouseholdType[]).map(
               (type) => {
+                const paperIdle =
+                  "border-[#c9c3b4] bg-[#fffefb] hover:border-[#a9a294]";
                 const meta: Record<
                   HouseholdType,
                   { sub: string; idle: string }
                 > = {
-                  single: {
-                    sub: "1인 통근 기준",
-                    idle: "border-coral-200 bg-coral-50 hover:border-coral-400",
-                  },
-                  dualIncome: {
-                    sub: "두 직장 고려",
-                    idle: "border-amber-200 bg-amber-50 hover:border-amber-400",
-                  },
-                  singleIncome: {
-                    sub: "한 직장 기준",
-                    idle: "border-rose-200 bg-rose-50 hover:border-rose-400",
-                  },
-                  retired: {
-                    sub: "통근 조건 없음",
-                    idle: "border-[#e0d3bf] bg-[#f5efe3] hover:border-[#cbb89a]",
-                  },
+                  single: { sub: "1인 통근 기준", idle: paperIdle },
+                  dualIncome: { sub: "두 직장 고려", idle: paperIdle },
+                  singleIncome: { sub: "한 직장 기준", idle: paperIdle },
+                  retired: { sub: "통근 조건 없음", idle: paperIdle },
                 };
                 const m = meta[type];
                 const selected = householdType === type;
@@ -924,12 +914,12 @@ export function ProfileForm({
                     <span
                       className={[
                         "block text-[15px] font-bold leading-tight",
-                        selected ? "text-coral-700" : "text-[#3a322c]",
+                        selected ? "text-coral-700" : "text-[#191713]",
                       ].join(" ")}
                     >
                       {HOUSEHOLD_TYPE_LABELS[type]}
                     </span>
-                    <span className="mt-0.5 block text-[12px] text-[#9a8f82]">
+                    <span className="mt-0.5 block text-[12px] text-[#8a857a]">
                       {m.sub}
                     </span>
                   </button>
@@ -940,10 +930,10 @@ export function ProfileForm({
 
           {/* 선호 평수 — 복수 선택 가능 */}
           <div>
-            <p className="text-[15px] font-semibold text-[#3a322c] mb-1">
+            <p className="text-[15px] font-semibold text-[#191713] mb-1">
               선호 평수
             </p>
-            <p className="text-[12px] text-[#9a8f82] mb-3">
+            <p className="text-[12px] text-[#8a857a] mb-3">
               여러 개 가능 (선택한 평수대만 표시)
             </p>
             <div className="grid grid-cols-3 gap-2">
@@ -958,7 +948,7 @@ export function ProfileForm({
                     className={`rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-coral-500 ${
                       selected
                         ? "border-coral-500 bg-coral-600 text-white"
-                        : "border-black/[0.10] bg-white text-[#6b6157] hover:border-coral-300"
+                        : "border-black/[0.10] bg-white text-[#5d574c] hover:border-coral-300"
                     }`}
                   >
                     {AREA_RANGES[key].label}
@@ -973,17 +963,17 @@ export function ProfileForm({
             <button
               type="button"
               onClick={() => setExtraOpen((v) => !v)}
-              className="flex w-full items-center justify-between rounded-2xl border border-black/[0.08] bg-[#f3ece4] px-5 py-4 text-left transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-coral-500"
+              className="flex w-full items-center justify-between rounded-2xl border border-black/[0.08] bg-[#f4f2ea] px-5 py-4 text-left transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-coral-500"
             >
-              <span className="text-sm font-semibold" style={{ color: "#3a322c" }}>
+              <span className="text-sm font-semibold" style={{ color: "#191713" }}>
                 추가 조건{" "}
-                <span className="font-medium text-[#9a8f82]">
+                <span className="font-medium text-[#8a857a]">
                   (선택 · 지역·거래량·신축·취향)
                 </span>
               </span>
               <svg
                 className={`h-4 w-4 flex-shrink-0 transition-transform duration-200 ${extraOpen ? "rotate-180" : ""}`}
-                style={{ color: "#9a8f82" }}
+                style={{ color: "#8a857a" }}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -1002,14 +992,14 @@ export function ProfileForm({
                 />
 
                 {/* 취향 한 스푼 (입지) — 복수선택 · 강도(한 스푼/두 스푼/듬뿍) */}
-                <div className="rounded-3xl border border-dashed border-[#ecd9b3] bg-[#fdf6e7] px-4 py-5">
-                  <p className="text-[15px] font-bold text-[#3a322c]">
+                <div className="rounded-3xl border border-dashed border-[#c9c3b4] bg-[#f4f2ea] px-4 py-5">
+                  <p className="text-[15px] font-bold text-[#191713]">
                     🌊 한강변 한 스푼{" "}
                     <span className="text-[12px] font-medium text-coral-500">
                       재미로
                     </span>
                   </p>
-                  <p className="mt-1 mb-4 text-[12px] leading-relaxed text-[#6b6157]">
+                  <p className="mt-1 mb-4 text-[12px] leading-relaxed text-[#5d574c]">
                     누를 때마다 한 스푼 → 두 스푼 → 듬뿍. 진해질수록 점수↑,{" "}
                     <strong className="font-semibold">한강에 더 가까워야</strong>{" "}
                     인정됨.
@@ -1083,16 +1073,16 @@ export function ProfileForm({
       {step === 2 && (
         <div className="flex flex-col gap-6">
           <div>
-            <h2 className="text-[22px] font-bold text-[#3a322c] leading-snug">
+            <h2 className="text-[22px] font-bold text-[#191713] leading-snug">
               직장 위치를 알려주세요
             </h2>
-            <p className="mt-1 text-[15px] text-[#6b6157]">
+            <p className="mt-1 text-[15px] text-[#5d574c]">
               {householdType === "dualIncome"
                 ? "두 분의 직장을 모두 입력해 주세요"
                 : "직장명이나 주소를 검색하세요"}
             </p>
             {hasSavedWorkplaces && (
-              <p className="mt-2 inline-flex items-center gap-2 rounded-full bg-[#f3ece4] px-3 py-1 text-[11.5px]" style={{ color: "#6b6157" }}>
+              <p className="mt-2 inline-flex items-center gap-2 rounded-full bg-[#f4f2ea] px-3 py-1 text-[11.5px]" style={{ color: "#5d574c" }}>
                 💾 이 기기에 저장된 직장 자동 복원
                 <button
                   type="button"
@@ -1141,9 +1131,9 @@ export function ProfileForm({
           )}
 
           {/* 통근 계산 안내 — 자동차는 카카오, 대중교통은 ODsay 기준 */}
-          <p className="rounded-2xl bg-[#f3ece4] px-4 py-3 text-[13px] leading-relaxed text-[#6b6157]">
+          <p className="rounded-2xl bg-[#f4f2ea] px-4 py-3 text-[13px] leading-relaxed text-[#5d574c]">
             통근 시간은{" "}
-            <strong className="font-semibold text-[#3a322c]">
+            <strong className="font-semibold text-[#191713]">
               자동차는 카카오 길찾기, 대중교통은 ODsay 길찾기
             </strong>{" "}
             기준 추정. 결과 화면의 주요 단지에서 대중교통 실제 소요시간 표시.
@@ -1164,10 +1154,10 @@ export function ProfileForm({
       {step === 3 && (
         <div className="flex flex-col gap-6">
           <div>
-            <h2 className="text-[22px] font-bold text-[#3a322c] leading-snug">
+            <h2 className="text-[22px] font-bold text-[#191713] leading-snug">
               가족 구성을 알려주세요
             </h2>
-            <p className="mt-1 text-[15px] text-[#6b6157]">
+            <p className="mt-1 text-[15px] text-[#5d574c]">
               학군·정책대출 요건 판정에 활용됩니다
             </p>
           </div>
@@ -1175,10 +1165,10 @@ export function ProfileForm({
           {/* 자녀·가족 신호 — 해당 항목 모두 선택 */}
           <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm flex flex-col gap-3">
             <div>
-              <p className="text-[15px] font-semibold text-[#3a322c]">
+              <p className="text-[15px] font-semibold text-[#191713]">
                 자녀 / 가족 상황
               </p>
-              <p className="text-[13px] text-[#9a8f82] mt-0.5">
+              <p className="text-[13px] text-[#8a857a] mt-0.5">
                 해당되는 항목을 모두 선택해 주세요. 학군 점수와 정책대출 자격
                 판정에 활용됩니다.
               </p>
@@ -1186,7 +1176,7 @@ export function ProfileForm({
 
             {/* 자녀 수 — 없음/1명/2명/3명 이상 */}
             <div className="flex flex-col gap-2">
-              <p className="text-[14px] font-medium text-[#3a322c]">자녀 수</p>
+              <p className="text-[14px] font-medium text-[#191713]">자녀 수</p>
               <Segmented
                 options={[
                   { value: "0", label: "없음" },
@@ -1201,7 +1191,7 @@ export function ProfileForm({
                   setHasThreeOrMoreChildren(v === "3");
                 }}
               />
-              <p className="text-[12px] text-[#9a8f82]">
+              <p className="text-[12px] text-[#8a857a]">
                 2명 이상이면 디딤돌(일반) 소득 기준 완화 대상이에요.
               </p>
             </div>
@@ -1246,11 +1236,11 @@ export function ProfileForm({
                 >
                   <div>
                     <p
-                      className={`text-[15px] font-medium ${item.state ? "text-coral-900" : "text-[#3a322c]"}`}
+                      className={`text-[15px] font-medium ${item.state ? "text-coral-900" : "text-[#191713]"}`}
                     >
                       {item.label}
                     </p>
-                    <p className="text-[12px] text-[#9a8f82] mt-0.5">
+                    <p className="text-[12px] text-[#8a857a] mt-0.5">
                       {item.why}
                     </p>
                   </div>
@@ -1295,13 +1285,13 @@ export function ProfileForm({
           )}
 
           {/* 정책대출 예비 안내 — 가족 구성 기준 */}
-          <div className="rounded-3xl border border-[#ecd9b3] bg-[#fdf6e7]/70 p-5 flex flex-col gap-2">
-            <p className="text-[15px] font-semibold text-[#3a322c]">
+          <div className="rounded-3xl border border-[#c9c3b4] bg-[#f4f2ea]/70 p-5 flex flex-col gap-2">
+            <p className="text-[15px] font-semibold text-[#191713]">
               정책대출 예비 안내
             </p>
             {familyPolicyHints.length > 0 ? (
               <>
-                <p className="text-[13px] text-[#6b6157] leading-relaxed">
+                <p className="text-[13px] text-[#5d574c] leading-relaxed">
                   지금까지 입력한 가족 구성 기준 — 아래 항목 해당 가능.
                   소득·순자산 요건은 다음 단계에서 확인.
                 </p>
@@ -1320,7 +1310,7 @@ export function ProfileForm({
                 </ul>
               </>
             ) : (
-              <p className="text-[13px] text-[#6b6157] leading-relaxed">
+              <p className="text-[13px] text-[#5d574c] leading-relaxed">
                 다음 단계에서 소득·순자산 입력 — 디딤돌·신생아 특례·보금자리론 등
                 정책대출 자격 확인.
               </p>
@@ -1342,10 +1332,10 @@ export function ProfileForm({
       {step === 4 && (
         <div className="flex flex-col gap-6">
           <div>
-            <h2 className="text-[22px] font-bold text-[#3a322c] leading-snug">
+            <h2 className="text-[22px] font-bold text-[#191713] leading-snug">
               예산 알려줘
             </h2>
-            <p className="mt-1 text-[15px] text-[#6b6157]">
+            <p className="mt-1 text-[15px] text-[#5d574c]">
               대출까지 계산해 얼마까지 가능한지 보여줌. 귀찮으면 접어서 예산만 입력 OK.
             </p>
           </div>
@@ -1405,10 +1395,10 @@ export function ProfileForm({
 
           {/* 예산 근접도 — 항상 표시 (결과 가격대 폭) */}
           <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm">
-            <p className="text-[15px] font-semibold text-[#3a322c] mb-1">
+            <p className="text-[15px] font-semibold text-[#191713] mb-1">
               예산 근접도
             </p>
-            <p className="text-[12px] text-[#6b6157] mb-3">
+            <p className="text-[12px] text-[#5d574c] mb-3">
               결과 가격대를 예산에 얼마나 딱 맞출지 골라주세요.
             </p>
             <Segmented
@@ -1429,15 +1419,15 @@ export function ProfileForm({
           {detailedBudget && (
             <div className="flex flex-col gap-6">
           {/* 정책대출 안내 배너 */}
-          <div className="rounded-2xl bg-[#fdf6e7] border border-[#ecd9b3] px-4 py-3">
-            <p className="text-[13px] leading-relaxed" style={{ color: "#9a5a1e" }}>
+          <div className="rounded-2xl bg-[#f4f2ea] border border-[#c9c3b4] px-4 py-3">
+            <p className="text-[13px] leading-relaxed" style={{ color: "#5d574c" }}>
               입력 정보로 디딤돌·신생아 특례·보금자리론 등 정책대출 자격도 함께 확인해 드립니다
             </p>
           </div>
 
           {/* 기본 재무 정보 */}
           <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm flex flex-col gap-5">
-            <p className="text-[15px] font-semibold text-[#3a322c]">
+            <p className="text-[15px] font-semibold text-[#191713]">
               기본 재무 정보
             </p>
 
@@ -1497,10 +1487,10 @@ export function ProfileForm({
           {/* 보유 주택 수 + 추가 동원자금 */}
           <div className="rounded-3xl bg-white border border-[#e5e5ea] p-5 shadow-sm flex flex-col gap-5">
             <div>
-              <p className="text-[15px] font-semibold text-[#3a322c] mb-1">
+              <p className="text-[15px] font-semibold text-[#191713] mb-1">
                 보유 주택 수
               </p>
-              <p className="text-[12px] text-[#6b6157] mb-3">
+              <p className="text-[12px] text-[#5d574c] mb-3">
                 생애최초·취득세 중과(2주택 8%·3주택+ 12%) 판정에 사용.
               </p>
               <Segmented
@@ -1572,7 +1562,7 @@ export function ProfileForm({
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-1.5">
-                        <p className="text-[14px] font-medium text-[#3a322c]">
+                        <p className="text-[14px] font-medium text-[#191713]">
                           2년 이상 거주·보유
                         </p>
                         <span
@@ -1589,12 +1579,12 @@ export function ProfileForm({
                             }
                           }}
                           aria-label="양도세 비과세 요건 안내 보기"
-                          className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-[#c7c7cc] text-[10px] font-bold text-[#9a8f82] hover:border-coral-400 hover:text-coral-600 cursor-pointer"
+                          className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-[#c7c7cc] text-[10px] font-bold text-[#8a857a] hover:border-coral-400 hover:text-coral-600 cursor-pointer"
                         >
                           ?
                         </span>
                       </div>
-                      <p className="text-[12px] text-[#9a8f82]">
+                      <p className="text-[12px] text-[#8a857a]">
                         세금 절감 — 1세대 1주택 양도세 비과세 요건
                       </p>
                     </div>
@@ -1619,11 +1609,11 @@ export function ProfileForm({
 
                   {/* 양도세 비과세 미니 가이드 — ? 클릭 시 표시 */}
                   {showTaxGuide && (
-                    <div className="rounded-2xl bg-[#fdf6e7]/80 border border-[#ecd9b3] px-4 py-3">
-                      <p className="text-[12px] font-semibold mb-2" style={{ color: "#7a4e15" }}>
+                    <div className="rounded-2xl bg-[#f4f2ea]/80 border border-[#c9c3b4] px-4 py-3">
+                      <p className="text-[12px] font-semibold mb-2" style={{ color: "#5d574c" }}>
                         1세대 1주택 양도세 비과세 — 모두 충족해야 적용
                       </p>
-                      <ul className="flex flex-col gap-1.5 text-[12px] leading-relaxed" style={{ color: "#5a3a10" }}>
+                      <ul className="flex flex-col gap-1.5 text-[12px] leading-relaxed" style={{ color: "#5d574c" }}>
                         <li className="flex gap-2">
                           <span className="flex-shrink-0">①</span>
                           <span>매도하는 집이 <strong>1세대 1주택</strong> (세대원 모두 다른 집 없음)</span>
@@ -1641,7 +1631,7 @@ export function ProfileForm({
                           <span><strong>양도가 12억원 이하</strong> (12억 초과분은 과세)</span>
                         </li>
                       </ul>
-                      <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#7a5a25" }}>
+                      <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#5d574c" }}>
                         헷갈리면 ❌ 그대로 두세요 — 양도세 6% 정도가 계산에 반영돼
                         보수적으로 추정됩니다. 정확한 판정은 세무사 상담 권장.
                       </p>
@@ -1658,8 +1648,8 @@ export function ProfileForm({
           {previewBudget ? (
             <BudgetPreview budget={previewBudget} />
           ) : (
-            <div className="rounded-3xl border border-dashed border-[#d1d1d6] bg-[#f3ece4] p-5">
-              <p className="text-[13px] text-[#9a8f82] leading-relaxed">
+            <div className="rounded-3xl border border-dashed border-[#d1d1d6] bg-[#f4f2ea] p-5">
+              <p className="text-[13px] text-[#8a857a] leading-relaxed">
                 {detailedBudget
                   ? "보유 현금과 연 가구소득을 입력하면 예상 대출 가능액·실매수 가능가가 여기 바로 표시됩니다."
                   : "가용 예산을 입력하면 취득세를 뺀 실매수 가능가가 여기 바로 표시됩니다."}
@@ -1682,10 +1672,10 @@ export function ProfileForm({
       {step === 5 && (
         <div className="flex flex-col gap-6">
           <div>
-            <h2 className="text-[22px] font-bold text-[#3a322c] leading-snug">
+            <h2 className="text-[22px] font-bold text-[#191713] leading-snug">
               무엇을 중요하게 볼까요?
             </h2>
-            <p className="mt-1 text-[15px] text-[#6b6157]">
+            <p className="mt-1 text-[15px] text-[#5d574c]">
               {isRetired ? "세" : "네"} 조건의 중요도가 분석 가중치에 반영됩니다
             </p>
           </div>
@@ -1707,10 +1697,10 @@ export function ProfileForm({
               >
                 <div className="flex items-baseline justify-between">
                   <div>
-                    <p className="text-[15px] font-semibold text-[#3a322c]">
+                    <p className="text-[15px] font-semibold text-[#191713]">
                       {PRIORITY_LABELS[key]}
                     </p>
-                    <p className="text-[11px] text-[#9a8f82] mt-0.5">
+                    <p className="text-[11px] text-[#8a857a] mt-0.5">
                       {hints[key]}
                     </p>
                   </div>
@@ -1719,7 +1709,7 @@ export function ProfileForm({
                       "text-[13px] font-medium",
                       priorities[key] >= 4
                         ? "text-coral-600"
-                        : "text-[#9a8f82]",
+                        : "text-[#8a857a]",
                     ].join(" ")}
                   >
                     {PRIORITY_SCALE_LABELS[priorities[key]]}
@@ -1745,14 +1735,14 @@ export function ProfileForm({
 
           {/* 분석 중 안내 */}
           {submitting && (
-            <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-[#fdf6e7] border border-[#ecd9b3] px-4 py-5">
+            <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-[#f4f2ea] border border-[#c9c3b4] px-4 py-5">
               <span className="flex h-5 w-5" aria-hidden="true">
                 <span className="inline-flex h-full w-full animate-ping rounded-full bg-coral-400 opacity-75" />
               </span>
-              <p className="text-[14px] font-semibold" style={{ color: "#7a4e15" }}>
+              <p className="text-[14px] font-semibold" style={{ color: "#5d574c" }}>
                 열심히 찾는 중…
               </p>
-              <p className="text-[12px]" style={{ color: "#9a5a1e" }}>
+              <p className="text-[12px]" style={{ color: "#5d574c" }}>
                 조건에 맞는 단지·예산 계산 중
               </p>
             </div>

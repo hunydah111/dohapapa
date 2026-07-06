@@ -12,12 +12,12 @@ export function BudgetPreview({ budget }: { budget: BudgetEstimate }) {
   const negative = budget.netPurchasePowerKrw <= 0;
 
   return (
-    <div className="rounded-3xl border border-[#ecd9b3] bg-[#fdf6e7]/70 p-5 flex flex-col gap-3">
+    <div className="rounded-3xl border border-[#c9c3b4] bg-[#f4f2ea]/70 p-5 flex flex-col gap-3">
       <div className="flex items-baseline justify-between">
-        <p className="text-[15px] font-semibold text-[#3a322c]">
+        <p className="text-[15px] font-semibold text-[#191713]">
           예상 예산 미리보기
         </p>
-        <span className="text-[11px] text-[#9a8f82]">입력에 따라 자동 갱신</span>
+        <span className="text-[11px] text-[#8a857a]">입력에 따라 자동 갱신</span>
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -36,19 +36,19 @@ export function BudgetPreview({ budget }: { budget: BudgetEstimate }) {
       </div>
 
       <div className="rounded-2xl bg-white px-4 py-3 flex items-center justify-between">
-        <span className="text-[13px] font-medium text-[#6b6157]">
+        <span className="text-[13px] font-medium text-[#5d574c]">
           실매수 가능가
         </span>
         <span
           className="text-[22px] font-extrabold tabular-nums tracking-tight"
-          style={{ color: negative ? "#dc2626" : "#3a322c" }}
+          style={{ color: negative ? "#dc2626" : "#191713" }}
         >
           {formatKrwHuman(budget.netPurchasePowerKrw)}
         </span>
       </div>
 
       {budget.monthlyPaymentKrw > 0 && (
-        <p className="text-[12px] text-[#6b6157]">
+        <p className="text-[12px] text-[#5d574c]">
           추정 월 원리금 상환액 약 {formatKrwHuman(budget.monthlyPaymentKrw)}
         </p>
       )}
@@ -72,7 +72,7 @@ export function BudgetPreview({ budget }: { budget: BudgetEstimate }) {
         </p>
       )}
 
-      <p className="text-[11px] leading-relaxed text-[#9a8f82]">
+      <p className="text-[11px] leading-relaxed text-[#8a857a]">
         공개 DSR·LTV 공식 기반 추정. 항목별 상세는 마지막 단계 후 결과 화면에서.
       </p>
     </div>
@@ -82,8 +82,8 @@ export function BudgetPreview({ budget }: { budget: BudgetEstimate }) {
 function PreviewRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-[13px] text-[#6b6157]">{label}</span>
-      <span className="text-[14px] font-semibold tabular-nums text-[#3a322c]">
+      <span className="text-[13px] text-[#5d574c]">{label}</span>
+      <span className="text-[14px] font-semibold tabular-nums text-[#191713]">
         {value}
       </span>
     </div>

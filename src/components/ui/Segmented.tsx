@@ -43,8 +43,8 @@ export function Segmented<T extends string>({
               "focus-visible:outline-none focus-visible:ring-2 " +
               "focus-visible:ring-coral-600 focus-visible:ring-offset-2 " +
               (selected
-                ? "bg-coral-600 text-white shadow-[0_1px_2px_rgba(0,0,0,0.06),0_4px_12px_-4px_rgba(242,96,60,0.35)]"
-                : "bg-[#f3ece4] text-[#6b6157] hover:bg-[#eaeaec]")
+                ? "bg-coral-600 text-white shadow-[0_1px_2px_rgba(0,0,0,0.06),0_4px_12px_-4px_rgba(232,87,31,0.35)]"
+                : "bg-[#f4f2ea] text-[#5d574c] hover:bg-[#eceae0]")
             }
           >
             {opt.label}

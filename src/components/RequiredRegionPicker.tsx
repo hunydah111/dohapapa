@@ -17,13 +17,13 @@ export function RequiredRegionPicker({
 
   return (
     <div>
-      <p className="text-[15px] font-semibold text-[#3a322c]">
+      <p className="text-[15px] font-semibold text-[#191713]">
         절대 포기 못 하는 지역{" "}
-        <span className="text-[12px] font-medium text-[#9a8f82]">
+        <span className="text-[12px] font-medium text-[#8a857a]">
           (복수 선택)
         </span>
       </p>
-      <p className="mt-0.5 mb-1 text-[12px] leading-relaxed text-[#6b6157]">
+      <p className="mt-0.5 mb-1 text-[12px] leading-relaxed text-[#5d574c]">
         고른 지역의 단지만 보여줘요. 안 고르면 수도권 전체.
       </p>
       {/* 1곳만 골랐을 때 예산 추정도 그 시군구 LTV·DSR로 정확. 다중·미선택은 보수적 가정. */}
@@ -32,7 +32,7 @@ export function RequiredRegionPicker({
       </p>
       {/* 빠른 선택 (핫플 → 해당 구) */}
       <div className="mb-2 flex flex-wrap items-center gap-1.5">
-        <span className="mr-1 text-[12px] font-medium text-[#9a8f82]">
+        <span className="mr-1 text-[12px] font-medium text-[#8a857a]">
           빠른 선택
         </span>
         {REGION_PRESETS.map((p) => {
@@ -51,7 +51,7 @@ export function RequiredRegionPicker({
               className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${
                 on
                   ? "border-coral-500 bg-coral-600 text-white"
-                  : "border-black/[0.10] bg-white text-[#6b6157] hover:border-coral-300"
+                  : "border-black/[0.10] bg-white text-[#5d574c] hover:border-coral-300"
               }`}
             >
               {p.label}
@@ -82,7 +82,7 @@ export function RequiredRegionPicker({
             className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
               regionTab === t
                 ? "bg-coral-600 text-white"
-                : "border border-black/[0.08] bg-[#f3ece4] text-[#6b6157]"
+                : "border border-black/[0.08] bg-[#f4f2ea] text-[#5d574c]"
             }`}
           >
             {t}
@@ -138,7 +138,7 @@ export function RequiredRegionPicker({
                 className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
                   sel
                     ? "border-coral-500 bg-coral-50 text-coral-700"
-                    : "border-black/[0.10] bg-white text-[#6b6157] hover:border-coral-300"
+                    : "border-black/[0.10] bg-white text-[#5d574c] hover:border-coral-300"
                 }`}
               >
                 {r}

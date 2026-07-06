@@ -19,7 +19,7 @@ export function MonthlyBurden({ budget }: { budget: BudgetEstimate }) {
   const stress = useSafe ? safe!.stressTest : budget.stressTest;
 
   return (
-    <div className="mb-5 rounded-2xl border border-[#ecd9b3] bg-[#fdf6e7]/70 px-5 py-4">
+    <div className="mb-5 rounded-2xl border border-[#c9c3b4] bg-[#f4f2ea]/70 px-5 py-4">
       {hasSafeToggle && safe && (
         <div className="mb-3 grid grid-cols-2 gap-1 rounded-xl bg-white/60 p-1">
           {(["max", "safe"] as const).map((m) => (
@@ -30,7 +30,7 @@ export function MonthlyBurden({ budget }: { budget: BudgetEstimate }) {
               className={`rounded-lg py-1.5 text-xs font-semibold transition-colors ${
                 mode === m
                   ? "bg-coral-600 text-white shadow-sm"
-                  : "text-[#9a8f82]"
+                  : "text-[#8a857a]"
               }`}
             >
               {m === "max" ? "은행 최대" : "안전선 (월 30%)"}
@@ -40,12 +40,12 @@ export function MonthlyBurden({ budget }: { budget: BudgetEstimate }) {
       )}
 
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium" style={{ color: "#6b6157" }}>
+        <span className="text-sm font-medium" style={{ color: "#5d574c" }}>
           추정 월 원리금 상환액
         </span>
         <span
           className="text-lg font-bold tabular-nums"
-          style={{ color: "#f2603c" }}
+          style={{ color: "#e8571f" }}
         >
           약 {formatManwon(monthly)}
         </span>
@@ -54,14 +54,14 @@ export function MonthlyBurden({ budget }: { budget: BudgetEstimate }) {
       {useSafe && safe && (
         <p
           className="mt-1.5 text-[11px] leading-relaxed"
-          style={{ color: "#9a8f82" }}
+          style={{ color: "#8a857a" }}
         >
           안전선 — 대출을{" "}
-          <span className="font-semibold" style={{ color: "#6b6157" }}>
+          <span className="font-semibold" style={{ color: "#5d574c" }}>
             {formatKrwHuman(safe.loanEstimateKrw)}
           </span>
           로 줄여 월 상환을 소득의 ~30% 이내로. 이 기준 실매입 상한 약{" "}
-          <span className="font-semibold" style={{ color: "#6b6157" }}>
+          <span className="font-semibold" style={{ color: "#5d574c" }}>
             {formatKrwHuman(safe.netPurchasePowerKrw)}
           </span>
           .
@@ -90,7 +90,7 @@ function BurdenSignal({ ratio }: { ratio: number }) {
   return (
     <div className="mt-3 border-t border-coral-100/70 pt-3">
       <div className="flex items-baseline justify-between">
-        <span className="text-xs" style={{ color: "#6b6157" }}>
+        <span className="text-xs" style={{ color: "#5d574c" }}>
           월소득 대비 원리금
         </span>
         <span
@@ -102,7 +102,7 @@ function BurdenSignal({ ratio }: { ratio: number }) {
       </div>
       <div
         className="mt-1.5 h-2 w-full overflow-hidden rounded-full"
-        style={{ background: "#ece0cc" }}
+        style={{ background: "#e5e2d6" }}
       >
         <div
           className="h-full rounded-full"
@@ -111,7 +111,7 @@ function BurdenSignal({ ratio }: { ratio: number }) {
       </div>
       <p
         className="mt-1.5 text-[11px] leading-relaxed"
-        style={{ color: "#9a8f82" }}
+        style={{ color: "#8a857a" }}
       >
         일반적으로 <span className="font-semibold">30% 안팎</span>을 부담 경계로
         참고만 (공식 단일 기준 아님). {tone.label}.
@@ -129,7 +129,7 @@ function StressRows({
 }) {
   return (
     <div className="mt-3 border-t border-coral-100/70 pt-3">
-      <p className="mb-1.5 text-xs font-medium" style={{ color: "#6b6157" }}>
+      <p className="mb-1.5 text-xs font-medium" style={{ color: "#5d574c" }}>
         금리가 더 오르면 (추정 월 원리금)
       </p>
       <div className="flex flex-col gap-1">
@@ -140,8 +140,8 @@ function StressRows({
               key={s.deltaRatePct}
               className="flex items-baseline justify-between text-xs"
             >
-              <span style={{ color: "#9a8f82" }}>금리 +{s.deltaRatePct}%p</span>
-              <span className="tabular-nums" style={{ color: "#3a322c" }}>
+              <span style={{ color: "#8a857a" }}>금리 +{s.deltaRatePct}%p</span>
+              <span className="tabular-nums" style={{ color: "#191713" }}>
                 약 {formatManwon(s.monthlyPaymentKrw)}
                 {delta > 0 && (
                   <span

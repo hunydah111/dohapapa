@@ -32,7 +32,7 @@ export function TextField({
         <label
           htmlFor={id}
           className="text-sm font-semibold"
-          style={{ color: "#3a322c" }}
+          style={{ color: "#191713" }}
         >
           {label}
         </label>
@@ -57,12 +57,12 @@ export function TextField({
           placeholder={placeholder}
           autoFocus={autoFocus}
           className={
-            "w-full rounded-2xl bg-[#f3ece4] px-4 text-[15px] text-[#3a322c] " +
-            "placeholder:text-[#9a8f82] " +
+            "w-full rounded-2xl bg-[#f4f2ea] px-4 text-[15px] text-[#191713] " +
+            "placeholder:text-[#8a857a] " +
             "border border-transparent " +
             "transition-all duration-200 " +
             "focus:outline-none focus:bg-white focus:border-coral-600 " +
-            "focus:shadow-[0_0_0_3px_rgba(242,96,60,0.12)] " +
+            "focus:shadow-[0_0_0_3px_rgba(232,87,31,0.12)] " +
             (suffix ? "pr-14 " : "") +
             "h-12"
           }
@@ -73,7 +73,7 @@ export function TextField({
         {suffix && (
           <span
             className="pointer-events-none absolute right-4 text-sm font-medium"
-            style={{ color: "#9a8f82" }}
+            style={{ color: "#8a857a" }}
           >
             {suffix}
           </span>
@@ -82,7 +82,7 @@ export function TextField({
 
       {/* 도움말 */}
       {hint && (
-        <p className="text-xs leading-relaxed" style={{ color: "#9a8f82" }}>
+        <p className="text-xs leading-relaxed" style={{ color: "#8a857a" }}>
           {hint}
         </p>
       )}

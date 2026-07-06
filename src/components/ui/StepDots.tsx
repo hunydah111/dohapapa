@@ -25,7 +25,7 @@ export function StepDots({ current, total }: StepDotsProps) {
                 ? "w-5 h-2 bg-coral-600"
                 : active
                 ? "w-2 h-2 bg-coral-400"
-                : "w-2 h-2 bg-[#d2d2d7]")
+                : "w-2 h-2 bg-[#d9d4c7]")
             }
             aria-hidden="true"
           />

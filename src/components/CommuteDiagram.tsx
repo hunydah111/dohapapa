@@ -35,7 +35,7 @@ export function CommuteDiagram({
 }) {
   if (legs.length === 0) {
     return (
-      <p className="text-xs" style={{ color: "#9a8f82" }}>
+      <p className="text-xs" style={{ color: "#8a857a" }}>
         통근 조건 없음
       </p>
     );
@@ -55,10 +55,10 @@ export function CommuteDiagram({
         : "통근 시간은 카카오 길찾기 표준 트래픽 기준 추정이에요.";
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl bg-[#f3ece4] px-4 py-3">
+    <div className="flex flex-col gap-3 rounded-2xl bg-[#f4f2ea] px-4 py-3">
       <p
         className="text-xs font-semibold tracking-wide uppercase"
-        style={{ color: "#6b6157" }}
+        style={{ color: "#5d574c" }}
       >
         통근 추정
       </p>
@@ -69,10 +69,10 @@ export function CommuteDiagram({
           // 대중교통 실측 대기 중(ODsay 호출 전)이면 mock 분·색을 보이지 않는다 — 숫자 점프 방지.
           const pending = isTransit && leg.realTransit === undefined;
           const ok = leg.withinLimit;
-          const accentColor = pending ? "#9a8f82" : ok ? "#059669" : "#d97706";
-          const bgColor = pending ? "bg-[#efe8df]" : ok ? "bg-emerald-50" : "bg-amber-50";
-          const dotEnd = pending ? "bg-[#c9bfb2]" : ok ? "bg-emerald-500" : "bg-amber-500";
-          const lineColor = pending ? "bg-[#d8cfc2]" : ok ? "bg-emerald-300" : "bg-amber-300";
+          const accentColor = pending ? "#8a857a" : ok ? "#059669" : "#d97706";
+          const bgColor = pending ? "bg-[#f4f2ea]" : ok ? "bg-emerald-50" : "bg-amber-50";
+          const dotEnd = pending ? "bg-[#b1ab9e]" : ok ? "bg-emerald-500" : "bg-amber-500";
+          const lineColor = pending ? "bg-[#d9d4c7]" : ok ? "bg-emerald-300" : "bg-amber-300";
           const fallbackLabel =
             leg.workplace === "A" ? "본인 직장" : "배우자 직장";
           const workplaceName = leg.workplaceLabel || fallbackLabel;
@@ -105,10 +105,10 @@ export function CommuteDiagram({
                   className="flex flex-col items-center gap-1"
                   style={{ width: 60 }}
                 >
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#6b6157] flex-shrink-0" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#5d574c] flex-shrink-0" />
                   <span
                     className="text-center text-[10px] font-medium leading-tight line-clamp-2"
-                    style={{ color: "#6b6157" }}
+                    style={{ color: "#5d574c" }}
                   >
                     {workplaceName}
                   </span>
@@ -121,7 +121,7 @@ export function CommuteDiagram({
                   />
                   <span
                     className="text-[10px]"
-                    style={{ color: "#9a8f82" }}
+                    style={{ color: "#8a857a" }}
                   >
                     {leg.roadDistanceKm != null
                       ? `운전 ${leg.roadDistanceKm.toFixed(1)}km`
@@ -139,7 +139,7 @@ export function CommuteDiagram({
                   />
                   <span
                     className="text-center text-[10px] font-medium"
-                    style={{ color: "#6b6157" }}
+                    style={{ color: "#5d574c" }}
                   >
                     단지
                   </span>
@@ -158,7 +158,7 @@ export function CommuteDiagram({
                 {pending ? (
                   <span
                     className="text-[13px] font-semibold"
-                    style={{ color: "#9a8f82" }}
+                    style={{ color: "#8a857a" }}
                   >
                     대중교통 계산 중…
                   </span>
@@ -170,7 +170,7 @@ export function CommuteDiagram({
                     >
                       {leg.minutes}분
                     </span>
-                    <span className="text-[11px]" style={{ color: "#9a8f82" }}>
+                    <span className="text-[11px]" style={{ color: "#8a857a" }}>
                       {modeLabel} · {sourceText}
                       {limitText}
                     </span>
@@ -210,7 +210,7 @@ export function CommuteDiagram({
 
       <p
         className="text-[11px] leading-relaxed"
-        style={{ color: "#9a8f82" }}
+        style={{ color: "#8a857a" }}
       >
         {footerBasis}
         {anyTransitFallback &&

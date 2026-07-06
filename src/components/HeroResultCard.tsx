@@ -108,7 +108,7 @@ export function HeroResultCard({
   return (
     <section
       className="relative overflow-hidden rounded-3xl px-5 py-5 text-white"
-      style={{ background: "#fe7644" }}
+      style={{ background: "#e8571f" }}
     >
 
       {/* 친구 비교 — URL ?f= 친구 판정 있을 때만. 자기 카드 위에 친구 판정 미니(텍스트)로 노출. */}
@@ -116,7 +116,7 @@ export function HeroResultCard({
         <div className="mb-3 flex items-center gap-3 rounded-2xl bg-white/15 px-3 py-2.5 backdrop-blur-sm">
           <span
             className="font-jua flex h-12 min-w-12 shrink-0 items-center justify-center rounded-lg bg-white px-1.5 text-[13px] leading-tight ring-1 ring-white/40"
-            style={{ color: "#e8662f" }}
+            style={{ color: "#e8571f" }}
             aria-hidden="true"
           >
             {friendTag.reach?.label ?? "판정"}

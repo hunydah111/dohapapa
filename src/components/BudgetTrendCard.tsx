@@ -41,20 +41,20 @@ export function BudgetTrendCard({
       }}
     >
       <div className="flex items-baseline justify-between">
-        <p className="text-[13px] font-bold" style={{ color: "#3a322c" }}>
+        <p className="text-[13px] font-bold" style={{ color: "#191713" }}>
           📊 내 예산대 시세 흐름
         </p>
-        <p className="text-[11px]" style={{ color: "#9a8f82" }}>
+        <p className="text-[11px]" style={{ color: "#8a857a" }}>
           매주 갱신
         </p>
       </div>
-      <p className="mt-2 text-[14px]" style={{ color: "#3a322c" }}>
+      <p className="mt-2 text-[14px]" style={{ color: "#191713" }}>
         {trend.scope} · {BRACKET_LABEL[tier]} 실거래 · 최근 3개월{" "}
-        <span className="font-extrabold" style={{ color: "#e8662f" }}>
+        <span className="font-extrabold" style={{ color: "#e8571f" }}>
           {arrow} {Math.abs(pct).toFixed(1)}% {word}
         </span>
       </p>
-      <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#9a8f82" }}>
+      <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "#8a857a" }}>
         과거 실거래 추세 · 미래 예측 아님 · 다음에 또 보자~
       </p>
     </section>

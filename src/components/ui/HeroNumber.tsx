@@ -13,10 +13,10 @@ import type { ReactNode } from "react";
 type Tone = "ink" | "accent" | "subtle" | "gold";
 
 const TONE_COLOR: Record<Tone, string> = {
-  ink: "#3a2c1d",      // 진한 우드 브라운 (기본 본문 톤)
-  accent: "#fe7644",   // 코랄 (강한 강조 — D-day 등)
-  subtle: "#6e5b46",   // 부드러운 우디 (보조)
-  gold: "#b87914",     // 깊은 페일 골드 — 핵심 가격·금액 (당근에 없는 황토 시그니처)
+  ink: "#191713",      // 진한 우드 브라운 (기본 본문 톤)
+  accent: "#e8571f",   // 코랄 (강한 강조 — D-day 등)
+  subtle: "#5d574c",   // 부드러운 우디 (보조)
+  gold: "#191713",     // 깊은 페일 골드 — 핵심 가격·금액 (당근에 없는 황토 시그니처)
 };
 
 export function HeroNumber({
@@ -55,7 +55,7 @@ export function HeroNumber({
         {value}
       </p>
       {caption ? (
-        <p className="mt-1.5 text-[0.875rem] leading-snug" style={{ color: "#9a8f82" }}>
+        <p className="mt-1.5 text-[0.875rem] leading-snug" style={{ color: "#8a857a" }}>
           {caption}
         </p>
       ) : null}

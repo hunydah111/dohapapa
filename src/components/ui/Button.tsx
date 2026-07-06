@@ -23,9 +23,9 @@ export function Button({
   fullWidth = false,
   className = "",
 }: ButtonProps) {
-  /* ── 베이스 ── */
+  /* ── 베이스 — 지면 CTA 문법: 각진 사각(라운드 0~2px) + 굵은 글씨 (2026-07-06 톤 통일) ── */
   const base =
-    "inline-flex items-center justify-center whitespace-nowrap font-semibold rounded-2xl " +
+    "inline-flex items-center justify-center whitespace-nowrap font-bold rounded-[2px] " +
     "transition-all duration-200 select-none cursor-pointer " +
     "active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 " +
     "focus-visible:ring-coral-600 focus-visible:ring-offset-2 " +
@@ -41,13 +41,13 @@ export function Button({
   const variants: Record<NonNullable<ButtonProps["variant"]>, string> = {
     primary:
       "bg-coral-600 text-white hover:bg-coral-700 " +
-      "shadow-[0_1px_2px_rgba(0,0,0,0.06),0_4px_12px_-4px_rgba(232,102,47,0.30)]",
+      "shadow-[0_1px_2px_rgba(0,0,0,0.06),0_4px_12px_-4px_rgba(232,87,31,0.30)]",
     secondary:
-      "bg-white text-[#3a322c] border border-black/[0.10] " +
-      "hover:bg-[#f3ece4] " +
+      "bg-white text-[#191713] border border-[#c9c3b4] " +
+      "hover:bg-[#f4f2ea] " +
       "shadow-[0_1px_2px_rgba(0,0,0,0.04)]",
     ghost:
-      "bg-transparent text-[#3a322c] hover:bg-black/[0.04]",
+      "bg-transparent text-[#191713] hover:bg-black/[0.04]",
   };
 
   const widthClass = fullWidth ? "w-full" : "";

@@ -158,7 +158,7 @@ function LocalProfileOptIn({
     }
   };
   return (
-    <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[#ecd9b3] bg-[#fdf6e7] px-4 py-3">
+    <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[#c9c3b4] bg-[#f4f2ea] px-4 py-3">
       <input
         type="checkbox"
         checked={on}
@@ -166,10 +166,10 @@ function LocalProfileOptIn({
         className="mt-0.5 h-4 w-4 shrink-0 accent-coral-600"
       />
       <span className="flex min-w-0 flex-col">
-        <span className="text-[13px] font-bold text-[#3a2c1d]">
+        <span className="text-[13px] font-bold text-[#191713]">
           다음에 오면 오늘 시세로 다시 계산
         </span>
-        <span className="text-[11px]" style={{ color: "#8a7d6e" }}>
+        <span className="text-[11px]" style={{ color: "#5d574c" }}>
           이 폰에만 저장 · 서버 미전송{on ? " · 저장됨 (해제하면 즉시 삭제)" : ""}
         </span>
       </span>
@@ -805,12 +805,12 @@ export function HomeExperience({
   // ── 공유 링크 분석 중 ──────────────────────────────────────
   if (state === null && autoLoading) {
     return (
-      <div id="biji-verdict" className="scroll-mt-4 flex flex-col items-center gap-2 rounded-3xl border border-[#ecd9b3] bg-[#fdf6e7]/70 px-6 py-12 text-center">
+      <div id="biji-verdict" className="scroll-mt-4 flex flex-col items-center gap-2 rounded-3xl border border-[#c9c3b4] bg-[#f4f2ea]/70 px-6 py-12 text-center">
         <span className="flex h-5 w-5" aria-hidden="true">
           <span className="inline-flex h-full w-full animate-ping rounded-full bg-coral-400 opacity-75" />
         </span>
-        <p className="text-sm font-semibold" style={{ color: "#7a4e15" }}>공유 링크 분석 중…</p>
-        <p className="text-xs" style={{ color: "#9a8f82" }}>잠시만 기다려 주세요</p>
+        <p className="text-sm font-semibold" style={{ color: "#5d574c" }}>공유 링크 분석 중…</p>
+        <p className="text-xs" style={{ color: "#8a857a" }}>잠시만 기다려 주세요</p>
       </div>
     );
   }
@@ -826,7 +826,7 @@ export function HomeExperience({
         {/* 재방문 이어보기(R2) — 저장된 검색 취향이 있으면 폼 미리채워 시작 제안.
             친구 비교 URL(?f=) 진입 시엔 숨김 — 사용자는 친구 보고 온 의도라 이어보기는 노이즈. */}
         {!friendTag && resumePrefs && (
-          <div className="mx-auto mb-4 flex w-full max-w-md items-center gap-2 rounded-2xl border border-[#ecd9b3] bg-[#fdf6e7] px-3 py-2.5">
+          <div className="mx-auto mb-4 flex w-full max-w-md items-center gap-2 rounded-2xl border border-[#c9c3b4] bg-[#f4f2ea] px-3 py-2.5">
             <button
               type="button"
               onClick={handleResume}
@@ -902,7 +902,7 @@ export function HomeExperience({
           <span aria-hidden="true" className="shrink-0 text-[15px]">🔍</span>
           <p
             className="text-sm font-semibold whitespace-nowrap"
-            style={{ color: "#6b6157" }}
+            style={{ color: "#5d574c" }}
           >
             검토 {result.consideredComplexCount.toLocaleString()}개 단지 분석 완료
           </p>
@@ -930,26 +930,26 @@ export function HomeExperience({
       {/* sticky 요약 바 — 구매력 / 1순위 단지 / 통근. 긴 결과를 스크롤해도 핵심 답이 상단 고정.
           토스트(z-50)보다 아래, 일반 카드보다 위(z-30). 반투명+blur로 밑 콘텐츠 비쳐도 가독 유지. */}
       {summaryTop && (
-        <div className="sticky top-0 z-30 -mt-2 flex items-stretch divide-x divide-[#ecd9b3] overflow-hidden rounded-2xl border border-[#ecd9b3] bg-[#fdf6e7]/95 shadow-sm backdrop-blur-sm">
+        <div className="sticky top-0 z-30 -mt-2 flex items-stretch divide-x divide-[#c9c3b4] overflow-hidden rounded-2xl border border-[#c9c3b4] bg-[#f4f2ea]/95 shadow-sm backdrop-blur-sm">
           <div className="flex shrink-0 flex-col px-3.5 py-2">
-            <span className="text-[10px] font-medium text-[#9a8f82]">구매력</span>
-            <span className="text-[13px] font-bold tabular-nums text-[#3a322c]">
+            <span className="text-[10px] font-medium text-[#8a857a]">구매력</span>
+            <span className="text-[13px] font-bold tabular-nums text-[#191713]">
               {formatKrwHuman(result.budget.netPurchasePowerKrw)}
             </span>
           </div>
           <div className="flex min-w-0 flex-1 flex-col px-3.5 py-2">
-            <span className="text-[10px] font-medium text-[#9a8f82]">1순위 단지</span>
-            <span className="truncate text-[13px] font-bold text-[#3a322c]">
+            <span className="text-[10px] font-medium text-[#8a857a]">1순위 단지</span>
+            <span className="truncate text-[13px] font-bold text-[#191713]">
               {summaryTop.complexName}{" "}
-              <span className="font-semibold text-[#b87914]">
+              <span className="font-semibold text-[#191713]">
                 {formatKrwHuman(summaryTop.medianPriceKrw)}
               </span>
             </span>
           </div>
           {summaryCommute && (
             <div className="flex shrink-0 flex-col px-3.5 py-2">
-              <span className="text-[10px] font-medium text-[#9a8f82]">통근</span>
-              <span className="whitespace-nowrap text-[13px] font-semibold tabular-nums text-[#3a322c]">
+              <span className="text-[10px] font-medium text-[#8a857a]">통근</span>
+              <span className="whitespace-nowrap text-[13px] font-semibold tabular-nums text-[#191713]">
                 {summaryCommute}
               </span>
             </div>
@@ -1072,10 +1072,10 @@ export function HomeExperience({
         <section className="flex flex-col gap-5">
           <div className="flex items-center gap-3">
             <div>
-              <h2 className="text-xl font-bold" style={{ color: "#3a322c" }}>
+              <h2 className="text-xl font-bold" style={{ color: "#191713" }}>
                 조건에 맞는 단지 잡았어
               </h2>
-              <p className="mt-0.5 text-sm" style={{ color: "#6b6157" }}>
+              <p className="mt-0.5 text-sm" style={{ color: "#5d574c" }}>
                 {result.consideredComplexCount.toLocaleString()}곳 중 상위{" "}
                 {result.candidates.length}곳
               </p>
@@ -1099,13 +1099,13 @@ export function HomeExperience({
         <Card>
           <h2
             className="text-xl font-bold mb-2 text-center"
-            style={{ color: "#3a322c" }}
+            style={{ color: "#191713" }}
           >
             앗, 이 조건엔 0건이네
           </h2>
-          <p className="text-sm leading-relaxed mb-3" style={{ color: "#6b6157" }}>
+          <p className="text-sm leading-relaxed mb-3" style={{ color: "#5d574c" }}>
             수도권{" "}
-            <span className="font-semibold" style={{ color: "#3a322c" }}>
+            <span className="font-semibold" style={{ color: "#191713" }}>
               {result.consideredComplexCount.toLocaleString("ko-KR")}곳
             </span>
             살펴봤는데 조건이 살짝 타이트하네.
@@ -1123,7 +1123,7 @@ export function HomeExperience({
             <div className="flex flex-col gap-3">
               <p
                 className="text-[12px] font-semibold uppercase tracking-wider"
-                style={{ color: "#9a8f82" }}
+                style={{ color: "#8a857a" }}
               >
                 이렇게 살짝 풀어볼까요? 👇 ({result.relaxationSuggestions.length})
               </p>
@@ -1136,13 +1136,13 @@ export function HomeExperience({
                   className={`group flex flex-col gap-2 rounded-2xl border px-5 py-4 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-coral-500 disabled:opacity-50 ${
                     i === 0
                       ? "border-coral-300 bg-coral-50 hover:bg-white"
-                      : "border-black/[0.08] bg-[#f3ece4] hover:bg-white hover:border-coral-300"
+                      : "border-black/[0.08] bg-[#f4f2ea] hover:bg-white hover:border-coral-300"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-3">
                     <span
                       className="text-sm font-medium leading-relaxed"
-                      style={{ color: "#3a322c" }}
+                      style={{ color: "#191713" }}
                     >
                       {s.message}
                     </span>
@@ -1217,10 +1217,10 @@ export function HomeExperience({
       {KAKAO_JS_ENABLED && result.candidates.length > 0 && (
         <section className="flex flex-col gap-3">
           <div>
-            <h2 className="text-lg font-bold" style={{ color: "#3a322c" }}>
+            <h2 className="text-lg font-bold" style={{ color: "#191713" }}>
               위치 한눈에 보기
             </h2>
-            <p className="mt-0.5 text-sm" style={{ color: "#6b6157" }}>
+            <p className="mt-0.5 text-sm" style={{ color: "#5d574c" }}>
               조건에 맞는 단지 {result.candidates.length}곳과 직장 위치
             </p>
           </div>
@@ -1244,11 +1244,11 @@ export function HomeExperience({
           <div>
             <h2
               className="text-lg font-bold"
-              style={{ color: "#3a322c" }}
+              style={{ color: "#191713" }}
             >
               그 밖의 후보
             </h2>
-            <p className="mt-0.5 text-sm" style={{ color: "#6b6157" }}>
+            <p className="mt-0.5 text-sm" style={{ color: "#5d574c" }}>
               상세 분석 외 추가로 조건에 근접한 {result.moreCandidates.length}곳
             </p>
           </div>
@@ -1267,20 +1267,20 @@ export function HomeExperience({
                 >
                   <span
                     className="mt-0.5 w-6 flex-shrink-0 text-sm tabular-nums"
-                    style={{ color: "#9a8f82" }}
+                    style={{ color: "#8a857a" }}
                   >
                     {i + 4}
                   </span>
                   <div className="flex-1 min-w-0">
                     <p
                       className="font-semibold text-sm leading-snug"
-                      style={{ color: "#3a322c" }}
+                      style={{ color: "#191713" }}
                     >
                       {m.complexName}
                     </p>
                     <p
                       className="mt-0.5 text-xs leading-relaxed"
-                      style={{ color: "#9a8f82" }}
+                      style={{ color: "#8a857a" }}
                     >
                       {m.sigungu} · {m.dongName} · {m.representativeArea}㎡ ·{" "}
                       {m.commuteSummary}
@@ -1288,7 +1288,7 @@ export function HomeExperience({
                   </div>
                   <span
                     className="flex-shrink-0 text-sm font-semibold tabular-nums"
-                    style={{ color: "#3a322c" }}
+                    style={{ color: "#191713" }}
                   >
                     {formatKrwHuman(m.medianPriceKrw)}
                   </span>
@@ -1303,10 +1303,10 @@ export function HomeExperience({
       {result.overLimitCandidates.length > 0 && (
         <section className="flex flex-col gap-4">
           <div>
-            <h2 className="text-lg font-bold" style={{ color: "#3a322c" }}>
+            <h2 className="text-lg font-bold" style={{ color: "#191713" }}>
               통근 한도를 살짝 넘는 후보
             </h2>
-            <p className="mt-0.5 text-sm" style={{ color: "#6b6157" }}>
+            <p className="mt-0.5 text-sm" style={{ color: "#5d574c" }}>
               내가 정한 통근 시간을 조금 넘지만(약 1.3배 이내) 그 외엔 괜찮은{" "}
               {result.overLimitCandidates.length}곳
             </p>
@@ -1324,13 +1324,13 @@ export function HomeExperience({
                   <div className="flex-1 min-w-0">
                     <p
                       className="font-semibold text-sm leading-snug"
-                      style={{ color: "#3a322c" }}
+                      style={{ color: "#191713" }}
                     >
                       {m.complexName}
                     </p>
                     <p
                       className="mt-0.5 text-xs leading-relaxed"
-                      style={{ color: "#9a8f82" }}
+                      style={{ color: "#8a857a" }}
                     >
                       {m.sigungu} · {m.dongName} · {m.representativeArea}㎡ ·{" "}
                       {m.commuteSummary}
@@ -1338,7 +1338,7 @@ export function HomeExperience({
                   </div>
                   <span
                     className="flex-shrink-0 text-sm font-semibold tabular-nums"
-                    style={{ color: "#3a322c" }}
+                    style={{ color: "#191713" }}
                   >
                     {formatKrwHuman(m.medianPriceKrw)}
                   </span>
@@ -1353,16 +1353,16 @@ export function HomeExperience({
       {result.overBudgetCandidates.length > 0 && result.candidates.length < 3 && (
         <section className="flex flex-col gap-4">
           <div>
-            <h2 className="text-lg font-bold" style={{ color: "#3a322c" }}>
+            <h2 className="text-lg font-bold" style={{ color: "#191713" }}>
               예산을 조금 더 쓰면 닿는 후보
             </h2>
-            <p className="mt-0.5 text-sm" style={{ color: "#6b6157" }}>
+            <p className="mt-0.5 text-sm" style={{ color: "#5d574c" }}>
               예산보다 조금 비싸지만 지역·평수·통근 조건엔 맞는{" "}
               {result.overBudgetCandidates.length}곳
             </p>
           </div>
-          <div className="overflow-hidden rounded-3xl border border-[#ecd9b3] bg-[#fdf6e7]/50">
-            <ul className="divide-y divide-[#ecd9b3]/70">
+          <div className="overflow-hidden rounded-3xl border border-[#c9c3b4] bg-[#f4f2ea]/50">
+            <ul className="divide-y divide-[#c9c3b4]/70">
               {result.overBudgetCandidates.map((m: MoreCandidate) => {
                 const diff = Math.max(
                   0,
@@ -1379,13 +1379,13 @@ export function HomeExperience({
                     <div className="flex-1 min-w-0">
                       <p
                         className="font-semibold text-sm leading-snug"
-                        style={{ color: "#3a322c" }}
+                        style={{ color: "#191713" }}
                       >
                         {m.complexName}
                       </p>
                       <p
                         className="mt-0.5 text-xs leading-relaxed"
-                        style={{ color: "#9a8f82" }}
+                        style={{ color: "#8a857a" }}
                       >
                         {m.sigungu} · {m.dongName} · {m.representativeArea}㎡ ·{" "}
                         {m.commuteSummary}
@@ -1393,7 +1393,7 @@ export function HomeExperience({
                     </div>
                     <span
                       className="flex-shrink-0 text-sm font-semibold tabular-nums"
-                      style={{ color: "#3a322c" }}
+                      style={{ color: "#191713" }}
                     >
                       {formatKrwHuman(m.medianPriceKrw)}
                     </span>
@@ -1410,17 +1410,17 @@ export function HomeExperience({
         <section className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
             <div>
-              <h2 className="text-lg font-bold" style={{ color: "#3a322c" }}>
+              <h2 className="text-lg font-bold" style={{ color: "#191713" }}>
                 조건과 가장 가까운 후보
               </h2>
-              <p className="mt-0.5 text-sm" style={{ color: "#6b6157" }}>
+              <p className="mt-0.5 text-sm" style={{ color: "#5d574c" }}>
                 딱 맞는 곳은 없었지만, 예산·통근과 차이가 있더라도 가장 가까운{" "}
                 {result.closestCandidates.length}곳이에요
               </p>
             </div>
           </div>
-          <div className="overflow-hidden rounded-3xl border border-[#e5e0d6] bg-[#f3ece4]/50">
-            <ul className="divide-y divide-[#e5e0d6]">
+          <div className="overflow-hidden rounded-3xl border border-[#c9c3b4] bg-[#f4f2ea]/50">
+            <ul className="divide-y divide-[#c9c3b4]">
               {result.closestCandidates.map((m: MoreCandidate) => (
                 <li
                   key={m.complexId}
@@ -1429,13 +1429,13 @@ export function HomeExperience({
                   <div className="flex-1 min-w-0">
                     <p
                       className="font-semibold text-sm leading-snug"
-                      style={{ color: "#3a322c" }}
+                      style={{ color: "#191713" }}
                     >
                       {m.complexName}
                     </p>
                     <p
                       className="mt-0.5 text-xs leading-relaxed"
-                      style={{ color: "#9a8f82" }}
+                      style={{ color: "#8a857a" }}
                     >
                       {m.sigungu} · {m.dongName} · {m.representativeArea}㎡ ·{" "}
                       {m.commuteSummary}
@@ -1443,7 +1443,7 @@ export function HomeExperience({
                   </div>
                   <span
                     className="flex-shrink-0 text-sm font-semibold tabular-nums"
-                    style={{ color: "#3a322c" }}
+                    style={{ color: "#191713" }}
                   >
                     {formatKrwHuman(m.medianPriceKrw)}
                   </span>
@@ -1459,10 +1459,10 @@ export function HomeExperience({
         result.relaxationSuggestions.length > 0 && (
           <section className="flex flex-col gap-4">
             <div>
-              <h2 className="text-lg font-bold" style={{ color: "#3a322c" }}>
+              <h2 className="text-lg font-bold" style={{ color: "#191713" }}>
                 더 넓게 보기
               </h2>
-              <p className="mt-0.5 text-sm" style={{ color: "#6b6157" }}>
+              <p className="mt-0.5 text-sm" style={{ color: "#5d574c" }}>
                 조건을 조금 풀면 후보가 더 늘어나요
               </p>
             </div>
@@ -1473,11 +1473,11 @@ export function HomeExperience({
                   type="button"
                   onClick={() => handleApplyRelaxation(s.action)}
                   disabled={reanalyzing}
-                  className="group flex items-center justify-between rounded-2xl border border-black/[0.08] bg-[#f3ece4] px-5 py-4 text-left transition-colors hover:border-coral-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-coral-500 disabled:opacity-50"
+                  className="group flex items-center justify-between rounded-2xl border border-black/[0.08] bg-[#f4f2ea] px-5 py-4 text-left transition-colors hover:border-coral-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-coral-500 disabled:opacity-50"
                 >
                   <span
                     className="text-sm font-medium leading-relaxed"
-                    style={{ color: "#3a322c" }}
+                    style={{ color: "#191713" }}
                   >
                     {s.message}
                   </span>
@@ -1497,14 +1497,14 @@ export function HomeExperience({
         <button
           type="button"
           onClick={() => setPanelOpen((v) => !v)}
-          className="flex w-full items-center justify-between rounded-2xl border border-black/[0.08] bg-[#f3ece4] px-5 py-4 text-left transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-coral-500"
+          className="flex w-full items-center justify-between rounded-2xl border border-black/[0.08] bg-[#f4f2ea] px-5 py-4 text-left transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-coral-500"
         >
-          <span className="text-sm font-semibold" style={{ color: "#3a322c" }}>
+          <span className="text-sm font-semibold" style={{ color: "#191713" }}>
             조건 수정
           </span>
           <svg
             className={`h-4 w-4 flex-shrink-0 transition-transform duration-200 ${panelOpen ? "rotate-180" : ""}`}
-            style={{ color: "#9a8f82" }}
+            style={{ color: "#8a857a" }}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -1520,7 +1520,7 @@ export function HomeExperience({
 
         {panelOpen && (
           <Card className="mt-2 flex flex-col gap-5">
-            <p className="text-sm" style={{ color: "#6b6157" }}>
+            <p className="text-sm" style={{ color: "#5d574c" }}>
               자주 바꾸는 조건만 수정하고 다시 분석할 수 있습니다.
             </p>
 
@@ -1552,10 +1552,10 @@ export function HomeExperience({
             <div className="flex flex-col gap-2">
               <p
                 className="text-sm font-semibold"
-                style={{ color: "#3a322c" }}
+                style={{ color: "#191713" }}
               >
                 선호 평수대{" "}
-                <span className="font-medium" style={{ color: "#9a8f82" }}>
+                <span className="font-medium" style={{ color: "#8a857a" }}>
                   (여러 개 선택 가능)
                 </span>
               </p>
@@ -1579,7 +1579,7 @@ export function HomeExperience({
                       className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-coral-500 ${
                         selected
                           ? "border-coral-500 bg-coral-600 text-white"
-                          : "border-black/[0.10] bg-white text-[#6b6157] hover:border-coral-300"
+                          : "border-black/[0.10] bg-white text-[#5d574c] hover:border-coral-300"
                       }`}
                     >
                       {AREA_RANGES[key].label}
@@ -1623,7 +1623,7 @@ export function HomeExperience({
 
             {/* P2 로딩 진행 표시 */}
             {reanalyzing && (
-              <div className="flex items-center gap-3 rounded-2xl bg-[#fdf6e7] border border-[#ecd9b3] px-4 py-3">
+              <div className="flex items-center gap-3 rounded-2xl bg-[#f4f2ea] border border-[#c9c3b4] px-4 py-3">
                 <span className="flex h-4 w-4 flex-shrink-0">
                   <span className="animate-ping inline-flex h-full w-full rounded-full bg-coral-400 opacity-75" />
                 </span>
@@ -1653,8 +1653,8 @@ export function HomeExperience({
       </section>
 
       {/* 면책 고지 */}
-      <footer className="rounded-2xl border border-black/[0.06] bg-[#f3ece4] px-5 py-4">
-        <p className="text-xs leading-relaxed" style={{ color: "#9a8f82" }}>
+      <footer className="rounded-2xl border border-black/[0.06] bg-[#f4f2ea] px-5 py-4">
+        <p className="text-xs leading-relaxed" style={{ color: "#8a857a" }}>
           {result.disclaimer}
         </p>
       </footer>

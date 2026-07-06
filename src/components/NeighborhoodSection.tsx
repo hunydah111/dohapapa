@@ -51,14 +51,14 @@ export function NeighborhoodRadar({ scores }: { scores: NeighborhoodData["scores
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
       {/* 격자 */}
       {[1, 0.66, 0.33].map((f) => (
-        <polygon key={f} points={ring(f)} fill="none" stroke="#e5e0d6" strokeWidth={1} />
+        <polygon key={f} points={ring(f)} fill="none" stroke="#c9c3b4" strokeWidth={1} />
       ))}
       {AXES.map((_, i) => {
         const [x, y] = pt(i, maxR);
-        return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="#e5e0d6" strokeWidth={1} />;
+        return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="#c9c3b4" strokeWidth={1} />;
       })}
       {/* 데이터 */}
-      <polygon points={dataPoly} fill="rgba(242,96,60,0.22)" stroke="#f2603c" strokeWidth={2} />
+      <polygon points={dataPoly} fill="rgba(232,87,31,0.22)" stroke="#e8571f" strokeWidth={2} />
       {/* 라벨 */}
       {AXES.map((ax, i) => {
         const [x, y] = pt(i, maxR + 12);
@@ -71,7 +71,7 @@ export function NeighborhoodRadar({ scores }: { scores: NeighborhoodData["scores
             dominantBaseline="middle"
             fontSize={11}
             fontWeight={700}
-            fill="#6b6157"
+            fill="#5d574c"
           >
             {ax.label}
           </text>
@@ -83,7 +83,7 @@ export function NeighborhoodRadar({ scores }: { scores: NeighborhoodData["scores
 
 function Chip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-full bg-[#f3ece4] px-2.5 py-1 text-[12px] font-semibold text-[#6b6157]">
+    <span className="inline-flex items-center rounded-full bg-[#f4f2ea] px-2.5 py-1 text-[12px] font-semibold text-[#5d574c]">
       {children}
     </span>
   );
@@ -141,7 +141,7 @@ export function NeighborhoodInline({ data }: { data: NeighborhoodData }) {
   const c = data.counts;
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-xs font-semibold" style={{ color: "#9a8f82" }}>
+      <p className="text-xs font-semibold" style={{ color: "#8a857a" }}>
         동네 · 반경 1km 시설 수 기반 사실 (추천·평가 아님)
       </p>
       <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center">

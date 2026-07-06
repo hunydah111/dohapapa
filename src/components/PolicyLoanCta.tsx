@@ -40,10 +40,10 @@ export function PolicyLoanCta({
   const hero = tone === "hero";
   const box = hero
     ? "rounded-2xl bg-white/15 backdrop-blur-sm"
-    : "rounded-2xl border border-[#e3d5bd] bg-[#fbf6ec]";
-  const heading = hero ? "text-amber-100" : "text-[#9a5a1e]";
-  const body = hero ? "text-white" : "text-[#3a2c1d]";
-  const sub = hero ? "text-white/70" : "text-[#9c8a72]";
+    : "rounded-2xl border border-[#c9c3b4] bg-[#f4f2ea]";
+  const heading = hero ? "text-amber-100" : "text-[#5d574c]";
+  const body = hero ? "text-white" : "text-[#191713]";
+  const sub = hero ? "text-white/70" : "text-[#8a857a]";
 
   return (
     <div className={`${box} px-4 py-3.5 text-left`}>

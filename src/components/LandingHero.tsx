@@ -4,6 +4,8 @@ import { BijiCard } from "@/components/BijiCard";
 import { POLICY_META } from "@/lib/policyLoan";
 import { budgetTier } from "@/lib/budgetPercentile";
 import { friendDdayLabel, friendReachName, type FriendTag } from "@/lib/friendShare";
+// 지면 명조 — DailyFront 와 같은 인스턴스(공유 모듈, 중복 선언 금지).
+import { serif } from "@/lib/paperTone";
 
 // 정책(대출·세제) 점검 시점 — "2026-05-25" → "2026.5".
 const POLICY_VERIFIED_SHORT: string = (() => {
@@ -58,47 +60,40 @@ export function LandingHero({
       {/* 친구 비교 배너 — URL ?f= 친구 등급 있을 때만. 친구가 너랑 비교하자고 보낸 링크임을
           1초 안에 인지시키는 funnel 진입 hook. */}
       {friendTag && friendName && (
-        <div className="biji-pop-in relative mx-auto mb-5 flex max-w-sm items-center gap-3 rounded-2xl border-2 border-coral-300 bg-coral-50 p-3 text-left shadow-sm">
+        <div
+          className="biji-pop-in relative mx-auto mb-5 flex max-w-sm items-center gap-3 rounded-sm border p-3 text-left shadow-sm"
+          style={{ borderColor: "#c9c3b4", background: "#fffefb" }}
+        >
           <span
-            className="font-jua flex h-14 min-w-14 shrink-0 items-center justify-center rounded-xl bg-white px-2 text-[14px] leading-tight ring-1 ring-coral-200"
-            style={{ color: "#e8662f" }}
+            className={`${serif.className} flex h-14 min-w-14 shrink-0 items-center justify-center border px-2 text-[14px] font-bold leading-tight`}
+            style={{ color: "#e8571f", borderColor: "#c9c3b4", background: "#fbfaf6" }}
             aria-hidden="true"
           >
             {friendTag.reach?.label ?? "판정"}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold text-coral-700">🦫 친구가 판정 까고 던졌다</p>
-            <p className="mt-0.5 truncate text-[15px] font-bold text-[#3a2c1d]" title={friendName}>
+            <p className="text-[11px] font-semibold" style={{ color: "#5d574c" }}>🦫 친구가 판정 까고 던졌다</p>
+            <p className="mt-0.5 truncate text-[15px] font-bold text-[#191713]" title={friendName}>
               {friendName}
               {friendDdayLabel(friendTag) && (
-                <span className="ml-1.5 font-jua text-[14px]" style={{ color: "#e8662f" }}>
+                <span className={`${serif.className} ml-1.5 text-[14px] font-bold tabular-nums`} style={{ color: "#e8571f" }}>
                   {friendDdayLabel(friendTag)}
                 </span>
               )}
             </p>
-            <p className="mt-0.5 text-[11px] leading-snug text-[#8a7d6e]">
+            <p className="mt-0.5 text-[11px] leading-snug text-[#5d574c]">
               너도 30초 까보고 옆에 서봐.
             </p>
           </div>
         </div>
       )}
 
-      {/* 페이지별 페일 액센트 — 한강 위쪽으로 부드러운 코랄 wash (Mercury 패턴) */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[420px] w-screen -translate-x-1/2"
-        style={{
-          background:
-            "radial-gradient(ellipse 70% 100% at 50% 0%, var(--accent-home) 0%, transparent 70%)",
-        }}
-      />
-
-      {/* 히어로 — 토스/당근 패턴: 큰 타이포가 메시지 전부, 비주얼은 제품(판정 카드) 그 자체.
-          일러스트·오버레이·슬로건 배너 없음. 타이포(잉크 단색) → 제품 카드 → CTA 순. */}
+      {/* 히어로 — 신문 헤드라인 위계(2026-07-06 지면 톤 통일): 명조 대형 타이포가 메시지 전부,
+          비주얼은 제품(판정서 카드) 그 자체. 배경은 종이(body) 그대로 — wash·오버레이 없음. */}
       <div className={`mx-auto max-w-md ${friendTag ? "pt-2" : "pt-8 sm:pt-12"}`}>
         <h1
-          className="font-jua break-keep text-[2.5rem] leading-[1.18] tracking-tight sm:text-[3.1rem]"
-          style={{ color: "#2c2118" }}
+          className={`${serif.className} break-keep text-[2.35rem] font-black leading-[1.24] tracking-tight sm:text-[2.9rem]`}
+          style={{ color: "#191713" }}
         >
           통장 까면,
           <br />
@@ -106,7 +101,7 @@ export function LandingHero({
         </h1>
         <p
           className="mx-auto mt-4 max-w-sm break-keep text-[15px] leading-relaxed sm:text-[16px]"
-          style={{ color: "#8a7d6e" }}
+          style={{ color: "#5d574c" }}
         >
           가능 아파트 · 돈 모자라면 D-며칠 · 놓친 정책대출까지
         </p>
@@ -128,7 +123,8 @@ export function LandingHero({
             popIn
           />
         </div>
-        <span className="absolute -right-2 -top-2 rounded-full bg-[#3a2c1d] px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
+        {/* 예시 배지 — 지면 코너 라벨(먹 바탕 사각 칩) 문법. */}
+        <span className="absolute -right-2 -top-2 bg-[#191713] px-2 py-[3px] text-[10px] font-bold tracking-[0.14em] text-[#fbfaf6] shadow-sm">
           예시
         </span>
       </div>
@@ -142,7 +138,7 @@ export function LandingHero({
         {/* 신뢰 1줄 — CTA 직하단 고정 (입력 직전 불안 차단). */}
         <p
           className="mx-auto mt-3 max-w-xs text-[11.5px] leading-relaxed"
-          style={{ color: "#9a8f82" }}
+          style={{ color: "#8a857a" }}
         >
           가입·로그인 없음 · 민감정보 저장 안 함
           <br />

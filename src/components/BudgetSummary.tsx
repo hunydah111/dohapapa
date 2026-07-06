@@ -32,20 +32,20 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
       {/* 섹션 제목 */}
       <div className="mb-6 flex items-center gap-3">
         <div>
-          <h2 className="text-lg font-bold" style={{ color: "#3a322c" }}>
+          <h2 className="text-lg font-bold" style={{ color: "#191713" }}>
             예산 분석
           </h2>
         </div>
       </div>
 
       {/* 정책·세제 반영 기준 — 눈에 띄게(신뢰). 검증일 오래되면 '확인 필요'. */}
-      <div className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl bg-[#f3ece4] px-3.5 py-2.5">
+      <div className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl bg-[#f4f2ea] px-3.5 py-2.5">
         <span
           className="text-[11px] leading-relaxed"
-          style={{ color: "#6b6157" }}
+          style={{ color: "#5d574c" }}
         >
           정책·세제{" "}
-          <span className="font-bold" style={{ color: "#3a322c" }}>
+          <span className="font-bold" style={{ color: "#191713" }}>
             {POLICY_META.effectiveLabel}
           </span>{" "}
           · 최종 점검 {fmtPolicyDate(POLICY_META.lastVerified)}
@@ -83,7 +83,7 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
         <FlowRow
           label="보유 현금"
           value={formatKrwHuman(budget.seedMoneyKrw)}
-          color="#3a322c"
+          color="#191713"
         />
 
         {/* 갈아타기: 매도 순수령액 */}
@@ -100,18 +100,18 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
                 ? `− ${formatKrwHuman(Math.abs(budget.homeSaleNetKrw))}`
                 : `+ ${formatKrwHuman(budget.homeSaleNetKrw)}`
             }
-            color={homeSaleNegative ? "#dc2626" : "#3a322c"}
+            color={homeSaleNegative ? "#dc2626" : "#191713"}
           />
         )}
 
         {/* 가용 자기자본 소계 */}
-        <div className="flex items-center justify-between rounded-xl bg-[#f3ece4] px-4 py-2.5">
-          <span className="text-sm font-semibold" style={{ color: "#6b6157" }}>
+        <div className="flex items-center justify-between rounded-xl bg-[#f4f2ea] px-4 py-2.5">
+          <span className="text-sm font-semibold" style={{ color: "#5d574c" }}>
             가용 자기자본
           </span>
           <span
             className="text-sm font-bold tabular-nums"
-            style={{ color: budget.totalEquityKrw < 0 ? "#dc2626" : "#3a322c" }}
+            style={{ color: budget.totalEquityKrw < 0 ? "#dc2626" : "#191713" }}
           >
             {budget.totalEquityKrw < 0
               ? `− ${formatKrwHuman(Math.abs(budget.totalEquityKrw))}`
@@ -127,15 +127,15 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
               : "추정 대출 가능액 (일반 DSR·LTV 기준)"
           }
           value={`+ ${formatKrwHuman(budget.loanEstimateKrw)}`}
-          color="#3a322c"
+          color="#191713"
         />
 
         {/* 대출 산출 근거 — 왜 이 금액인지 단계별 설명 */}
         {budget.loanReasonLines.length > 0 && (
-          <div className="ml-4 mt-1 mb-2 rounded-xl bg-[#fdf6e7]/60 border border-[#ecd9b3] px-3 py-2.5">
+          <div className="ml-4 mt-1 mb-2 rounded-xl bg-[#f4f2ea]/60 border border-[#c9c3b4] px-3 py-2.5">
             <p
               className="text-[11px] font-semibold mb-1.5"
-              style={{ color: "#f2603c" }}
+              style={{ color: "#e8571f" }}
             >
               이 금액이 어떻게 나왔는지
             </p>
@@ -144,7 +144,7 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
                 <li
                   key={i}
                   className="text-[11px] leading-relaxed"
-                  style={{ color: "#f2603c" }}
+                  style={{ color: "#e8571f" }}
                 >
                   {line}
                 </li>
@@ -160,7 +160,7 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
         <FlowRow
           label="총예산"
           value={`= ${formatKrwHuman(budget.grossBudgetKrw)}`}
-          color="#3a322c"
+          color="#191713"
           semibold
         />
 
@@ -168,7 +168,7 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
         <FlowRow
           label="취득세 · 부대비용"
           value={`− ${formatKrwHuman(budget.acquisitionCostsKrw)}`}
-          color="#6b6157"
+          color="#5d574c"
         />
       </div>
 
@@ -176,17 +176,17 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
       <div
         className="rounded-2xl px-5 py-5 mb-5"
         style={{
-          background: "linear-gradient(135deg, #fff4ef 0%, #f7ead0 100%)",
-          boxShadow: "0 1px 3px rgba(242,96,60,0.08)",
+          background: "linear-gradient(135deg, #fdf0e9 0%, #f4f2ea 100%)",
+          boxShadow: "0 1px 3px rgba(232,87,31,0.08)",
         }}
       >
-        <p className="text-xs font-medium mb-1" style={{ color: "#6b6157" }}>
+        <p className="text-xs font-medium mb-1" style={{ color: "#5d574c" }}>
           실 매입가능 상한 (추정치)
         </p>
         {budget.netPurchasePowerKrw > 0 ? (
           <p
             className="font-jua text-5xl tabular-nums tracking-tight"
-            style={{ color: "#b87914" }}
+            style={{ color: "#191713" }}
           >
             {formatKrwHuman(budget.netPurchasePowerKrw)}
           </p>
@@ -194,11 +194,11 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
           <>
             <p
               className="text-xl font-extrabold tracking-tight"
-              style={{ color: "#3a322c" }}
+              style={{ color: "#191713" }}
             >
               현금 좀 더 필요 — 우선 현금흐름 잡자~
             </p>
-            <p className="mt-1.5 text-sm leading-relaxed" style={{ color: "#6b6157" }}>
+            <p className="mt-1.5 text-sm leading-relaxed" style={{ color: "#5d574c" }}>
               근데 정책대출 자격 보거나, 조건 살짝 바꾸면 가능 — 아래 안내 보자~
             </p>
           </>
@@ -212,7 +212,7 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
       {budget.policyLoanMatches.length > 0 && (
         <div className="mb-5">
           <div className="flex items-baseline gap-2 mb-3">
-            <p className="text-sm font-bold" style={{ color: "#3a322c" }}>
+            <p className="text-sm font-bold" style={{ color: "#191713" }}>
               정책대출 자격 안내
             </p>
             {budget.appliedLoanType === "policy" &&
@@ -230,15 +230,15 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
                 <p className="mb-0.5 text-xs font-bold text-emerald-700">
                   당신 케이스 → {conclusionLoan.productName} 가능성 높음
                 </p>
-                <p className="text-[12px] leading-snug" style={{ color: "#3a322c" }}>
+                <p className="text-[12px] leading-snug" style={{ color: "#191713" }}>
                   {conclusionLoan.reason}
                 </p>
               </div>
               {(restEligible.length > 0 || ineligibleLoans.length > 0) && (
-                <details className="rounded-2xl bg-[#f7f3ec] px-3 py-2 [&_summary::-webkit-details-marker]:hidden">
+                <details className="rounded-2xl bg-[#f4f2ea] px-3 py-2 [&_summary::-webkit-details-marker]:hidden">
                   <summary
                     className="cursor-pointer list-none text-xs font-semibold"
-                    style={{ color: "#6b6157" }}
+                    style={{ color: "#5d574c" }}
                   >
                     다른 정책 자격 자세히 ▾ ({restEligible.length + ineligibleLoans.length})
                   </summary>
@@ -257,7 +257,7 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
             /* 적격 없음 — 거짓 결론 만들지 않고 미적격 나열 그대로 */
             ineligibleLoans.length > 0 && (
               <div className="flex flex-col gap-2 mb-3">
-                <p className="text-xs font-semibold" style={{ color: "#9a8f82" }}>
+                <p className="text-xs font-semibold" style={{ color: "#8a857a" }}>
                   이 조건엔 자격 안 됨
                 </p>
                 {ineligibleLoans.map((loan) => (
@@ -270,7 +270,7 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
           {/* 컴플라이언스 안내 */}
           <p
             className="text-[11px] leading-relaxed"
-            style={{ color: "#9a8f82" }}
+            style={{ color: "#8a857a" }}
           >
             본 결과는 자격요건 시뮬레이션입니다 — 실제 한도·금리·승인 여부는
             취급 금융기관(주택도시기금 · 한국주택금융공사) 심사 기준을 따르므로
@@ -305,7 +305,7 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
         <div>
           <p
             className="text-xs font-semibold mb-1.5"
-            style={{ color: "#9a8f82" }}
+            style={{ color: "#8a857a" }}
           >
             계산 가정
           </p>
@@ -314,7 +314,7 @@ export function BudgetSummary({ budget }: { budget: BudgetEstimate }) {
               <li
                 key={i}
                 className="flex gap-1.5 text-xs leading-relaxed"
-                style={{ color: "#9a8f82" }}
+                style={{ color: "#8a857a" }}
               >
                 <span
                   className="mt-0.5 flex-shrink-0"
@@ -347,10 +347,10 @@ function FlowRow({
 }) {
   return (
     <div className="flex items-baseline justify-between px-1">
-      <span className="text-sm" style={{ color: "#6b6157" }}>
+      <span className="text-sm" style={{ color: "#5d574c" }}>
         {label}
         {hint && (
-          <span className="ml-1 text-xs" style={{ color: "#9a8f82" }}>
+          <span className="ml-1 text-xs" style={{ color: "#8a857a" }}>
             {hint}
           </span>
         )}
@@ -374,7 +374,7 @@ function PolicyLoanCard({
 }) {
   if (eligible) {
     return (
-      <div className="rounded-2xl border border-[#ecd9b3] bg-[#fdf6e7] px-4 py-3">
+      <div className="rounded-2xl border border-[#c9c3b4] bg-[#f4f2ea] px-4 py-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold" style={{ color: "#3730a3" }}>
@@ -382,7 +382,7 @@ function PolicyLoanCard({
             </p>
             <p
               className="mt-0.5 text-xs leading-relaxed"
-              style={{ color: "#f2603c" }}
+              style={{ color: "#e8571f" }}
             >
               {loan.reason}
             </p>
@@ -395,17 +395,17 @@ function PolicyLoanCard({
           loan.rateMin !== undefined) && (
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
             {loan.loanLimitKrw !== undefined && (
-              <span className="text-xs font-semibold tabular-nums" style={{ color: "#3a322c" }}>
+              <span className="text-xs font-semibold tabular-nums" style={{ color: "#191713" }}>
                 한도 {formatKrwHuman(loan.loanLimitKrw)}
               </span>
             )}
             {loan.rateMin !== undefined && loan.rateMax !== undefined && (
-              <span className="text-xs font-semibold tabular-nums" style={{ color: "#3a322c" }}>
+              <span className="text-xs font-semibold tabular-nums" style={{ color: "#191713" }}>
                 금리 연 {loan.rateMin}%~{loan.rateMax}%
               </span>
             )}
             {loan.rateMin !== undefined && loan.rateMax === undefined && (
-              <span className="text-xs font-semibold tabular-nums" style={{ color: "#3a322c" }}>
+              <span className="text-xs font-semibold tabular-nums" style={{ color: "#191713" }}>
                 금리 연 {loan.rateMin}%~
               </span>
             )}
@@ -416,20 +416,20 @@ function PolicyLoanCard({
   }
 
   return (
-    <div className="rounded-2xl border border-black/[0.06] bg-[#f3ece4] px-4 py-3">
+    <div className="rounded-2xl border border-black/[0.06] bg-[#f4f2ea] px-4 py-3">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium" style={{ color: "#9a8f82" }}>
+          <p className="text-sm font-medium" style={{ color: "#8a857a" }}>
             {loan.productName}
           </p>
           <p
             className="mt-0.5 text-xs leading-relaxed"
-            style={{ color: "#9a8f82" }}
+            style={{ color: "#8a857a" }}
           >
             {loan.reason}
           </p>
         </div>
-        <span className="flex-shrink-0 rounded-full border border-black/[0.08] bg-white px-2.5 py-0.5 text-[11px] font-medium" style={{ color: "#9a8f82" }}>
+        <span className="flex-shrink-0 rounded-full border border-black/[0.08] bg-white px-2.5 py-0.5 text-[11px] font-medium" style={{ color: "#8a857a" }}>
           조건 확인 필요
         </span>
       </div>

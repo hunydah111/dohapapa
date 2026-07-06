@@ -14,21 +14,13 @@
 // 하위호환: 라이브 dailyPatch.json은 다음 크론 전까지 major/temp 필드가 없다(구 스키마)
 //   → 둘 다 optional, 없으면 해당 코너/줄을 조용히 접는다.
 
-import { Noto_Serif_KR } from "next/font/google";
 import dailyPatchRaw from "@/data/dailyPatch.json";
 import dailyPulseRaw from "@/data/dailyPulse.json";
 import { pickHeadline, type MajorItem, type PatchTemp, type RegionPulse } from "@/lib/patchNote";
 import { ThresholdGauge, DailyFrontPing } from "./ThresholdGauge";
 import { DealMiniMap } from "./DealMiniMap";
-
-// 제호·헤드라인 명조 — next/font 셀프호스팅(빌드 시 내장)이라 기기에 폰트가 없어도
-// 모든 플랫폼에서 동일 렌더. 시스템 폴백(바탕 합성볼드)은 뭉개져서 폐기 (2026-07-06).
-const serif = Noto_Serif_KR({
-  weight: ["700", "900"],
-  subsets: ["latin"],
-  display: "swap",
-  fallback: ["Nanum Myeongjo", "Batang", "serif"],
-});
+// 명조·조판 토큰 — 공유 모듈(단일 소스, 2026-07-06 홈 하부 톤 통일). 중복 선언 금지.
+import { serif, PAPER, INK, INK_SOFT, RULE, CORAL, GREEN } from "@/lib/paperTone";
 
 interface PatchItem {
   kind: "nerf" | "buff";
@@ -89,14 +81,6 @@ interface DailyPulse {
 // placeholder(빈 배열)는 never[] 로 추론되므로 명시 캐스팅.
 const patch = dailyPatchRaw as unknown as DailyPatch;
 const pulse = dailyPulseRaw as unknown as DailyPulse;
-
-// ── 조판 토큰 ──────────────────────────────────────────────────────────────────
-const PAPER = "#fbfaf6";
-const INK = "#191713";
-const INK_SOFT = "#5d574c";
-const RULE = "#c9c3b4";
-const CORAL = "#e8571f";
-const GREEN = "#2e7d52";
 
 // ── 포맷터 ────────────────────────────────────────────────────────────────────
 /** "2026-06-28" → "6/28". 깨진 값은 그대로 반환. */

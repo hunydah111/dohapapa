@@ -6,35 +6,35 @@
   --font-jua: "Jua", "Gowun Dodum", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* ── 비집고 우디 팔레트 (비버·나무·보금자리) ── */
-  --color-page-bg:    #f5ecd9;   /* 따뜻한 오트밀/우드 크림 */
-  --color-surface:    #fffdf8;   /* 따뜻한 화이트 */
-  --color-text-primary:   #3a2c1d;  /* 진한 우드 브라운 */
-  --color-text-secondary: #6e5b46;
-  --color-text-muted:     #9c8a72;
-  --color-accent:     #fe7644;   /* 코랄 — 주 브랜드/CTA (로고 비버·아파트와 통일) */
-  --color-accent-hover: #e8662f;
+  /* ── 비집고 지면(신문) 팔레트 — 2026-07-06 홈 하부 톤 통일 (src/lib/paperTone.ts 와 동일 값) ── */
+  --color-page-bg:    #fbfaf6;   /* 종이 */
+  --color-surface:    #fffefb;   /* 종이 위 카드(살짝 더 흰 종이) */
+  --color-text-primary:   #191713;  /* 먹 */
+  --color-text-secondary: #5d574c;  /* 보조 먹 */
+  --color-text-muted:     #8a857a;  /* 옅은 먹 */
+  --color-accent:     #e8571f;   /* 코랄 — 제호 플레이트·CTA·판정 링크 (지면과 동일) */
+  --color-accent-hover: #c9490f;
   --color-warm:       #e0a23a;   /* 허니 앰버 — 보조 액센트 */
-  --color-warm-soft:  #f7ead0;   /* 배지·하이라이트 배경 */
+  --color-warm-soft:  #f4f2ea;   /* 배지·하이라이트 배경 (종이 패널) */
   --color-warm-text:  #9a5a1e;   /* 따뜻한 텍스트 */
-  --color-success:    #4f9d54;   /* 그린 통일 (통과/적격) */
-  --color-border:     rgba(70,48,24,0.12);
+  --color-success:    #2e7d52;   /* 그린 통일 (통과/적격 — 지면 그린) */
+  --color-border:     rgba(25,23,19,0.14);   /* 괘선 톤 */
 
   /* 비버 우드 톤 (구조·테두리·텍스처용 보조) */
   --color-wood:       #8a6240;
   --color-wood-soft:  #efe2cf;
 
-  /* ── coral-* 스케일 → 따뜻한 코랄 (브랜드 통일: 로고 비버·아파트 톤) ──
+  /* ── coral-* 스케일 → 지면 코랄(#e8571f) 중심 재조정 (2026-07-06 톤 통일) ──
      초록은 의미색(통과/적격)으로만 남기고 emerald 계열과 --color-success 가 담당. */
-  --color-coral-50:  #fff4ef;
-  --color-coral-100: #ffe6dc;
-  --color-coral-200: #ffccb7;
-  --color-coral-300: #ffb094;
-  --color-coral-400: #ff926a;
-  --color-coral-500: #fe7d4f;
-  --color-coral-600: #fe7644;
-  --color-coral-700: #e8662f;
-  --color-coral-800: #c4521f;
+  --color-coral-50:  #fdf0e9;
+  --color-coral-100: #fadfd2;
+  --color-coral-200: #f5c2ab;
+  --color-coral-300: #efa07d;
+  --color-coral-400: #ec7c4b;
+  --color-coral-500: #ea672f;
+  --color-coral-600: #e8571f;
+  --color-coral-700: #c9490f;
+  --color-coral-800: #a53c0c;
 
   /* ── 그림자 토큰 ── */
   --shadow-card:
@@ -63,10 +63,10 @@
   --text-body:       0.9375rem;/* 15px */
   --text-caption:    0.75rem;  /* 12px */
 
-  /* ── 페이지별 페일 액센트 (Mercury 패턴 — 페이지가 작품처럼 분위기 가짐) ── */
-  --accent-home:     #fff4ef;  /* blush coral (홈) */
-  --accent-result:   #f7ead0;  /* warm sand (결과) */
-  --accent-plan:     #f5ecd9;  /* oatmeal (플랜·기본 페이지 배경) */
+  /* ── 페이지별 페일 액센트 (지면 통일 후엔 종이 계열로 수렴 — 홈 wash 는 폐지) ── */
+  --accent-home:     #f4f2ea;  /* 종이 패널 (홈) */
+  --accent-result:   #f4f2ea;  /* 종이 패널 (결과) */
+  --accent-plan:     #f5ecd9;  /* oatmeal (플랜 — 다음 사이클에서 통일) */
 
   /* ── 여백 토큰 (Mercury 4-6rem 섹션 gap) ── */
   --space-section:   4rem;     /* 섹션 간 (큰 호흡) */
@@ -287,7 +287,7 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255,122,89,0.30);
+  background: rgba(232,87,31,0.30);
   border-radius: 9999px;
 }
 
