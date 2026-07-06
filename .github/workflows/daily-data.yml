@@ -7,7 +7,15 @@ name: weekly-data-refresh
 on:
   schedule:
     - cron: "0 21 * * 6"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      refresh_months:
+        # 평소 2. "정화 백필"은 13 — fetch-molit 적재 규칙(2026-07-06: 해제 스킵·직거래
+        # 태깅)을 과거 13개월에 소급 적용해 regionSeries "해제·직거래 제외" 각주를
+        # 전 구간에서 참으로 만든다. API 호출 ~81×13이므로 필요할 때 1회만.
+        description: "실거래 재적재 개월 수 (기본 2 · 해제·직거래 정화 백필은 13)"
+        required: false
+        default: "2"
 
 permissions:
   contents: write
@@ -35,8 +43,9 @@ jobs:
       - run: npm ci
       - run: npx prisma generate
 
-      # 1) 매매 실거래 — 최근 2개월만 시군구별 원자적 교체(멱등). 신규 단지는 find-or-create.
-      - run: npx tsx scripts/fetch-molit.ts --gu=all --refresh-recent=2
+      # 1) 매매 실거래 — 최근 N개월(기본 2)만 시군구별 원자적 교체(멱등). 신규 단지는
+      #    find-or-create. 수동 실행 시 refresh_months 로 창 확대 가능(정화 백필 13).
+      - run: npx tsx scripts/fetch-molit.ts --gu=all --refresh-recent=${{ inputs.refresh_months || '2' }}
       # 2) 신규 단지만 좌표/학교거리 보강(증분, 저비용).
       - run: npx tsx scripts/geocode-complexes.ts
       - run: npx tsx scripts/enrich-schools.ts
@@ -52,6 +61,9 @@ jobs:
         continue-on-error: true
       # 4e) 일간 펄스도 한 번 새로(전체 재계산 직후 최근 창 재확인).
       - run: npx tsx scripts/daily-pulse.ts --gu=all --months=2
+      # 4f) 동네면 시계열 — 시군구 × 최근 13개월 월 버킷(거래량 + 관측 중위가).
+      #     DB(fetch-molit 적재분)에서 굽는다 — fetch-molit 다음이면 언제든 OK.
+      - run: npx tsx scripts/build-region-series.ts
 
       # 5) 바뀐 데이터 JSON 만 커밋 → push 시 Vercel 자동 배포.
       #    (분양권(fetch-presale)은 변동이 드물고 호출이 무거워 제외 — 필요 시 수동.)
@@ -59,7 +71,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data/trendIndex.json src/data/dataMeta.json src/data/complexSnapshot.json src/data/rebWeekly.json src/data/dailyPulse.json
+          git add src/data/trendIndex.json src/data/dataMeta.json src/data/complexSnapshot.json src/data/rebWeekly.json src/data/dailyPulse.json src/data/regionSeries.json
           if git diff --staged --quiet; then
             echo "변경 없음 — 커밋 생략"
           else

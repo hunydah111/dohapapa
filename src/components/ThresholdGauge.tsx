@@ -13,6 +13,23 @@ import { track } from "@/lib/track";
 import { loadLocalProfile } from "@/lib/localProfile";
 import { computeDdayForSigungu, type DdayResult } from "@/lib/plan/dday";
 import { formatKrwHuman } from "@/lib/format";
+import { isKnownSigungu, normalizeSigungu } from "@/lib/molit";
+
+/** 시군구명 → 동네면(/r/[시군구]) 링크 — 먹색 유지 + 점선 밑줄(지면 톤).
+ *  화이트리스트 밖 값(구 프로필 등)은 링크 없이 텍스트 그대로. */
+function GaugeRegion({ sigungu, ink }: { sigungu: string; ink: string }) {
+  if (!isKnownSigungu(sigungu)) return <>{sigungu}</>;
+  return (
+    <a
+      href={`/r/${encodeURIComponent(normalizeSigungu(sigungu))}`}
+      title={`${sigungu} 동네면`}
+      className="underline decoration-dotted underline-offset-2"
+      style={{ color: ink }}
+    >
+      {sigungu}
+    </a>
+  );
+}
 
 /** 스트립 노출 계측 — 서버 컴포넌트(DailyFront)에서 클라이언트로 위임한 1회성 핑. */
 export function DailyFrontPing() {
@@ -56,7 +73,7 @@ export function ThresholdGauge() {
     line = (
       <>
         <span className="font-bold" style={{ color: INK }}>
-          {sigungu} 문턱, 지금 기준 아득해요
+          <GaugeRegion sigungu={sigungu} ink={INK} /> 문턱, 지금 기준 아득해요
         </span>
         <a
           href="#biji-verdict"
@@ -70,13 +87,15 @@ export function ThresholdGauge() {
   } else if (dday.months === 0) {
     line = (
       <span className="font-bold" style={{ color: INK }}>
-        {sigungu} — 지금 닿아요
+        <GaugeRegion sigungu={sigungu} ink={INK} /> — 지금 닿아요
       </span>
     );
   } else {
     line = (
       <span className="tabular-nums" style={{ color: INK }}>
-        <span className="font-bold">{sigungu} 문턱까지 </span>
+        <span className="font-bold">
+          <GaugeRegion sigungu={sigungu} ink={INK} /> 문턱까지{" "}
+        </span>
         <span className="text-[17px] font-extrabold">{formatKrwHuman(dday.gapKrw)}</span>
         <span style={{ color: INK_SOFT }}>
           {" "}

@@ -156,6 +156,33 @@ function floorSubwayTag(
 }
 
 // ── 조판 부품 ─────────────────────────────────────────────────────────────────
+/** 동네면 링크 — 지면 동네명 → /r/[시군구]. 먹색 유지 + 점선 밑줄(절제된 링크 표시)로
+ *  지면 조판 톤을 깨지 않는다. 공백 포함 시군구("수원시 팔달구")는 encodeURIComponent. */
+function RegionLink({
+  sigungu,
+  children,
+  className,
+  style,
+  ...rest
+}: {
+  sigungu: string;
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+} & Record<`data-${string}`, string>) {
+  return (
+    <a
+      href={`/r/${encodeURIComponent(sigungu)}`}
+      title={`${sigungu} 동네면`}
+      className={`underline decoration-dotted underline-offset-2 ${className ?? ""}`}
+      style={{ color: INK, ...style }}
+      {...rest}
+    >
+      {children}
+    </a>
+  );
+}
+
 /** 코너 라벨 — 먹색 바탕 흰 글씨 사각 칩. */
 function CornerLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -251,7 +278,7 @@ function MajorRow({ item, divider }: { item: MajorItem; divider: boolean }) {
     >
       <div className="flex items-baseline gap-2">
         <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
-          {item.dong} {item.apt}{" "}
+          <RegionLink sigungu={item.sigungu}>{item.dong}</RegionLink> {item.apt}{" "}
           <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
             {sqm(item.areaM2)}㎡{tag ? ` · ${tag}` : ""}
           </span>
@@ -295,7 +322,7 @@ function StrongRow({ item, divider }: { item: PatchItem; divider: boolean }) {
           <span aria-hidden="true" className="mr-1 font-extrabold" style={{ color: INK }}>
             ▲
           </span>
-          {item.sigungu} {item.apt}{" "}
+          <RegionLink sigungu={item.sigungu}>{item.sigungu}</RegionLink> {item.apt}{" "}
           <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
             {sqm(item.areaM2)}㎡{tag ? ` · ${tag}` : ""}
           </span>
@@ -325,7 +352,7 @@ function CancellationRow({ item, divider }: { item: CancellationItem; divider: b
     >
       <div className="flex items-baseline gap-2">
         <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
-          {item.dong} {item.apt}{" "}
+          <RegionLink sigungu={item.sigungu}>{item.dong}</RegionLink> {item.apt}{" "}
           <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
             {sqm(item.areaM2)}㎡{tag ? ` · ${tag}` : ""}
           </span>
@@ -358,7 +385,7 @@ function WeakRegionRow({ item, divider }: { item: RegionPulse; divider: boolean 
         <span aria-hidden="true" className="mr-1 font-extrabold" style={{ color: GREEN }}>
           ▼
         </span>
-        {item.sigungu}
+        <RegionLink sigungu={item.sigungu}>{item.sigungu}</RegionLink>
       </span>
       <span className="shrink-0 text-right text-[13px] font-extrabold" style={{ color: GREEN }}>
         직전 거래 대비 평균 −{pctAbs(item.avgPct)}%
@@ -601,7 +628,8 @@ export function DailyFront() {
               )}
 
               {/* 오늘 최다 공개 동네 — fresh 유효 거래 시군구 상위 3(3건 이상만).
-                  동네명은 추후 링크 예정이라 span으로 감싸 둔다. 구 스키마·비면 생략. */}
+                  동네명은 동네면(/r/[시군구]) 링크 — data-region 은 기존 셀렉터 호환 유지.
+                  구 스키마·비면 생략. */}
               {busiestRegions.length > 0 && (
                 <p
                   className="mb-0 mt-2 text-[12px] leading-[1.6] tabular-nums"
@@ -611,9 +639,9 @@ export function DailyFront() {
                   {busiestRegions.map((r, i) => (
                     <span key={r.sigungu}>
                       {i > 0 && " · "}
-                      <span data-region={r.sigungu} style={{ color: INK }} className="font-bold">
+                      <RegionLink sigungu={r.sigungu} data-region={r.sigungu} className="font-bold">
                         {r.sigungu}
-                      </span>{" "}
+                      </RegionLink>{" "}
                       {r.count.toLocaleString("ko-KR")}건
                     </span>
                   ))}

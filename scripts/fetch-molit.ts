@@ -78,6 +78,22 @@ function currentYYYYMM(): string {
 
 const prisma = new PrismaClient();
 
+// ── 유효 거래 적재 규칙 (2026-07-06, 동네면 시계열 "해제·직거래 제외" 각주의 근거) ──
+// Transaction 스키마에 해제/거래유형 컬럼이 없으므로:
+//  - 해제(canceled): 법적으로 무효가 된 계약 — 적재 자체를 안 한다(스킵).
+//    (해제 "뉴스"는 daily-pulse 가 API 원본에서 직접 다룬다 — DB 무관.)
+//  - 직거래: source="MOLIT_DIRECT" 로 태깅해 보존 — 집계 스크립트가 걸러 쓸 수 있게.
+//    (기존 소비자(스냅샷 중위가 등)는 source 를 필터하지 않으므로 동작 불변.)
+// ⚠️ 이 규칙 이전 적재분은 해제·직거래가 "MOLIT" 으로 남아 있다 — 주간 증분 창(최근
+// 2개월)은 매주 원자적 재적재로 자연 정화되고, 과거 월 정화는 workflow_dispatch 에서
+// refresh_months=13 1회 실행으로 백필한다.
+/** MOLIT 매매가 적재 시 갖는 source 값들 — 증분 교체(deleteMany) 대상. */
+const MOLIT_SOURCES = ["MOLIT", "MOLIT_DIRECT"];
+
+function txSourceOf(d: MolitDeal): string {
+  return d.dealingGbn === "직거래" ? "MOLIT_DIRECT" : "MOLIT";
+}
+
 /** SQLite 변수 한도를 피하려고 createMany 를 청크로 나눠 실행. */
 async function createTransactionsChunked(
   data: {
@@ -139,9 +155,10 @@ async function ingestGu(
   const idMap = new Map<string, string>();
   for (const r of rows) idMap.set(`${r.dongName}|${r.name}`, r.id);
 
-  // 4. 거래 일괄 생성.
+  // 4. 거래 일괄 생성 — 해제는 스킵, 직거래는 source 태깅(위 적재 규칙).
   const txData = deals
     .map((d) => {
+      if (d.canceled) return null;
       const complexId = idMap.get(`${d.dongName}|${d.apartmentName}`);
       if (!complexId) return null;
       return {
@@ -150,7 +167,7 @@ async function ingestGu(
         priceKrw: d.priceKrw,
         area: d.area,
         floor: d.floor ?? null,
-        source: "MOLIT",
+        source: txSourceOf(d),
       };
     })
     .filter((x): x is NonNullable<typeof x> => x !== null);
@@ -210,6 +227,7 @@ async function ingestGuIncremental(
 
   const txData = deals
     .map((d) => {
+      if (d.canceled) return null; // 해제 — 유효 거래 아님, 적재 스킵.
       const complexId = idMap.get(`${d.dongName}|${d.apartmentName}`);
       if (!complexId) return null;
       return {
@@ -218,17 +236,17 @@ async function ingestGuIncremental(
         priceKrw: d.priceKrw,
         area: d.area,
         floor: d.floor ?? null,
-        source: "MOLIT",
+        source: txSourceOf(d),
       };
     })
     .filter((x): x is NonNullable<typeof x> => x !== null);
 
-  // 2. 원자적 교체: 이 시군구의 fromDate 이후 매매 삭제 → 재삽입.
+  // 2. 원자적 교체: 이 시군구의 fromDate 이후 매매(MOLIT + MOLIT_DIRECT) 삭제 → 재삽입.
   const CHUNK = 1000;
   const ops = [
     prisma.transaction.deleteMany({
       where: {
-        source: "MOLIT",
+        source: { in: MOLIT_SOURCES },
         dealDate: { gte: fromDate },
         complex: { sigungu: gu },
       },
