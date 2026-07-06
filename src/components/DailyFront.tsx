@@ -43,7 +43,7 @@ import {
   CORAL,
   UP,
   DOWN,
-  PLATE_FONT,
+  plateFont,
 } from "@/lib/paperTone";
 
 interface PatchItem {
@@ -763,8 +763,8 @@ export function DailyFront() {
           style={{ borderTop: `2.5px solid ${INK}`, borderBottom: `1px solid ${INK}` }}
         >
           <h2
-            className="m-0 inline-block px-3 py-1.5 text-[34px] leading-none tracking-[0.18em]"
-            style={{ background: CORAL, color: PAPER, fontFamily: PLATE_FONT, fontWeight: 900 }}
+            className={`${plateFont.className} m-0 inline-block px-3 py-1.5 text-[34px] leading-none tracking-[0.06em]`}
+            style={{ background: CORAL, color: PAPER }}
           >
             비집고
           </h2>

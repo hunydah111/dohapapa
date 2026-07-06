@@ -2,7 +2,7 @@ import type { BudgetTier } from "@/lib/budgetPercentile";
 import { composeReachName } from "@/lib/bijiName";
 import { SITE_DOMAIN } from "@/lib/site";
 // 지면 조판 토큰·명조 — DailyFront 와 동일 단일 소스 (중복 선언 금지).
-import { serif, PAPER, INK, INK_SOFT, RULE, CORAL, PLATE_FONT } from "@/lib/paperTone";
+import { serif, PAPER, INK, INK_SOFT, RULE, CORAL, plateFont } from "@/lib/paperTone";
 
 // 판정서 카드 — 지면(신문) 디자인 언어 재조판 (2026-07-06 홈 하부 톤 통일).
 // 파스텔 트레이딩 카드 → "판독 결과지/증서" 문법:
@@ -159,8 +159,8 @@ export function BijiCard({
             style={{ borderColor: RULE }}
           >
             <span
-              className="inline-block px-1.5 py-[2px] text-[10px] leading-none tracking-[0.18em]"
-              style={{ background: CORAL, color: PAPER, fontFamily: PLATE_FONT, fontWeight: 900 }}
+              className={`${plateFont.className} inline-block px-1.5 py-[2px] text-[10px] leading-none tracking-[0.06em]`}
+              style={{ background: CORAL, color: PAPER }}
             >
               비집고
             </span>
