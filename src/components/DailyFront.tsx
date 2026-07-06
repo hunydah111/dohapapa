@@ -351,8 +351,19 @@ function TempTrendChart({
   const X0 = 26;
   const X1 = 356;
   const TODAY_X = 384;
-  const yOf = (p: number) => 68 - (p / 100) * 60; // 0%→68, 50%→38, 100%→8
   const xOf = (i: number) => X0 + (i * (X1 - X0)) / (n - 1);
+  // 동적 y축 — 온도는 35~65% 사이에서 노는 지표라 0~100 고정축이면 변화가 안 보인다
+  // (2026-07-06 사장 지시). 데이터 범위 ±4pp, 5 단위 스냅, 50% 균형선은 항상 도메인 안에.
+  const pctVals: number[] = [];
+  for (let i = 0; i < n; i++) {
+    if (series.matched[i] > 0) pctVals.push((series.above[i] / series.matched[i]) * 100);
+  }
+  if (pctVals.length < 2) return null;
+  pctVals.push(todayAbovePct);
+  const yMin = Math.min(45, Math.max(0, Math.floor((Math.min(...pctVals) - 4) / 5) * 5));
+  const yMax = Math.max(55, Math.min(100, Math.ceil((Math.max(...pctVals) + 4) / 5) * 5));
+  const yOf = (p: number) => 68 - ((p - yMin) / (yMax - yMin)) * 60;
+  const yMid = yOf(50);
   const pts: { x: number; y: number }[] = [];
   for (let i = 0; i < n; i++) {
     if (!(series.matched[i] > 0)) continue; // 표본 0 달은 선에서 제외
@@ -387,12 +398,12 @@ function TempTrendChart({
         role="img"
         aria-label={`온도 추이 — 직전 거래보다 높게 팔린 비율(계약월 기준, ${series.months[0]}~). 오늘 ${todayAbovePct}%`}
       >
-        <text x="0" y="12" fontSize="8.5" fill={INK_SOFT}>100%</text>
-        <text x="7" y="41" fontSize="8.5" fill={INK_SOFT}>50</text>
-        <text x="10" y="70" fontSize="8.5" fill={INK_SOFT}>0</text>
+        <text x="0" y="12" fontSize="8.5" fill={INK_SOFT}>{yMax}%</text>
+        <text x="7" y={(yMid + 3).toFixed(1)} fontSize="8.5" fill={INK_SOFT}>50</text>
+        <text x="7" y="70" fontSize="8.5" fill={INK_SOFT}>{yMin}</text>
         <line x1={X0} y1="8" x2="392" y2="8" stroke="#eee8da" strokeWidth="1" />
-        {/* 50% 중립 점선 */}
-        <line x1={X0} y1="38" x2="392" y2="38" stroke={RULE} strokeWidth="1" strokeDasharray="3 3" />
+        {/* 50% 균형 점선 — 동적 도메인 안에서 위치 계산 */}
+        <line x1={X0} y1={yMid.toFixed(1)} x2="392" y2={yMid.toFixed(1)} stroke={RULE} strokeWidth="1" strokeDasharray="3 3" />
         <line x1={X0} y1="68" x2="392" y2="68" stroke={RULE} strokeWidth="1" />
         <polyline fill="none" stroke={INK} strokeWidth="1.8" points={line} />
         {/* 오늘 점 (공개 기준) */}
