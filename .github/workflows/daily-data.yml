@@ -81,7 +81,8 @@ jobs:
       - run: npx tsx scripts/daily-pulse.ts --gu=all --months=2
       # 4f) 동네면 시계열 — 시군구 × 최근 13개월 월 버킷(거래량 + 관측 중위가).
       #     DB(fetch-molit 적재분)에서 굽는다 — fetch-molit 다음이면 언제든 OK.
-      #     같은 스크립트가 온도 1년 시계열(tempSeries.json)도 함께 굽는다(시안 B 차트).
+      #     같은 스크립트가 온도 시계열(tempSeries.json)과 [최근 거래 상위]
+      #     (regionTop.json — 시군구×평형 밴드 최근 60일 TOP10)도 함께 굽는다.
       - run: npx tsx scripts/build-region-series.ts
 
       # 5) 바뀐 데이터 JSON 만 커밋 → push 시 Vercel 자동 배포.
@@ -90,7 +91,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data/trendIndex.json src/data/dataMeta.json src/data/complexSnapshot.json src/data/rebWeekly.json src/data/dailyPulse.json src/data/regionSeries.json src/data/tempSeries.json
+          git add src/data/trendIndex.json src/data/dataMeta.json src/data/complexSnapshot.json src/data/rebWeekly.json src/data/dailyPulse.json src/data/regionSeries.json src/data/tempSeries.json src/data/regionTop.json
           if git diff --staged --quiet; then
             echo "변경 없음 — 커밋 생략"
           else

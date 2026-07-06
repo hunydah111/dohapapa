@@ -7,8 +7,11 @@ import {
   lastMonths,
   median,
   medianLineSegments,
+  priceAxis,
+  regionSeriesSummary,
   roundManwon,
   ymOf,
+  type RegionSeriesEntry,
   type RegionSeriesTx,
 } from "@/lib/regionSeries";
 
@@ -120,5 +123,84 @@ describe("medianLineSegments — null(표본 부족) 달에서 라인이 끊긴�
 
   it("전부 null 이면 빈 배열", () => {
     expect(medianLineSegments([null, null])).toEqual([]);
+  });
+});
+
+describe("priceAxis — y축 가격 눈금(동적 도메인·깔끔한 스냅)", () => {
+  it("14억~16억 구간은 1억 스냅 눈금 2~3개(14/15/16억꼴)", () => {
+    const axis = priceAxis(1_400_000_000, 1_600_000_000)!;
+    expect(axis.ticks.length).toBeGreaterThanOrEqual(2);
+    expect(axis.ticks.length).toBeLessThanOrEqual(3);
+    // 전부 5천만의 배수("깔끔한" 눈금).
+    for (const t of axis.ticks) expect(t % 50_000_000).toBe(0);
+    // 도메인이 관측 범위를 여유 있게 감싼다.
+    expect(axis.domainMin).toBeLessThan(1_400_000_000);
+    expect(axis.domainMax).toBeGreaterThan(1_600_000_000);
+    // 눈금은 도메인 안.
+    expect(axis.ticks[0]).toBeGreaterThanOrEqual(axis.domainMin);
+    expect(axis.ticks[axis.ticks.length - 1]).toBeLessThanOrEqual(axis.domainMax);
+  });
+
+  it("좁은 구간(5천만 폭)은 5천만 스냅으로 눈금이 잡힌다", () => {
+    const axis = priceAxis(500_000_000, 550_000_000)!;
+    expect(axis.ticks.length).toBeGreaterThanOrEqual(2);
+    expect(axis.ticks.length).toBeLessThanOrEqual(3);
+    for (const t of axis.ticks) expect(t % 50_000_000).toBe(0);
+  });
+
+  it("광폭 구간(강남 18.8억~28.5억)도 눈금 2~3개로 절제된다", () => {
+    const axis = priceAxis(1_880_000_000, 2_850_000_000)!;
+    expect(axis.ticks.length).toBeGreaterThanOrEqual(2);
+    expect(axis.ticks.length).toBeLessThanOrEqual(3);
+    for (const t of axis.ticks) expect(t % 50_000_000).toBe(0);
+  });
+
+  it("평평한 구간(min=max — 유효월 1개)도 도메인을 벌려 눈금 2개 이상 보장", () => {
+    const axis = priceAxis(1_470_000_000, 1_470_000_000)!;
+    expect(axis.ticks.length).toBeGreaterThanOrEqual(2);
+    expect(axis.domainMin).toBeLessThan(1_470_000_000);
+    expect(axis.domainMax).toBeGreaterThan(1_470_000_000);
+  });
+
+  it("비정상 입력(min>max·0 이하)은 null — 호출부가 축 없이 렌더", () => {
+    expect(priceAxis(2_000_000_000, 1_000_000_000)).toBeNull();
+    expect(priceAxis(0, 1_000_000_000)).toBeNull();
+  });
+});
+
+describe("regionSeriesSummary — 12개월 요약 한 줄", () => {
+  const months = ["2025-07", "2025-08", "2025-09", "2025-10"];
+
+  it("첫·마지막 유효월과 등락률, 거래 최다 월을 요약한다", () => {
+    const entry: RegionSeriesEntry = {
+      counts: [5, 12, 8, 2],
+      medianKrw: [1_000_000_000, 1_050_000_000, 1_098_000_000, null],
+    };
+    const s = regionSeriesSummary(months, entry)!;
+    expect(s.firstYm).toBe("2025-07");
+    expect(s.firstKrw).toBe(1_000_000_000);
+    expect(s.lastYm).toBe("2025-09"); // 마지막 유효(non-null) 월
+    expect(s.lastKrw).toBe(1_098_000_000);
+    expect(s.pct).toBeCloseTo(0.098, 10);
+    expect(s.busiestYm).toBe("2025-08");
+    expect(s.busiestCount).toBe(12);
+  });
+
+  it("거래 최다 동률은 최신 월을 채택한다", () => {
+    const entry: RegionSeriesEntry = {
+      counts: [9, 3, 9, 1],
+      medianKrw: [1_000_000_000, null, 900_000_000, null],
+    };
+    const s = regionSeriesSummary(months, entry)!;
+    expect(s.busiestYm).toBe("2025-09");
+    expect(s.pct).toBeCloseTo(-0.1, 10);
+  });
+
+  it("유효월 2개 미만이면 null — 요약 줄 생략", () => {
+    const entry: RegionSeriesEntry = {
+      counts: [1, 2, 1, 0],
+      medianKrw: [null, 1_000_000_000, null, null],
+    };
+    expect(regionSeriesSummary(months, entry)).toBeNull();
   });
 });

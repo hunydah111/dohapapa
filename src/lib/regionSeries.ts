@@ -108,6 +108,94 @@ export function bucketRegionSeries(
   return regions;
 }
 
+// ── y축 가격 눈금 (v2.4 — 세로축에 가격 눈금이 없으면 선의 높이가 의미 불명) ────────
+/** 눈금 스텝 사다리 — 전부 5천만의 배수("깔끔한" 억 단위 눈금: 14억 / 14.5억 / 15억…).
+ *  DailyFront TempTrendChart의 동적 도메인(±패딩·스냅)과 같은 사상, 단위만 원화. */
+export const PRICE_TICK_STEPS = [
+  50_000_000, 100_000_000, 200_000_000, 500_000_000,
+  1_000_000_000, 2_000_000_000, 5_000_000_000,
+] as const;
+
+export interface PriceAxis {
+  /** 차트 y 도메인(원) — 관측 min/max ± 여유. */
+  domainMin: number;
+  domainMax: number;
+  /** 도메인 안의 눈금(원, 오름차순) — 항상 2~3개, 전부 step의 배수. */
+  ticks: number[];
+}
+
+/**
+ * 관측 중위 min/max → 동적 y축. 규칙:
+ *  - 스텝 = (범위+양쪽 8% 패딩)/2.5 를 사다리에서 올림 스냅 → 눈금 최대 3개 보장.
+ *  - 패딩 ≥ 스텝×0.3 — 선이 눈금선에 붙어 안 뭉개지게.
+ *  - 눈금이 2개 미만이면(평평한 구간 등) 도메인을 반 스텝씩 확장 — 2개 보장.
+ * 입력이 비정상(min>max, ≤0)이면 null — 호출부가 축 없이 렌더(기존 폴백).
+ */
+export function priceAxis(minKrw: number, maxKrw: number): PriceAxis | null {
+  if (!(minKrw > 0) || !(maxKrw >= minKrw)) return null;
+  const span = Math.max(maxKrw - minKrw, 1);
+  const rawStep = (span * 1.16) / 2.5;
+  const step =
+    PRICE_TICK_STEPS.find((s) => s >= rawStep) ??
+    PRICE_TICK_STEPS[PRICE_TICK_STEPS.length - 1];
+  const pad = Math.max(span * 0.08, step * 0.3);
+  let lo = Math.max(0, minKrw - pad);
+  let hi = maxKrw + pad;
+  let t0 = Math.ceil(lo / step) * step;
+  let t1 = Math.floor(hi / step) * step;
+  // 평평한 구간(단일 관측월 등)은 눈금이 0~1개 — 2개 들어올 때까지 확장(항상 수렴).
+  while (t1 < t0 + step) {
+    lo = Math.max(0, lo - step / 2);
+    hi += step / 2;
+    t0 = Math.ceil(lo / step) * step;
+    t1 = Math.floor(hi / step) * step;
+  }
+  const ticks: number[] = [];
+  for (let t = t0; t <= t1; t += step) ticks.push(t);
+  return { domainMin: lo, domainMax: hi, ticks };
+}
+
+// ── 12개월 요약 한 줄 (v2.4) — "관측 중위 A → B (±x%) · 거래 최다 M(N건)" ─────────
+export interface RegionSeriesSummary {
+  firstYm: string;
+  firstKrw: number;
+  lastYm: string;
+  lastKrw: number;
+  /** (last − first) / first — 관측 중위끼리의 변화(시세 지수 아님 — 라벨 의무). */
+  pct: number;
+  busiestYm: string;
+  busiestCount: number;
+}
+
+/** 유효(중위가 non-null) 월 2개 미만이면 null — 요약 줄 생략. 거래 최다는 동률 시 최신 월. */
+export function regionSeriesSummary(
+  months: readonly string[],
+  entry: RegionSeriesEntry,
+): RegionSeriesSummary | null {
+  const valid: number[] = [];
+  entry.medianKrw.forEach((v, i) => {
+    if (v !== null && i < months.length) valid.push(i);
+  });
+  if (valid.length < 2) return null;
+  const fi = valid[0];
+  const li = valid[valid.length - 1];
+  const firstKrw = entry.medianKrw[fi]!;
+  const lastKrw = entry.medianKrw[li]!;
+  let bi = 0;
+  entry.counts.forEach((c, i) => {
+    if (i < months.length && c >= entry.counts[bi]) bi = i; // ≥ — 동률은 최신 월
+  });
+  return {
+    firstYm: months[fi],
+    firstKrw,
+    lastYm: months[li],
+    lastKrw,
+    pct: (lastKrw - firstKrw) / firstKrw,
+    busiestYm: months[bi],
+    busiestCount: entry.counts[bi],
+  };
+}
+
 /**
  * 중위가 라인의 연속 구간 분리 — null(표본 부족) 달에서 선을 끊는다.
  * 반환: [{ i(월 인덱스), v(원) }, ...] 구간 배열. 고립 1점 구간도 그대로(점으로 렌더).

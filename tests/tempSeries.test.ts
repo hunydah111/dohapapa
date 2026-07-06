@@ -3,7 +3,10 @@
 // 같거나 이른 것 중 최신(자기 제외, 60일 내), ±1% 중립 밴드.
 import { describe, it, expect } from "vitest";
 import {
+  PHASE_MIN_MONTHS,
+  REFERENCE_PHASES,
   bucketTempSeries,
+  phaseAvg,
   trimLeadingEmptyMonths,
   TEMP_SERIES_DEFAULT_MONTHS,
   type TempSeriesTx,
@@ -112,5 +115,62 @@ describe("tempSeries.trimLeadingEmptyMonths — 앞쪽 빈 달 잘라내기", ()
 
   it("기본 버킷 수 = 5년 + 당월", () => {
     expect(TEMP_SERIES_DEFAULT_MONTHS).toBe(61);
+  });
+});
+
+describe("tempSeries.phaseAvg — 국면 참조 척도(역사적 관측 평균만, 임의 임계 금지)", () => {
+  /** months 구간을 만들어 above/matched를 채우는 헬퍼. */
+  function mk(months: string[], above: number[], matched: number[]) {
+    return { months, above, matched };
+  }
+  const boom = { from: "2020-11", to: "2021-10" };
+
+  it("구간 월들의 matched 가중 평균 above%를 돌려준다", () => {
+    // 6개월 관측: matched가 큰 달이 평균을 지배해야 한다(단순 평균 아님).
+    const months = ["2020-11", "2020-12", "2021-01", "2021-02", "2021-03", "2021-04"];
+    const above = [90, 10, 10, 10, 10, 10]; // 첫 달만 90/100, 나머지 10/20
+    const matched = [100, 20, 20, 20, 20, 20];
+    // 가중 평균 = (90+50) / (100+100) = 140/200 = 70%
+    expect(phaseAvg(mk(months, above, matched), boom)).toBeCloseTo(70, 10);
+  });
+
+  it("구간이 부분만 있어도(전부 아님) 6개월 이상이면 값을 준다", () => {
+    // 폭등기 12개월 중 7개월만 시리즈에 존재.
+    const months = ["2021-04", "2021-05", "2021-06", "2021-07", "2021-08", "2021-09", "2021-10"];
+    const above = months.map(() => 6);
+    const matched = months.map(() => 10);
+    expect(phaseAvg(mk(months, above, matched), boom)).toBeCloseTo(60, 10);
+  });
+
+  it("구간 관측월이 6개월 미만이면 null — 백필 전엔 참조선이 안 뜬다", () => {
+    const months = ["2021-06", "2021-07", "2021-08", "2021-09", "2021-10"]; // 5개월
+    const above = months.map(() => 6);
+    const matched = months.map(() => 10);
+    expect(phaseAvg(mk(months, above, matched), boom)).toBeNull();
+  });
+
+  it("구간 안이라도 matched=0 달은 관측월로 안 센다", () => {
+    const months = ["2020-11", "2020-12", "2021-01", "2021-02", "2021-03", "2021-04"];
+    const above = [5, 5, 5, 5, 5, 0];
+    const matched = [10, 10, 10, 10, 10, 0]; // 관측 5개월뿐
+    expect(phaseAvg(mk(months, above, matched), boom)).toBeNull();
+  });
+
+  it("구간 밖 달은 집계에 안 들어간다", () => {
+    const months = [
+      "2020-10", // 구간 앞 — 제외
+      "2020-11", "2020-12", "2021-01", "2021-02", "2021-03", "2021-04",
+      "2021-11", // 구간 뒤 — 제외
+    ];
+    const above = [1000, 5, 5, 5, 5, 5, 5, 1000];
+    const matched = [1000, 10, 10, 10, 10, 10, 10, 1000];
+    expect(phaseAvg(mk(months, above, matched), boom)).toBeCloseTo(50, 10);
+  });
+
+  it("참조 국면 상수 — 폭등기/급락기 두 국면, 최소 관측 6개월", () => {
+    expect(REFERENCE_PHASES.map((p) => p.key)).toEqual(["boom", "slump"]);
+    expect(REFERENCE_PHASES[0].tone).toBe("up");
+    expect(REFERENCE_PHASES[1].tone).toBe("down");
+    expect(PHASE_MIN_MONTHS).toBe(6);
   });
 });

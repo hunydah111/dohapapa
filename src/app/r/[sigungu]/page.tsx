@@ -16,20 +16,29 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import dailyPatchRaw from "@/data/dailyPatch.json";
 import regionSeriesRaw from "@/data/regionSeries.json";
+import regionTopRaw from "@/data/regionTop.json";
 import { LAWD_CODES, SIGUNGU_NAMES } from "@/lib/molit";
 import {
   medianLineSegments,
+  priceAxis,
+  regionSeriesSummary,
   type RegionSeriesEntry,
   type RegionSeriesFile,
 } from "@/lib/regionSeries";
+import {
+  REGION_TOP_BANDS,
+  orderedBandKeys,
+  type RegionTopFile,
+  type RegionTopItem,
+} from "@/lib/regionTop";
 import type {
   BusiestRegion,
   CancellationItem,
   MajorItem,
   PatchItem,
 } from "@/lib/patchNote";
-// 지면 조판 토큰·명조 — 공유 단일 소스(중복 선언 금지).
-import { serif, PAPER, INK, INK_SOFT, RULE, CORAL } from "@/lib/paperTone";
+// 지면 조판 토큰·명조 — 공유 단일 소스(중복 선언 금지). UP/DOWN = 시세 방향색(1면과 동일 문법).
+import { serif, PAPER, INK, INK_SOFT, RULE, CORAL, UP, DOWN } from "@/lib/paperTone";
 
 // ── 라우팅 — LAWD_CODES 81개 키가 곧 전체 지면 목록. 미지 파라미터는 404. ──────
 export const dynamicParams = false;
@@ -63,6 +72,7 @@ interface DailyPatchSubset {
 }
 const patch = dailyPatchRaw as unknown as DailyPatchSubset;
 const series = regionSeriesRaw as unknown as RegionSeriesFile;
+const regionTop = regionTopRaw as unknown as RegionTopFile;
 
 // ── 포맷터 — DailyFront 지면과 동일 규칙(그쪽은 컴포넌트 프라이빗이라 미러) ───────
 /** "2026-06-28" → "6/28". 깨진 값은 그대로. */
@@ -166,15 +176,17 @@ function RegionSeriesChart({
   const maxCount = Math.max(1, ...entry.counts);
   const barH = (c: number) => (c / maxCount) * (yBase - yTop - 26);
 
-  // 라인 스케일 — 관측 중위가(자체 min/max, 상하 여백).
+  // 라인 스케일 — 동적 y 도메인(관측 중위 min/max ± 여유) + 억 단위 "깔끔한" 눈금
+  // 2~3개(5천만/1억… 스냅 — priceAxis). TempTrendChart의 동적 도메인과 같은 사상.
   const meds = entry.medianKrw.filter((v): v is number => v !== null);
-  const medMin = meds.length > 0 ? Math.min(...meds) : 0;
-  const medMax = meds.length > 0 ? Math.max(...meds) : 0;
-  const span = medMax - medMin;
+  const axis = meds.length > 0 ? priceAxis(Math.min(...meds), Math.max(...meds)) : null;
+  const yPlotTop = yTop + 14; // 상단 캡션("막대 = …") 아래
+  const yPlotBot = yBase - 12; // 막대 기준선 위
   const yMed = (v: number) =>
-    span === 0
-      ? (yTop + yBase) / 2
-      : yBase - 24 - ((v - medMin) / span) * (yBase - yTop - 48);
+    axis
+      ? yPlotBot -
+        ((v - axis.domainMin) / (axis.domainMax - axis.domainMin)) * (yPlotBot - yPlotTop)
+      : (yTop + yBase) / 2;
 
   const segments = medianLineSegments(entry.medianKrw);
 
@@ -206,6 +218,24 @@ function RegionSeriesChart({
     >
       {/* 기준선(괘선) */}
       <line x1={x0} y1={yBase} x2={x1 + 40} y2={yBase} stroke={INK} strokeWidth="1.5" />
+      {/* y축 가격 눈금 + 가는 그리드선 — 관측 중위가 라인 전용 축(막대 축은 별도 —
+          캡션 "월 최다 N건"으로 표기). 눈금은 전부 5천만의 배수. */}
+      {axis?.ticks.map((t) => (
+        <g key={`g${t}`}>
+          <line
+            x1={x0}
+            y1={yMed(t).toFixed(1)}
+            x2={x1 + 40}
+            y2={yMed(t).toFixed(1)}
+            stroke={RULE}
+            strokeWidth="0.8"
+            strokeDasharray="2 3"
+          />
+          <text x={x0} y={(yMed(t) - 4).toFixed(1)} fontSize="10" fill={INK_SOFT}>
+            {eok(t)}
+          </text>
+        </g>
+      ))}
       {/* 거래량 막대 */}
       {entry.counts.map((c, i) =>
         c > 0 ? (
@@ -315,6 +345,100 @@ function DealLine({
   );
 }
 
+// ── [최근 거래 상위] 행 — 순위 + 단지(카카오맵 링크) + 가격, 직전 거래 있으면 대비 병기. ──
+// 좌표 미보유 데이터라 DealLocation(미니맵 details) 대신 검색 딥링크만 — 행 전체가 링크.
+function TopRow({
+  item,
+  rank,
+  sigungu,
+  divider,
+}: {
+  item: RegionTopItem;
+  rank: number;
+  sigungu: string;
+  divider: boolean;
+}) {
+  const pct =
+    item.prevKrw != null && item.prevKrw > 0
+      ? (item.priceKrw - item.prevKrw) / item.prevKrw
+      : null;
+  const dir = pct == null || pct === 0 ? INK : pct > 0 ? UP : DOWN;
+  const sign = pct == null ? "" : pct > 0 ? "+" : pct < 0 ? "−" : "±";
+  return (
+    <a
+      href={`https://map.kakao.com/link/search/${encodeURIComponent(`${sigungu} ${item.apt}`)}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`block py-[5.5px] tabular-nums ${divider ? "border-t border-dotted" : ""}`}
+      style={divider ? { borderColor: RULE } : undefined}
+    >
+      <div className="flex items-baseline gap-2">
+        <span className="w-[18px] shrink-0 text-right text-[12px] font-bold" style={{ color: INK_SOFT }}>
+          {rank}.
+        </span>
+        <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
+          {item.dong} {item.apt}{" "}
+          <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
+            {sqm(item.areaM2)}㎡{item.floor != null ? ` · ${item.floor}층` : ""}
+          </span>
+        </span>
+        <span className="shrink-0 text-right text-[13px] font-bold" style={{ color: INK }}>
+          {eok(item.priceKrw)}{" "}
+          <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
+            계약 {md(item.dealDate)}
+          </span>
+        </span>
+      </div>
+      {pct != null && item.prevDate != null && item.prevKrw != null && (
+        <div className="mt-[1px] pl-[26px] text-[11px] leading-[1.5]" style={{ color: INK_SOFT }}>
+          직전 {md(item.prevDate)} {eok(item.prevKrw)} 대비{" "}
+          <b style={{ color: dir }}>
+            {sign}
+            {pctAbs(pct)}%
+          </b>
+        </div>
+      )}
+    </a>
+  );
+}
+
+/** 밴드 섹션 — 라벨 칩 + 행 목록. 탭 강제 금지(헌장 6조 "조작하지 않는다, 읽는다"):
+ *  두 밴드를 접기 없이 연속 게재하고, 거래 많은 밴드가 위(orderedBandKeys). */
+function TopBandSection({
+  label,
+  deals,
+  items,
+  sigungu,
+}: {
+  label: string;
+  deals: number;
+  items: RegionTopItem[];
+  sigungu: string;
+}) {
+  return (
+    <div className="pt-1.5 first:pt-0">
+      <p className="m-0 text-[11px] font-bold tracking-[0.08em]" style={{ color: INK_SOFT }}>
+        <span
+          className="mr-1.5 inline-block border px-1.5 py-[1px] text-[10.5px]"
+          style={{ borderColor: INK, color: INK }}
+        >
+          {label}
+        </span>
+        최근 60일 관측 {deals.toLocaleString("ko-KR")}건
+      </p>
+      {items.map((it, i) => (
+        <TopRow
+          key={`${it.apt}-${it.dealDate}-${it.priceKrw}`}
+          item={it}
+          rank={i + 1}
+          sigungu={sigungu}
+          divider={i > 0}
+        />
+      ))}
+    </div>
+  );
+}
+
 // ── 페이지 ───────────────────────────────────────────────────────────────────
 export default async function Page({
   params,
@@ -352,6 +476,16 @@ export default async function Page({
     series.generatedAt !== null && series.months.length > 0
       ? (series.regions[sigungu] ?? null)
       : null;
+  // 12개월 요약 한 줄 — 유효(중위가 인쇄) 월 2개 미만이면 생략.
+  const summary = entry ? regionSeriesSummary(series.months, entry) : null;
+  const summaryDir =
+    summary == null || summary.pct === 0 ? INK : summary.pct > 0 ? UP : DOWN;
+
+  // [최근 거래 상위] — regionTop. placeholder·미수록 동네는 안내 문구.
+  // 탭 강제 금지 — 거래 많은 밴드가 위, 두 밴드 연속 게재(무조작 완결).
+  const topBands =
+    regionTop.generatedAt !== null ? (regionTop.regions[sigungu] ?? null) : null;
+  const topOrder = topBands ? orderedBandKeys(topBands) : [];
 
   return (
     <div className="mx-auto w-full max-w-md px-0 py-4 sm:py-6">
@@ -487,12 +621,59 @@ export default async function Page({
             <CornerNote>추이 데이터는 일요일 주간 갱신부터 채워집니다.</CornerNote>
           ) : (
             <>
+              {summary && (
+                <p
+                  className="m-0 pb-1 text-[12.5px] leading-[1.6] tabular-nums"
+                  style={{ color: INK_SOFT }}
+                >
+                  관측 중위 <b style={{ color: INK }}>{eok(summary.firstKrw)}</b> →{" "}
+                  <b style={{ color: INK }}>{eok(summary.lastKrw)}</b>{" "}
+                  <b style={{ color: summaryDir }}>
+                    ({summary.pct > 0 ? "+" : summary.pct < 0 ? "−" : "±"}
+                    {pctAbs(summary.pct)}%)
+                  </b>{" "}
+                  · 거래 최다 {ymShort(summary.busiestYm)}(
+                  {summary.busiestCount.toLocaleString("ko-KR")}건)
+                </p>
+              )}
               <RegionSeriesChart sigungu={sigungu} months={series.months} entry={entry} />
               <CornerNote>
                 국토부 실거래 관측값(해제·직거래 제외, 평형 혼합 중위) — 시세 지수가
                 아닙니다. 월 3건 미만은 중위가 생략(표본 부족) · 당월은 신고 지연(최대
                 30일)으로 집계 중
                 {series.generatedAt ? ` · 주간 갱신 ${md(series.generatedAt.slice(0, 10))}` : ""}.
+              </CornerNote>
+            </>
+          )}
+        </section>
+
+        {/* ── [최근 거래 상위] — 59㎡급/84㎡급 연속 게재(거래 많은 밴드가 위, 무조작 완결) ── */}
+        <section className="px-0.5 pb-3.5 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
+          <CornerLabel>최근 거래 상위</CornerLabel>
+          {topOrder.length === 0 ? (
+            <CornerNote>최근 거래 상위는 일요일 주간 갱신부터 채워집니다.</CornerNote>
+          ) : (
+            <>
+              {topOrder.map((key) => {
+                const cell = topBands![key]!;
+                const band = REGION_TOP_BANDS.find((b) => b.key === key)!;
+                return (
+                  <TopBandSection
+                    key={key}
+                    label={band.label}
+                    deals={cell.deals}
+                    items={cell.items}
+                    sigungu={sigungu}
+                  />
+                );
+              })}
+              <CornerNote>
+                최근 {regionTop.windowDays ?? 60}일 공개된 중개거래(해제·직거래 제외) ·
+                단지당 대표 1건(최신 계약) · 가격순 상위 10 — 시세가 아닌 관측값
+                {regionTop.generatedAt
+                  ? ` · 주간 갱신 ${md(regionTop.generatedAt.slice(0, 10))}`
+                  : ""}
+                . 단지를 누르면 카카오맵.
               </CornerNote>
             </>
           )}

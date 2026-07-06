@@ -17,9 +17,14 @@
  *    있을 수 있다 — 정화 백필은 weekly-data-refresh workflow_dispatch 에서
  *    refresh_months=13 으로 1회 수동 실행(fetch-molit 이 그 창을 원자적 재적재).
  *
- * 함께 굽는 것: 온도 시계열(src/data/tempSeries.json) — 직전 거래(같은 단지×평형 밴드,
+ * 함께 굽는 것 1: 온도 시계열(src/data/tempSeries.json) — 직전 거래(같은 단지×평형 밴드,
  *   60일 내) 대비 월별 above/below/matched, 최대 5년+당월(--months= 오버라이드).
  *   같은 DB 조회를 재사용한다(추가 쿼리 0). 로직은 @/lib/tempSeries (순수 함수).
+ *
+ * 함께 굽는 것 2: [최근 거래 상위](src/data/regionTop.json) — 시군구 × 평형 밴드
+ *   (59㎡급=p19_25 / 84㎡급=p32_35) 최근 60일 유효 거래 중 단지당 대표 1건, 가격
+ *   내림차순 TOP10 + 직전 거래(60일 규칙 동일). 단지명·동·층이 필요해 별도의 좁은
+ *   조회(120일 창 — 직전 후보 포함)를 한 번 더 한다. 로직은 @/lib/regionTop (순수 함수).
  *
  * 실행: 주간 크론(.github/workflows/daily-data.yml) 전용 — DB(Neon)는 크론에서만 접근 가능.
  *   npx tsx scripts/build-region-series.ts [--months=61]
@@ -43,6 +48,12 @@ import {
   type TempSeriesFile,
   type TempSeriesTx,
 } from "@/lib/tempSeries";
+import {
+  REGION_TOP_WINDOW_DAYS,
+  buildRegionTop,
+  type RegionTopFile,
+  type RegionTopTx,
+} from "@/lib/regionTop";
 
 /** 매매 관측에서 제외하는 source — 분양권 전매(별도 시장) + 직거래(증여성 의심). */
 const EXCLUDED_SOURCES = new Set(["분양권", "입주권", "MOLIT_DIRECT"]);
@@ -67,10 +78,20 @@ async function main() {
   // regionSeries 버킷은 months 밖 거래를 스스로 무시하므로 영향 없음.
   const sincePrev = new Date(ty, tm - 3, 1);
 
+  // [최근 거래 상위] 창 — 대표는 최근 60일, 직전 거래 후보는 그 60일 전까지(총 120일).
+  const now = new Date();
+  const topWindowStart = new Date(now);
+  topWindowStart.setDate(now.getDate() - REGION_TOP_WINDOW_DAYS);
+  const topSince = new Date(now);
+  topSince.setDate(now.getDate() - REGION_TOP_WINDOW_DAYS * 2);
+  const isoOf = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
   const { db } = await import("@/lib/db");
   let rows: RegionSeriesTx[];
   let tempRows: TempSeriesTx[];
   let validYms: string[]; // 유효 거래(밴드 무관)의 계약월 — 앞쪽 빈 달 잘라내기 판정용
+  let topTxs: RegionTopTx[];
   try {
     const txs = await db.transaction.findMany({
       where: { dealDate: { gte: sincePrev } },
@@ -111,6 +132,38 @@ async function main() {
         },
       ];
     });
+
+    // [최근 거래 상위] 입력 — 단지명·동·층까지 필요해 좁은 창(120일)으로 별도 조회.
+    // 온도용 5년 조회에 문자열 컬럼을 얹으면 메모리가 불어나 분리했다(작고 싼 쿼리).
+    const recent = await db.transaction.findMany({
+      where: { dealDate: { gte: topSince } },
+      select: {
+        id: true,
+        priceKrw: true,
+        dealDate: true,
+        area: true,
+        floor: true,
+        source: true,
+        complexId: true,
+        complex: { select: { sigungu: true, name: true, dongName: true } },
+      },
+    });
+    topTxs = recent
+      .filter(
+        (t) =>
+          !EXCLUDED_SOURCES.has(t.source) && SIGUNGU_NAMES.has(t.complex.sigungu),
+      )
+      .map((t) => ({
+        id: t.id,
+        complexId: t.complexId,
+        sigungu: t.complex.sigungu,
+        dong: t.complex.dongName,
+        apt: t.complex.name,
+        areaM2: t.area,
+        priceKrw: Number(t.priceKrw),
+        dealDateISO: isoOf(t.dealDate),
+        floor: t.floor,
+      }));
   } finally {
     await db.$disconnect();
   }
@@ -159,6 +212,25 @@ async function main() {
   const totalMatched = tempOut.matched.reduce((a, b) => a + b, 0);
   console.log(
     `tempSeries: ${tempMonths[0] ?? "-"}~${tempMonths[tempMonths.length - 1] ?? "-"} (${tempMonths.length}/${tempMonthsWanted}개월) · matched ${totalMatched.toLocaleString()}건 → ${tempDest}`,
+  );
+
+  // ── [최근 거래 상위] — 시군구 × 밴드(59㎡급/84㎡급) 최근 60일 TOP10 ────────────
+  const topRegions = buildRegionTop(topTxs, isoOf(topWindowStart));
+  const topOut: RegionTopFile = {
+    generatedAt: new Date().toISOString(),
+    windowDays: REGION_TOP_WINDOW_DAYS,
+    regions: topRegions,
+  };
+  const topDest = resolve(process.cwd(), "src/data/regionTop.json");
+  writeFileSync(topDest, JSON.stringify(topOut) + "\n", "utf8");
+  const topCount = Object.values(topRegions).reduce(
+    (a, bands) =>
+      a + Object.values(bands).reduce((x, cell) => x + (cell?.items.length ?? 0), 0),
+    0,
+  );
+  const topKb = Math.round(JSON.stringify(topOut).length / 102.4) / 10;
+  console.log(
+    `regionTop: 시군구 ${Object.keys(topRegions).length}곳 · 행 ${topCount.toLocaleString()}개 · 창 ${isoOf(topWindowStart)}~ · ${topKb}KB → ${topDest}`,
   );
 }
 

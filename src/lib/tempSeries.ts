@@ -106,6 +106,53 @@ export function bucketTempSeries(
   return { above, below, matched };
 }
 
+// ── 국면 참조 척도 (v2.4 사장 지시) ────────────────────────────────────────────
+// 원칙: "불장=60%" 같은 임의 임계 단정 금지 — 역사적 관측 평균만 참조로 제시한다.
+// 지면 각주 의무: "참조선 = 해당 기간 관측 평균(임의 기준 아님)". "지금은 불장/하락장"
+// 류 판정 문구 금지 — 판정은 독자의 몫, 우리는 과거 국면의 관측값만 나란히 놓는다.
+
+export interface ReferencePhase {
+  key: string;
+  /** 지면 라벨 — 괄호 앞 토막("폭등기")이 차트 참조선 라벨로 쓰인다. */
+  label: string;
+  /** "YYYY-MM" 폐구간. */
+  from: string;
+  to: string;
+  /** 참조선 색 — up=UP(빨강)/down=DOWN(파랑), 30% 투명. */
+  tone: "up" | "down";
+}
+
+export const REFERENCE_PHASES: ReferencePhase[] = [
+  { key: "boom", label: "폭등기('20.11~'21.10)", from: "2020-11", to: "2021-10", tone: "up" },
+  { key: "slump", label: "급락기('22)", from: "2022-01", to: "2022-12", tone: "down" },
+];
+
+/** 국면 평균을 인쇄하려면 구간 월이 시리즈에 최소 이만큼 관측돼 있어야 한다. */
+export const PHASE_MIN_MONTHS = 6;
+
+/**
+ * 국면 구간의 matched 가중 평균 above%(0~100). 구간 월이 시리즈에 전부는 아니어도
+ * PHASE_MIN_MONTHS(6) 이상 관측(matched>0)돼 있을 때만 값을 돌려준다 — 아니면 null
+ * (소급 백필 전엔 참조선이 안 뜨고, 백필이 차면 자동 등장하는 조건 렌더의 근거).
+ */
+export function phaseAvg(
+  series: Pick<TempSeriesFile, "months" | "above" | "matched">,
+  phase: Pick<ReferencePhase, "from" | "to">,
+): number | null {
+  let above = 0;
+  let matched = 0;
+  let observedMonths = 0;
+  series.months.forEach((ym, i) => {
+    if (ym < phase.from || ym > phase.to) return;
+    if (!(series.matched[i] > 0)) return;
+    observedMonths += 1;
+    above += series.above[i];
+    matched += series.matched[i];
+  });
+  if (observedMonths < PHASE_MIN_MONTHS || matched === 0) return null;
+  return (above / matched) * 100;
+}
+
 /**
  * 앞쪽 빈 달 잘라내기 — monthCounts[i] = months[i] 달의 DB 유효 거래 총수(밴드 무관).
  * 첫 "데이터 있는 달"의 인덱스를 돌려준다(전부 비면 length — 호출부가 빈 파일 처리).

@@ -28,7 +28,7 @@ import {
   type BusiestRegion,
   type HeadlinesResult,
 } from "@/lib/patchNote";
-import type { TempSeriesFile } from "@/lib/tempSeries";
+import { REFERENCE_PHASES, phaseAvg, type TempSeriesFile } from "@/lib/tempSeries";
 import { TILE_MAP, TILE_GRID_COLS, tileLevel } from "@/lib/tileMap";
 import { ThresholdGauge, DailyFrontPing } from "./ThresholdGauge";
 import { DealMiniMap } from "./DealMiniMap";
@@ -360,6 +360,13 @@ function TempTrendChart({
   }
   if (pctVals.length < 2) return null;
   pctVals.push(todayAbovePct);
+  // 국면 참조 척도(v2.4 사장 지시) — 임의 임계("불장=60%") 단정 금지, 역사적 관측 평균만.
+  // phaseAvg는 구간 월 6개 이상 관측 시에만 값 — 소급 백필이 차면 참조선이 자동 등장.
+  const phaseLines = REFERENCE_PHASES.flatMap((phase) => {
+    const avg = phaseAvg(series, phase);
+    return avg === null ? [] : [{ phase, avg }];
+  });
+  for (const pl of phaseLines) pctVals.push(pl.avg); // 도메인이 참조선을 포함하도록
   const yMin = Math.min(45, Math.max(0, Math.floor((Math.min(...pctVals) - 4) / 5) * 5));
   const yMax = Math.max(55, Math.min(100, Math.ceil((Math.max(...pctVals) + 4) / 5) * 5));
   const yOf = (p: number) => 68 - ((p - yMin) / (yMax - yMin)) * 60;
@@ -371,6 +378,8 @@ function TempTrendChart({
   }
   if (pts.length < 2) return null;
   const todayY = yOf(todayAbovePct);
+  // "오늘 nn%" 라벨 기준선 y — 국면 참조선 라벨의 충돌 회피 판정에도 쓴다.
+  const todayLabelY = todayY >= 52 ? todayY - 7 : todayY + 13;
   const line = [...pts, { x: TODAY_X, y: todayY }]
     .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`)
     .join(" ");
@@ -390,6 +399,34 @@ function TempTrendChart({
   }
   // 짧은 구간(소급 수집 전) 안내 — 백필이 채워지면 자동으로 사라진다.
   const shortWindow = n <= 13;
+  // 국면 참조선이 하나도 없으면(백필 전) 시리즈 자체 요약 한 줄을 캡션에 병기.
+  let seriesSummary: string | null = null;
+  if (phaseLines.length === 0) {
+    let aSum = 0;
+    let mSum = 0;
+    let maxP = -Infinity;
+    let minP = Infinity;
+    let maxYm = "";
+    let minYm = "";
+    for (let i = 0; i < n; i++) {
+      if (!(series.matched[i] > 0)) continue;
+      const p = (series.above[i] / series.matched[i]) * 100;
+      aSum += series.above[i];
+      mSum += series.matched[i];
+      if (p > maxP) {
+        maxP = p;
+        maxYm = series.months[i];
+      }
+      if (p < minP) {
+        minP = p;
+        minYm = series.months[i];
+      }
+    }
+    if (mSum > 0) {
+      const f = (ym: string) => `'${ym.slice(2, 4)}.${Number(ym.slice(5, 7))}`;
+      seriesSummary = `최근 ${n}개월 — 평균 ${Math.round((aSum / mSum) * 100)}% · 최고 ${Math.round(maxP)}%(${f(maxYm)}) · 최저 ${Math.round(minP)}%(${f(minYm)})`;
+    }
+  }
   return (
     <div className="mt-2">
       <svg
@@ -405,12 +442,43 @@ function TempTrendChart({
         {/* 50% 균형 점선 — 동적 도메인 안에서 위치 계산 */}
         <line x1={X0} y1={yMid.toFixed(1)} x2="392" y2={yMid.toFixed(1)} stroke={RULE} strokeWidth="1" strokeDasharray="3 3" />
         <line x1={X0} y1="68" x2="392" y2="68" stroke={RULE} strokeWidth="1" />
+        {/* 국면 참조선 — 해당 기간 관측 평균(임의 기준 아님). "오늘" 라벨과 겹치면 좌측 배치. */}
+        {phaseLines.map(({ phase, avg }) => {
+          const y = yOf(avg);
+          const color = phase.tone === "up" ? UP : DOWN;
+          const clash = Math.abs(y - todayLabelY) < 11;
+          return (
+            <g key={phase.key}>
+              <line
+                x1={X0}
+                y1={y.toFixed(1)}
+                x2="392"
+                y2={y.toFixed(1)}
+                stroke={color}
+                strokeOpacity="0.3"
+                strokeWidth="1.3"
+                strokeDasharray="5 3"
+              />
+              <text
+                x={clash ? X0 + 3 : 356}
+                y={(y - 2.5).toFixed(1)}
+                textAnchor={clash ? "start" : "end"}
+                fontSize="8"
+                fontWeight="700"
+                fill={color}
+                fillOpacity="0.65"
+              >
+                {phase.label.split("(")[0]} 평균 {Math.round(avg)}%
+              </text>
+            </g>
+          );
+        })}
         <polyline fill="none" stroke={INK} strokeWidth="1.8" points={line} />
         {/* 오늘 점 (공개 기준) */}
         <circle cx={TODAY_X} cy={todayY.toFixed(1)} r="3.4" fill={UP} />
         <text
           x="378"
-          y={todayY >= 52 ? (todayY - 7).toFixed(1) : (todayY + 13).toFixed(1)}
+          y={todayLabelY.toFixed(1)}
           textAnchor="end"
           fontSize="9"
           fontWeight="700"
@@ -428,8 +496,15 @@ function TempTrendChart({
       <p className="m-0 mt-1 text-[10px] leading-[1.5]" style={{ color: INK_SOFT }}>
         온도 추이 — 직전 거래보다 높게 팔린 비율. 점선 = 50% 균형선 · 선 = 계약월 기준 ·
         붉은 점 = 오늘 공개분
+        {phaseLines.length > 0 && " · 참조선 = 해당 기간 관측 평균(임의 기준 아님)"}
         {shortWindow && " · 국토부 수집 구간 기준 — 소급 수집 중"}
         {mergedNote}.
+        {seriesSummary && (
+          <>
+            <br />
+            {seriesSummary}
+          </>
+        )}
       </p>
     </div>
   );
