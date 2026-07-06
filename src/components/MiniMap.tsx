@@ -67,9 +67,12 @@ export interface MapPin {
 export function MiniMap({
   pins,
   workplaces = [],
+  className = "h-60 w-full overflow-hidden rounded-3xl border border-black/[0.06]",
 }: {
   pins: MapPin[];
   workplaces?: MapPin[];
+  /** 컨테이너 스타일 오버라이드 — 지면(DailyFront) 행 지도는 신문 톤(각·괘선·160px)을 쓴다. */
+  className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -130,7 +133,7 @@ export function MiniMap({
   return (
     <div
       ref={ref}
-      className="h-60 w-full overflow-hidden rounded-3xl border border-black/[0.06]"
+      className={className}
       style={{ boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}
       aria-label="결과 단지 위치 지도"
     />

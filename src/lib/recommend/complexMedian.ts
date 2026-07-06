@@ -58,6 +58,11 @@ export interface AreaMedian {
    * 매매(소유권 이전)와 권리 상태가 달라 UI 에 "분양권 거래"로 구분 표시한다.
    */
   presale?: boolean;
+  /**
+   * 최근 1년(12개월 로드 창) 실거래 최고가(원) — 보정·보간 없는 관측값 그대로.
+   * 패치노트 "1년 최고가 갱신" 헤드라인 판정용. 구 스냅샷엔 없으므로 optional.
+   */
+  maxKrw?: number;
 }
 
 const WINDOW_MONTHS = 6;
@@ -418,6 +423,9 @@ export function mediansFromGrouped(
         sparse: useFallback,
         lowConfidence: false,
         presale: presaleCount > txs.length / 2,
+        // 최근 1년 실거래 최고가 — 6개월 창과 무관하게 12개월 전체(txs12)에서.
+        // 시점 보정·면적 보간을 적용하지 않는 관측값(실제 신고가)이라 imputed 교정 대상 아님.
+        maxKrw: Math.max(...txs12.map((t) => t.price)),
       });
     }
     flagLowConfidence(medians);

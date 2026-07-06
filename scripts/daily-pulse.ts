@@ -96,22 +96,35 @@ async function main() {
 
     // 단지 자기 시세 인덱스 — "시군구|공백제거단지명" → 평형별 중위가.
     // (시군구 중위가 대비는 구조적 이탈만 잡아서 폐기 — patchNote.ts 상단 주석 참조)
-    type SnapMedian = { area: number; medianKrw: number; count: number; lowConfidence?: boolean };
-    const cxIndex = new Map<string, SnapMedian[]>();
-    for (const c of (complexSnapshot as unknown as { complexes: { name: string; sigungu: string; medians: SnapMedian[] }[] }).complexes) {
-      cxIndex.set(`${c.sigungu}|${c.name.replace(/\s+/g, "")}`, c.medians);
+    type SnapMedian = { area: number; medianKrw: number; count: number; lowConfidence?: boolean; maxKrw?: number };
+    type CxEntry = { medians: SnapMedian[]; lat: number | null; lng: number | null };
+    const cxIndex = new Map<string, CxEntry>();
+    for (const c of (complexSnapshot as unknown as { complexes: { name: string; sigungu: string; latitude?: number | null; longitude?: number | null; medians: SnapMedian[] }[] }).complexes) {
+      // 좌표 동봉 — 지면 행 미니맵·카카오맵 링크용 (2026-07-06 사장 지시).
+      cxIndex.set(`${c.sigungu}|${c.name.replace(/\s+/g, "")}`, {
+        medians: c.medians,
+        lat: c.latitude ?? null,
+        lng: c.longitude ?? null,
+      });
     }
     const lookupMedian: ComplexMedianLookup = (d) => {
-      const ms = cxIndex.get(`${d.sigunguName}|${d.apartmentName.replace(/\s+/g, "")}`);
-      if (!ms) return null;
+      const cx = cxIndex.get(`${d.sigunguName}|${d.apartmentName.replace(/\s+/g, "")}`);
+      if (!cx) return null;
       // 같은 평형 최근접(±3㎡) 중위가. 신뢰 낮은 셀은 스킵.
       let best: SnapMedian | null = null;
-      for (const m of ms) {
+      for (const m of cx.medians) {
         const diff = Math.abs(m.area - d.area);
         if (diff <= 3 && (!best || diff < Math.abs(best.area - d.area))) best = m;
       }
       if (!best || best.lowConfidence) return null;
-      return { medianKrw: best.medianKrw, sampleCount: best.count };
+      // maxKrw(최근 1년 실거래 최고가)는 주간 스냅샷 갱신 후부터 존재 — 없으면 null.
+      return {
+        medianKrw: best.medianKrw,
+        sampleCount: best.count,
+        maxKrw: best.maxKrw ?? null,
+        lat: cx.lat,
+        lng: cx.lng,
+      };
     };
 
     const patch = computePatch({
@@ -148,6 +161,9 @@ async function main() {
           buff: boot ? boot.buff : patch.buff,
           major: boot ? boot.major : patch.major,
           temp: boot ? boot.temp : patch.temp,
+          // [약세 동네] 코너 데이터 + 대칭 강세 집계(데이터용 — UI는 약세만 게재).
+          weakRegions: boot ? boot.weakRegions : patch.weakRegions,
+          strongRegions: boot ? boot.strongRegions : patch.strongRegions,
           latestDealDate: latest || null,
         },
         null,
@@ -162,7 +178,7 @@ async function main() {
     );
     const p = boot ?? patch;
     console.log(
-      `dailyPatch(${boot ? "창간호" : "일간"}): 스코프 ${p.scopeDealCount}건 · 신규 ${p.newDealCount} · 너프 ${p.nerf.length} · 버프 ${p.buff.length} · 주요 ${p.major.length} · 온도 ${p.temp ? `${p.temp.above}:${p.temp.below}/${p.temp.matched}` : "표본부족"}`,
+      `dailyPatch(${boot ? "창간호" : "일간"}): 스코프 ${p.scopeDealCount}건 · 신규 ${p.newDealCount} · 너프 ${p.nerf.length} · 버프 ${p.buff.length} · 주요 ${p.major.length} · 약세동네 ${p.weakRegions.length} · 온도 ${p.temp ? `${p.temp.above}:${p.temp.below}/${p.temp.matched}` : "표본부족"}`,
     );
   }
 }

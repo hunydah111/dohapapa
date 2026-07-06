@@ -44,14 +44,12 @@ export async function generateMetadata({
 export default function HomePage() {
   return (
     <div className="relative mx-auto max-w-2xl px-4 pt-4">
-      {/* ── 오늘의 1면 — 0입력 데일리 스트립 (패치노트·환산·문턱 게이지) ── */}
-      <DailyFront />
-
-      {/* ── 메인 경험 (랜딩 히어로 → 폼 → 결과) ──
-          id=biji-verdict: DailyFront 판정 훅·게이지 "대안 동네 보기"의 스크롤 목적지. */}
-      <div id="biji-verdict" className="scroll-mt-4">
-        <HomeExperience />
-      </div>
+      {/* ── 메인 경험 (오늘의 1면 → 랜딩 히어로 → 폼 → 결과) ──
+          오늘의 1면(DailyFront, 서버 컴포넌트)은 prop 으로 넘겨 랜딩 상태에서만 렌더
+          — 판정 폼 진행·결과 화면에선 접힌다(집중 유지, 2026-07-06 폼 UX).
+          id=biji-verdict 앵커(지면 CTA·게이지의 스크롤 목적지)는 HomeExperience 내부,
+          frontPage 아래 본 경험 컨테이너에 붙는다. */}
+      <HomeExperience frontPage={<DailyFront />} />
 
       {/* ── 면책 안내 ── */}
       <p

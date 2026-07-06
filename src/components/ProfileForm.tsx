@@ -448,8 +448,9 @@ export function ProfileForm({
   const debounceARef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debounceBRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 단계 전환 시 맨 위로 스크롤 — 최초 마운트(첫 단계)에선 스크롤하지 않는다.
+  // 단계 전환 시 폼 컨테이너로 스크롤 — 최초 마운트(첫 단계)에선 스크롤하지 않는다.
   const stepScrollMountRef = useRef(true);
+  const formRootRef = useRef<HTMLDivElement>(null);
 
   const fetchGeocode = useCallback(
     async (
@@ -524,16 +525,23 @@ export function ProfileForm({
     };
   }, [wpB.query, fetchGeocode]);
 
-  // 단계가 바뀌면 항상 맨 위부터 보이게 — 즉시 최상단으로(레이아웃 변동에도 안정),
-  // 레이아웃 확정 후 한 번 더 보정. scrollIntoView 는 다음 단계 높이 변화 때 중간/하단에
-  // 멈추는 문제가 있어 window 절대 스크롤로 교체.
+  // 단계가 바뀌면(다음·이전 모두) 폼 컨테이너 상단으로 부드럽게 스크롤 (2026-07-06 폼 UX).
+  // prefers-reduced-motion 사용자에겐 즉시(auto) 점프. 다음 단계 높이 변화로 중간에 멈추는
+  // 문제는 레이아웃 확정 후(rAF) 한 번 더 호출해 보정한다.
   useEffect(() => {
     if (stepScrollMountRef.current) {
       stepScrollMountRef.current = false;
       return;
     }
-    window.scrollTo(0, 0);
-    requestAnimationFrame(() => window.scrollTo(0, 0));
+    const behavior: ScrollBehavior = window.matchMedia?.(
+      "(prefers-reduced-motion: reduce)",
+    ).matches
+      ? "auto"
+      : "smooth";
+    const toFormTop = () =>
+      formRootRef.current?.scrollIntoView({ behavior, block: "start" });
+    toFormTop();
+    requestAnimationFrame(toFormTop);
   }, [step]);
 
   // ── 헬퍼 ─────────────────────────────────────────────────────
@@ -842,7 +850,10 @@ export function ProfileForm({
   // ── 렌더 ──────────────────────────────────────────────────────
 
   return (
-    <div className="w-full max-w-lg mx-auto flex flex-col gap-6">
+    <div
+      ref={formRootRef}
+      className="w-full max-w-lg mx-auto flex flex-col gap-6 scroll-mt-4"
+    >
       {/* 진행 표시 + 좌상단 이전 단계 */}
       <div className="relative flex flex-col items-center gap-2 pt-2">
         <button

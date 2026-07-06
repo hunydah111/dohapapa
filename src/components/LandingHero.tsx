@@ -24,7 +24,7 @@ const EXAMPLES = [
   { pct: 23, sigungu: "마포구", dong: "아현동", area: 84, chip: "🚇 통근 28분", hero: "마포구 사정권",
     dday: { caption: "마포구 중위 입성까지", headline: "D-3,044", verdict: "버틸 만한 싸움이다." } },
   { pct: 1, sigungu: "서초구", dong: "반포동", area: 84, chip: "🌊 한강뷰", hero: "서초구 입성",
-    dday: { caption: "서초구 중위 단지", headline: "지금 입성 가능", verdict: "통장 좀 치네. 인정." } },
+    dday: { caption: "서초구 중위 단지", headline: "지금 입성 가능", verdict: "지금 자산 기준, 가능." } },
   { pct: 85, sigungu: "강남구", dong: "대치동", area: 59, chip: "🏫 초품아", hero: "강남구 아득",
     dday: { caption: "강남구 중위 입성까지", headline: "D-아득", verdict: "서울이 나를 거부함 🦫" } },
   { pct: 8, sigungu: "성동구", dong: "옥수동", area: 84, chip: "🚇 통근 19분", hero: "성동구 사정권",
@@ -32,7 +32,7 @@ const EXAMPLES = [
   { pct: 50, sigungu: "노원구", dong: "상계동", area: 59, chip: "🌳 공원 옆", hero: "노원구 문밖",
     dday: { caption: "노원구 중위 입성까지", headline: "D-5,114", verdict: "길다. 근데 0은 아니다." } },
   { pct: 35, sigungu: "수원시 영통구", dong: "광교동", area: 84, chip: "🚗 자차 31분", hero: "영통구 사정권",
-    dday: { caption: "영통구 중위 입성까지", headline: "D-2,190", verdict: "루틴만 지키면 닿는다." } },
+    dday: { caption: "영통구 중위 입성까지", headline: "D-2,190", verdict: "루틴만 지키면 온다." } },
 ] as const;
 
 export function LandingHero({

@@ -1,10 +1,12 @@
 // 비집고 1면 — 홈 최상단 0입력 데일리 스트립, 신문 지면 조판 (2026-07-04 전면 재작성).
 //
-// 구조(위→아래): 정보띠 → 제호(비집고+判 인장) → 오늘의 헤드라인(뉴스가치 사다리)
-//   → 오늘의 온도 → [주요 거래] → [이상 거래 판독] → [내 문턱 · 구독자란] → CTA → 콜로폰.
+// 구조(위→아래): 정보띠 → 제호(이코노미스트식 코랄 플레이트) → 오늘의 헤드라인(뉴스가치 사다리)
+//   → 오늘의 온도 → [주요 거래] → [강세 거래] → [약세 동네] → [내 문턱 · 구독자란] → CTA → 콜로폰.
+// 하락(버프) 실명 리스트는 2026-07-06 사장 지시로 폐지 — 급락 단지 실명 노출 = 주민 비하.
+//   하락은 [약세 동네](시군구 집계)로만 다루고, buff 데이터는 분석용으로만 남긴다.
 //
 // 조판 토큰(bijigo-front-mockup 시안 A): 종이 #fbfaf6 · 먹 #191713 · 보조 #5d574c
-//   · 괘선 #c9c3b4 · 코랄 #e8571f(인장·CTA만) · 버프 그린 #2e7d52. 명조는 시스템 폴백 스택.
+//   · 괘선 #c9c3b4 · 코랄 #e8571f(제호 플레이트·CTA·판정 링크만) · 그린 #2e7d52. 명조는 셀프호스팅.
 //
 // 정직성 원칙: 실거래 신고는 계약 후 최대 30일 지연 → 카피는 항상 "공개" 기준.
 // "실시간" 금지 · 미래 예측 금지 · 빨간 경보색 금지(너프=먹, 버프=그린) · 캐릭터/이모지 0.
@@ -15,8 +17,9 @@
 import { Noto_Serif_KR } from "next/font/google";
 import dailyPatchRaw from "@/data/dailyPatch.json";
 import dailyPulseRaw from "@/data/dailyPulse.json";
-import { pickHeadline, type MajorItem, type PatchTemp } from "@/lib/patchNote";
+import { pickHeadline, type MajorItem, type PatchTemp, type RegionPulse } from "@/lib/patchNote";
 import { ThresholdGauge, DailyFrontPing } from "./ThresholdGauge";
+import { DealMiniMap } from "./DealMiniMap";
 
 // 제호·헤드라인 명조 — next/font 셀프호스팅(빌드 시 내장)이라 기기에 폰트가 없어도
 // 모든 플랫폼에서 동일 렌더. 시스템 폴백(바탕 합성볼드)은 뭉개져서 폐기 (2026-07-06).
@@ -36,9 +39,22 @@ interface PatchItem {
   band: string;
   priceKrw: number;
   medianKrw: number;
-  /** 단지 자기 시세 대비 이탈률(소수) — nerf 양수, buff 음수. */
+  /** 단지 자기 중위가 대비 이탈률(소수) — 내부 선별 필터 값. 화면 노출 금지("시세" 단정 위험). */
   pct: number;
   dealDate: string;
+  /** 최근 1년 실거래 최고가(원) — 구 스키마·구 스냅샷엔 없음. */
+  maxKrw?: number | null;
+  /** 같은 단지×밴드 직전 실거래가(원, 60일 내) — 화면 노출용 팩트. 구 스키마엔 없음. */
+  prevKrw?: number | null;
+  /** 직전 실거래 계약일 YYYY-MM-DD. */
+  prevDate?: string | null;
+  /** (price − prevKrw) / prevKrw — 화면 노출용 등락(팩트 기준). */
+  pctVsPrev?: number | null;
+  /** 폴링창 내 자기 제외 최고가 — 헤드라인 rung 판정용. */
+  windowMaxKrw?: number | null;
+  /** 단지 좌표 — 행 미니맵·카카오맵 링크용. 스냅샷 미등재면 null. */
+  lat?: number | null;
+  lng?: number | null;
 }
 
 interface DailyPatch {
@@ -56,6 +72,10 @@ interface DailyPatch {
   major?: MajorItem[];
   /** 오늘의 온도 — 구 스키마엔 없음. 표본 부족이면 null. */
   temp?: PatchTemp | null;
+  /** [약세 동네] — 구 스키마엔 없음(optional 필수). 없거나 비면 코너 자체 생략. */
+  weakRegions?: RegionPulse[];
+  /** 대칭 강세 집계 — 데이터만, UI 비게재([강세 거래] 실명이 담당). */
+  strongRegions?: RegionPulse[];
   latestDealDate: string | null;
 }
 
@@ -135,53 +155,160 @@ function CornerNote({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** 주요 거래 행 — 점선 괘선 · 숫자 tabular-nums · 가격 우측 정렬. */
-function MajorRow({ item, divider }: { item: MajorItem; divider: boolean }) {
+/** 행 펼침 힌트 — details marker 대용 ▸ (group-open 시 90° 회전). */
+function RowHint() {
   return (
-    <div
-      className={`flex items-baseline gap-2 py-[5.5px] tabular-nums ${divider ? "border-t border-dotted" : ""}`}
-      style={divider ? { borderColor: RULE } : undefined}
+    <span
+      aria-hidden="true"
+      className="ml-0.5 inline-block text-[9px] transition-transform duration-150 group-open:rotate-90"
+      style={{ color: INK_SOFT }}
     >
-      <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
-        {item.dong} {item.apt}{" "}
-        <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
-          {sqm(item.areaM2)}㎡
-        </span>
-      </span>
-      <span className="shrink-0 text-right text-[13px] font-bold" style={{ color: INK }}>
-        {eok(item.priceKrw)}
-      </span>
-      <span className="w-[62px] shrink-0 text-right text-[11px]" style={{ color: INK_SOFT }}>
-        계약 {md(item.dealDate)}
-      </span>
+      ▸
+    </span>
+  );
+}
+
+/** 행 펼침 내용 — 단지 미니맵(좌표·카카오 JS 키 있을 때만) + 카카오맵 링크(키 불필요). */
+function DealLocation({
+  apt,
+  sigungu,
+  lat,
+  lng,
+}: {
+  apt: string;
+  sigungu: string;
+  lat?: number | null;
+  lng?: number | null;
+}) {
+  const hasCoords = lat != null && lng != null;
+  const kakaoHref = hasCoords
+    ? `https://map.kakao.com/link/map/${encodeURIComponent(apt)},${lat},${lng}`
+    : `https://map.kakao.com/link/search/${encodeURIComponent(`${sigungu} ${apt}`)}`;
+  return (
+    <div className="mb-1.5 mt-1 flex flex-col gap-1.5 border p-2" style={{ borderColor: RULE }}>
+      {hasCoords && <DealMiniMap label={apt} lat={lat!} lng={lng!} />}
+      <a
+        href={kakaoHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="self-start text-[11.5px] font-bold underline underline-offset-2"
+        style={{ color: INK }}
+      >
+        카카오맵에서 보기 →
+      </a>
     </div>
   );
 }
 
-/** 이상 거래 행 — ▲ 먹 / ▼ 그린 (빨간 경보색 금지). */
-function DeviationRow({ item, divider }: { item: PatchItem; divider: boolean }) {
-  const isNerf = item.kind === "nerf";
-  const tone = isNerf ? INK : GREEN;
+/** 행을 네이티브 <details>로 — 탭하면 위치(미니맵+카카오맵 링크) 펼침. JS 없이 동작. */
+function DealDetails({
+  item,
+  children,
+}: {
+  item: { apt: string; sigungu: string; lat?: number | null; lng?: number | null };
+  children: React.ReactNode;
+}) {
+  return (
+    <details className="group">
+      <summary className="block cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+        {children}
+      </summary>
+      <DealLocation apt={item.apt} sigungu={item.sigungu} lat={item.lat} lng={item.lng} />
+    </details>
+  );
+}
+
+/** 주요 거래 행 — 점선 괘선 · 숫자 tabular-nums · 가격 우측 정렬.
+ *  서브라인: 기준점(기간 내 최고 거래가) 병기 — 스냅샷 1년 최고 우선, 없으면 폴링창 2개월. */
+function MajorRow({ item, divider }: { item: MajorItem; divider: boolean }) {
+  const refMax = item.windowMaxKrw ?? null;
+  return (
+    <div
+      className={`py-[5.5px] tabular-nums ${divider ? "border-t border-dotted" : ""}`}
+      style={divider ? { borderColor: RULE } : undefined}
+    >
+      <div className="flex items-baseline gap-2">
+        <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
+          {item.dong} {item.apt}{" "}
+          <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
+            {sqm(item.areaM2)}㎡
+          </span>
+          <RowHint />
+        </span>
+        <span className="shrink-0 text-right text-[13px] font-bold" style={{ color: INK }}>
+          {eok(item.priceKrw)}
+        </span>
+        <span className="w-[62px] shrink-0 text-right text-[11px]" style={{ color: INK_SOFT }}>
+          계약 {md(item.dealDate)}
+        </span>
+      </div>
+      {/* 기준점 서브라인 — 비교 대상 없으면(신축 첫거래 등) 생략. */}
+      {refMax !== null && item.refMaxPeriod && (
+        <div className="mt-[1px] text-[11px] leading-[1.5]" style={{ color: INK_SOFT }}>
+          {item.priceKrw >= refMax ? (
+            <b style={{ color: INK }}>— {item.refMaxPeriod} 내 최고가</b>
+          ) : (
+            <>
+              최근 {item.refMaxPeriod} 최고 {eok(refMax)}
+              {item.windowMaxDate ? ` (${md(item.windowMaxDate)})` : ""}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** [강세 거래] 행 — ▲ 먹 (빨간 경보색 금지). 비교는 전부 실거래 팩트(직전 거래, 날짜 병기).
+ *  하락 실명 행은 폐지(주민 비하 금지) — 하락은 [약세 동네] 시군구 집계로만 다룬다. */
+function StrongRow({ item, divider }: { item: PatchItem; divider: boolean }) {
+  return (
+    <div
+      className={`py-[5.5px] tabular-nums ${divider ? "border-t border-dotted" : ""}`}
+      style={divider ? { borderColor: RULE } : undefined}
+    >
+      <div className="flex items-baseline gap-2">
+        <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
+          <span aria-hidden="true" className="mr-1 font-extrabold" style={{ color: INK }}>
+            ▲
+          </span>
+          {item.sigungu} {item.apt}{" "}
+          <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
+            {sqm(item.areaM2)}㎡
+          </span>
+          <RowHint />
+        </span>
+        <span className="shrink-0 text-right text-[13px] font-extrabold" style={{ color: INK }}>
+          +{pctAbs(item.pctVsPrev!)}%
+        </span>
+      </div>
+      {/* 팩트 라인 — 직전 거래 날짜 병기 의무(사장 지시). */}
+      <div className="mt-[1px] pl-[18px] text-[11px] leading-[1.5]" style={{ color: INK_SOFT }}>
+        직전 {md(item.prevDate!)} {eok(item.prevKrw!)} → {eok(item.priceKrw)} · 계약{" "}
+        {md(item.dealDate)}
+      </div>
+    </div>
+  );
+}
+
+/** [약세 동네] 행 — 시군구 집계(실명 단지 없음), 그린 톤. 기준은 직전 실거래(팩트). */
+function WeakRegionRow({ item, divider }: { item: RegionPulse; divider: boolean }) {
   return (
     <div
       className={`flex items-baseline gap-2 py-[5.5px] tabular-nums ${divider ? "border-t border-dotted" : ""}`}
       style={divider ? { borderColor: RULE } : undefined}
     >
       <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
-        <span aria-hidden="true" className="mr-1 font-extrabold" style={{ color: tone }}>
-          {isNerf ? "▲" : "▼"}
+        <span aria-hidden="true" className="mr-1 font-extrabold" style={{ color: GREEN }}>
+          ▼
         </span>
-        {item.sigungu} {item.apt}{" "}
-        <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
-          {sqm(item.areaM2)}㎡
-        </span>
+        {item.sigungu}
       </span>
-      <span className="shrink-0 text-right text-[13px] font-extrabold" style={{ color: tone }}>
-        {isNerf ? "+" : "−"}
-        {pctAbs(item.pct)}%
+      <span className="shrink-0 text-right text-[13px] font-extrabold" style={{ color: GREEN }}>
+        직전 거래 대비 평균 −{pctAbs(item.avgPct)}%
       </span>
-      <span className="w-[74px] shrink-0 text-right text-[11px]" style={{ color: INK_SOFT }}>
-        {eok(item.priceKrw)} · {md(item.dealDate)}
+      <span className="w-[46px] shrink-0 text-right text-[11px]" style={{ color: INK_SOFT }}>
+        {item.count}건
       </span>
     </div>
   );
@@ -217,7 +344,14 @@ export function DailyFront() {
   // 환산 서브라인 — 1위(최고가) 거래 기준.
   const convYears = major && major[0] ? Math.round(major[0].priceKrw / SAVING_KRW_PER_YEAR) : 0;
 
-  const deviations = [...patch.nerf, ...patch.buff];
+  // [강세 거래] = 상승(너프) 실명만, 그것도 직전 거래 팩트(prevKrw·60일 내)가 있는 것만
+  // — 표시할 팩트가 없으면 안 싣는다. 하락(버프) 실명 리스트는 게재 폐지(주민 비하 금지).
+  const strongs = patch.nerf.filter(
+    (i) => i.prevKrw != null && i.prevDate != null && (i.pctVsPrev ?? 0) > 0,
+  );
+  // 구 스키마(직전 거래 필드 없는 nerf만 있음) — 새 기준 데이터가 올 때까지 예고 문구.
+  const strongLegacy = strongs.length === 0 && patch.nerf.length > 0;
+  const weakRegions = patch.weakRegions ?? []; // 구 스키마(undefined)·표본 없음([]) → 코너 생략
 
   // 온도 게이지 분할 — 위(먹) : 중립(괘선) : 아래(그린), matched 대비 비율.
   const tempPct = temp
@@ -248,26 +382,18 @@ export function DailyFront() {
           <span>오늘의 판 · 매일 새벽 5:30 발행</span>
         </div>
 
-        {/* ── 제호 ── */}
+        {/* ── 제호 — 이코노미스트식 코랄 플레이트(2026-07-06 사장 지시, 判 도장 폐지).
+            각진 사각(라운드·회전 금지), 텍스트에 딱 맞는 패딩, 흰 명조 워드마크.
+            대비: #e8571f 위 #fbfaf6 ≈ 3.5:1 — 34px 굵은 글씨(large text) AA 통과. ── */}
         <header
-          className="flex items-baseline justify-between px-0.5 pb-2.5 pt-3"
+          className="flex items-center justify-between px-0.5 pb-2.5 pt-3"
           style={{ borderTop: `2.5px solid ${INK}`, borderBottom: `1px solid ${INK}` }}
         >
           <h2
-            className={`${serif.className} m-0 text-[34px] font-extrabold leading-none tracking-[0.16em]`}
+            className={`${serif.className} m-0 inline-block px-3 py-1.5 text-[34px] font-extrabold leading-none tracking-[0.16em]`}
+            style={{ background: CORAL, color: PAPER }}
           >
             비집고
-            <span
-              aria-hidden="true"
-              className={`${serif.className} ml-2 inline-block h-[24px] w-[24px] text-center text-[13px] font-bold leading-[23px] tracking-normal align-[5px]`}
-              style={{
-                border: `1.6px solid ${CORAL}`,
-                color: CORAL,
-                transform: "rotate(-4deg)",
-              }}
-            >
-              判
-            </span>
           </h2>
           <p className="m-0 text-right text-[10.5px] leading-[1.5]" style={{ color: INK_SOFT }}>
             통장 까면, 동네 나온다
@@ -332,23 +458,25 @@ export function DailyFront() {
                 )}
                 {patch.latestDealDate && <>. 최신 계약 {md(patch.latestDealDate)}.</>}
                 {headline!.kind === "first-trade" && (
-                  <> 시세 이력이 없는 신축의 첫 공개 — 기준가가 찍히는 순간이다.</>
+                  <> 거래 이력이 없는 신축의 첫 공개 — 기준가가 찍히는 순간이다.</>
                 )}
               </p>
 
-              {/* 오늘의 온도 — 자기 시세(단지 중위가) 위:아래. 표본 부족·구 스키마면 생략. */}
+              {/* 오늘의 온도 — 직전 실거래 대비(팩트 기준). 표본 부족·구 스키마면 생략. */}
               {temp && tempPct && (
                 <div className="mt-2.5">
                   <p className="m-0 text-[12px] leading-[1.6] tabular-nums" style={{ color: INK_SOFT }}>
-                    오늘의 온도 — 자기 시세 위{" "}
-                    <b style={{ color: INK }}>{tempPct.above}%</b> : 아래{" "}
-                    <b style={{ color: GREEN }}>{tempPct.below}%</b> ({temp.matched.toLocaleString("ko-KR")}건
-                    기준)
+                    오늘의 온도 — 직전 거래보다 높게{" "}
+                    <b style={{ color: INK }}>{tempPct.above}%</b> : 낮게{" "}
+                    <b style={{ color: GREEN }}>{tempPct.below}%</b>{" "}
+                    <span className="text-[10.5px]">
+                      (직전 실거래가 있는 거래 {temp.matched.toLocaleString("ko-KR")}건 기준)
+                    </span>
                   </p>
                   <div
                     className="mt-1 flex h-[3px] w-full overflow-hidden"
                     role="img"
-                    aria-label={`오늘 공개 거래 중 단지 자기 시세 위 ${tempPct.above}%, 아래 ${tempPct.below}%`}
+                    aria-label={`오늘 공개 거래 중 직전 실거래보다 높게 ${tempPct.above}%, 낮게 ${tempPct.below}%`}
                   >
                     <span style={{ width: `${tempPct.above}%`, background: INK }} />
                     <span
@@ -380,17 +508,28 @@ export function DailyFront() {
                   <div>
                     {majorVisible.map((item, i) => (
                       <div key={`${item.apt}-${item.dealDate}-${item.priceKrw}-${i}`}>
-                        <MajorRow item={item} divider={i > 0} />
+                        <DealDetails item={item}>
+                          <MajorRow item={item} divider={i > 0} />
+                        </DealDetails>
                         {i === 0 && (
                           <div
                             className="mb-1 mt-0.5 border-l-2 pl-2 text-[11.5px] leading-[1.55]"
                             style={{ borderColor: RULE, color: INK_SOFT }}
+                            title="가정: 월급 300 실수령, 한 푼 안 쓰고 전액 저축"
                           >
-                            월급 300 실수령 기준, 한 푼 안 쓰고{" "}
+                            월급 300 기준{" "}
                             <b className="tabular-nums" style={{ color: INK }}>
                               {convYears}년
                             </b>{" "}
-                            <span className="text-[10px]">(가정: 월 300 저축 전액)</span>
+                            — 내 조건으론?{" "}
+                            <a
+                              href="#biji-verdict"
+                              className="font-bold underline underline-offset-2"
+                              style={{ color: CORAL }}
+                            >
+                              30초 판정 →
+                            </a>{" "}
+                            <span className="text-[9.5px]">(월 300 전액 저축 가정)</span>
                           </div>
                         )}
                       </div>
@@ -406,11 +545,12 @@ export function DailyFront() {
                       </summary>
                       <div className="border-t border-dotted" style={{ borderColor: RULE }}>
                         {majorRest.map((item, i) => (
-                          <MajorRow
+                          <DealDetails
                             key={`${item.apt}-${item.dealDate}-${item.priceKrw}-r${i}`}
                             item={item}
-                            divider={i > 0}
-                          />
+                          >
+                            <MajorRow item={item} divider={i > 0} />
+                          </DealDetails>
                         ))}
                       </div>
                     </details>
@@ -420,40 +560,58 @@ export function DailyFront() {
               )}
             </section>
 
-            {/* ── [이상 거래 판독] — 단지 자기 시세 대비 ±7% 이탈 ── */}
+            {/* ── [강세 거래] — 직전 실거래(팩트)보다 높게 팔린 중개거래 실명 ── */}
             <section className="px-0.5 pb-3.5 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
-              <CornerLabel>이상 거래 판독</CornerLabel>
-              {deviations.length === 0 ? (
-                <CornerNote>오늘 공개분엔 자기 시세를 ±7% 이상 흔든 중개거래가 없었습니다.</CornerNote>
+              <CornerLabel>강세 거래</CornerLabel>
+              {strongLegacy ? (
+                <CornerNote>「강세 거래」 코너는 다음 호부터 직전 실거래 대비 기준으로 게재됩니다.</CornerNote>
+              ) : strongs.length === 0 ? (
+                <CornerNote>오늘 공개분엔 직전 거래보다 눈에 띄게 높게 팔린 중개거래가 없었습니다.</CornerNote>
               ) : (
                 <>
                   <div>
-                    {deviations.map((item, i) => (
-                      <DeviationRow
-                        key={`${item.kind}-${item.apt}-${item.dealDate}`}
-                        item={item}
-                        divider={i > 0}
-                      />
+                    {strongs.map((item, i) => (
+                      <DealDetails key={`${item.kind}-${item.apt}-${item.dealDate}`} item={item}>
+                        <StrongRow item={item} divider={i > 0} />
+                      </DealDetails>
                     ))}
                   </div>
                   <CornerNote>
-                    판독 기준 — <b style={{ color: INK }}>단지 자기 시세 대비 ±7% 이상</b> 이탈한
-                    중개거래만 · 오늘 공개 {openCount.toLocaleString("ko-KR")}건 중{" "}
+                    비교는 <b style={{ color: INK }}>같은 단지·평형의 최근 60일 내 직전 실거래</b>{" "}
+                    기준 · 단지 최근 거래 기록과 대조해 선별 · 오늘 공개{" "}
+                    {openCount.toLocaleString("ko-KR")}건 중{" "}
                     <b className="tabular-nums" style={{ color: INK }}>
-                      {deviations.length}건
+                      {strongs.length}건
                     </b>{" "}
                     · 직거래·해제 제외.
                   </CornerNote>
                 </>
               )}
             </section>
+
+            {/* ── [약세 동네] — 시군구 집계만(특정 단지 실명 급락 게재 금지 — 2026-07-06 사장 지시).
+                구 스키마(weakRegions 없음)·표본 없음이면 코너 자체를 조용히 생략. ── */}
+            {weakRegions.length > 0 && (
+              <section className="px-0.5 pb-3.5 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
+                <CornerLabel>약세 동네</CornerLabel>
+                <div>
+                  {weakRegions.map((item, i) => (
+                    <WeakRegionRow key={item.sigungu} item={item} divider={i > 0} />
+                  ))}
+                </div>
+                <CornerNote>
+                  오늘 공개된 중개거래의 직전 실거래(같은 단지·평형, 최근 60일 내) 대비 평균 ·
+                  5건 이상 동네만.
+                </CornerNote>
+              </section>
+            )}
           </>
         )}
 
         {/* ── [내 문턱 · 구독자란] — 옵트인 로컬 프로필 있을 때만(클라이언트가 자체 렌더) ── */}
         <ThresholdGauge />
 
-        {/* ── CTA — 코랄은 인장과 CTA에만 ── */}
+        {/* ── CTA — 코랄은 제호 플레이트와 CTA·판정 링크에만 ── */}
         <a
           href="#biji-verdict"
           className="mt-3 block w-full py-[13px] text-center text-[15px] font-extrabold tracking-[0.04em] text-white focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-2"
@@ -470,7 +628,7 @@ export function DailyFront() {
           <span>
             국토부 실거래 공개분 기준 · 신고는 계약 후 최대 30일
             <br />
-            시세 판정이며 투자 권유가 아닙니다
+            실거래 기록 판독이며 투자 권유가 아닙니다
           </span>
           <span className="text-right">
             다음 호

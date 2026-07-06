@@ -177,7 +177,14 @@ function LocalProfileOptIn({
   );
 }
 
-export function HomeExperience() {
+export function HomeExperience({
+  frontPage,
+}: {
+  /** 오늘의 1면(DailyFront, 서버 컴포넌트) — 표준 "server component as client prop" 패턴.
+   *  랜딩 상태에서만 렌더한다. 판정 폼 진행 중(1단계~)·결과 화면에선 접혀(비렌더)
+   *  판정 흐름에 집중시킨다 (2026-07-06 폼 UX — 결과엔 문턱 게이지가 별도로 있음). */
+  frontPage?: ReactNode;
+}) {
   const [state, setState] = useState<ResultState | null>(null);
   const [autoLoading, setAutoLoading] = useState(false);
   const [started, setStarted] = useState(false); // 랜딩 CTA 누르면 폼 시작
@@ -798,7 +805,7 @@ export function HomeExperience() {
   // ── 공유 링크 분석 중 ──────────────────────────────────────
   if (state === null && autoLoading) {
     return (
-      <div className="flex flex-col items-center gap-2 rounded-3xl border border-[#ecd9b3] bg-[#fdf6e7]/70 px-6 py-12 text-center">
+      <div id="biji-verdict" className="scroll-mt-4 flex flex-col items-center gap-2 rounded-3xl border border-[#ecd9b3] bg-[#fdf6e7]/70 px-6 py-12 text-center">
         <span className="flex h-5 w-5" aria-hidden="true">
           <span className="inline-flex h-full w-full animate-ping rounded-full bg-coral-400 opacity-75" />
         </span>
@@ -807,10 +814,15 @@ export function HomeExperience() {
       </div>
     );
   }
-  // 시작 전 = 랜딩 히어로(가치제안+단일 CTA). CTA 누르면 폼 노출.
+  // 시작 전 = 오늘의 1면(frontPage) + 랜딩 히어로(가치제안+단일 CTA). CTA 누르면 폼 노출
+  // — 그때부터 frontPage 는 접힌다(이 분기를 벗어나므로 자동 비렌더).
+  // #biji-verdict 앵커는 frontPage "아래" 본 경험 컨테이너에 — 지면 CTA 클릭 시
+  // 지면 상단이 아니라 판정 시작점으로 스크롤되게.
   if (state === null && !started) {
     return (
       <>
+        {frontPage}
+        <div id="biji-verdict" className="scroll-mt-4">
         {/* 재방문 이어보기(R2) — 저장된 검색 취향이 있으면 폼 미리채워 시작 제안.
             친구 비교 URL(?f=) 진입 시엔 숨김 — 사용자는 친구 보고 온 의도라 이어보기는 노이즈. */}
         {!friendTag && resumePrefs && (
@@ -850,6 +862,7 @@ export function HomeExperience() {
           }}
           friendTag={friendTag}
         />
+        </div>
       </>
     );
   }
@@ -1650,8 +1663,10 @@ export function HomeExperience() {
   }
 
   // 폼은 결과 뒤에 항상 마운트(숨김만) → "← 이전" 시 입력 보존. 결과 없으면 폼이 보인다.
+  // frontPage(오늘의 1면)는 이 분기(폼 진행·결과)에선 렌더하지 않는다 — 판정 집중.
+  // #biji-verdict 앵커는 상태와 무관하게 존재해야 하므로(딥링크·게이지 목적지) 여기도 부착.
   return (
-    <>
+    <div id="biji-verdict" className="scroll-mt-4">
       <div style={state !== null ? { display: "none" } : undefined}>
         <ProfileForm
           onResult={handleResult}
@@ -1661,6 +1676,6 @@ export function HomeExperience() {
         />
       </div>
       {resultView}
-    </>
+    </div>
   );
 }

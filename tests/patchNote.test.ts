@@ -7,6 +7,7 @@ import {
   PATCH_TOP_N,
   PATCH_MAJOR_MIN_PRICE_KRW,
   PATCH_TEMP_MIN_MATCHED,
+  PATCH_PREV_MAX_AGE_DAYS,
   type PatchDealInput,
   type ComplexMedianLookup,
   type MajorItem,
@@ -28,28 +29,97 @@ function makeDeal(overrides: Partial<PatchDealInput> = {}): PatchDealInput {
   };
 }
 
-// 강남구 소재 단지는 자기 중위가 10억, 표본 충분 — 단순 스텁 (단지 자기 시세 기준)
+/** 직전 거래 스텁 — window 안(스코프 밖, 6/15=19일 전) 같은 단지×밴드 기준 거래.
+ *  [강세 거래]·온도·동네 집계가 직전 실거래 팩트를 요구하므로(2026-07-06 재정의)
+ *  게재를 기대하는 fresh 거래엔 이 기준 거래를 짝지어 준다. */
+function prevDeal(
+  apartmentName: string,
+  priceKrw = 1_000_000_000,
+  dealDateISO = "2026-06-15",
+  floor = 1,
+): PatchDealInput {
+  return makeDeal({ apartmentName, priceKrw, dealDateISO, floor });
+}
+
+// 강남구 소재 단지는 자기 중위가 10억, 표본 충분 — 단순 스텁 (내부 선별 필터용)
 const lookup: ComplexMedianLookup = (d) =>
   d.sigunguName === "강남구"
     ? { medianKrw: 1_000_000_000, sampleCount: 30 }
     : null;
 
 describe("patchNote.computePatch", () => {
-  it("단지 시세 +7% 이상 신규 거래는 너프, -7% 이하는 버프", () => {
+  it("중위가 ±7% 이탈로 선별하되, 너프 게재엔 직전 거래 팩트가 실린다", () => {
     const r = computePatch({
       deals: [
+        prevDeal("급등단지"), // 직전 거래 1.0억×10 (6/15)
         makeDeal({ apartmentName: "급등단지", priceKrw: 1_120_000_000 }), // +12%
-        makeDeal({ apartmentName: "급락단지", priceKrw: 880_000_000 }), // -12%
-        makeDeal({ apartmentName: "평범단지", priceKrw: 1_020_000_000 }), // +2% → 제외
+        makeDeal({ apartmentName: "급락단지", priceKrw: 880_000_000 }), // -12% → buff(데이터)
+        makeDeal({ apartmentName: "평범단지", priceKrw: 1_020_000_000 }), // +2% → 필터 제외
       ],
       seenKeys: new Set(),
       lookupMedian: lookup,
       todayISO: TODAY,
     });
     expect(r.nerf.map((i) => i.apt)).toEqual(["급등단지"]);
+    expect(r.nerf[0].pct).toBeCloseTo(0.12, 5); // 내부 필터 값(중위가 대비)
+    // 화면 노출용 팩트 — 직전 실거래 대비 + 날짜
+    expect(r.nerf[0].prevKrw).toBe(1_000_000_000);
+    expect(r.nerf[0].prevDate).toBe("2026-06-15");
+    expect(r.nerf[0].pctVsPrev).toBeCloseTo(0.12, 5);
     expect(r.buff.map((i) => i.apt)).toEqual(["급락단지"]);
-    expect(r.nerf[0].pct).toBeCloseTo(0.12, 5);
-    expect(r.buff[0].pct).toBeCloseTo(-0.12, 5);
+  });
+
+  it("중위가 필터를 통과해도 직전 거래가 없으면 [강세 거래] 미게재 — 표시할 팩트가 없다", () => {
+    const r = computePatch({
+      deals: [makeDeal({ apartmentName: "이력없는급등", priceKrw: 1_120_000_000 })],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    expect(r.nerf).toHaveLength(0);
+  });
+
+  it("직전 거래가 60일(PREV_MAX_AGE)보다 묵으면 비교 무효 → 미게재, 경계 60일은 유효", () => {
+    // 4/30 → 7/1 = 62일 → 무효
+    const stale = computePatch({
+      deals: [
+        prevDeal("묵은단지", 1_000_000_000, "2026-04-30"),
+        makeDeal({ apartmentName: "묵은단지", priceKrw: 1_120_000_000 }),
+      ],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    expect(stale.nerf).toHaveLength(0);
+    // 5/2 → 7/1 = 딱 60일 → 유효
+    const edge = computePatch({
+      deals: [
+        prevDeal("경계단지", 1_000_000_000, "2026-05-02"),
+        makeDeal({ apartmentName: "경계단지", priceKrw: 1_120_000_000 }),
+      ],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    expect(edge.nerf).toHaveLength(1);
+    expect(edge.nerf[0].prevDate).toBe("2026-05-02");
+    void PATCH_PREV_MAX_AGE_DAYS; // 문서화용 상수 참조
+  });
+
+  it("같은 날짜의 타거래도 직전 거래로 허용(자기 자신 제외) — 층이 달라도", () => {
+    const r = computePatch({
+      deals: [
+        makeDeal({ apartmentName: "동일자단지", floor: 3, priceKrw: 1_000_000_000 }),
+        makeDeal({ apartmentName: "동일자단지", floor: 20, priceKrw: 1_120_000_000 }),
+      ],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    // 1.12억×10 거래의 직전 = 같은 날 3층 1.0억×10 (자기 자신은 제외)
+    expect(r.nerf.map((i) => i.apt)).toEqual(["동일자단지"]);
+    expect(r.nerf[0].priceKrw).toBe(1_120_000_000);
+    expect(r.nerf[0].prevKrw).toBe(1_000_000_000);
   });
 
   it("이미 본 거래(seenKeys)는 신규로 잡지 않는다", () => {
@@ -87,23 +157,24 @@ describe("patchNote.computePatch", () => {
     expect(r.nextSeenKeys).toHaveLength(0);
   });
 
-  it("스코프 경계: 정확히 14일 전은 포함", () => {
+  it("스코프 경계: 정확히 14일 전은 포함 (직전 거래는 스코프 밖이라도 인덱스에 남는다)", () => {
     const edge = makeDeal({
       dealDateISO: "2026-06-20", // 딱 14일 전
       priceKrw: 1_150_000_000,
     });
     const r = computePatch({
-      deals: [edge],
+      deals: [prevDeal("테스트단지"), edge], // 기준 거래는 6/15(스코프 밖)
       seenKeys: new Set(),
       lookupMedian: lookup,
       todayISO: TODAY,
     });
-    expect(r.scopeDealCount).toBe(1);
+    expect(r.scopeDealCount).toBe(1); // 스코프 밖 기준 거래는 안 셈
     expect(r.nerf).toHaveLength(1);
+    expect(r.nerf[0].prevKrw).toBe(1_000_000_000);
     void PATCH_SCOPE_DAYS; // 문서화용 상수 참조
   });
 
-  it("노이즈 컷: ±35% 초과 괴리·표본 부족·초저가는 제외", () => {
+  it("노이즈 컷: ±35% 초과 괴리·표본 부족·초저가는 제외 (내부 선별 필터)", () => {
     const sparseLookup: ComplexMedianLookup = (d) =>
       d.sigunguName === "강남구"
         ? { medianKrw: 1_000_000_000, sampleCount: 30 }
@@ -128,22 +199,30 @@ describe("patchNote.computePatch", () => {
     expect(r.buff).toHaveLength(0);
   });
 
-  it("같은 단지×평형은 |pct| 최대 1건만, 각 리스트 상위 N건 제한", () => {
+  it("같은 단지×평형은 pctVsPrev 최대 대표 1건만 — 도배 방지", () => {
+    const r = computePatch({
+      deals: [
+        prevDeal("도배단지"), // 6/15 · 1.0억×10
+        makeDeal({ apartmentName: "도배단지", dealDateISO: "2026-06-28", floor: 3, priceKrw: 1_080_000_000 }), // 직전(6/15) 대비 +8%
+        makeDeal({ apartmentName: "도배단지", dealDateISO: "2026-07-01", floor: 15, priceKrw: 1_140_000_000 }), // 직전(6/28) 대비 +5.6%
+      ],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    const 도배 = r.nerf.filter((i) => i.apt === "도배단지");
+    expect(도배).toHaveLength(1);
+    expect(도배[0].priceKrw).toBe(1_080_000_000); // pctVsPrev(+8%) 최대 건이 대표
+  });
+
+  it("[강세 거래]는 pctVsPrev 내림차순 상위 N건", () => {
     const many: PatchDealInput[] = [];
-    // 같은 단지 3건 — 대표 1건만 남아야 함
-    for (const [floor, price] of [
-      [3, 1_080_000_000],
-      [15, 1_140_000_000], // |pct| 최대 → 대표
-      [7, 1_100_000_000],
-    ] as const) {
-      many.push(makeDeal({ apartmentName: "도배단지", floor, priceKrw: price }));
-    }
-    // 서로 다른 단지 7건 — TOP_N(5) 컷 확인
     for (let i = 0; i < 7; i++) {
+      many.push(prevDeal(`단지${i}`)); // 각 단지 기준 거래 1.0억×10
       many.push(
         makeDeal({
           apartmentName: `단지${i}`,
-          priceKrw: 1_080_000_000 + i * 10_000_000,
+          priceKrw: 1_080_000_000 + i * 10_000_000, // 직전 대비 +8%…+14%
         }),
       );
     }
@@ -154,11 +233,8 @@ describe("patchNote.computePatch", () => {
       todayISO: TODAY,
     });
     expect(r.nerf).toHaveLength(PATCH_TOP_N);
-    const 도배 = r.nerf.filter((i) => i.apt === "도배단지");
-    expect(도배).toHaveLength(1);
-    expect(도배[0].priceKrw).toBe(1_140_000_000);
-    // 정렬: |pct| 내림차순
-    const pcts = r.nerf.map((i) => Math.abs(i.pct));
+    expect(r.nerf[0].apt).toBe("단지6"); // 가장 큰 +14%부터
+    const pcts = r.nerf.map((i) => i.pctVsPrev ?? 0);
     expect([...pcts].sort((a, b) => b - a)).toEqual(pcts);
   });
 
@@ -179,12 +255,12 @@ describe("patchNote.computePatch", () => {
       dealingGbn: "중개거래",
     });
     const r = computePatch({
-      deals: [direct, canceledDeal, normal],
+      deals: [prevDeal("정상중개단지"), direct, canceledDeal, normal],
       seenKeys: new Set(),
       lookupMedian: lookup,
       todayISO: TODAY,
     });
-    // 해제는 스코프 밖, 직거래·정상은 스코프 안
+    // 해제는 스코프 밖, 직거래·정상은 스코프 안 (기준 거래 6/15는 스코프 밖)
     expect(r.scopeDealCount).toBe(2);
     // 분류는 정상 중개거래만
     expect(r.buff).toHaveLength(0);
@@ -193,16 +269,17 @@ describe("patchNote.computePatch", () => {
     expect(r.nextSeenKeys).toContain(dealKey(direct));
   });
 
-  it("scopeDays 오버라이드(창간호 3일): 3일 밖 거래는 제외, 안은 포함", () => {
+  it("scopeDays 오버라이드(창간호 3일): 3일 밖 거래는 스코프 제외돼도 직전 거래론 쓰인다", () => {
     const inside = makeDeal({
       apartmentName: "창간호단지",
       dealDateISO: "2026-07-02", // 2일 전
       priceKrw: 1_150_000_000,
     });
     const outside = makeDeal({
-      apartmentName: "스코프밖단지",
-      dealDateISO: "2026-06-28", // 6일 전 — 기본 14일엔 들지만 3일엔 제외
-      priceKrw: 1_150_000_000,
+      apartmentName: "창간호단지",
+      dealDateISO: "2026-06-28", // 6일 전 — 3일 스코프엔 제외, 직전 거래로는 유효
+      priceKrw: 1_000_000_000,
+      floor: 2,
     });
     const r = computePatch({
       deals: [inside, outside],
@@ -213,6 +290,9 @@ describe("patchNote.computePatch", () => {
     });
     expect(r.scopeDealCount).toBe(1);
     expect(r.nerf.map((i) => i.apt)).toEqual(["창간호단지"]);
+    expect(r.nerf[0].prevKrw).toBe(1_000_000_000);
+    expect(r.nerf[0].prevDate).toBe("2026-06-28");
+    expect(r.nerf[0].pctVsPrev).toBeCloseTo(0.15, 5);
   });
 
   it("dealKey는 층·가격까지 포함해 같은 날 같은 단지의 다른 거래를 구분", () => {
@@ -221,9 +301,11 @@ describe("patchNote.computePatch", () => {
     expect(dealKey(a)).not.toBe(dealKey(b));
   });
 
-  it("비대칭 노이즈 컷 — 상승은 +35%까지, 하락은 −30%까지만 코너 게재", () => {
+  it("비대칭 노이즈 컷 — 상승은 +35%까지, 하락은 −30%까지만 (내부 필터)", () => {
     const r = computePatch({
       deals: [
+        prevDeal("상승32"),
+        prevDeal("상승36"),
         makeDeal({ apartmentName: "상승32", priceKrw: 1_320_000_000 }), // +32% → 너프 OK
         makeDeal({ apartmentName: "상승36", priceKrw: 1_360_000_000 }), // +36% → 컷
         makeDeal({ apartmentName: "하락28", priceKrw: 720_000_000 }), // -28% → 버프 OK
@@ -283,7 +365,7 @@ describe("patchNote.computePatch — major", () => {
     expect(r.major).toHaveLength(0);
   });
 
-  it("pct·sampleCount — lookup 성공 시 채움, 실패 시 null(시세 이력 없음 신호)", () => {
+  it("pct·sampleCount — lookup 성공 시 채움, 실패 시 null(거래 이력 없음 신호)", () => {
     const r = computePatch({
       deals: [
         makeDeal({ apartmentName: "이력있음", priceKrw: 1_600_000_000 }), // 강남구 → lookup OK
@@ -299,52 +381,318 @@ describe("patchNote.computePatch — major", () => {
       todayISO: TODAY,
     });
     const known = r.major.find((m) => m.apt === "이력있음")!;
-    expect(known.pct).toBeCloseTo(0.6, 5); // 16억 vs 중위 10억
+    expect(known.pct).toBeCloseTo(0.6, 5); // 16억 vs 중위 10억 (내부 필터 값)
     expect(known.sampleCount).toBe(30);
+    expect(known.prevKrw).toBeNull(); // 직전 거래 없음
     const fresh = r.major.find((m) => m.apt === "신축첫거래")!;
     expect(fresh.pct).toBeNull();
     expect(fresh.sampleCount).toBeNull();
     expect(fresh.buildYear).toBe(2026);
   });
-});
 
-// ── 오늘의 온도 — fresh 중개거래의 자기 시세 위:아래 ──────────────────────────
-
-describe("patchNote.computePatch — temp", () => {
-  function bulkDeals(n: number, priceOf: (i: number) => number): PatchDealInput[] {
-    return Array.from({ length: n }, (_, i) =>
-      makeDeal({ apartmentName: `단지${i}`, floor: i + 1, priceKrw: priceOf(i) }),
-    );
-  }
-
-  it("±1% 이내는 중립(matched에만), 위/아래 집계", () => {
-    // 30건: 12 위(+5%), 10 아래(−5%), 8 중립(±0.5%)
-    const deals = [
-      ...bulkDeals(12, () => 1_050_000_000),
-      ...bulkDeals(10, () => 950_000_000).map((d, i) => ({ ...d, apartmentName: `아래${i}` })),
-      ...bulkDeals(8, () => 1_005_000_000).map((d, i) => ({ ...d, apartmentName: `중립${i}` })),
-    ];
-    const r = computePatch({ deals, seenKeys: new Set(), lookupMedian: lookup, todayISO: TODAY });
-    expect(r.temp).toEqual({ above: 12, below: 10, matched: 30 });
+  it("major에도 직전 거래 팩트(prevKrw·prevDate·pctVsPrev)가 실린다", () => {
+    const r = computePatch({
+      deals: [
+        prevDeal("대장주", 2_000_000_000, "2026-06-15"),
+        makeDeal({ apartmentName: "대장주", priceKrw: 2_100_000_000 }),
+      ],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    expect(r.major).toHaveLength(1); // 기준 거래(6/15)는 스코프 밖 — fresh 아님
+    expect(r.major[0].prevKrw).toBe(2_000_000_000);
+    expect(r.major[0].prevDate).toBe("2026-06-15");
+    expect(r.major[0].pctVsPrev).toBeCloseTo(0.05, 5);
   });
 
-  it("matched < 30이면 표본 부족 → null", () => {
-    const deals = bulkDeals(PATCH_TEMP_MIN_MATCHED - 1, () => 1_050_000_000);
+  it("기준점(2개월) — 자기 자신이 최고면 windowMax는 차순위(자기 제외) 거래", () => {
+    const r = computePatch({
+      deals: [
+        prevDeal("신고가단지", 2_000_000_000, "2026-06-15"),
+        makeDeal({ apartmentName: "신고가단지", priceKrw: 2_100_000_000 }), // 창 내 최고는 자기
+      ],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    const m = r.major[0];
+    expect(m.windowMaxKrw).toBe(2_000_000_000); // 자기 제외 최고 → 이번 거래(2.1억×10) ≥ 기준
+    expect(m.windowMaxDate).toBe("2026-06-15");
+    expect(m.refMaxPeriod).toBe("2개월");
+  });
+
+  it("기준점(2개월) — 창 안에 더 높은 과거 거래가 있으면 그 가격·날짜", () => {
+    const r = computePatch({
+      deals: [
+        prevDeal("고점단지", 2_500_000_000, "2026-06-10"),
+        prevDeal("고점단지", 2_000_000_000, "2026-06-15", 2),
+        makeDeal({ apartmentName: "고점단지", priceKrw: 2_100_000_000 }),
+      ],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    const m = r.major.find((x) => x.priceKrw === 2_100_000_000)!;
+    expect(m.windowMaxKrw).toBe(2_500_000_000);
+    expect(m.windowMaxDate).toBe("2026-06-10");
+    expect(m.refMaxPeriod).toBe("2개월");
+  });
+
+  it("기준점 — 스냅샷 1년 최고가(maxKrw)가 있으면 우선, 라벨 '1년'·날짜 없음", () => {
+    const maxLookup: ComplexMedianLookup = () => ({
+      medianKrw: 2_000_000_000,
+      sampleCount: 30,
+      maxKrw: 2_400_000_000,
+    });
+    const r = computePatch({
+      deals: [
+        prevDeal("연최고단지", 2_000_000_000, "2026-06-15"),
+        makeDeal({ apartmentName: "연최고단지", priceKrw: 2_100_000_000 }),
+      ],
+      seenKeys: new Set(),
+      lookupMedian: maxLookup,
+      todayISO: TODAY,
+    });
+    const m = r.major.find((x) => x.priceKrw === 2_100_000_000)!;
+    expect(m.windowMaxKrw).toBe(2_400_000_000);
+    expect(m.windowMaxDate).toBeNull();
+    expect(m.refMaxPeriod).toBe("1년");
+  });
+
+  it("기준점 — 비교 대상이 전혀 없으면(신축 첫거래 등) null → UI 서브라인 생략", () => {
+    const r = computePatch({
+      deals: [
+        makeDeal({
+          apartmentName: "신축첫거래",
+          sigunguName: "이력없는구", // lookup null → 스냅샷 maxKrw 없음
+          priceKrw: 1_800_000_000,
+        }),
+      ],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    const m = r.major[0];
+    expect(m.windowMaxKrw).toBeNull();
+    expect(m.windowMaxDate).toBeNull();
+    expect(m.refMaxPeriod).toBeNull();
+  });
+
+  it("좌표 — lookup 셀의 lat/lng가 major·nerf 아이템에 실리고, 미등재면 null", () => {
+    const geoLookup: ComplexMedianLookup = (d) =>
+      d.sigunguName === "강남구"
+        ? { medianKrw: 1_500_000_000, sampleCount: 30, lat: 37.5172, lng: 127.0473 }
+        : null;
+    const r = computePatch({
+      deals: [
+        prevDeal("좌표단지", 1_500_000_000, "2026-06-15"),
+        makeDeal({ apartmentName: "좌표단지", priceKrw: 1_700_000_000 }), // +13.3% → nerf·major
+        makeDeal({
+          apartmentName: "미등재단지",
+          sigunguName: "이력없는구",
+          priceKrw: 1_800_000_000,
+        }),
+      ],
+      seenKeys: new Set(),
+      lookupMedian: geoLookup,
+      todayISO: TODAY,
+    });
+    const geo = r.major.find((m) => m.apt === "좌표단지")!;
+    expect(geo.lat).toBeCloseTo(37.5172, 4);
+    expect(geo.lng).toBeCloseTo(127.0473, 4);
+    const none = r.major.find((m) => m.apt === "미등재단지")!;
+    expect(none.lat).toBeNull();
+    expect(none.lng).toBeNull();
+    expect(r.nerf[0].lat).toBeCloseTo(37.5172, 4);
+  });
+});
+
+// ── 오늘의 온도 — 직전 실거래 대비(팩트 기준) ─────────────────────────────────
+
+describe("patchNote.computePatch — temp", () => {
+  /** 단지마다 (6/15 기준 거래 1.0억×10) + (오늘 fresh 거래 price) 짝을 만든다. */
+  function pairedDeals(
+    n: number,
+    priceOf: (i: number) => number,
+    tag = "P",
+  ): PatchDealInput[] {
+    const out: PatchDealInput[] = [];
+    for (let i = 0; i < n; i++) {
+      out.push(prevDeal(`단지${tag}${i}`));
+      out.push(
+        makeDeal({ apartmentName: `단지${tag}${i}`, floor: i + 2, priceKrw: priceOf(i) }),
+      );
+    }
+    return out;
+  }
+
+  it("직전 거래 대비 ±1% 이내는 중립(matched에만), 높게/낮게 집계", () => {
+    // 20건: 10 높게(+5%), 6 낮게(−5%), 4 중립(+0.5%)
+    const deals = [
+      ...pairedDeals(10, () => 1_050_000_000, "위"),
+      ...pairedDeals(6, () => 950_000_000, "아래"),
+      ...pairedDeals(4, () => 1_005_000_000, "중립"),
+    ];
+    const r = computePatch({ deals, seenKeys: new Set(), lookupMedian: lookup, todayISO: TODAY });
+    expect(r.temp).toEqual({ above: 10, below: 6, matched: 20 });
+  });
+
+  it("matched < 20이면 표본 부족 → null", () => {
+    const deals = pairedDeals(PATCH_TEMP_MIN_MATCHED - 1, () => 1_050_000_000);
     const r = computePatch({ deals, seenKeys: new Set(), lookupMedian: lookup, todayISO: TODAY });
     expect(r.temp).toBeNull();
   });
 
-  it("lookup 실패 거래는 matched에 안 셈", () => {
+  it("직전 거래가 없는 거래는 matched에 안 셈 (중위가 lookup 성공과 무관)", () => {
     const deals = [
-      ...bulkDeals(30, () => 1_050_000_000),
-      makeDeal({ apartmentName: "이력없음", sigunguName: "이력없는구", priceKrw: 1_050_000_000 }),
+      ...pairedDeals(20, () => 1_050_000_000),
+      makeDeal({ apartmentName: "직전없음", priceKrw: 1_050_000_000 }), // lookup OK지만 prev 없음
     ];
     const r = computePatch({ deals, seenKeys: new Set(), lookupMedian: lookup, todayISO: TODAY });
-    expect(r.temp?.matched).toBe(30);
+    expect(r.temp?.matched).toBe(20);
   });
 });
 
-// ── 오늘의 헤드라인 — 뉴스가치 사다리 ─────────────────────────────────────────
+// ── [약세/강세 동네] — 시군구 평균 등락(직전 실거래 대비) 집계 ────────────────
+
+describe("patchNote.computePatch — weakRegions / strongRegions", () => {
+  // 동네 집계는 직전 거래 팩트 기준 — 중위가 lookup 불필요.
+  const noLookup: ComplexMedianLookup = () => null;
+
+  /** 시군구별 n개 단지 — 각 단지에 (6/15 기준 1.0억×10) + (오늘 price) 짝. */
+  function guDeals(sigungu: string, n: number, priceKrw: number): PatchDealInput[] {
+    const out: PatchDealInput[] = [];
+    for (let i = 0; i < n; i++) {
+      out.push(
+        makeDeal({
+          apartmentName: `${sigungu}단지${i}`,
+          sigunguName: sigungu,
+          dealDateISO: "2026-06-15",
+          priceKrw: 1_000_000_000,
+          floor: 1,
+        }),
+      );
+      out.push(
+        makeDeal({
+          apartmentName: `${sigungu}단지${i}`,
+          sigunguName: sigungu,
+          floor: 2,
+          priceKrw,
+        }),
+      );
+    }
+    return out;
+  }
+
+  it("count≥5 AND avgPct≤−1%만 약세 — 표본 4건·중립(±1% 미만) 동네는 제외", () => {
+    const r = computePatch({
+      deals: [
+        ...guDeals("약세구", 6, 950_000_000), // 직전 대비 −5% × 6건 → 게재
+        ...guDeals("표본부족구", 4, 900_000_000), // −10%지만 4건 → 제외
+        ...guDeals("중립구", 5, 995_000_000), // −0.5% → 문턱 미달 제외
+      ],
+      seenKeys: new Set(),
+      lookupMedian: noLookup,
+      todayISO: TODAY,
+    });
+    expect(r.weakRegions).toHaveLength(1);
+    expect(r.weakRegions[0].sigungu).toBe("약세구");
+    expect(r.weakRegions[0].count).toBe(6);
+    expect(r.weakRegions[0].avgPct).toBeCloseTo(-0.05, 10);
+  });
+
+  it("약세는 avgPct 오름차순(가장 약세부터)·상위 3개만", () => {
+    const r = computePatch({
+      deals: [
+        ...guDeals("완만구", 5, 980_000_000), // −2%
+        ...guDeals("급락구", 5, 900_000_000), // −10%
+        ...guDeals("중간구", 5, 950_000_000), // −5%
+        ...guDeals("꼴찌구", 5, 985_000_000), // −1.5% → 4위, 상위 3 컷
+      ],
+      seenKeys: new Set(),
+      lookupMedian: noLookup,
+      todayISO: TODAY,
+    });
+    expect(r.weakRegions.map((w) => w.sigungu)).toEqual(["급락구", "중간구", "완만구"]);
+  });
+
+  it("대칭 강세(avgPct≥+1%)는 strongRegions에 — 내림차순(가장 강세부터)", () => {
+    const r = computePatch({
+      deals: [
+        ...guDeals("강세구", 5, 1_050_000_000), // +5%
+        ...guDeals("더강세구", 5, 1_100_000_000), // +10%
+        ...guDeals("약세구", 5, 950_000_000), // −5% → strong 아님
+      ],
+      seenKeys: new Set(),
+      lookupMedian: noLookup,
+      todayISO: TODAY,
+    });
+    expect(r.strongRegions.map((s) => s.sigungu)).toEqual(["더강세구", "강세구"]);
+    expect(r.weakRegions.map((w) => w.sigungu)).toEqual(["약세구"]);
+  });
+
+  it("직거래·직전 거래 없는 거래는 동네 집계에 안 들어간다", () => {
+    const 직거래표시 = guDeals("직거래구", 5, 800_000_000).map((d) =>
+      d.floor === 2 ? { ...d, dealingGbn: "직거래" } : d,
+    );
+    const 직전없음 = Array.from({ length: 5 }, (_, i) =>
+      makeDeal({
+        apartmentName: `무이력단지${i}`,
+        sigunguName: "무이력구",
+        floor: i + 1,
+        priceKrw: 800_000_000,
+      }),
+    );
+    const r = computePatch({
+      deals: [...guDeals("약세구", 5, 950_000_000), ...직거래표시, ...직전없음],
+      seenKeys: new Set(),
+      lookupMedian: noLookup,
+      todayISO: TODAY,
+    });
+    expect(r.weakRegions.map((w) => w.sigungu)).toEqual(["약세구"]);
+  });
+
+  it("buff(하락 실명)는 데이터에 계속 남는다 — UI 비게재는 렌더 계층 책임", () => {
+    const r = computePatch({
+      deals: [makeDeal({ apartmentName: "급락단지", priceKrw: 880_000_000 })], // −12%
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    expect(r.buff.map((i) => i.apt)).toEqual(["급락단지"]);
+  });
+
+  it("nerf 아이템에 lookup 셀의 maxKrw(1년 최고가)와 windowMaxKrw가 실린다", () => {
+    const maxLookup: ComplexMedianLookup = (d) =>
+      d.sigunguName === "강남구"
+        ? { medianKrw: 1_000_000_000, sampleCount: 30, maxKrw: 1_100_000_000 }
+        : null;
+    const withMax = computePatch({
+      deals: [
+        prevDeal("갱신단지"),
+        makeDeal({ apartmentName: "갱신단지", priceKrw: 1_150_000_000 }), // +15%
+      ],
+      seenKeys: new Set(),
+      lookupMedian: maxLookup,
+      todayISO: TODAY,
+    });
+    expect(withMax.nerf[0].maxKrw).toBe(1_100_000_000);
+    expect(withMax.nerf[0].windowMaxKrw).toBe(1_000_000_000); // window 내 자기 제외 최고
+    const without = computePatch({
+      deals: [
+        prevDeal("구스냅샷단지"),
+        makeDeal({ apartmentName: "구스냅샷단지", priceKrw: 1_150_000_000 }),
+      ],
+      seenKeys: new Set(),
+      lookupMedian: lookup, // maxKrw 미제공(구 스냅샷)
+      todayISO: TODAY,
+    });
+    expect(without.nerf[0].maxKrw).toBeNull();
+  });
+});
+
+// ── 오늘의 헤드라인 — 뉴스가치 사다리 (비교 문구는 전부 실거래 팩트) ──────────
 
 describe("patchNote.pickHeadline", () => {
   function makeMajor(over: Partial<MajorItem> = {}): MajorItem {
@@ -376,11 +724,21 @@ describe("patchNote.pickHeadline", () => {
       ...over,
     };
   }
+  /** 직전 거래 팩트가 실린 너프 — 4.8억(6/25) → 5.2억 = +8.3%. */
+  function makeNerfWithPrev(over: Partial<PatchItem> = {}): PatchItem {
+    return makeNerf({
+      prevKrw: 480_000_000,
+      prevDate: "2026-06-25",
+      pctVsPrev: (520_000_000 - 480_000_000) / 480_000_000,
+      windowMaxKrw: 600_000_000, // 기본: 창 내 더 높은 거래 있음 → "두 달 내 최고가" 아님
+      ...over,
+    });
+  }
 
-  it("1순위 — 신축(기준연도−3 이내) 첫 실거래: 시세 이력 없음 + 15억 이상", () => {
+  it("1순위 — 신축(기준연도−3 이내) 첫 실거래: 거래 이력 없음 + 15억 이상", () => {
     const h = pickHeadline({
       major: [makeMajor()],
-      nerf: [makeNerf()], // 너프가 있어도 첫거래가 이긴다
+      nerf: [makeNerfWithPrev()], // 너프가 있어도 첫거래가 이긴다
       newDealCount: 487,
       todayISO: "2026-07-04",
     });
@@ -425,20 +783,79 @@ describe("patchNote.pickHeadline", () => {
     expect(h.text).toContain("비싼신축");
   });
 
-  it("2순위 — 신고가성 상승 이탈: pct × log10(price) 스코어 최대", () => {
-    // 이탈률은 작아도 체급이 크면 이길 수 있는 가중 확인:
-    // A: 25.2% × log10(5.2억) ≈ 2.20 · B: 24% × log10(52억) ≈ 2.33 → B
+  it("2순위 ① — 최근 1년 최고가(maxKrw) 갱신: 등락률은 최고가 대비 재계산", () => {
+    // price 5.2억 vs maxKrw 5억 → (5.2−5)/5 = +4%
+    const h = pickHeadline({
+      major: [],
+      nerf: [makeNerfWithPrev({ maxKrw: 500_000_000 })],
+      newDealCount: 487,
+      todayISO: "2026-07-04",
+    });
+    expect(h.kind).toBe("nerf");
+    expect(h.text).toBe("안양시 만안구 관악성원, 최근 1년 최고가 4% 갱신 — 5.2억");
+  });
+
+  it("2순위 ② — 두 달(폴링창) 내 최고가: 직전 거래 날짜 병기", () => {
+    const h = pickHeadline({
+      major: [],
+      nerf: [makeNerfWithPrev({ windowMaxKrw: 500_000_000 })], // 5.2억 > 창 내 최고 5억
+      newDealCount: 487,
+      todayISO: "2026-07-04",
+    });
+    expect(h.kind).toBe("nerf");
+    expect(h.text).toBe(
+      "안양시 만안구 관악성원, 두 달 내 최고가 — 직전 거래(6/25)보다 8.3% 높게 팔렸다",
+    );
+  });
+
+  it("2순위 ③ — 직전 거래 대비: 날짜 병기 + 가격", () => {
+    const h = pickHeadline({
+      major: [],
+      nerf: [makeNerfWithPrev()], // windowMax 6억 > 5.2억 → 최고가 아님, 직전 대비로
+      newDealCount: 487,
+      todayISO: "2026-07-04",
+    });
+    expect(h.kind).toBe("nerf");
+    expect(h.text).toBe(
+      "안양시 만안구 관악성원, 직전 거래(6/25)보다 8.3% 높게 팔렸다 — 5.2억",
+    );
+  });
+
+  it("2순위 ④ — 비교 팩트 없는 후보는 스킵하고 다음 후보로", () => {
     const h = pickHeadline({
       major: [],
       nerf: [
-        makeNerf(),
-        makeNerf({ sigungu: "서초구", apt: "체급단지", priceKrw: 5_200_000_000, pct: 0.24 }),
+        makeNerf(), // 구 스키마 — prev·maxKrw 없음 → 스킵
+        makeNerfWithPrev({ apt: "팩트단지" }),
       ],
       newDealCount: 487,
       todayISO: "2026-07-04",
     });
     expect(h.kind).toBe("nerf");
-    expect(h.text).toBe("서초구 체급단지, 자기 시세를 24% 웃돌았다 — 52억");
+    expect(h.text).toContain("팩트단지, 직전 거래(6/25)보다");
+  });
+
+  it("2순위 전멸(전부 팩트 없음)이면 다음 rung(최고가)로 내려간다", () => {
+    const h = pickHeadline({
+      major: [makeMajor({ buildYear: 2010 })],
+      nerf: [makeNerf(), makeNerf({ apt: "팩트없음2" })],
+      newDealCount: 487,
+      todayISO: "2026-07-04",
+    });
+    expect(h.kind).toBe("top-major");
+  });
+
+  it("후보 순서 우선 — 입력(pctVsPrev 내림차순) 첫 팩트 후보가 이긴다", () => {
+    const h = pickHeadline({
+      major: [],
+      nerf: [
+        makeNerfWithPrev({ apt: "일등단지" }),
+        makeNerfWithPrev({ apt: "이등단지" }),
+      ],
+      newDealCount: 487,
+      todayISO: "2026-07-04",
+    });
+    expect(h.text).toContain("일등단지");
   });
 
   it("3순위 — 이탈 없으면 오늘의 최고가(major[0])", () => {
@@ -452,10 +869,10 @@ describe("patchNote.pickHeadline", () => {
     expect(h.text).toBe("오늘 공개 최고가 — 디에이치퍼스티어 35.6억");
   });
 
-  it("4순위 폴백 — 아무것도 없으면 '흔든 거래 없음'", () => {
+  it("4순위 폴백 — 아무것도 없으면 '판을 흔든 거래 없음' ('시세' 단어 금지)", () => {
     const h = pickHeadline({ major: [], nerf: [], newDealCount: 487, todayISO: "2026-07-04" });
     expect(h.kind).toBe("none");
-    expect(h.text).toBe("오늘 공개 487건 — 시세를 흔든 거래는 없었다");
+    expect(h.text).toBe("오늘 공개 487건 — 판을 흔든 거래는 없었다");
   });
 
   it("하락(버프)은 어떤 경우에도 헤드라인 금지 — 입력 자체를 안 받는다", () => {
