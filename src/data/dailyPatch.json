@@ -15,7 +15,14 @@
       "priceKrw": 1530000000,
       "medianKrw": 1343593408,
       "pct": 0.13873735230472342,
-      "dealDate": "2026-07-01"
+      "dealDate": "2026-07-01",
+      "maxKrw": null,
+      "prevKrw": 1300000000,
+      "prevDate": "2026-05-23",
+      "pctVsPrev": 0.17692307692307693,
+      "windowMaxKrw": 1300000000,
+      "lat": 37.60208270344136,
+      "lng": 126.9360726516278
     }
   ],
   "buff": [
@@ -29,7 +36,14 @@
       "priceKrw": 180000000,
       "medianKrw": 199165479,
       "pct": -0.09622892027387939,
-      "dealDate": "2026-07-04"
+      "dealDate": "2026-07-04",
+      "maxKrw": null,
+      "prevKrw": 209000000,
+      "prevDate": "2026-06-08",
+      "pctVsPrev": -0.13875598086124402,
+      "windowMaxKrw": 209000000,
+      "lat": 37.65036104815989,
+      "lng": 126.7796706405216
     },
     {
       "kind": "buff",
@@ -41,7 +55,14 @@
       "priceKrw": 880000000,
       "medianKrw": 958740700,
       "pct": -0.08212929731678231,
-      "dealDate": "2026-07-03"
+      "dealDate": "2026-07-03",
+      "maxKrw": null,
+      "prevKrw": 900000000,
+      "prevDate": "2026-06-20",
+      "pctVsPrev": -0.022222222222222223,
+      "windowMaxKrw": 925000000,
+      "lat": 37.27037560840249,
+      "lng": 127.0212220437136
     }
   ],
   "major": [
@@ -54,7 +75,15 @@
       "dealDate": "2026-06-25",
       "pct": 0.023742271667216958,
       "buildYear": 1992,
-      "sampleCount": 5
+      "sampleCount": 5,
+      "prevKrw": 1900000000,
+      "prevDate": "2026-05-13",
+      "pctVsPrev": 0.02631578947368421,
+      "windowMaxKrw": 1900000000,
+      "windowMaxDate": "2026-05-13",
+      "refMaxPeriod": "2개월",
+      "lat": 37.40438036005426,
+      "lng": 127.1223959013565
     },
     {
       "sigungu": "은평구",
@@ -65,9 +94,35 @@
       "dealDate": "2026-07-01",
       "pct": 0.13873735230472342,
       "buildYear": 2019,
-      "sampleCount": 4
+      "sampleCount": 4,
+      "prevKrw": 1300000000,
+      "prevDate": "2026-05-23",
+      "pctVsPrev": 0.17692307692307693,
+      "windowMaxKrw": 1300000000,
+      "windowMaxDate": "2026-05-23",
+      "refMaxPeriod": "2개월",
+      "lat": 37.60208270344136,
+      "lng": 126.9360726516278
     }
   ],
-  "temp": null,
+  "temp": {
+    "above": 8,
+    "below": 10,
+    "matched": 20
+  },
+  "weakRegions": [
+    {
+      "sigungu": "고양시 일산동구",
+      "avgPct": -0.0535372340995554,
+      "count": 7
+    }
+  ],
+  "strongRegions": [
+    {
+      "sigungu": "수원시 팔달구",
+      "avgPct": 0.01445042272746576,
+      "count": 9
+    }
+  ],
   "latestDealDate": "2026-07-04"
 }
