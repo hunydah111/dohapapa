@@ -9,7 +9,9 @@
 //   · 괘선 #c9c3b4 · 코랄 #e8571f(제호 플레이트·CTA·판정 링크만) · 그린 #2e7d52. 명조는 셀프호스팅.
 //
 // 정직성 원칙: 실거래 신고는 계약 후 최대 30일 지연 → 카피는 항상 "공개" 기준.
-// "실시간" 금지 · 미래 예측 금지 · 빨간 경보색 금지(너프=먹, 버프=그린) · 캐릭터/이모지 0.
+// "실시간" 금지 · 미래 예측 금지 · 캐릭터/이모지 0.
+// 시세 방향색 = 한국 시세면 문법: 상승 UP(빨강)·하락 DOWN(파랑) (2026-07-06 사장 확정).
+// 빨강은 '상승 수치·기호' 전용 — 경보·조바심 용도 사용은 여전히 금지.
 // 서버 컴포넌트 — 데이터는 빌드/배포 시점 JSON(매일 새벽 5:30 파이프라인이 갱신).
 // 하위호환: 라이브 dailyPatch.json은 다음 크론 전까지 major/temp 필드가 없다(구 스키마)
 //   → 둘 다 optional, 없으면 해당 코너/줄을 조용히 접는다.
@@ -28,7 +30,7 @@ import {
 import { ThresholdGauge, DailyFrontPing } from "./ThresholdGauge";
 import { DealMiniMap } from "./DealMiniMap";
 // 명조·조판 토큰 — 공유 모듈(단일 소스, 2026-07-06 홈 하부 톤 통일). 중복 선언 금지.
-import { serif, PAPER, INK, INK_SOFT, RULE, CORAL, GREEN } from "@/lib/paperTone";
+import { serif, PAPER, INK, INK_SOFT, RULE, CORAL, UP, DOWN } from "@/lib/paperTone";
 
 interface PatchItem {
   kind: "nerf" | "buff";
@@ -319,7 +321,7 @@ function StrongRow({ item, divider }: { item: PatchItem; divider: boolean }) {
     >
       <div className="flex items-baseline gap-2">
         <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
-          <span aria-hidden="true" className="mr-1 font-extrabold" style={{ color: INK }}>
+          <span aria-hidden="true" className="mr-1 font-extrabold" style={{ color: UP }}>
             ▲
           </span>
           <RegionLink sigungu={item.sigungu}>{item.sigungu}</RegionLink> {item.apt}{" "}
@@ -328,7 +330,7 @@ function StrongRow({ item, divider }: { item: PatchItem; divider: boolean }) {
           </span>
           <RowHint />
         </span>
-        <span className="shrink-0 text-right text-[13px] font-extrabold" style={{ color: INK }}>
+        <span className="shrink-0 text-right text-[13px] font-extrabold" style={{ color: UP }}>
           +{pctAbs(item.pctVsPrev!)}%
         </span>
       </div>
@@ -382,12 +384,12 @@ function WeakRegionRow({ item, divider }: { item: RegionPulse; divider: boolean 
       style={divider ? { borderColor: RULE } : undefined}
     >
       <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
-        <span aria-hidden="true" className="mr-1 font-extrabold" style={{ color: GREEN }}>
+        <span aria-hidden="true" className="mr-1 font-extrabold" style={{ color: DOWN }}>
           ▼
         </span>
         <RegionLink sigungu={item.sigungu}>{item.sigungu}</RegionLink>
       </span>
-      <span className="shrink-0 text-right text-[13px] font-extrabold" style={{ color: GREEN }}>
+      <span className="shrink-0 text-right text-[13px] font-extrabold" style={{ color: DOWN }}>
         직전 거래 대비 평균 −{pctAbs(item.avgPct)}%
       </span>
       <span className="w-[46px] shrink-0 text-right text-[11px]" style={{ color: INK_SOFT }}>
@@ -603,8 +605,8 @@ export function DailyFront() {
                 <div className="mt-2.5">
                   <p className="m-0 text-[12px] leading-[1.6] tabular-nums" style={{ color: INK_SOFT }}>
                     오늘의 온도 — 직전 거래보다 높게{" "}
-                    <b style={{ color: INK }}>{tempPct.above}%</b> : 낮게{" "}
-                    <b style={{ color: GREEN }}>{tempPct.below}%</b>{" "}
+                    <b style={{ color: UP }}>{tempPct.above}%</b> : 낮게{" "}
+                    <b style={{ color: DOWN }}>{tempPct.below}%</b>{" "}
                     <span className="text-[10.5px]">
                       (직전 실거래가 있는 거래 {temp.matched.toLocaleString("ko-KR")}건 기준
                       {mergedNote})
@@ -615,14 +617,14 @@ export function DailyFront() {
                     role="img"
                     aria-label={`오늘 공개 거래 중 직전 실거래보다 높게 ${tempPct.above}%, 낮게 ${tempPct.below}%`}
                   >
-                    <span style={{ width: `${tempPct.above}%`, background: INK }} />
+                    <span style={{ width: `${tempPct.above}%`, background: UP }} />
                     <span
                       style={{
                         width: `${Math.max(0, 100 - tempPct.above - tempPct.below)}%`,
                         background: RULE,
                       }}
                     />
-                    <span style={{ width: `${tempPct.below}%`, background: GREEN }} />
+                    <span style={{ width: `${tempPct.below}%`, background: DOWN }} />
                   </div>
                 </div>
               )}

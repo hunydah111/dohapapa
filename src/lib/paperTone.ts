@@ -24,5 +24,10 @@ export const INK_SOFT = "#5d574c";
 export const RULE = "#c9c3b4";
 /** 코랄 — 제호 플레이트·CTA·판정 링크에만. */
 export const CORAL = "#e8571f";
-/** 그린 — 하락(버프)·통과 의미색. */
+/** 그린 — 통과·긍정 의미색 (시세 방향엔 사용하지 않음 — UP/DOWN 참조). */
 export const GREEN = "#2e7d52";
+
+/** 시세 방향색 — 한국 증권·부동산 시세면 문법 (2026-07-06 사장 확정: 상승=빨강·하락=파랑).
+ *  주의: 경보·조바심 용도의 빨강은 여전히 금지 — UP은 오직 '상승 수치·기호'에만 쓴다. */
+export const UP = "#c9252d";
+export const DOWN = "#2563a8";
