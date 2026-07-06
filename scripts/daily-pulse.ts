@@ -11,7 +11,16 @@
 import { writeFileSync, readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { LAWD_CODES, fetchDealsForRange } from "@/lib/molit";
-import { computePatch, type PatchDealInput, type ComplexMedianLookup, PATCH_SCOPE_DAYS } from "@/lib/patchNote";
+import {
+  computePatch,
+  pickHeadlines,
+  subtractRecentFromSeen,
+  type PatchDealInput,
+  type ComplexMedianLookup,
+  PATCH_SCOPE_DAYS,
+  PATCH_MERGED_MIN_FRESH,
+  DAILY_RECENT_KEEP_DAYS,
+} from "@/lib/patchNote";
 import complexSnapshot from "@/data/complexSnapshot.json";
 
 const arg = (k: string) => process.argv.find((a) => a.startsWith(`--${k}=`))?.split("=").slice(1).join("=");
@@ -97,14 +106,15 @@ async function main() {
     // 단지 자기 시세 인덱스 — "시군구|공백제거단지명" → 평형별 중위가.
     // (시군구 중위가 대비는 구조적 이탈만 잡아서 폐기 — patchNote.ts 상단 주석 참조)
     type SnapMedian = { area: number; medianKrw: number; count: number; lowConfidence?: boolean; maxKrw?: number };
-    type CxEntry = { medians: SnapMedian[]; lat: number | null; lng: number | null };
+    type CxEntry = { medians: SnapMedian[]; lat: number | null; lng: number | null; nearestSubwayM: number | null };
     const cxIndex = new Map<string, CxEntry>();
-    for (const c of (complexSnapshot as unknown as { complexes: { name: string; sigungu: string; latitude?: number | null; longitude?: number | null; medians: SnapMedian[] }[] }).complexes) {
-      // 좌표 동봉 — 지면 행 미니맵·카카오맵 링크용 (2026-07-06 사장 지시).
+    for (const c of (complexSnapshot as unknown as { complexes: { name: string; sigungu: string; latitude?: number | null; longitude?: number | null; nearestSubwayM?: number | null; medians: SnapMedian[] }[] }).complexes) {
+      // 좌표·역거리 동봉 — 지면 행 미니맵·카카오맵 링크·"역 350m" 태그용.
       cxIndex.set(`${c.sigungu}|${c.name.replace(/\s+/g, "")}`, {
         medians: c.medians,
         lat: c.latitude ?? null,
         lng: c.longitude ?? null,
+        nearestSubwayM: c.nearestSubwayM ?? null,
       });
     }
     const lookupMedian: ComplexMedianLookup = (d) => {
@@ -124,6 +134,7 @@ async function main() {
         maxKrw: best.maxKrw ?? null,
         lat: cx.lat,
         lng: cx.lng,
+        nearestSubwayM: cx.nearestSubwayM,
       };
     };
 
@@ -148,22 +159,87 @@ async function main() {
         })
       : null;
 
+    // ── seen 스키마 v2 마이그레이션 가드 — 구 seen(스코프 유효 거래만, 해제 키 없음)으로
+    // 첫 v2.3 실행을 하면 window 내 모든 해제가 한꺼번에 '오늘 처음 확인'으로 쏟아진다.
+    // 그 회차(+창간호)는 해제 코너를 비우고 seen만 시딩 → 다음 회차부터 정상 감지.
+    const prevSeenSchema = (prevSeen as { schema?: number }).schema ?? 1;
+    const cancellationsReady = !firstRun && prevSeenSchema >= 2;
+
+    // ── 주말 저볼륨 폴백 ④ — dailyRecent.json 롤링(오늘 fresh 요약 append, 3일 초과분 prune)
+    const RECENT_PATH = resolve("src/data/dailyRecent.json");
+    type RecentDay = { date: string; items: PatchDealInput[] };
+    const ageDays = (fromISO: string, toISO: string) =>
+      Math.round((new Date(`${toISO}T00:00:00Z`).getTime() - new Date(`${fromISO}T00:00:00Z`).getTime()) / 86_400_000);
+    const prevRecent: { days?: RecentDay[] } = existsSync(RECENT_PATH)
+      ? JSON.parse(readFileSync(RECENT_PATH, "utf8"))
+      : {};
+    // 오늘 재실행(workflow_dispatch) 시 같은 날짜 항목은 교체. 보존 창(오늘 포함 3일) 밖은 prune.
+    const recentDays: RecentDay[] = (prevRecent.days ?? []).filter(
+      (d) => d.date !== today && ageDays(d.date, today) >= 1 && ageDays(d.date, today) < DAILY_RECENT_KEEP_DAYS,
+    );
+    // 오늘 항목 — 유효 fresh + (감지 준비된 회차에만) 신규 해제. 마이그레이션/창간 회차의
+    // 해제 홍수가 롤링 파일로 번지지 않게 canceled는 cancellationsReady일 때만 담는다.
+    const todayItems = (boot ?? patch).freshDeals.filter((d) => !d.canceled || cancellationsReady);
+    recentDays.push({ date: today, items: todayItems });
+    recentDays.sort((a, b) => a.date.localeCompare(b.date));
+    writeFileSync(
+      RECENT_PATH,
+      JSON.stringify({ updatedAt: today, days: recentDays }) + "\n",
+      "utf8",
+    );
+
+    // merged 판정 — 오늘 fresh 유효 거래가 문턱(80) 미만이고 합산할 이전 일자가 있을 때.
+    // 이전 며칠 fresh의 seen 키를 빼고 다시 computePatch → 코너 전부(주요·강세·약세·온도·해제)
+    // 를 합산분 기준으로 재계산한다. 개별 아이템 날짜(dealDate)는 그대로 병기된다.
+    const freshValidCount = patch.newDealCount;
+    const canMerge = !boot && freshValidCount < PATCH_MERGED_MIN_FRESH && recentDays.length >= 2;
+    const merged = canMerge
+      ? computePatch({
+          deals: patchDeals,
+          seenKeys: subtractRecentFromSeen(
+            new Set(prevSeen.keys ?? []),
+            recentDays.flatMap((d) => d.items),
+          ),
+          lookupMedian,
+          todayISO: today,
+        })
+      : null;
+
+    const active = boot ?? merged ?? patch;
+    const mode = boot ? "bootstrap" : merged ? "merged" : "daily";
+    const cancellations = cancellationsReady ? active.cancellations : [];
+    // 헤드라인 묶음 ⑤ — 톱 1 + 세그먼트 서브(서울/경기·인천/9억 이하) 빌드타임 확정.
+    const headlines = pickHeadlines({
+      major: active.major,
+      nerf: active.nerf,
+      newDealCount: active.newDealCount,
+      todayISO: today,
+    });
+
     writeFileSync(
       PATCH_PATH,
       JSON.stringify(
         {
           generatedAt: today,
           scopeDays: boot ? BOOTSTRAP_SCOPE_DAYS : PATCH_SCOPE_DAYS,
-          mode: boot ? "bootstrap" : "daily",
-          newDealCount: boot ? boot.newDealCount : patch.newDealCount,
-          scopeDealCount: boot ? boot.scopeDealCount : patch.scopeDealCount,
-          nerf: boot ? boot.nerf : patch.nerf,
-          buff: boot ? boot.buff : patch.buff,
-          major: boot ? boot.major : patch.major,
-          temp: boot ? boot.temp : patch.temp,
+          mode,
+          // merged 라벨용 합산 구간 — "주말 합산 · {M/D}~{M/D} 공개분".
+          mergedFromDate: merged ? recentDays[0].date : null,
+          mergedToDate: merged ? today : null,
+          newDealCount: active.newDealCount,
+          scopeDealCount: active.scopeDealCount,
+          nerf: active.nerf,
+          buff: active.buff,
+          major: active.major,
+          temp: active.temp,
           // [약세 동네] 코너 데이터 + 대칭 강세 집계(데이터용 — UI는 약세만 게재).
-          weakRegions: boot ? boot.weakRegions : patch.weakRegions,
-          strongRegions: boot ? boot.strongRegions : patch.strongRegions,
+          weakRegions: active.weakRegions,
+          strongRegions: active.strongRegions,
+          // [오늘의 해제] ① — 마이그레이션/창간 회차는 [](다음 회차부터 감지).
+          cancellations,
+          // 오늘 최다 공개 동네 ② — fresh 유효 거래 시군구 상위 3.
+          busiestRegions: active.busiestRegions,
+          headlines,
           latestDealDate: latest || null,
         },
         null,
@@ -171,14 +247,15 @@ async function main() {
       ) + "\n",
       "utf8",
     );
+    // seen은 항상 "오늘 폴링 전체 window"(해제 포함) 기준 — merged/boot와 무관.
     writeFileSync(
       SEEN_PATH,
-      JSON.stringify({ updatedAt: today, keys: patch.nextSeenKeys }) + "\n",
+      JSON.stringify({ updatedAt: today, schema: 2, keys: patch.nextSeenKeys }) + "\n",
       "utf8",
     );
-    const p = boot ?? patch;
+    const p = active;
     console.log(
-      `dailyPatch(${boot ? "창간호" : "일간"}): 스코프 ${p.scopeDealCount}건 · 신규 ${p.newDealCount} · 너프 ${p.nerf.length} · 버프 ${p.buff.length} · 주요 ${p.major.length} · 약세동네 ${p.weakRegions.length} · 온도 ${p.temp ? `${p.temp.above}:${p.temp.below}/${p.temp.matched}` : "표본부족"}`,
+      `dailyPatch(${boot ? "창간호" : merged ? "주말합산" : "일간"}): 스코프 ${p.scopeDealCount}건 · 신규 ${p.newDealCount} · 너프 ${p.nerf.length} · 버프 ${p.buff.length} · 주요 ${p.major.length} · 약세동네 ${p.weakRegions.length} · 해제 ${cancellations.length}${cancellationsReady ? "" : "(시딩)"} · 최다동네 ${p.busiestRegions.map((b) => `${b.sigungu} ${b.count}`).join("/") || "-"} · 온도 ${p.temp ? `${p.temp.above}:${p.temp.below}/${p.temp.matched}` : "표본부족"}`,
     );
   }
 }

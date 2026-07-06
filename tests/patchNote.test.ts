@@ -2,12 +2,17 @@ import { describe, it, expect } from "vitest";
 import {
   computePatch,
   dealKey,
+  seenKeyOf,
+  subtractRecentFromSeen,
   pickHeadline,
+  pickHeadlines,
   PATCH_SCOPE_DAYS,
   PATCH_TOP_N,
   PATCH_MAJOR_MIN_PRICE_KRW,
   PATCH_TEMP_MIN_MATCHED,
   PATCH_PREV_MAX_AGE_DAYS,
+  PATCH_BUSIEST_MIN_COUNT,
+  PATCH_BUSIEST_TOP_N,
   type PatchDealInput,
   type ComplexMedianLookup,
   type MajorItem,
@@ -154,7 +159,10 @@ describe("patchNote.computePatch", () => {
       todayISO: TODAY,
     });
     expect(r.scopeDealCount).toBe(0);
-    expect(r.nextSeenKeys).toHaveLength(0);
+    // v2.3 재설계: seen은 스코프가 아니라 window "전체" 기준 — 스코프 밖 거래도 seen에
+    // 남는다(해제 감시가 window 전역이라 seen도 전역이어야 재등장을 막는다).
+    expect(r.nextSeenKeys).toHaveLength(2);
+    expect(r.nextSeenKeys).toContain(dealKey(old));
   });
 
   it("스코프 경계: 정확히 14일 전은 포함 (직전 거래는 스코프 밖이라도 인덱스에 남는다)", () => {
@@ -879,5 +887,426 @@ describe("patchNote.pickHeadline", () => {
     // pickHeadline 시그니처에 buff가 없음을 타입으로 보증 + 폴백 동작 확인.
     const h = pickHeadline({ major: [], nerf: [], newDealCount: 3, todayISO: "2026-07-04" });
     expect(h.kind).toBe("none");
+  });
+});
+
+// ── [오늘의 해제] ① — seen 재설계·wasTopInWindow (v2.3) ───────────────────────
+
+describe("patchNote.computePatch — cancellations · seen 재설계", () => {
+  it("처음 확인된 해제는 cancellations에 실리고, seen 키(해제 구분)에도 들어간다", () => {
+    const cxl = makeDeal({ apartmentName: "해제단지", priceKrw: 1_200_000_000, canceled: true });
+    const r = computePatch({
+      deals: [cxl],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    expect(r.cancellations.map((c) => c.apt)).toEqual(["해제단지"]);
+    expect(r.cancellations[0].priceKrw).toBe(1_200_000_000);
+    expect(r.cancellations[0].dealDate).toBe("2026-07-01");
+    // seen엔 해제 상태 구분 키로 저장 — 유효 키와 별개.
+    expect(r.nextSeenKeys).toContain(seenKeyOf(cxl));
+    expect(seenKeyOf(cxl)).not.toBe(dealKey(cxl));
+  });
+
+  it("해제는 다음 폴링부터 seen에 잡혀 매일 '신규 해제'로 재등장하지 않는다(버그 수정)", () => {
+    const cxl = makeDeal({ apartmentName: "재등장금지", priceKrw: 1_200_000_000, canceled: true });
+    const day1 = computePatch({
+      deals: [cxl],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    expect(day1.cancellations).toHaveLength(1);
+    const day2 = computePatch({
+      deals: [cxl],
+      seenKeys: new Set(day1.nextSeenKeys),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    expect(day2.cancellations).toHaveLength(0);
+  });
+
+  it("유효로 공개됐다가(seen) 해제로 전환되면 — 그때 딱 한 번 '오늘 처음 확인된 해제'", () => {
+    const asValid = makeDeal({ apartmentName: "전환단지", priceKrw: 1_300_000_000 });
+    const asCanceled = { ...asValid, canceled: true };
+    // 어제까지는 유효로 seen에 있었음
+    const seenYesterday = new Set([dealKey(asValid)]);
+    const r = computePatch({
+      deals: [asCanceled],
+      seenKeys: seenYesterday,
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    expect(r.cancellations.map((c) => c.apt)).toEqual(["전환단지"]);
+    // 다음 날부터는 해제 키가 seen에 있어 재등장 안 함
+    const r2 = computePatch({
+      deals: [asCanceled],
+      seenKeys: new Set(r.nextSeenKeys),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    expect(r2.cancellations).toHaveLength(0);
+  });
+
+  it("스코프(14일) 밖 계약일의 해제도 감지한다 — 해제 감시는 window 전역", () => {
+    const oldCxl = makeDeal({
+      apartmentName: "묵은해제",
+      dealDateISO: "2026-06-01", // 33일 전 — 분석 스코프 밖
+      priceKrw: 1_100_000_000,
+      canceled: true,
+    });
+    const r = computePatch({
+      deals: [oldCxl],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    expect(r.scopeDealCount).toBe(0); // 분석 scope는 계속 canceled·스코프 밖 제외
+    expect(r.cancellations.map((c) => c.apt)).toEqual(["묵은해제"]);
+    expect(r.nextSeenKeys).toContain(seenKeyOf(oldCxl)); // 내일 재등장 방지
+  });
+
+  it("초저가(지분성 의심) 해제는 코너에서 컷", () => {
+    const r = computePatch({
+      deals: [makeDeal({ apartmentName: "지분해제", priceKrw: 30_000_000, canceled: true })],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    expect(r.cancellations).toHaveLength(0);
+  });
+
+  it("wasTopInWindow — window 내 다른 유효 거래 '전부'보다 높았을 때만 true", () => {
+    const valid1 = makeDeal({ apartmentName: "감시단지", priceKrw: 1_000_000_000, floor: 3 });
+    const valid2 = makeDeal({ apartmentName: "감시단지", priceKrw: 1_100_000_000, floor: 7 });
+    const topCxl = makeDeal({
+      apartmentName: "감시단지",
+      priceKrw: 1_200_000_000,
+      floor: 15,
+      canceled: true,
+    });
+    const midCxl = makeDeal({
+      apartmentName: "감시단지",
+      priceKrw: 1_050_000_000,
+      floor: 9,
+      canceled: true,
+    });
+    const r = computePatch({
+      deals: [valid1, valid2, topCxl, midCxl],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    expect(r.cancellations).toHaveLength(2);
+    const top = r.cancellations.find((c) => c.priceKrw === 1_200_000_000)!;
+    const mid = r.cancellations.find((c) => c.priceKrw === 1_050_000_000)!;
+    expect(top.wasTopInWindow).toBe(true); // 1.0·1.1억×10 전부보다 높음
+    expect(mid.wasTopInWindow).toBe(false); // 1.1억×10보다 낮음
+    // 정렬 — wasTop 우선
+    expect(r.cancellations[0].wasTopInWindow).toBe(true);
+  });
+
+  it("wasTopInWindow — 비교할 유효 거래가 없으면 false(공허한 최고가 주장 금지), 동가도 false", () => {
+    const lonely = makeDeal({ apartmentName: "유일해제", priceKrw: 1_200_000_000, canceled: true });
+    const tieValid = makeDeal({ apartmentName: "동가단지", priceKrw: 1_200_000_000, floor: 3 });
+    const tieCxl = makeDeal({
+      apartmentName: "동가단지",
+      priceKrw: 1_200_000_000,
+      floor: 10,
+      canceled: true,
+    });
+    const r = computePatch({
+      deals: [lonely, tieValid, tieCxl],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    expect(r.cancellations.find((c) => c.apt === "유일해제")!.wasTopInWindow).toBe(false);
+    expect(r.cancellations.find((c) => c.apt === "동가단지")!.wasTopInWindow).toBe(false);
+  });
+
+  it("해제 자기들끼리는 비교 기준이 아니다 — 유효 거래(timeline)만 기준", () => {
+    // 더 비싼 '해제' 거래가 있어도, 유효 거래 전부보다 높으면 wasTop true.
+    const r = computePatch({
+      deals: [
+        makeDeal({ apartmentName: "혼합단지", priceKrw: 1_000_000_000, floor: 3 }),
+        makeDeal({ apartmentName: "혼합단지", priceKrw: 1_500_000_000, floor: 20, canceled: true }),
+        makeDeal({ apartmentName: "혼합단지", priceKrw: 1_200_000_000, floor: 11, canceled: true }),
+      ],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    const low = r.cancellations.find((c) => c.priceKrw === 1_200_000_000)!;
+    expect(low.wasTopInWindow).toBe(true); // 유효 1.0억×10보다 높음 — 해제 1.5억×10은 기준 아님
+  });
+});
+
+// ── [오늘 최다 공개 동네] ② (v2.3) ────────────────────────────────────────────
+
+describe("patchNote.computePatch — busiestRegions", () => {
+  const noLookup: ComplexMedianLookup = () => null;
+  /** 시군구에 fresh 유효 거래 n건 생성 (층으로 dealKey 구분). */
+  function freshIn(sigungu: string, n: number): PatchDealInput[] {
+    return Array.from({ length: n }, (_, i) =>
+      makeDeal({ apartmentName: `${sigungu}단지${i}`, sigunguName: sigungu, floor: i + 1 }),
+    );
+  }
+
+  it("fresh 유효 거래 시군구 집계 — count≥3만, 내림차순 상위 3", () => {
+    const r = computePatch({
+      deals: [
+        ...freshIn("화성시 동탄구", 18),
+        ...freshIn("강남구", 9),
+        ...freshIn("송파구", 7),
+        ...freshIn("노원구", 5), // 4위 — 상위 3 컷
+        ...freshIn("과천시", 2), // count<3 — 컷
+      ],
+      seenKeys: new Set(),
+      lookupMedian: noLookup,
+      todayISO: TODAY,
+    });
+    expect(r.busiestRegions).toEqual([
+      { sigungu: "화성시 동탄구", count: 18 },
+      { sigungu: "강남구", count: 9 },
+      { sigungu: "송파구", count: 7 },
+    ]);
+    void PATCH_BUSIEST_MIN_COUNT;
+    void PATCH_BUSIEST_TOP_N;
+  });
+
+  it("seen(이미 확인)·해제 거래는 집계에 안 들어간다 — fresh 유효만", () => {
+    const seenDeal = makeDeal({ apartmentName: "어제확인", sigunguName: "강남구", floor: 99 });
+    const r = computePatch({
+      deals: [
+        ...freshIn("강남구", 2), // fresh 2건 + seen 1건 → 3 미달
+        seenDeal,
+        makeDeal({ apartmentName: "해제건", sigunguName: "강남구", floor: 98, canceled: true }),
+      ],
+      seenKeys: new Set([dealKey(seenDeal)]),
+      lookupMedian: noLookup,
+      todayISO: TODAY,
+    });
+    expect(r.busiestRegions).toEqual([]);
+  });
+});
+
+// ── 주말 저볼륨 폴백 ④ — merged 합산 (v2.3) ───────────────────────────────────
+
+describe("patchNote — subtractRecentFromSeen (merged 폴백)", () => {
+  it("최근 항목(freshDeals)을 seen에서 빼면 코너(강세·해제)가 합산분으로 복원된다", () => {
+    const base = prevDeal("합산단지"); // 6/15 기준 거래(스코프 밖 — fresh 아님)
+    const d1 = makeDeal({
+      apartmentName: "합산단지",
+      dealDateISO: "2026-07-01",
+      priceKrw: 1_120_000_000,
+    });
+    const cxl = makeDeal({ apartmentName: "합산해제", priceKrw: 1_200_000_000, canceled: true });
+
+    // 어제(7/3) 실행 — d1·cxl이 fresh
+    const day1 = computePatch({
+      deals: [base, d1, cxl],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: "2026-07-03",
+    });
+    expect(day1.nerf).toHaveLength(1);
+    expect(day1.cancellations).toHaveLength(1);
+    expect(day1.freshDeals.map((d) => d.apartmentName).sort()).toEqual([
+      "합산단지",
+      "합산해제",
+    ]);
+
+    // 오늘(7/4) 실행 — 신규 없음 → 코너 전멸
+    const day2 = computePatch({
+      deals: [base, d1, cxl],
+      seenKeys: new Set(day1.nextSeenKeys),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    expect(day2.newDealCount).toBe(0);
+    expect(day2.nerf).toHaveLength(0);
+    expect(day2.cancellations).toHaveLength(0);
+
+    // merged — 어제 fresh를 seen에서 차감하고 재계산 → 합산 코너 복원
+    const merged = computePatch({
+      deals: [base, d1, cxl],
+      seenKeys: subtractRecentFromSeen(new Set(day1.nextSeenKeys), day1.freshDeals),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    expect(merged.newDealCount).toBe(1);
+    expect(merged.nerf.map((i) => i.apt)).toEqual(["합산단지"]);
+    expect(merged.nerf[0].dealDate).toBe("2026-07-01"); // 개별 아이템 날짜는 그대로 병기
+    expect(merged.cancellations.map((c) => c.apt)).toEqual(["합산해제"]);
+  });
+
+  it("차감은 원본 seen을 변경하지 않는다(순수)", () => {
+    const d = makeDeal({});
+    const seen = new Set([dealKey(d), "다른키"]);
+    const out = subtractRecentFromSeen(seen, [d]);
+    expect(out.has(dealKey(d))).toBe(false);
+    expect(seen.has(dealKey(d))).toBe(true);
+    expect(out.has("다른키")).toBe(true);
+  });
+});
+
+// ── 층·역거리 태그 ③ (v2.3) ───────────────────────────────────────────────────
+
+describe("patchNote.computePatch — floor·nearestSubwayM 전파", () => {
+  const subwayLookup: ComplexMedianLookup = (d) =>
+    d.sigunguName === "강남구"
+      ? { medianKrw: 1_000_000_000, sampleCount: 30, nearestSubwayM: 350 }
+      : null;
+
+  it("nerf·major·cancellations 아이템에 floor·nearestSubwayM이 실린다", () => {
+    const r = computePatch({
+      deals: [
+        prevDeal("역세권단지"), // 84㎡ 밴드 기준 거래(6/15 · 1.0억×10)
+        makeDeal({ apartmentName: "역세권단지", priceKrw: 1_120_000_000, floor: 12 }), // +12% → nerf
+        // 다른 밴드(120㎡ = over45) — 위 84㎡ 밴드의 직전 거래 비교를 오염시키지 않음.
+        makeDeal({ apartmentName: "역세권단지", area: 120, priceKrw: 1_600_000_000, floor: 20 }), // major
+        makeDeal({ apartmentName: "역세권단지", priceKrw: 1_150_000_000, floor: 5, canceled: true }),
+      ],
+      seenKeys: new Set(),
+      lookupMedian: subwayLookup,
+      todayISO: TODAY,
+    });
+    expect(r.nerf.map((i) => i.apt)).toEqual(["역세권단지"]);
+    expect(r.nerf[0].floor).toBe(12);
+    expect(r.nerf[0].nearestSubwayM).toBe(350);
+    const m = r.major.find((x) => x.priceKrw === 1_600_000_000)!;
+    expect(m.floor).toBe(20);
+    expect(m.nearestSubwayM).toBe(350);
+    expect(r.cancellations[0].floor).toBe(5);
+    expect(r.cancellations[0].nearestSubwayM).toBe(350);
+  });
+
+  it("lookup 실패(스냅샷 미등재)·층 미제공이면 null", () => {
+    const r = computePatch({
+      deals: [
+        makeDeal({
+          apartmentName: "미등재해제",
+          sigunguName: "이력없는구",
+          priceKrw: 1_200_000_000,
+          floor: null,
+          canceled: true,
+        }),
+      ],
+      seenKeys: new Set(),
+      lookupMedian: subwayLookup,
+      todayISO: TODAY,
+    });
+    expect(r.cancellations[0].floor).toBeNull();
+    expect(r.cancellations[0].nearestSubwayM).toBeNull();
+  });
+});
+
+// ── 헤드라인 묶음 ⑤ — 톱 1 + 서브 3 (v2.3) ────────────────────────────────────
+
+describe("patchNote.pickHeadlines", () => {
+  /** 직전 거래 팩트가 실린 너프 생성기 — 세그먼트 조합용. */
+  function nerfOf(over: Partial<PatchItem> & { apt: string }): PatchItem {
+    const priceKrw = over.priceKrw ?? 520_000_000;
+    const prevKrw = over.prevKrw ?? Math.round(priceKrw / 1.083);
+    return {
+      kind: "nerf",
+      sigungu: "안양시 만안구",
+      dong: "안양동",
+      areaM2: 59,
+      band: "p18_25",
+      medianKrw: prevKrw,
+      pct: 0.1,
+      dealDate: "2026-07-02",
+      prevDate: "2026-06-25",
+      windowMaxKrw: priceKrw * 2, // 기본: 창 내 최고가 아님 → "직전 거래 대비" rung
+      ...over,
+      priceKrw,
+      prevKrw,
+      pctVsPrev: (priceKrw - prevKrw) / prevKrw,
+    };
+  }
+
+  it("top은 pickHeadline과 동일한 사다리 결과", () => {
+    const nerfs = [
+      nerfOf({ apt: "서울일등", sigungu: "강남구", priceKrw: 2_000_000_000 }),
+      nerfOf({ apt: "경기이등", sigungu: "수원시 장안구", priceKrw: 700_000_000 }),
+    ];
+    const single = pickHeadline({ major: [], nerf: nerfs, newDealCount: 100, todayISO: TODAY });
+    const bundle = pickHeadlines({ major: [], nerf: nerfs, newDealCount: 100, todayISO: TODAY });
+    expect(bundle.top).toEqual(single);
+    expect(bundle.top.text).toContain("서울일등");
+  });
+
+  it("세그먼트 3종 — [서울]·[경기·인천]·[9억 이하] 각각 자기 사다리 1픽", () => {
+    const bundle = pickHeadlines({
+      major: [],
+      nerf: [
+        nerfOf({ apt: "서울톱", sigungu: "강남구", priceKrw: 2_000_000_000 }), // top이 됨
+        nerfOf({ apt: "서울차선", sigungu: "노원구", priceKrw: 1_000_000_000 }),
+        nerfOf({ apt: "경기대표", sigungu: "수원시 장안구", priceKrw: 700_000_000 }),
+      ],
+      newDealCount: 100,
+      todayISO: TODAY,
+    });
+    expect(bundle.top.text).toContain("서울톱");
+    const byLabel = Object.fromEntries(bundle.subs.map((s) => [s.label, s.text]));
+    // [서울] — 톱과 동일 아이템(서울톱) 회피 → 차순위 '서울차선'
+    expect(byLabel["서울"]).toContain("서울차선");
+    // [경기·인천] — 서울 외
+    expect(byLabel["경기·인천"]).toContain("경기대표");
+    // [9억 이하] — 7억 거래
+    expect(byLabel["9억 이하"]).toContain("경기대표");
+    expect(bundle.subs).toHaveLength(3);
+  });
+
+  it("톱과 동일 아이템 회피 — 세그먼트에 차순위가 없으면 그 서브는 생략", () => {
+    const bundle = pickHeadlines({
+      major: [],
+      nerf: [nerfOf({ apt: "유일단지", sigungu: "강남구", priceKrw: 2_000_000_000 })],
+      newDealCount: 100,
+      todayISO: TODAY,
+    });
+    expect(bundle.top.text).toContain("유일단지");
+    // 서울 세그 후보 = 톱과 동일 아이템뿐 → 생략. 경기·9억 이하는 후보 자체가 없음 → 생략.
+    expect(bundle.subs).toHaveLength(0);
+  });
+
+  it("팩트 후보 없는 세그먼트는 생략 — 서울만 있으면 서브는 서울 계열만", () => {
+    const bundle = pickHeadlines({
+      major: [],
+      nerf: [
+        nerfOf({ apt: "강남A", sigungu: "강남구", priceKrw: 2_000_000_000 }),
+        nerfOf({ apt: "강남B", sigungu: "서초구", priceKrw: 1_800_000_000 }),
+      ],
+      newDealCount: 100,
+      todayISO: TODAY,
+    });
+    const labels = bundle.subs.map((s) => s.label);
+    expect(labels).toEqual(["서울"]); // 경기·인천 후보 없음, 9억 이하 후보 없음
+    expect(bundle.subs[0].text).toContain("강남B");
+  });
+
+  it("서브의 kind도 사다리 그대로 — 9억 이하 세그에 major는 없으니(15억 하한) nerf rung만", () => {
+    const bundle = pickHeadlines({
+      major: [],
+      nerf: [
+        nerfOf({ apt: "서울톱", sigungu: "강남구", priceKrw: 2_000_000_000 }), // top 차지
+        nerfOf({ apt: "구억이하", sigungu: "수원시 장안구", priceKrw: 700_000_000 }),
+      ],
+      newDealCount: 100,
+      todayISO: TODAY,
+    });
+    const cheap = bundle.subs.find((s) => s.label === "9억 이하");
+    expect(cheap?.kind).toBe("nerf");
+    expect(cheap?.text).toContain("구억이하");
+  });
+
+  it("아무 후보도 없으면 top은 기존 폴백('판을 흔든 거래는 없었다'), subs는 []", () => {
+    const bundle = pickHeadlines({ major: [], nerf: [], newDealCount: 42, todayISO: TODAY });
+    expect(bundle.top.kind).toBe("none");
+    expect(bundle.top.text).toBe("오늘 공개 42건 — 판을 흔든 거래는 없었다");
+    expect(bundle.subs).toEqual([]);
   });
 });
