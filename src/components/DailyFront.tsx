@@ -12,10 +12,20 @@
 // 하위호환: 라이브 dailyPatch.json은 다음 크론 전까지 major/temp 필드가 없다(구 스키마)
 //   → 둘 다 optional, 없으면 해당 코너/줄을 조용히 접는다.
 
+import { Noto_Serif_KR } from "next/font/google";
 import dailyPatchRaw from "@/data/dailyPatch.json";
 import dailyPulseRaw from "@/data/dailyPulse.json";
 import { pickHeadline, type MajorItem, type PatchTemp } from "@/lib/patchNote";
 import { ThresholdGauge, DailyFrontPing } from "./ThresholdGauge";
+
+// 제호·헤드라인 명조 — next/font 셀프호스팅(빌드 시 내장)이라 기기에 폰트가 없어도
+// 모든 플랫폼에서 동일 렌더. 시스템 폴백(바탕 합성볼드)은 뭉개져서 폐기 (2026-07-06).
+const serif = Noto_Serif_KR({
+  weight: ["700", "900"],
+  subsets: ["latin"],
+  display: "swap",
+  fallback: ["Nanum Myeongjo", "Batang", "serif"],
+});
 
 interface PatchItem {
   kind: "nerf" | "buff";
@@ -67,8 +77,6 @@ const INK_SOFT = "#5d574c";
 const RULE = "#c9c3b4";
 const CORAL = "#e8571f";
 const GREEN = "#2e7d52";
-/** 제호·헤드라인용 명조 폴백 스택 — 웹폰트 추가 설치 없이 시스템 폴백. */
-const SERIF = { fontFamily: '"Nanum Myeongjo", Batang, "Noto Serif KR", serif' } as const;
 
 // ── 포맷터 ────────────────────────────────────────────────────────────────────
 /** "2026-06-28" → "6/28". 깨진 값은 그대로 반환. */
@@ -92,6 +100,12 @@ function eok(krw: number): string {
   const v = krw / 100_000_000;
   const s = v.toFixed(1);
   return `${s.endsWith(".0") ? s.slice(0, -2) : s}억`;
+}
+
+/** 전용면적 → "84.9" (소수 1자리, .0 은 생략 — 원본 84.898 같은 꼬리 방지). */
+function sqm(area: number): string {
+  const s = area.toFixed(1);
+  return s.endsWith(".0") ? s.slice(0, -2) : s;
 }
 
 /** 이탈률(소수) → "8.8" (절대값, 소수 1자리, .0 은 생략). */
@@ -131,7 +145,7 @@ function MajorRow({ item, divider }: { item: MajorItem; divider: boolean }) {
       <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
         {item.dong} {item.apt}{" "}
         <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
-          {item.areaM2}㎡
+          {sqm(item.areaM2)}㎡
         </span>
       </span>
       <span className="shrink-0 text-right text-[13px] font-bold" style={{ color: INK }}>
@@ -159,7 +173,7 @@ function DeviationRow({ item, divider }: { item: PatchItem; divider: boolean }) 
         </span>
         {item.sigungu} {item.apt}{" "}
         <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
-          {item.areaM2}㎡
+          {sqm(item.areaM2)}㎡
         </span>
       </span>
       <span className="shrink-0 text-right text-[13px] font-extrabold" style={{ color: tone }}>
@@ -240,15 +254,13 @@ export function DailyFront() {
           style={{ borderTop: `2.5px solid ${INK}`, borderBottom: `1px solid ${INK}` }}
         >
           <h2
-            className="m-0 text-[34px] font-extrabold leading-none tracking-[0.16em]"
-            style={SERIF}
+            className={`${serif.className} m-0 text-[34px] font-extrabold leading-none tracking-[0.16em]`}
           >
             비집고
             <span
               aria-hidden="true"
-              className="ml-2 inline-block h-[24px] w-[24px] text-center text-[13px] font-bold leading-[23px] tracking-normal align-[5px]"
+              className={`${serif.className} ml-2 inline-block h-[24px] w-[24px] text-center text-[13px] font-bold leading-[23px] tracking-normal align-[5px]`}
               style={{
-                ...SERIF,
                 border: `1.6px solid ${CORAL}`,
                 color: CORAL,
                 transform: "rotate(-4deg)",
@@ -269,8 +281,7 @@ export function DailyFront() {
           {isPrelaunch ? (
             <>
               <h3
-                className="m-0 text-[21px] font-extrabold leading-[1.38] break-keep"
-                style={SERIF}
+                className={`${serif.className} m-0 text-[21px] font-extrabold leading-[1.38] break-keep`}
               >
                 첫 지면은 곧 발행됩니다
               </h3>
@@ -297,8 +308,7 @@ export function DailyFront() {
           ) : (
             <>
               <h3
-                className="m-0 text-[21px] font-extrabold leading-[1.38] break-keep"
-                style={SERIF}
+                className={`${serif.className} m-0 text-[21px] font-extrabold leading-[1.38] break-keep`}
               >
                 {headline!.text}
               </h3>
