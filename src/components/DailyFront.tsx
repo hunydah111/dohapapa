@@ -1065,16 +1065,16 @@ export function DailyFront() {
                   {isMerged ? "합산 기간" : "오늘"} 공개된 거래 기준{mergedNote}.
                 </CornerNote>
                 {/* 동네판 진입점(v2.6) — 지면에서 유일한 1개. #local 해시 → HomeTabs 가
-                    동네판 탭으로 전환(구독 설정은 그쪽 지면에서). */}
-                <p className="m-0 mt-1.5 text-[11.5px]">
-                  <a
-                    href="#local"
-                    className="font-bold underline decoration-dotted underline-offset-2"
-                    style={{ color: INK }}
-                  >
-                    이 동네를 내 동네판으로 — 매일 아침 먼저 보기 →
-                  </a>
-                </p>
+                    동네판 탭으로 전환(구독 설정은 그쪽 지면에서).
+                    박스형 버튼(사장 지시) — 코랄은 판정 CTA 전용이라 먹 아웃라인 위계. */}
+                <a
+                  href="#local"
+                  className="mt-2.5 flex items-center justify-between border-2 px-3 py-2 text-[12.5px] font-bold"
+                  style={{ borderColor: INK, color: INK, background: PAPER }}
+                >
+                  <span>우리동네 설정하기</span>
+                  <span aria-hidden="true">→</span>
+                </a>
               </section>
             )}
 
