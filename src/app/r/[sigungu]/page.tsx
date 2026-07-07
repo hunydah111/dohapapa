@@ -120,7 +120,7 @@ export async function generateMetadata({
   const sigungu = resolveSigungu(raw);
   if (!sigungu) return { title: "비집고 — 내 통장으로 비집고 들어갈 집" };
   const title = `${sigungu} 아파트 오늘 공개 실거래·12개월 추이 — 비집고`;
-  const description = `${sigungu} 오늘 공개된 아파트 실거래(국토부 공개분, 매일 새벽 5:30 갱신)와 최근 12개월 거래량·관측 중위가. 해제·직거래 제외 — 시세 지수가 아닌 실거래 관측값.`;
+  const description = `${sigungu} 오늘 공개된 아파트 실거래(국토부 공개분, 매일 아침 갱신)와 최근 12개월 거래량·관측 중위가. 해제·직거래 제외 — 시세 지수가 아닌 실거래 관측값.`;
   const path = `/r/${encodeURIComponent(sigungu)}`;
   return {
     title,
@@ -534,7 +534,7 @@ export default async function Page({
           <CornerLabel>오늘 이 동네</CornerLabel>
           {!hasToday ? (
             <CornerNote>
-              오늘 공개분에 이 동네 거래 없음 · 다음 호 내일 새벽 5:30
+              오늘 공개분에 이 동네 거래 없음 · 다음 호 내일 아침
             </CornerNote>
           ) : (
             <>
@@ -701,7 +701,7 @@ export default async function Page({
           <span className="text-right">
             다음 호
             <br />
-            내일 새벽 5:30
+            내일 아침
           </span>
         </div>
       </article>

@@ -6,7 +6,8 @@ name: daily-pulse
 # 일요일엔 05:30 daily → 06:00 weekly 순서라 충돌 없음.
 on:
   schedule:
-    - cron: "30 20 * * *"
+    # 04:45 KST 목표 — GitHub cron은 상습 지연(오늘 84분 밀림)이라 앞당겨 "아침 발행" 약속을 지킨다.
+    - cron: "45 19 * * *"
   workflow_dispatch: {}
 
 permissions:

@@ -837,7 +837,7 @@ export function DailyFront() {
               </>
             )}
           </span>
-          <span>오늘의 판 · 매일 새벽 5:30 발행</span>
+          <span>오늘의 판 · 매일 아침 발행</span>
         </div>
 
         {/* ── 제호 — 이코노미스트식 코랄 플레이트(2026-07-06 사장 지시, 判 도장 폐지).
@@ -1194,7 +1194,7 @@ export function DailyFront() {
           <span className="text-right">
             다음 호
             <br />
-            내일 새벽 5:30
+            내일 아침
           </span>
         </div>
       </div>
