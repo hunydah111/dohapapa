@@ -20,7 +20,9 @@ import dailyPatchRaw from "@/data/dailyPatch.json";
 import dailyPulseRaw from "@/data/dailyPulse.json";
 import tempSeriesRaw from "@/data/tempSeries.json";
 import {
-  pickHeadline,
+  pickHeadlines,
+  passesStrongGate,
+  ymdShortText,
   type MajorItem,
   type PatchTemp,
   type RegionPulse,
@@ -32,6 +34,7 @@ import { REFERENCE_PHASES, phaseAvg, type TempSeriesFile } from "@/lib/tempSerie
 import { TILE_MAP, TILE_GRID_COLS, tileLevel } from "@/lib/tileMap";
 import { ThresholdGauge, DailyFrontPing } from "./ThresholdGauge";
 import { DealMiniMap } from "./DealMiniMap";
+import { ShareButton } from "./ShareButton";
 // 명조·조판 토큰 — 공유 모듈(단일 소스, 2026-07-06 홈 하부 톤 통일). 중복 선언 금지.
 // 제호는 시안 B(2026-07-06)부터 고딕 블랙(PLATE_FONT) — 명조는 헤드라인·등급명 전용.
 import {
@@ -64,6 +67,8 @@ interface PatchItem {
   prevKrw?: number | null;
   /** 직전 실거래 계약일 YYYY-MM-DD. */
   prevDate?: string | null;
+  /** 직전 실거래의 층 — "직전 '26.6.18 4.2억(7층)" 병기. 구 스키마엔 없음. */
+  prevFloor?: number | null;
   /** (price − prevKrw) / prevKrw — 화면 노출용 등락(팩트 기준). */
   pctVsPrev?: number | null;
   /** 폴링창 내 자기 제외 최고가 — 헤드라인 rung 판정용. */
@@ -107,7 +112,9 @@ interface DailyPatch {
   /** [오늘의 거래 지도] — fresh 유효 거래의 시군구별 전체 집계(0건 제외).
    *  구 스키마엔 없음 → 지도 코너 자체를 조용히 생략. */
   regionCounts?: Record<string, number>;
-  /** 헤드라인 묶음(톱 1 + 서브 ≤3) — 구 스키마엔 없음 → 기존 단일 헤드라인 로직 폴백. */
+  /** 헤드라인 묶음(톱 1 + 서브 ≤3) — 크론이 굽는 데이터 기록. ⚠️ v2.5부터 렌더엔 안 쓴다:
+   *  게이트 이전 크론이 구운 오보성 헤드라인이 살아남지 않도록, 렌더가 같은 순수 함수
+   *  (pickHeadlines)로 재계산한다(아래 본문 주석 참조). */
   headlines?: HeadlinesResult;
   latestDealDate: string | null;
 }
@@ -125,11 +132,16 @@ const pulse = dailyPulseRaw as unknown as DailyPulse;
 const tempSeries = tempSeriesRaw as unknown as TempSeriesFile;
 
 // ── 포맷터 ────────────────────────────────────────────────────────────────────
-/** "2026-06-28" → "6/28". 깨진 값은 그대로 반환. */
+/** "2026-06-28" → "6/28". 깨진 값은 그대로 반환. (당일·당월성 표기 전용 — 계약일 등) */
 function md(date: string): string {
   const m = /^\d{4}-(\d{2})-(\d{2})$/.exec(date);
   return m ? `${Number(m[1])}/${Number(m[2])}` : date;
 }
+
+/** "2026-06-18" → "'26.6.18" — 직전/종전 비교 표기 전용(연도 병기 의무, 올해여도 통일).
+ *  직전 거래가 작년일 수 있어 월일만 쓰면 오독된다(2026-07-07 사장 지시). 헤드라인
+ *  포맷(patchNote.ymdShortText)과 단일 규칙. */
+const ymdShort = ymdShortText;
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"] as const;
 
@@ -203,15 +215,26 @@ function RegionLink({
   );
 }
 
-/** 코너 라벨 — 먹색 바탕 흰 글씨 사각 칩. */
+/** 코너 라벨 — 먹색 바탕 흰 글씨 사각 칩 + 라인 우측 끝 미세 출처 워터마크.
+ *  어느 코너를 스크린샷해도 "bijigo.kr"가 담긴다(2026-07-07 사장 지시). 코너당 1개,
+ *  10px·INK_SOFT·소문자·링크 아님 — 덕지덕지 금지, 절제. */
 function CornerLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span
-      className="mb-2.5 inline-block px-2 py-[3px] text-[11px] font-bold tracking-[0.18em]"
-      style={{ background: INK, color: PAPER }}
-    >
-      {children}
-    </span>
+    <div className="mb-2.5 flex items-center justify-between gap-2">
+      <span
+        className="inline-block px-2 py-[3px] text-[11px] font-bold tracking-[0.18em]"
+        style={{ background: INK, color: PAPER }}
+      >
+        {children}
+      </span>
+      <span
+        aria-hidden="true"
+        className="shrink-0 text-[10px] tracking-[0.04em]"
+        style={{ color: INK_SOFT }}
+      >
+        bijigo.kr
+      </span>
+    </div>
   );
 }
 
@@ -333,7 +356,7 @@ function BusiestLine({
   );
 }
 
-// ── 온도 추이 차트(최대 5년) — 시안 B 축 차트, 서버 SVG · 라이브러리 0 ────────────────
+// ── 온도 추이 차트(최대 약 6년, '20.9~) — 시안 B 축 차트, 서버 SVG · 라이브러리 0 ────────────────
 /** 월별 above/matched 비율 곡선 + 50% 중립 점선 + 오늘 점(빨강). 계약월 기준.
  *  x축 눈금은 데이터 길이에 적응 — 3년 이상이면 연 단위('25), 미만이면 3분위 월('25.7).
  *  그릴 점이 2개 미만(표본 전무)이면 null — 게이지 바만 남는다. */
@@ -631,21 +654,25 @@ function MajorRow({
           )}
         </div>
       )}
-      {/* 기준점 서브라인 — 비교 대상 없으면(신축 첫거래 등) 생략. */}
+      {/* 기준점 서브라인 — 비교 대상 없으면(신축 첫거래 등) 생략.
+          종전 표기엔 연도 병기('25.11.3)·층 병기(값 있을 때만 — 구 스냅샷은 생략). */}
       {refMax !== null && item.refMaxPeriod && (
         <div className="mt-[3px] text-[11px] leading-[1.5]" style={{ color: INK_SOFT }}>
           {item.priceKrw > refMax ? (
             <>
               <b style={{ color: UP }}>— {item.refMaxPeriod} 내 최고가 갱신</b> (종전{" "}
               {eok(refMax)}
-              {item.windowMaxDate ? ` · ${md(item.windowMaxDate)}` : ""})
+              {item.windowMaxDate ? ` · ${ymdShort(item.windowMaxDate)}` : ""}
+              {item.windowMaxFloor != null ? ` · ${item.windowMaxFloor}층` : ""})
             </>
           ) : item.priceKrw === refMax ? (
             <b style={{ color: INK }}>— {item.refMaxPeriod} 내 최고가 동률</b>
           ) : (
             <>
               최근 {item.refMaxPeriod} 최고 {eok(refMax)}
-              {item.windowMaxDate ? ` (${md(item.windowMaxDate)})` : ""}
+              {item.windowMaxDate
+                ? ` (${ymdShort(item.windowMaxDate)}${item.windowMaxFloor != null ? `·${item.windowMaxFloor}층` : ""})`
+                : ""}
             </>
           )}
         </div>
@@ -678,9 +705,10 @@ function StrongRow({ item, divider }: { item: PatchItem; divider: boolean }) {
           +{pctAbs(item.pctVsPrev!)}%
         </span>
       </div>
-      {/* 팩트 라인 — 직전 거래 날짜 병기 의무(사장 지시). */}
+      {/* 팩트 라인 — 직전 거래 날짜(연도 병기 의무)·층(값 있을 때만) 병기. */}
       <div className="mt-[1px] pl-[18px] text-[11px] leading-[1.5]" style={{ color: INK_SOFT }}>
-        직전 {md(item.prevDate!)} {eok(item.prevKrw!)} → {eok(item.priceKrw)} · 계약{" "}
+        직전 {ymdShort(item.prevDate!)} {eok(item.prevKrw!)}
+        {item.prevFloor != null ? `(${item.prevFloor}층)` : ""} → {eok(item.priceKrw)} · 계약{" "}
         {md(item.dealDate)}
       </div>
     </div>
@@ -766,32 +794,41 @@ export function DailyFront() {
   const major = patch.major; // undefined = 구 스키마, [] = 오늘 없음
   const temp = patch.temp ?? null;
 
-  // 헤드라인 — 새 스키마는 빌드타임 headlines(톱+서브) 사용, 구 스키마는 기존 단일 로직 폴백.
-  const headline = isPrelaunch
+  // 헤드라인 — 렌더 시점에 지면 데이터(major·nerf)로 재계산한다(v2.5 오보 게이트).
+  // ⚠️ 빌드타임 확정값(patch.headlines)은 더 이상 렌더에 쓰지 않는다: 게이트 이전
+  // 크론이 구운 헤드라인(금강펜테리움 +40.5% 류)이 다음 크론까지 살아남는 걸 막기 위해,
+  // 같은 순수 함수(pickHeadlines — 게이트 내장)를 같은 JSON 입력으로 재실행한다.
+  // 입력이 동일하므로 정상 데이터에선 빌드타임 값과 결과가 같다 — 데이터 기록용으로는 유지.
+  const headlines = isPrelaunch
     ? null
-    : patch.headlines?.top ??
-      pickHeadline({
+    : pickHeadlines({
         major: major ?? [],
         nerf: patch.nerf,
         newDealCount: openCount,
         todayISO: patch.generatedAt!,
       });
-  const subHeadlines = patch.headlines?.subs ?? []; // 구 스키마 → [] = 섹션 생략
+  const headline = headlines?.top ?? null;
+  const subHeadlines = headlines?.subs ?? [];
 
   const majorVisible = major?.slice(0, MAJOR_VISIBLE) ?? [];
   const majorRest = major?.slice(MAJOR_VISIBLE) ?? [];
   // 환산 서브라인 — 1위(최고가) 거래 기준.
   const convYears = major && major[0] ? Math.round(major[0].priceKrw / SAVING_KRW_PER_YEAR) : 0;
 
-  // [강세 거래] = 상승(너프) 실명만, 그것도 직전 거래 팩트(prevKrw·60일 내)가 있는 것만
-  // — 표시할 팩트가 없으면 안 싣는다. 하락(버프) 실명 리스트는 게재 폐지(주민 비하 금지).
-  const strongs = patch.nerf.filter(
-    (i) => i.prevKrw != null && i.prevDate != null && (i.pctVsPrev ?? 0) > 0,
-  );
-  // 구 스키마(직전 거래 필드 없는 nerf만 있음) — 새 기준 데이터가 올 때까지 예고 문구.
-  const strongLegacy = strongs.length === 0 && patch.nerf.length > 0;
+  // [강세 거래] = 상승(너프) 실명만, 오보 게이트(passesStrongGate — 직전 거래 팩트
+  // + 이중 합의 +7% + 상한 +30%) 통과분만. 게이트 이전 크론이 구운 데이터도 렌더에서
+  // 걸러진다(금강펜테리움 사례). 하락(버프) 실명 리스트는 게재 폐지(주민 비하 금지).
+  const strongs = patch.nerf.filter((i) => i.prevDate != null && passesStrongGate(i));
+  // 구 스키마(직전 거래 필드 자체가 없는 nerf) — 새 기준 데이터가 올 때까지 예고 문구.
+  // 게이트 탈락(필드는 있는데 조건 미달)은 legacy 가 아니라 "게재할 강세 없음"으로 처리.
+  const strongLegacy =
+    strongs.length === 0 &&
+    patch.nerf.length > 0 &&
+    patch.nerf.every((i) => i.prevKrw === undefined);
   const weakRegions = patch.weakRegions ?? []; // 구 스키마(undefined)·표본 없음([]) → 코너 생략
   const cancellations = patch.cancellations ?? []; // 구 스키마·0건 → 코너 생략
+  // 요약 줄 "그중 M건은 해제 전까지 최고가로 공개돼 있었음"용 — wasTop 수.
+  const cancelWasTopCount = cancellations.filter((c) => c.wasTopInWindow).length;
   const busiestRegions = patch.busiestRegions ?? []; // 구 스키마·비면 줄 생략
 
   // [오늘의 거래 지도] — 구 스키마(regionCounts 없음)면 코너 자체 생략(graceful).
@@ -1142,24 +1179,51 @@ export function DailyFront() {
                 단정 금지("조작" 류 단어 금지 — 편집 헌장). 0건·구 스키마면 코너 생략. ── */}
             {cancellations.length > 0 && (
               <section className="px-0.5 pb-3.5 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
-                <CornerLabel>오늘의 해제</CornerLabel>
+                <CornerLabel>오늘 등록된 해제거래</CornerLabel>
+                {/* 코너 설명 — "해제"가 뭔지 모르는 독자를 위한 1줄(2026-07-07 사장 지시). */}
+                <p className="m-0 pb-1 text-[11px] leading-[1.55]" style={{ color: INK_SOFT }}>
+                  계약 신고 후 취소(해제) 신고된 거래 — 국토부 공개 행정 사실이며 해제
+                  사유는 공개되지 않습니다.
+                </p>
+                {/* 요약 줄 = 이 코너의 결론(항상 노출 — 무조작 완결, 헌장 6조).
+                    wasTop 요약은 0건이면 공허한 문장이라 생략. 정렬은 현행 wasTop 우선 유지. */}
                 <p className="m-0 text-[12.5px] leading-[1.6]" style={{ color: INK_SOFT }}>
                   {isMerged
-                    ? `주말 합산 ${md(patch.mergedFromDate!)}~${md(patch.mergedToDate!)} 해제 신고`
-                    : "오늘 해제 신고"}{" "}
+                    ? `주말 합산 ${md(patch.mergedFromDate!)}~${md(patch.mergedToDate!)} 등록 해제거래`
+                    : "오늘 등록된 해제거래"}{" "}
                   <b className="tabular-nums" style={{ color: INK }}>
                     {cancellations.length.toLocaleString("ko-KR")}건
                   </b>
+                  {cancelWasTopCount > 0 && (
+                    <>
+                      {" "}
+                      · 그중{" "}
+                      <b className="tabular-nums" style={{ color: INK }}>
+                        {cancelWasTopCount.toLocaleString("ko-KR")}건
+                      </b>
+                      은 해제 전까지 그 단지 최고가로 공개돼 있었음
+                    </>
+                  )}
                 </p>
-                <div>
-                  {cancellations.map((item, i) => (
-                    <CancellationRow
-                      key={`${item.apt}-${item.dealDate}-${item.priceKrw}-${i}`}
-                      item={item}
-                      divider={i > 0}
-                    />
-                  ))}
-                </div>
+                {/* 행 리스트 — 기본 접힘(수십 건 나열이 지면을 늘림 — 헌장 7조 강등).
+                    요약이 결론이므로 펼치지 않아도 완결. 네이티브 details — JS 0. */}
+                <details className="mt-1">
+                  <summary
+                    className="cursor-pointer list-none py-1 text-[11.5px] font-bold"
+                    style={{ color: INK_SOFT }}
+                  >
+                    전체 {cancellations.length.toLocaleString("ko-KR")}건 펼치기 ▾
+                  </summary>
+                  <div className="border-t border-dotted" style={{ borderColor: RULE }}>
+                    {cancellations.map((item, i) => (
+                      <CancellationRow
+                        key={`${item.apt}-${item.dealDate}-${item.priceKrw}-${i}`}
+                        item={item}
+                        divider={i > 0}
+                      />
+                    ))}
+                  </div>
+                </details>
                 <CornerNote>
                   계약 해제는 국토부 공개 행정 사실이며, 해제 사유는 알 수 없습니다 · 국토부는
                   신고가 신고 후 해제 행위를 별도 조사하고 있습니다{mergedNote}.
@@ -1181,9 +1245,9 @@ export function DailyFront() {
           그래서 이 동네들, 내 통장으론? — 30초 판정
         </a>
 
-        {/* ── 콜로폰 ── */}
+        {/* ── 콜로폰 + 공유(콜로폰 옆 소형 버튼 — 각진 지면 톤) ── */}
         <div
-          className="mt-3.5 flex justify-between pt-2.5 text-[10px] leading-[1.6]"
+          className="mt-3.5 flex items-start justify-between gap-3 pt-2.5 text-[10px] leading-[1.6]"
           style={{ borderTop: `2.5px solid ${INK}`, color: INK_SOFT }}
         >
           <span>
@@ -1191,10 +1255,13 @@ export function DailyFront() {
             <br />
             실거래 기록 판독이며 투자 권유가 아닙니다
           </span>
-          <span className="text-right">
-            다음 호
-            <br />
-            내일 아침
+          <span className="flex shrink-0 items-center gap-2.5">
+            <ShareButton title="비집고 — 오늘의 판" />
+            <span className="text-right">
+              다음 호
+              <br />
+              내일 아침
+            </span>
           </span>
         </div>
       </div>

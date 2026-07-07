@@ -3,6 +3,8 @@ import {
   estimateCurrentPrice,
   flagLowConfidence,
   pickRepresentative,
+  groupTxRows,
+  mediansFromGrouped,
 } from "@/lib/recommend/complexMedian";
 import type { AreaMedian, Tx } from "@/lib/recommend/complexMedian";
 
@@ -101,5 +103,54 @@ describe("estimateCurrentPrice — 얇은표본 보정 + 범위", () => {
     expect(est.price / 1e8).toBeLessThan(31);
     // 범위 상단은 분위로 트림되어 단일 36억에 끌려가지 않음.
     expect(est.high / 1e8).toBeLessThan(35);
+  });
+});
+
+describe("mediansFromGrouped — 1년 최고가 maxKrw·maxDate·maxFloor (v2.5)", () => {
+  const NOW = new Date("2026-07-07T00:00:00Z").getTime();
+  const row = (
+    priceEok: number,
+    dealDate: string,
+    floor: number | null,
+    area = 84.9,
+  ) => ({
+    complexId: "cx1",
+    area,
+    priceKrw: priceEok * 100_000_000,
+    dealDate: new Date(`${dealDate}T00:00:00Z`),
+    source: "MOLIT",
+    floor,
+  });
+
+  it("12개월 창의 최고가 거래의 계약일·층을 관측값 그대로 보존한다", () => {
+    const grouped = groupTxRows(
+      [
+        row(58, "2026-06-01", 5),
+        row(61, "2025-11-03", 21), // 1년 내 최고 — 6개월 창 밖이어도 잡힌다
+        row(59, "2026-05-02", 12),
+      ],
+      NOW,
+    );
+    const m = mediansFromGrouped(grouped).get("cx1")![0];
+    expect(m.maxKrw).toBe(6_100_000_000);
+    expect(m.maxDate).toBe("2025-11-03");
+    expect(m.maxFloor).toBe(21);
+  });
+
+  it("동가 최고가는 계약일 최신 채택(결정적), 층 미제공(null)도 그대로 보존", () => {
+    const grouped = groupTxRows(
+      [row(60, "2026-01-10", 3), row(60, "2026-04-20", null)],
+      NOW,
+    );
+    const m = mediansFromGrouped(grouped).get("cx1")![0];
+    expect(m.maxKrw).toBe(6_000_000_000);
+    expect(m.maxDate).toBe("2026-04-20");
+    expect(m.maxFloor).toBeNull();
+  });
+
+  it("구 호출부(Tx에 dateISO 없음) — estimateCurrentPrice 경로엔 영향 없다(호환)", () => {
+    // groupTxRows 를 거치지 않는 직접 Tx 입력(구 테스트들)이 깨지지 않음을 상수 참조로 문서화.
+    const est = estimateCurrentPrice([tx(30, 10), tx(31, 20)]);
+    expect(est.price).toBeGreaterThan(0);
   });
 });

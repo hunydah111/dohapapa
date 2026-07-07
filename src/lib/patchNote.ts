@@ -9,7 +9,12 @@
 // 노출하면 위험하다("니가 제일 모르는 게 시세"). 그래서
 //   - 중위가(pct)   = 내부 선별 필터 전용 (±7% 문턱·노이즈컷) — 화면 노출 금지
 //   - 직전 실거래(pctVsPrev)·1년/두 달 최고가 = 화면에 노출하는 비교 팩트
-// 비교는 같은 단지×밴드의 최근 60일 내 직전 실거래 기준, 표기엔 항상 날짜 병기.
+// 비교는 같은 단지 ±3㎡(중위가 lookup 과 동일 허용오차)의 최근 60일 내 직전 실거래 기준,
+// 표기엔 항상 날짜(연도 포함 '26.6.18 포맷) 병기.
+//
+// ⚠️ 오보 게이트(2026-07-07 사장 적발 — 금강펜테리움 사례): 직전 거래가 이상치면
+// pctVsPrev 하나만으로 "40.5% 높게 팔렸다"는 왜곡 헤드라인이 나간다. [강세 거래] 게재와
+// 헤드라인 신고가성 rung 은 passesStrongGate(이중 합의 + 상한 컷)를 통과해야 한다.
 //
 // 정직성 규약:
 // - MOLIT는 '신고일'을 주지 않는다. "오늘 공개"는 "오늘 폴링에서 처음 확인"의 뜻이며,
@@ -47,6 +52,11 @@ export interface ComplexMedianCell {
   /** 최근 1년 실거래 최고가(원) — 주간 스냅샷(complexSnapshot)의 maxKrw.
    *  구 스냅샷(다음 주간 갱신 전)엔 없으므로 optional — 없으면 최고가 갱신 판정 생략. */
   maxKrw?: number | null;
+  /** 최근 1년 최고가의 계약일 YYYY-MM-DD — "1년 내 최고가 갱신 (종전 … · 날짜 · 층)" 표기용.
+   *  스냅샷이 maxDate 를 굽기 전(구 스냅샷)엔 없음 — 없으면 날짜 병기 생략. */
+  maxDate?: string | null;
+  /** 최근 1년 최고가 거래의 층 — 위와 동일하게 optional(구 스냅샷 호환). */
+  maxFloor?: number | null;
   /** 단지 좌표(스냅샷 latitude/longitude) — 행 미니맵·카카오맵 링크용. 미등재면 null. */
   lat?: number | null;
   lng?: number | null;
@@ -76,13 +86,17 @@ export interface PatchItem {
   /** 그 단지×평형의 최근 1년 실거래 최고가(원) — 헤드라인 "1년 최고가 갱신" 판정용.
    *  스냅샷이 아직 maxKrw 를 안 주면 null/undefined (구 스키마 호환). */
   maxKrw?: number | null;
-  /** 같은 단지×밴드의 직전 실거래가(원) — 60일 내(PATCH_PREV_MAX_AGE_DAYS). 없으면 null. */
+  /** 같은 단지 ±3㎡의 직전 실거래가(원) — 60일 내(PATCH_PREV_MAX_AGE_DAYS). 없으면 null.
+   *  ⚠️ v2.5: 매칭을 밴드 전체 → 같은 단지 ±3㎡(중위가 lookup 과 동일 허용오차)로 좁힘 —
+   *  같은 밴드 안에서 평형이 섞이면(49㎡ vs 59㎡ 등) '직전 거래 대비'가 왜곡된다. */
   prevKrw?: number | null;
   /** 직전 실거래 계약일 YYYY-MM-DD — 비교 표기엔 항상 날짜 병기(사장 지시). */
   prevDate?: string | null;
+  /** 직전 실거래의 층 — "직전 '26.6.18 4.2억(7층)" 병기용. 미제공이면 null. */
+  prevFloor?: number | null;
   /** (price − prevKrw) / prevKrw — 화면 노출용 등락(실거래 팩트 기준). prev 없으면 null. */
   pctVsPrev?: number | null;
-  /** 폴링창(window) 내 같은 단지×밴드 자기 제외 최고가 — "두 달 내 최고가" rung 판정용. */
+  /** 폴링창(window) 내 같은 단지 ±3㎡ 자기 제외 최고가 — "두 달 내 최고가" rung 판정용. */
   windowMaxKrw?: number | null;
   /** 단지 좌표 — 행 미니맵·카카오맵 링크용. 스냅샷 미등재(신축 등)면 null. */
   lat?: number | null;
@@ -117,18 +131,23 @@ export interface MajorItem {
   buildYear: number | null;
   /** 단지 자기 중위가 lookup 성공 시 그 표본수, 실패 시 null("거래 이력 없는 단지" 신호). */
   sampleCount: number | null;
-  /** 같은 단지×밴드의 직전 실거래가(원) — 60일 내. 없으면 null. */
+  /** 같은 단지 ±3㎡의 직전 실거래가(원) — 60일 내. 없으면 null. */
   prevKrw?: number | null;
   /** 직전 실거래 계약일 YYYY-MM-DD. */
   prevDate?: string | null;
+  /** 직전 실거래의 층 — UI 병기용. 미제공이면 null. */
+  prevFloor?: number | null;
   /** (price − prevKrw) / prevKrw — 실거래 팩트 기준 등락. prev 없으면 null. */
   pctVsPrev?: number | null;
   /** 기준점 최고가(원) — 행 서브라인 "최근 {기간} 최고" 비교용. 스냅샷 1년 최고가
    *  (maxKrw)가 있으면 그것을 우선(refMaxPeriod="1년"), 없으면 폴링창 내 자기 제외
    *  최고가(refMaxPeriod="2개월"). 비교 대상 자체가 없으면 null → 서브라인 생략. */
   windowMaxKrw?: number | null;
-  /** 기준점 최고가의 계약일 — "2개월"(폴링창)일 때만. 스냅샷 "1년"은 날짜 미보관 → null. */
+  /** 기준점 최고가의 계약일 — "2개월"(폴링창)은 항상, "1년"은 새 스냅샷(maxDate 보유)부터.
+   *  구 스냅샷 "1년" 기준점은 날짜 미보관 → null(표기 생략). */
   windowMaxDate?: string | null;
+  /** 기준점 최고가 거래의 층 — 값 있을 때만 병기("6.4억 ('26.5.2·12층)"). 없으면 null. */
+  windowMaxFloor?: number | null;
   /** 기준점 기간 라벨 — UI 가 "1년/2개월"을 알 수 있게. */
   refMaxPeriod?: "1년" | "2개월" | null;
   /** 단지 좌표 — 행 미니맵·카카오맵 링크용. 스냅샷 미등재(신축 첫거래 등)면 null. */
@@ -233,12 +252,44 @@ export const PATCH_TEMP_NEUTRAL_PCT = 0.01;
  *  현 폴링창(2개월)에선 사실상 자동이지만, 추후 스냅샷 lastKrw 등 더 긴 이력 소스를
  *  붙여도 이 규칙이 코드 레벨에서 강제되도록 명문화한다. */
 export const PATCH_PREV_MAX_AGE_DAYS = 60;
+/** 직전 거래·기준점 매칭 전용면적 허용오차(㎡) — 중위가 lookup(±3㎡)과 동일 기준.
+ *  밴드 전체 매칭은 평형 혼합 왜곡(49㎡ 거래가 59㎡의 '직전'이 되는 등)을 만든다. */
+export const PATCH_PREV_AREA_TOLERANCE_M2 = 3;
 /** 단지×평형 중위가 표본이 이보다 적으면 대조 자체를 신뢰하지 않음(단지 단위라 작게). */
 export const PATCH_MIN_SAMPLE = 3;
 /** 초저가(원) 컷 — 지분·특수 거래 방어. */
 export const PATCH_MIN_PRICE_KRW = 50_000_000;
 /** 너프/버프 각각 상위 N건. */
 export const PATCH_TOP_N = 5;
+
+// ── 오보 게이트(2026-07-07 사장 적발) — [강세 거래] 게재·헤드라인 신고가성 rung 공통 ──
+// 실사례: 남양주 금강펜테리움 5.9억 — pctVsPrev +40.5%로 헤드라인에 실렸지만,
+// 자기 중위가 대비는 +17.8%뿐이고 직전 거래(4.2억)가 자기 중위가보다 −16% 낮았던
+// "이상치"였다. 직전 거래 하나만 믿으면 이상치 대비 등락이 뉴스로 확성된다.
+// → 두 신호 합의 원칙: 직전 거래 대비(pctVsPrev)와 자기 중위가 대비(pct)가 "둘 다"
+//   +7% 이상일 때만 신고가성으로 게재하고, pctVsPrev +30% 초과는 직전 거래 이상치
+//   의심으로 컷한다. 셋 중 하나라도 어기면 게재 제외.
+/** 강세 게재 하한 — 직전 거래 대비 최소 상승률. */
+export const PATCH_STRONG_MIN_PCT_VS_PREV = 0.07;
+/** 강세 게재 상한 — 직전 거래 대비 이 비율 초과 급등은 직전 거래 이상치 의심 컷. */
+export const PATCH_STRONG_MAX_PCT_VS_PREV = 0.3;
+
+/** 오보 게이트 판정 — computePatch(게재 목록)와 UI(구 데이터 렌더 필터)가 공유한다.
+ *  구 스키마(prev 필드 없음) 아이템은 자동 탈락 — 표시할 팩트가 없다. */
+export function passesStrongGate(i: {
+  /** 자기 중위가 대비 이탈률(내부 선별 값). */
+  pct: number;
+  prevKrw?: number | null;
+  pctVsPrev?: number | null;
+}): boolean {
+  return (
+    i.prevKrw != null &&
+    i.pctVsPrev != null &&
+    i.pctVsPrev >= PATCH_STRONG_MIN_PCT_VS_PREV &&
+    i.pctVsPrev <= PATCH_STRONG_MAX_PCT_VS_PREV &&
+    i.pct >= PATCH_MIN_PCT
+  );
+}
 /** [약세/강세 동네] 시군구 집계 — 대조 성공 거래가 이보다 적은 동네는 안 실음. */
 export const PATCH_REGION_MIN_COUNT = 5;
 /** [약세/강세 동네] 평균 이탈률 문턱(절대값) — 이보다 완만하면 중립으로 보고 생략. */
@@ -275,6 +326,28 @@ export function seenKeyOf(d: PatchDealInput): string {
   return d.canceled ? `${dealKey(d)}|해제` : dealKey(d);
 }
 
+/** 2단(+검증) 발행 프로토콜의 모노토닉 덮어쓰기 가드 — 순수 함수(크론·테스트 공유).
+ *  크론이 하루 3회(05:20 본판 · 05:50/06:12 검증판) 돌 때, 검증판이 본판보다 얇으면
+ *  (오늘 fresh 유효 거래 수 ≤ 기존 newDealCount) 기존 발행분을 덮어쓰지 않는다.
+ *  본판이 GitHub cron 지연·국토부 배치 부분 착지로 얇게 나갔을 때만 더 풍부한 판으로
+ *  교체된다 — 지면은 하루 안에서 단조증가(monotonic)만 허용. 날짜가 다르면 정상 진행. */
+export function shouldSkipPatchOverwrite(opts: {
+  /** 기존 dailyPatch.json 의 generatedAt — placeholder(발행 전)면 null. */
+  prevGeneratedAt: string | null;
+  /** 기존 dailyPatch.json 의 newDealCount. */
+  prevNewDealCount: number;
+  /** 이번 실행 기준일 YYYY-MM-DD. */
+  todayISO: string;
+  /** 이번 실행의 fresh 유효 거래 수(일간 diff — merged 재계산 전 기준). */
+  freshCount: number;
+}): boolean {
+  return (
+    opts.prevGeneratedAt !== null &&
+    opts.prevGeneratedAt === opts.todayISO &&
+    opts.freshCount <= opts.prevNewDealCount
+  );
+}
+
 /** 주말 합산(merged) 모드용 seen 차감 — 최근 며칠(dailyRecent) 항목을 seen에서 빼서
  *  그 거래들이 다시 fresh로 잡히게 한다. 순수 함수 — 크론과 테스트가 같이 쓴다. */
 export function subtractRecentFromSeen(
@@ -308,35 +381,47 @@ export function computePatch(opts: {
   // 0) 직전 거래 타임라인 — canceled 만 제외한 window "전체"(스코프 이전 거래 포함).
   //    화면에 노출하는 비교 기준은 우리 추정(중위가 "시세")이 아니라 실거래 팩트(직전 거래)
   //    — "니가 제일 모르는 게 시세" (2026-07-06 사장 지시).
-  type TimelineDeal = { selfKey: string; dateISO: string; priceKrw: number };
-  const bandKeyOf = (d: PatchDealInput): string | null => {
-    const band = bandOfArea(d.area);
-    return band ? `${d.sigunguName}|${d.apartmentName}|${band}` : null;
+  //    ⚠️ v2.5 오보 게이트: 매칭 단위를 밴드 전체 → 같은 단지 ±3㎡(중위가 lookup 과 동일
+  //    허용오차)로 좁힘. 같은 밴드 안 평형 혼합(49㎡ 거래가 59㎡의 '직전'이 되는 등)이
+  //    pctVsPrev 를 왜곡했다 — 금강펜테리움 사례(직전 4.2억이 자기 중위가 −16% 이상치).
+  type TimelineDeal = {
+    selfKey: string;
+    dateISO: string;
+    priceKrw: number;
+    area: number;
+    floor: number | null;
   };
+  const cxKeyOf = (d: PatchDealInput): string =>
+    `${d.sigunguName}|${d.apartmentName}`;
+  const sameAreaType = (a: number, b: number): boolean =>
+    Math.abs(a - b) <= PATCH_PREV_AREA_TOLERANCE_M2;
   const timeline = new Map<string, TimelineDeal[]>();
   for (const d of deals) {
     if (d.canceled) continue;
-    const k = bandKeyOf(d);
-    if (!k) continue;
-    const list = timeline.get(k) ?? [];
-    list.push({ selfKey: dealKey(d), dateISO: d.dealDateISO, priceKrw: d.priceKrw });
-    timeline.set(k, list);
+    const list = timeline.get(cxKeyOf(d)) ?? [];
+    list.push({
+      selfKey: dealKey(d),
+      dateISO: d.dealDateISO,
+      priceKrw: d.priceKrw,
+      area: d.area,
+      floor: d.floor ?? null,
+    });
+    timeline.set(cxKeyOf(d), list);
   }
-  /** 직전 거래 — 같은 단지×밴드, 계약일이 같거나 이른 것 중 최신. 자기 자신(동일 dealKey)
+  /** 직전 거래 — 같은 단지 ±3㎡, 계약일이 같거나 이른 것 중 최신. 자기 자신(동일 dealKey)
    *  제외, 같은 날짜 타거래는 층이 달라도 허용. 같은 날짜가 여럿이면 가격 최고를 채택
    *  (결정적이면서 pctVsPrev 과대 방지 쪽으로 보수적). 계약일 기준
    *  PATCH_PREV_MAX_AGE_DAYS(60일)보다 묵은 직전 거래는 비교 무의미 — null. */
   const findPrev = (
     d: PatchDealInput,
-  ): { prevKrw: number; prevDate: string } | null => {
-    const k = bandKeyOf(d);
-    if (!k) return null;
-    const list = timeline.get(k);
+  ): { prevKrw: number; prevDate: string; prevFloor: number | null } | null => {
+    const list = timeline.get(cxKeyOf(d));
     if (!list) return null;
     const self = dealKey(d);
     let best: TimelineDeal | null = null;
     for (const c of list) {
       if (c.selfKey === self) continue;
+      if (!sameAreaType(c.area, d.area)) continue;
       if (c.dateISO > d.dealDateISO) continue;
       if (
         !best ||
@@ -348,21 +433,20 @@ export function computePatch(opts: {
     }
     if (!best) return null;
     if (daysBetweenISO(best.dateISO, d.dealDateISO) > PATCH_PREV_MAX_AGE_DAYS) return null;
-    return { prevKrw: best.priceKrw, prevDate: best.dateISO };
+    return { prevKrw: best.priceKrw, prevDate: best.dateISO, prevFloor: best.floor };
   };
-  /** window 내 같은 단지×밴드의 자기 제외 최고가(+계약일) — "두 달 내 최고가" rung
+  /** window 내 같은 단지 ±3㎡의 자기 제외 최고가(+계약일·층) — "두 달 내 최고가" rung
    *  판정과 [주요 거래] 기준점 서브라인용. 동가면 계약일 최신 채택. */
   const findWindowMax = (
     d: PatchDealInput,
-  ): { priceKrw: number; dateISO: string } | null => {
-    const k = bandKeyOf(d);
-    if (!k) return null;
-    const list = timeline.get(k);
+  ): { priceKrw: number; dateISO: string; floor: number | null } | null => {
+    const list = timeline.get(cxKeyOf(d));
     if (!list) return null;
     const self = dealKey(d);
     let mx: TimelineDeal | null = null;
     for (const c of list) {
       if (c.selfKey === self) continue;
+      if (!sameAreaType(c.area, d.area)) continue;
       if (
         !mx ||
         c.priceKrw > mx.priceKrw ||
@@ -371,7 +455,7 @@ export function computePatch(opts: {
         mx = c;
       }
     }
-    return mx ? { priceKrw: mx.priceKrw, dateISO: mx.dateISO } : null;
+    return mx ? { priceKrw: mx.priceKrw, dateISO: mx.dateISO, floor: mx.floor } : null;
   };
 
   // 1) 스코프: 계약일이 오늘로부터 scopeDays 이내 (미래 날짜·해제 거래는 제외)
@@ -390,8 +474,9 @@ export function computePatch(opts: {
   const fresh = scope.filter((d) => !seenKeys.has(dealKey(d)));
 
   // 2-a) [오늘의 해제] — canceled이면서 seen에 없던 것(해제 키 기준). 초저가(지분성)만 컷.
-  //      wasTopInWindow = 같은 단지×밴드 window 내 "다른 유효 거래들"(timeline, canceled 제외)
+  //      wasTopInWindow = 같은 단지 ±3㎡ window 내 "다른 유효 거래들"(timeline, canceled 제외)
   //      전부보다 강하게 높았는지 — 비교 대상이 없으면 false(공허한 최고가 주장 금지).
+  //      직전 거래 매칭과 동일 기준(±3㎡) — 평형 혼합이면 '최고가였다' 주장도 왜곡된다.
   const freshCancellations = deals.filter(
     (d) =>
       d.canceled === true &&
@@ -399,8 +484,9 @@ export function computePatch(opts: {
       d.priceKrw >= PATCH_MIN_PRICE_KRW,
   );
   const cancellations: CancellationItem[] = freshCancellations.map((d) => {
-    const k = bandKeyOf(d);
-    const others = k ? timeline.get(k) ?? [] : [];
+    const others = (timeline.get(cxKeyOf(d)) ?? []).filter((c) =>
+      sameAreaType(c.area, d.area),
+    );
     const wasTopInWindow =
       others.length > 0 && others.every((c) => d.priceKrw > c.priceKrw);
     const cell = lookupMedian(d);
@@ -475,13 +561,19 @@ export function computePatch(opts: {
     // ── [주요 거래] — 15억 이상 중개거래 전부 (band·표본과 무관하게 게재) ──
     if (d.priceKrw >= PATCH_MAJOR_MIN_PRICE_KRW) {
       // 기준점(기간 내 최고 거래가) — 스냅샷 1년 최고가 우선, 없으면 폴링창(2개월) 최고.
+      // "1년" 날짜·층은 새 스냅샷(maxDate·maxFloor 동봉)부터 — 구 스냅샷은 null(표기 생략).
       const snapMax = cell?.maxKrw ?? null;
       const wm = findWindowMax(d);
       const refMax =
         snapMax !== null && snapMax > 0
-          ? { krw: snapMax, date: null as string | null, period: "1년" as const }
+          ? {
+              krw: snapMax,
+              date: cell?.maxDate ?? null,
+              floor: cell?.maxFloor ?? null,
+              period: "1년" as const,
+            }
           : wm
-            ? { krw: wm.priceKrw, date: wm.dateISO, period: "2개월" as const }
+            ? { krw: wm.priceKrw, date: wm.dateISO, floor: wm.floor, period: "2개월" as const }
             : null;
       major.push({
         sigungu: d.sigunguName,
@@ -495,9 +587,11 @@ export function computePatch(opts: {
         sampleCount: cell && cell.medianKrw > 0 ? cell.sampleCount : null,
         prevKrw: prev?.prevKrw ?? null,
         prevDate: prev?.prevDate ?? null,
+        prevFloor: prev?.prevFloor ?? null,
         pctVsPrev,
         windowMaxKrw: refMax?.krw ?? null,
         windowMaxDate: refMax?.date ?? null,
+        windowMaxFloor: refMax?.floor ?? null,
         refMaxPeriod: refMax?.period ?? null,
         lat: cell?.lat ?? null,
         lng: cell?.lng ?? null,
@@ -542,6 +636,7 @@ export function computePatch(opts: {
       // 직전 실거래 팩트 — 화면·헤드라인 노출용.
       prevKrw: prev?.prevKrw ?? null,
       prevDate: prev?.prevDate ?? null,
+      prevFloor: prev?.prevFloor ?? null,
       pctVsPrev,
       windowMaxKrw: findWindowMax(d)?.priceKrw ?? null,
       lat: cell?.lat ?? null,
@@ -581,10 +676,11 @@ export function computePatch(opts: {
   }
   const deduped = Array.from(byComplex.values());
 
-  // [강세 거래] 게재 요건 — 직전 거래 팩트가 있고(60일 내) 그보다 높게 팔린 것만.
-  // 표시할 팩트가 없으면 안 싣는다. 정렬은 pctVsPrev 내림차순.
+  // [강세 거래] 게재 요건 — 오보 게이트(passesStrongGate): 직전 거래 팩트(60일 내)가
+  // 있고, pctVsPrev·pct 둘 다 +7% 이상(두 신호 합의)이며, pctVsPrev ≤ +30%(직전 거래
+  // 이상치 컷)인 것만. 셋 중 하나라도 어기면 미게재 — 금강펜테리움 사례 참조(상수 주석).
   const nerfPublished = deduped
-    .filter((i) => i.kind === "nerf" && i.prevKrw != null && (i.pctVsPrev ?? 0) > 0)
+    .filter((i) => i.kind === "nerf" && passesStrongGate(i))
     .sort((a, b) => (b.pctVsPrev ?? 0) - (a.pctVsPrev ?? 0))
     .slice(0, PATCH_TOP_N);
   // buff 는 데이터 보존용(렌더 안 함) — 기존 |pct| 정렬 유지.
@@ -632,10 +728,12 @@ function eokText(krw: number): string {
   return s.endsWith(".0") ? s.slice(0, -2) : s;
 }
 
-/** "2026-06-25" → "6/25" — 비교 표기 날짜 병기용(사장 지시: 직전 거래엔 항상 날짜). */
-function mdText(dateISO: string): string {
-  const m = /^\d{4}-(\d{2})-(\d{2})$/.exec(dateISO);
-  return m ? `${Number(m[1])}/${Number(m[2])}` : dateISO;
+/** "2026-06-25" → "'26.6.25" — 직전/종전 비교 표기용(사장 지시: 항상 날짜 병기).
+ *  v2.5: 연도 병기 의무 — 직전 거래가 작년일 수 있어 월일만 쓰면 오독("6/18이 올해?").
+ *  올해여도 같은 포맷으로 통일한다. UI(DailyFront·동네면)의 ymdShort 와 동일 규칙. */
+export function ymdShortText(dateISO: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateISO);
+  return m ? `'${m[1].slice(2)}.${Number(m[2])}.${Number(m[3])}` : dateISO;
 }
 
 /** 등락률(소수) → "8.3" (소수 1자리, .0 생략). */
@@ -697,7 +795,10 @@ function headlineCandidates(opts: {
 
   // 2) 신고가성 상승 — 실거래 팩트 사다리. 후보는 입력 순서(computePatch 가
   //    pctVsPrev 내림차순으로 게재 목록을 만든다)대로 훑고, 팩트가 잡히는 후보만 싣는다.
+  //    오보 게이트 — 게재 목록과 동일한 이중 합의(+7% 합의·+30% 컷)를 헤드라인에도 강제.
+  //    구 데이터(게이트 이전 산출 nerf)로 렌더 시점에 재계산해도 오보 후보가 못 올라온다.
   for (const cand of nerf) {
+    if (!passesStrongGate(cand)) continue;
     const eok = eokText(cand.priceKrw);
     const itemKey = headlineItemKey(cand);
     // 2-① 최근 1년 최고가 갱신 — 주간 스냅샷의 관측 실거래 최고가(maxKrw) 대비.
@@ -716,7 +817,7 @@ function headlineCandidates(opts: {
     const prevKrw = cand.prevKrw ?? null;
     const pctVsPrev = cand.pctVsPrev ?? null;
     if (prevKrw !== null && cand.prevDate && pctVsPrev !== null && pctVsPrev > 0) {
-      const prevMd = mdText(cand.prevDate);
+      const prevMd = ymdShortText(cand.prevDate);
       // 2-② 두 달(폴링창) 내 최고가 — window 내 자기 제외 최고가보다도 높음.
       const windowMaxKrw = cand.windowMaxKrw ?? null;
       if (windowMaxKrw !== null && cand.priceKrw > windowMaxKrw) {
@@ -803,7 +904,8 @@ export const HEADLINE_SUB_CHEAP_MAX_KRW = 900_000_000;
 /**
  * 톱 1 + 서브 3 — 톱은 기존 전체 사다리(pickHeadline과 동일), 서브는 세그먼트별
  * 사다리: [서울](LAWD 코드 11*) · [경기·인천](그 외) · [9억 이하](priceKrw < 9억).
- * 세그먼트 1픽이 톱과 동일 아이템이면 차순위 후보, 팩트 후보가 없으면 그 서브 생략.
+ * 세그먼트 1픽이 톱 "또는 앞선 서브"와 동일 아이템이면 차순위 후보, 없으면 그 서브 생략
+ * (v2.5 — [경기·인천]과 [9억 이하]에 같은 거래가 중복 게재되던 문제 수정).
  */
 export function pickHeadlines(opts: {
   major: MajorItem[];
@@ -825,15 +927,20 @@ export function pickHeadlines(opts: {
   ];
 
   const subs: SubHeadline[] = [];
+  // 이미 실린 아이템(톱 + 앞선 서브) — 같은 거래가 두 세그먼트에 중복 게재되지 않게.
+  const usedKeys = new Set<string>(topCand ? [topCand.itemKey] : []);
   for (const seg of segments) {
     const segCands = headlineCandidates({
       major: major.filter(seg.pred),
       nerf: nerf.filter(seg.pred),
       todayISO,
     });
-    // 톱과 동일 아이템이면 차순위 — 팩트 후보가 바닥나면 이 서브는 생략.
-    const pick = segCands.find((c) => !topCand || c.itemKey !== topCand.itemKey);
-    if (pick) subs.push({ label: seg.label, kind: pick.kind, text: pick.text });
+    // 톱·앞선 서브와 동일 아이템이면 차순위 — 팩트 후보가 바닥나면 이 서브는 생략.
+    const pick = segCands.find((c) => !usedKeys.has(c.itemKey));
+    if (pick) {
+      usedKeys.add(pick.itemKey);
+      subs.push({ label: seg.label, kind: pick.kind, text: pick.text });
+    }
   }
 
   return { top, subs };

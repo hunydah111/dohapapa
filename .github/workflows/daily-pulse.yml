@@ -1,17 +1,30 @@
 name: daily-pulse
 
-# 하이브리드의 '가벼운' 쪽 — 매일 05:30 KST(20:30 UTC). 최근 거래월 실거래만 다시 폴링 +
-# R-ONE 주간 지수. DB·snapshot 안 건드림(API만, 가벼움) → 매일 커밋·배포로 "매일 갱신" 실체.
-# 무거운 전체 시세 재계산은 weekly-data-refresh(일요일)가 담당.
-# 일요일엔 05:30 daily → 06:00 weekly 순서라 충돌 없음.
+# 하이브리드의 '가벼운' 쪽 — 매일 새벽 2단(+검증) 발행. 최근 거래월 실거래만 다시 폴링 +
+# R-ONE 주간 지수(본판 회차만). DB·snapshot 안 건드림(API만, 가벼움) → 커밋·배포로 "매일 갱신" 실체.
+# 무거운 전체 시세 재계산은 weekly-data-refresh(일요일 06:00)가 담당 — 06:12 검증판은
+# 모노토닉 가드로 대부분 무변경 종료라 순서 충돌 부담 없음(concurrency 그룹도 분리).
+#
+# ── 2단 발행 프로토콜 (2026-07-07 사장 확정) ──
+# 국토부 일 배치가 새벽 5시경 착지(자체 관측 — 낮 재실행 시 신규 ≈0, 새벽 첫 실행에
+# 하루치가 몰림) + GitHub cron 상습 지연(수십 분) 대응:
+#   05:20 KST 본판 · 05:50/06:12 KST 검증판. 검증판은 scripts/daily-pulse.ts 의
+#   모노토닉 덮어쓰기 가드(shouldSkipPatchOverwrite)에 걸리면 아무 파일도 안 써서
+#   커밋 스텝이 "변경 없음"으로 자연 스킵 — 본판이 지연·부분 착지로 얇게 나갔을 때만
+#   더 풍부한 판으로 덮어쓴다.
 on:
   schedule:
-    # 04:45 KST 목표 — GitHub cron은 상습 지연(오늘 84분 밀림)이라 앞당겨 "아침 발행" 약속을 지킨다.
-    - cron: "45 19 * * *"
+    # 05:20 KST 본판
+    - cron: "20 20 * * *"
+    # 05:50 KST 검증판 1차
+    - cron: "50 20 * * *"
+    # 06:12 KST 검증판 최종 — 지연 알림(이슈) 판정도 이 회차에서만
+    - cron: "12 21 * * *"
   workflow_dispatch: {}
 
 permissions:
   contents: write
+  issues: write # 지연 알림 이슈 생성용
 
 concurrency:
   group: daily-pulse
@@ -33,9 +46,14 @@ jobs:
       - run: npm ci
 
       # 1) 일간 실거래 펄스 — 최근 2개월 거래월 재확인(누적/스냅샷 미변경).
+      #    검증판 회차는 모노토닉 가드가 걸리면 파일을 하나도 안 쓴다(무변경 → 커밋 스킵).
       - run: npx tsx scripts/daily-pulse.ts --gu=all --months=2
-      # 2) R-ONE 주간 매매가격지수 — 권역 이번 주 변동률(키 없으면 실패해도 펄스는 커밋되게 continue).
+      # 2) R-ONE 주간 매매가격지수 — 본판(05:20)·수동 실행만. rebWeekly.json 이
+      #    generatedAt 타임스탬프를 품고 있어 검증판마다 다시 구우면 매번 diff 가 생겨
+      #    가드의 "무변경 → 커밋 스킵"이 무의미해진다(주간 지수가 30분 새 바뀔 일도 없음).
+      #    키 없으면 실패해도 펄스는 커밋되게 continue.
       - run: npx tsx scripts/build-reb-weekly.ts
+        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '20 20 * * *'
         continue-on-error: true
 
       # 3) 가벼운 JSON 만 커밋 → push 시 Vercel 자동 배포(매일).
@@ -50,3 +68,34 @@ jobs:
             git commit -m "chore(data): 일간 실거래 펄스 + R-ONE 주간 ($(date +%Y-%m-%d))"
             git push
           fi
+
+      # 4) 지연 알림 — 검증판 최종(06:12) 회차 기준: 오늘 발행분 신규가 80건
+      #    (PATCH_MERGED_MIN_FRESH) 미만이고 화~토요일(월요판은 주말 합산이 정상이라
+      #    월요일 제외)이면 이슈 생성. 같은 날짜 이슈가 열려 있으면 중복 생성 금지.
+      #    이슈 실패가 크론을 죽이면 안 됨(continue-on-error).
+      - name: delay alert
+        if: github.event.schedule == '12 21 * * *'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TODAY=$(date +%Y-%m-%d)
+          DOW=$(date +%u) # 1=월 … 7=일
+          if [ "$DOW" -lt 2 ] || [ "$DOW" -gt 6 ]; then
+            echo "일·월요일 — 지연 알림 대상 아님(월요판 주말 합산은 정상)"
+            exit 0
+          fi
+          N=$(node -e "const p=require('./src/data/dailyPatch.json'); console.log(p.generatedAt === '$TODAY' ? (p.newDealCount ?? 0) : 0)")
+          if [ "$N" -ge 80 ]; then
+            echo "오늘 신규 ${N}건 — 정상 발행, 알림 없음"
+            exit 0
+          fi
+          TITLE="지면 발행 지연 — ${TODAY} 신규 ${N}건"
+          # 중복 판정 — GitHub search 문법이 한글·대시에 취약해 열린 이슈 제목을 jq 로 직접 대조.
+          EXISTS=$(gh issue list --state open --json title --jq "[.[] | select(.title | startswith(\"지면 발행 지연 — ${TODAY}\"))] | length")
+          if [ "$EXISTS" -gt 0 ]; then
+            echo "같은 날짜 지연 이슈가 이미 열려 있음 — 중복 생성 생략"
+            exit 0
+          fi
+          gh issue create --title "$TITLE" \
+            --body "검증판(06:12 KST)까지 끝났는데 오늘 발행분 신규가 ${N}건(문턱 80 미만)입니다. 재발사: Actions → daily-pulse → Run workflow(workflow_dispatch) 수동 실행 — 모노토닉 가드가 있어 더 풍부해질 때만 덮어씁니다."

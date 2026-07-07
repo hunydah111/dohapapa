@@ -1,4 +1,4 @@
-// 온도 시계열(최대 5년) — 월별(계약월) above/below/matched 버킷 검증.
+// 온도 시계열(최대 약 6년, '20.9~) — 월별(계약월) above/below/matched 버킷 검증.
 // 규칙은 오늘의 온도(patchNote)와 동일: 직전 거래 = 같은 단지×밴드 그룹의 계약일이
 // 같거나 이른 것 중 최신(자기 제외, 60일 내), ±1% 중립 밴드.
 import { describe, it, expect } from "vitest";
@@ -114,7 +114,7 @@ describe("tempSeries.trimLeadingEmptyMonths — 앞쪽 빈 달 잘라내기", ()
   });
 
   it("기본 버킷 수 = 5년 + 당월", () => {
-    expect(TEMP_SERIES_DEFAULT_MONTHS).toBe(61);
+    expect(TEMP_SERIES_DEFAULT_MONTHS).toBe(73);
   });
 });
 

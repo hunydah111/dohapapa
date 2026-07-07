@@ -63,6 +63,13 @@ export interface AreaMedian {
    * 패치노트 "1년 최고가 갱신" 헤드라인 판정용. 구 스냅샷엔 없으므로 optional.
    */
   maxKrw?: number;
+  /**
+   * 최고가(maxKrw) 거래의 계약일 "YYYY-MM-DD" — "1년 내 최고가 갱신 (종전 61억 ·
+   * '25.11.3 · 21층)" 표기용. Tx 에 dateISO 가 없던 구 경로/구 스냅샷엔 없음(optional).
+   */
+  maxDate?: string;
+  /** 최고가 거래의 층 — 위와 동일하게 optional(구 스냅샷 호환). 미제공 거래면 null. */
+  maxFloor?: number | null;
 }
 
 const WINDOW_MONTHS = 6;
@@ -131,6 +138,10 @@ export interface Tx {
   daysAgo: number;
   /** 거래 출처 — "MOLIT"(매매) | "분양권" | "입주권". 분양권 라벨 판정용. */
   source?: string;
+  /** 계약일 "YYYY-MM-DD" — maxDate(최고가 거래 계약일) 보존용. 구 호출부엔 없음. */
+  dateISO?: string;
+  /** 층 — maxFloor(최고가 거래 층) 보존용. MOLIT 미제공·구 호출부면 없음/null. */
+  floor?: number | null;
 }
 
 /** 분양권/입주권(등기 전 권리 거래) 여부. */
@@ -332,6 +343,8 @@ export interface RawTxRow {
   priceKrw: number;
   dealDate: Date;
   source: string;
+  /** 층 — maxFloor 보존용(스냅샷 빌더가 채움). 미조회 경로는 생략 가능. */
+  floor?: number | null;
 }
 
 /** 추세 시점 보정 기준이 되는 12개월 전 컷오프. */
@@ -365,6 +378,9 @@ export function groupTxRows(
       price: row.priceKrw,
       daysAgo: (now - row.dealDate.getTime()) / 86_400_000,
       source: row.source,
+      // 계약일·층 — maxKrw(1년 최고가)의 날짜·층 병기용 관측값 보존.
+      dateISO: row.dealDate.toISOString().slice(0, 10),
+      floor: row.floor ?? null,
     });
     areaGroups.set(key, list);
   }
@@ -411,6 +427,17 @@ export function mediansFromGrouped(
       }
 
       const presaleCount = txs.filter((t) => isPresaleSource(t.source)).length;
+      // 최근 1년 최고가 거래 — 가격 최고, 동가면 계약일 최신(결정적). 날짜·층은
+      // 관측값 그대로 보존해 "1년 내 최고가 갱신 (종전 … · 날짜 · 층)" 표기에 쓴다.
+      let maxTx = txs12[0];
+      for (const t of txs12) {
+        if (
+          t.price > maxTx.price ||
+          (t.price === maxTx.price && (t.dateISO ?? "") > (maxTx.dateISO ?? ""))
+        ) {
+          maxTx = t;
+        }
+      }
       medians.push({
         area,
         medianKrw: Math.round(est.price * factor),
@@ -425,7 +452,11 @@ export function mediansFromGrouped(
         presale: presaleCount > txs.length / 2,
         // 최근 1년 실거래 최고가 — 6개월 창과 무관하게 12개월 전체(txs12)에서.
         // 시점 보정·면적 보간을 적용하지 않는 관측값(실제 신고가)이라 imputed 교정 대상 아님.
-        maxKrw: Math.max(...txs12.map((t) => t.price)),
+        maxKrw: maxTx.price,
+        // 최고가 거래의 계약일·층 — 입력 Tx 에 없으면(구 호출부) 필드 자체가 빠진다
+        // (JSON.stringify 가 undefined 를 생략 → 구 스냅샷 스키마와 자연 호환).
+        maxDate: maxTx.dateISO,
+        maxFloor: maxTx.floor,
       });
     }
     flagLowConfidence(medians);
@@ -455,7 +486,14 @@ export async function getAreaMediansForMany(
     const ids = complexIds.slice(i, i + CHUNK);
     const rows = await db.transaction.findMany({
       where: { complexId: { in: ids }, dealDate: { gte: since } },
-      select: { complexId: true, area: true, priceKrw: true, dealDate: true, source: true },
+      select: {
+        complexId: true,
+        area: true,
+        priceKrw: true,
+        dealDate: true,
+        source: true,
+        floor: true,
+      },
     });
     for (const r of rows) {
       allRows.push({
@@ -464,6 +502,7 @@ export async function getAreaMediansForMany(
         priceKrw: Number(r.priceKrw),
         dealDate: r.dealDate,
         source: r.source,
+        floor: r.floor,
       });
     }
   }

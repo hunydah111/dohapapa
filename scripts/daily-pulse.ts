@@ -15,6 +15,7 @@ import {
   computePatch,
   pickHeadlines,
   subtractRecentFromSeen,
+  shouldSkipPatchOverwrite,
   type PatchDealInput,
   type ComplexMedianLookup,
   PATCH_SCOPE_DAYS,
@@ -88,10 +89,16 @@ async function main() {
     prevCheckedAt: prev?.checkedAt ?? null,
     guCount: codes.length,
   };
-  writeFileSync(PATH, JSON.stringify(out, null, 2) + "\n", "utf8");
-  console.log(
-    `dailyPulse: ${today} · 거래월 ${out.windowFromMonth}~${out.windowToMonth} · 최신거래 ${latest || "-"} · ${total.toLocaleString()}건 (신규 ${newSincePrev == null ? "첫 폴링" : "+" + newSincePrev}) · ${codes.length}구${failed ? ` · 실패 ${failed}` : ""}`,
-  );
+  // dailyPulse 기록 — 전 구(all) 경로에선 모노토닉 가드 판정 뒤로 미룬다: 검증판이
+  // 갱신 생략(skip)하는 회차에 pulse 만 갱신되면 newSincePrev 가 0으로 덮이고
+  // 무의미한 커밋·재배포가 생긴다(2단 발행 프로토콜, 2026-07-07).
+  const writePulse = () => {
+    writeFileSync(PATH, JSON.stringify(out, null, 2) + "\n", "utf8");
+    console.log(
+      `dailyPulse: ${today} · 거래월 ${out.windowFromMonth}~${out.windowToMonth} · 최신거래 ${latest || "-"} · ${total.toLocaleString()}건 (신규 ${newSincePrev == null ? "첫 폴링" : "+" + newSincePrev}) · ${codes.length}구${failed ? ` · 실패 ${failed}` : ""}`,
+    );
+  };
+  if (guArg !== "all") writePulse();
 
   // ── 패치노트 v0 — 오늘 처음 확인된 스코프(계약 14일) 거래를 중위가와 대조 ──
   // 전 구 폴링일 때만 (부분 폴링으로 seen을 오염시키지 않기)
@@ -105,7 +112,7 @@ async function main() {
 
     // 단지 자기 시세 인덱스 — "시군구|공백제거단지명" → 평형별 중위가.
     // (시군구 중위가 대비는 구조적 이탈만 잡아서 폐기 — patchNote.ts 상단 주석 참조)
-    type SnapMedian = { area: number; medianKrw: number; count: number; lowConfidence?: boolean; maxKrw?: number };
+    type SnapMedian = { area: number; medianKrw: number; count: number; lowConfidence?: boolean; maxKrw?: number; maxDate?: string; maxFloor?: number | null };
     type CxEntry = { medians: SnapMedian[]; lat: number | null; lng: number | null; nearestSubwayM: number | null };
     const cxIndex = new Map<string, CxEntry>();
     for (const c of (complexSnapshot as unknown as { complexes: { name: string; sigungu: string; latitude?: number | null; longitude?: number | null; nearestSubwayM?: number | null; medians: SnapMedian[] }[] }).complexes) {
@@ -128,10 +135,13 @@ async function main() {
       }
       if (!best || best.lowConfidence) return null;
       // maxKrw(최근 1년 실거래 최고가)는 주간 스냅샷 갱신 후부터 존재 — 없으면 null.
+      // maxDate·maxFloor(최고가 거래의 계약일·층)는 그보다 새 스냅샷부터 — 없으면 null.
       return {
         medianKrw: best.medianKrw,
         sampleCount: best.count,
         maxKrw: best.maxKrw ?? null,
+        maxDate: best.maxDate ?? null,
+        maxFloor: best.maxFloor ?? null,
         lat: cx.lat,
         lng: cx.lng,
         nearestSubwayM: cx.nearestSubwayM,
@@ -158,6 +168,28 @@ async function main() {
           scopeDays: BOOTSTRAP_SCOPE_DAYS,
         })
       : null;
+
+    // ── 모노토닉 덮어쓰기 가드 (2단 발행 프로토콜 — 05:20 본판 + 05:50/06:12 검증판) ──
+    // 오늘 이미 발행된 판이 이번 실행보다 풍부하면 아무것도 쓰지 않고 종료 —
+    // dailyPulse·dailyPatch·dailySeen·dailyRecent 전부 미기록 → 워크플로우 커밋 스텝이
+    // "변경 없음"으로 자연 스킵된다. 창간호(boot)·부분 폴링(--gu)엔 적용하지 않는다.
+    const prevPatchRaw: { generatedAt?: string | null; newDealCount?: number } | null =
+      existsSync(PATCH_PATH) ? JSON.parse(readFileSync(PATCH_PATH, "utf8")) : null;
+    if (
+      !boot &&
+      shouldSkipPatchOverwrite({
+        prevGeneratedAt: prevPatchRaw?.generatedAt ?? null,
+        prevNewDealCount: prevPatchRaw?.newDealCount ?? 0,
+        todayISO: today,
+        freshCount: patch.newDealCount,
+      })
+    ) {
+      console.log(
+        `dailyPatch: 이미 오늘 발행분이 더 풍부(기존 ${prevPatchRaw!.newDealCount}건 ≥ 이번 fresh ${patch.newDealCount}건) — 갱신 생략 (pulse·patch·seen·recent 전부 미기록)`,
+      );
+      return;
+    }
+    writePulse();
 
     // ── seen 스키마 v2 마이그레이션 가드 — 구 seen(스코프 유효 거래만, 해제 키 없음)으로
     // 첫 v2.3 실행을 하면 window 내 모든 해제가 한꺼번에 '오늘 처음 확인'으로 쏟아진다.

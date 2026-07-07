@@ -63,7 +63,7 @@ async function loadFromSqlite(path: string): Promise<Source> {
     const sinceMs = medianSince().getTime();
     const txRaw = sdb
       .prepare(
-        `SELECT complexId, area, priceKrw, dealDate, source
+        `SELECT complexId, area, priceKrw, dealDate, source, floor
          FROM "Transaction" WHERE dealDate >= ?`,
       )
       .all(sinceMs) as Record<string, unknown>[];
@@ -88,6 +88,7 @@ async function loadFromSqlite(path: string): Promise<Source> {
       priceKrw: Number(r.priceKrw),
       dealDate: new Date(Number(r.dealDate)),
       source: r.source == null ? "MOLIT" : String(r.source),
+      floor: r.floor == null ? null : Number(r.floor),
     }));
 
     return { complexes, txRows, label: `sqlite:${path}` };
@@ -126,6 +127,7 @@ async function loadFromPrisma(): Promise<Source> {
         priceKrw: true,
         dealDate: true,
         source: true,
+        floor: true,
       },
     });
     const txRows: RawTxRow[] = txs.map((t) => ({
@@ -134,6 +136,7 @@ async function loadFromPrisma(): Promise<Source> {
       priceKrw: Number(t.priceKrw),
       dealDate: t.dealDate,
       source: t.source,
+      floor: t.floor,
     }));
     // lat/lng 는 box 필터로 non-null 보장.
     const meta: ComplexMeta[] = complexes.map((c) => ({

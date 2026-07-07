@@ -18,7 +18,7 @@
  *    refresh_months=13 으로 1회 수동 실행(fetch-molit 이 그 창을 원자적 재적재).
  *
  * 함께 굽는 것 1: 온도 시계열(src/data/tempSeries.json) — 직전 거래(같은 단지×평형 밴드,
- *   60일 내) 대비 월별 above/below/matched, 최대 5년+당월(--months= 오버라이드).
+ *   60일 내) 대비 월별 above/below/matched, 최대 약 6년('20.9~)+당월(--months= 오버라이드).
  *   같은 DB 조회를 재사용한다(추가 쿼리 0). 로직은 @/lib/tempSeries (순수 함수).
  *
  * 함께 굽는 것 2: [최근 거래 상위](src/data/regionTop.json) — 시군구 × 평형 밴드
@@ -66,7 +66,7 @@ async function main() {
   // 첫 달 1일 0시(로컬=KST — 크론 TZ와 기존 적재분 일치) 이후 거래만.
   const [y, m] = months[0].split("-").map(Number);
   const since = new Date(y, m - 1, 1);
-  // 온도 시계열 창 — 기본 5년+당월(61). DB에 없는 앞쪽 달은 굽기 전에 잘라낸다
+  // 온도 시계열 창 — 기본 약 6년+당월(73, '20.9~ 커버). DB에 없는 앞쪽 달은 굽기 전에 잘라낸다
   // (--months= 오버라이드 가능 — 소급 백필 진행 상황과 무관하게 멱등).
   const tempMonthsWanted = Math.max(
     1,
@@ -134,7 +134,7 @@ async function main() {
     });
 
     // [최근 거래 상위] 입력 — 단지명·동·층까지 필요해 좁은 창(120일)으로 별도 조회.
-    // 온도용 5년 조회에 문자열 컬럼을 얹으면 메모리가 불어나 분리했다(작고 싼 쿼리).
+    // 온도용 약 6년 조회에 문자열 컬럼을 얹으면 메모리가 불어나 분리했다(작고 싼 쿼리).
     const recent = await db.transaction.findMany({
       where: { dealDate: { gte: topSince } },
       select: {
@@ -186,7 +186,7 @@ async function main() {
     `regionSeries: 시군구 ${Object.keys(regions).length}곳 · ${months[0]}~${months[months.length - 1]} · 유효 거래 ${totalDeals.toLocaleString()}건 · ${kb}KB → ${dest}`,
   );
 
-  // ── 온도 시계열(최대 5년) — 직전 거래(같은 단지×밴드, 60일 내) 대비 월별 집계 ──
+  // ── 온도 시계열(최대 약 6년) — 직전 거래(같은 단지×밴드, 60일 내) 대비 월별 집계 ──
   // DB에 데이터가 없는 앞쪽 달은 배열에서 제외(null 패딩 금지 — months = 실제 데이터 구간).
   // 소급 백필(fetch-molit --from/--to)이 과거 월을 채우면 다음 주간 실행에서 자동 연장.
   const monthTotals = tempMonthsAll.map(() => 0);

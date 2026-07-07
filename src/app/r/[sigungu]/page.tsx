@@ -31,12 +31,15 @@ import {
   type RegionTopFile,
   type RegionTopItem,
 } from "@/lib/regionTop";
-import type {
-  BusiestRegion,
-  CancellationItem,
-  MajorItem,
-  PatchItem,
+import {
+  passesStrongGate,
+  ymdShortText,
+  type BusiestRegion,
+  type CancellationItem,
+  type MajorItem,
+  type PatchItem,
 } from "@/lib/patchNote";
+import { ShareButton } from "@/components/ShareButton";
 // 지면 조판 토큰·명조 — 공유 단일 소스(중복 선언 금지). UP/DOWN = 시세 방향색(1면과 동일 문법).
 import { serif, PAPER, INK, INK_SOFT, RULE, CORAL, UP, DOWN } from "@/lib/paperTone";
 
@@ -75,11 +78,13 @@ const series = regionSeriesRaw as unknown as RegionSeriesFile;
 const regionTop = regionTopRaw as unknown as RegionTopFile;
 
 // ── 포맷터 — DailyFront 지면과 동일 규칙(그쪽은 컴포넌트 프라이빗이라 미러) ───────
-/** "2026-06-28" → "6/28". 깨진 값은 그대로. */
+/** "2026-06-28" → "6/28". 깨진 값은 그대로. (당일·당월성 표기 전용 — 계약일 등) */
 function md(date: string): string {
   const m = /^\d{4}-(\d{2})-(\d{2})$/.exec(date);
   return m ? `${Number(m[1])}/${Number(m[2])}` : date;
 }
+/** "2026-06-18" → "'26.6.18" — 직전/종전 비교 표기 전용(연도 병기 의무, 1면과 단일 규칙). */
+const ymdShort = ymdShortText;
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"] as const;
 /** "2026-07-06" → "2026년 7월 6일 월요일". */
 function koDate(date: string): string {
@@ -132,14 +137,25 @@ export async function generateMetadata({
 }
 
 // ── 조판 부품 (DailyFront 미러 — 코너 라벨/각주) ─────────────────────────────────
+/** 코너 라벨 + 라인 우측 끝 미세 출처 워터마크 "bijigo.kr" — 어느 코너를 스크린샷해도
+ *  출처가 담긴다(2026-07-07 사장 지시). 코너당 1개·10px·소문자·링크 아님(절제). */
 function CornerLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span
-      className="mb-2.5 inline-block px-2 py-[3px] text-[11px] font-bold tracking-[0.18em]"
-      style={{ background: INK, color: PAPER }}
-    >
-      {children}
-    </span>
+    <div className="mb-2.5 flex items-center justify-between gap-2">
+      <span
+        className="inline-block px-2 py-[3px] text-[11px] font-bold tracking-[0.18em]"
+        style={{ background: INK, color: PAPER }}
+      >
+        {children}
+      </span>
+      <span
+        aria-hidden="true"
+        className="shrink-0 text-[10px] tracking-[0.04em]"
+        style={{ color: INK_SOFT }}
+      >
+        bijigo.kr
+      </span>
+    </div>
   );
 }
 function CornerNote({ children }: { children: React.ReactNode }) {
@@ -391,7 +407,7 @@ function TopRow({
       </div>
       {pct != null && item.prevDate != null && item.prevKrw != null && (
         <div className="mt-[1px] pl-[26px] text-[11px] leading-[1.5]" style={{ color: INK_SOFT }}>
-          직전 {md(item.prevDate)} {eok(item.prevKrw)} 대비{" "}
+          직전 {ymdShort(item.prevDate)} {eok(item.prevKrw)} 대비{" "}
           <b style={{ color: dir }}>
             {sign}
             {pctAbs(pct)}%
@@ -456,13 +472,10 @@ export default async function Page({
     ? ` · 주말 합산 ${md(patch.mergedFromDate!)}~${md(patch.mergedToDate!)} 공개분`
     : "";
   const majors = (patch.major ?? []).filter((m) => m.sigungu === sigungu);
-  // [강세] 게재 요건은 1면과 동일 — 직전 실거래 팩트(60일 내)가 있는 상승만.
+  // [강세] 게재 요건은 1면과 동일 — 오보 게이트(passesStrongGate: 직전 거래 팩트 +
+  // 이중 합의 +7% + 상한 +30%) 통과분만. 게이트 이전 크론 데이터도 렌더에서 걸러진다.
   const strongs = patch.nerf.filter(
-    (i) =>
-      i.sigungu === sigungu &&
-      i.prevKrw != null &&
-      i.prevDate != null &&
-      (i.pctVsPrev ?? 0) > 0,
+    (i) => i.sigungu === sigungu && i.prevDate != null && passesStrongGate(i),
   );
   const cancellations = (patch.cancellations ?? []).filter((c) => c.sigungu === sigungu);
   const busiestRank = (patch.busiestRegions ?? []).findIndex((b) => b.sigungu === sigungu);
@@ -577,7 +590,7 @@ export default async function Page({
                       left={`▲ ${s.dong} ${s.apt}`}
                       meta={`${sqm(s.areaM2)}㎡`}
                       right={`+${pctAbs(s.pctVsPrev!)}%`}
-                      sub={`직전 ${md(s.prevDate!)} ${eok(s.prevKrw!)} → ${eok(s.priceKrw)} · 계약 ${md(s.dealDate)}`}
+                      sub={`직전 ${ymdShort(s.prevDate!)} ${eok(s.prevKrw!)}${s.prevFloor != null ? `(${s.prevFloor}층)` : ""} → ${eok(s.priceKrw)} · 계약 ${md(s.dealDate)}`}
                       divider={i > 0}
                     />
                   ))}
@@ -587,7 +600,7 @@ export default async function Page({
               {cancellations.length > 0 && (
                 <div className="pt-1.5">
                   <p className="m-0 text-[11px] font-bold tracking-[0.08em]" style={{ color: INK_SOFT }}>
-                    오늘의 해제(국토부 공개 행정 사실 — 사유는 알 수 없음)
+                    오늘 등록된 해제거래(국토부 공개 행정 사실 — 사유는 알 수 없음)
                   </p>
                   {cancellations.map((c, i) => (
                     <DealLine
@@ -688,9 +701,9 @@ export default async function Page({
           이 동네, 내 통장으론? — 30초 판정
         </Link>
 
-        {/* ── 콜로폰 — 지면(1면)과 동일 문구 ── */}
+        {/* ── 콜로폰 + 공유(콜로폰 옆 소형 버튼) — 지면(1면)과 동일 문법 ── */}
         <div
-          className="mt-3.5 flex justify-between pt-2.5 text-[10px] leading-[1.6]"
+          className="mt-3.5 flex items-start justify-between gap-3 pt-2.5 text-[10px] leading-[1.6]"
           style={{ borderTop: `2.5px solid ${INK}`, color: INK_SOFT }}
         >
           <span>
@@ -698,10 +711,13 @@ export default async function Page({
             <br />
             실거래 기록 판독이며 투자 권유가 아닙니다
           </span>
-          <span className="text-right">
-            다음 호
-            <br />
-            내일 아침
+          <span className="flex shrink-0 items-center gap-2.5">
+            <ShareButton title={`비집고 — ${sigungu} 동네면`} />
+            <span className="text-right">
+              다음 호
+              <br />
+              내일 아침
+            </span>
           </span>
         </div>
       </article>
