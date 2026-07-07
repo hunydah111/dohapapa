@@ -509,7 +509,7 @@ function BriefBody({
       {/* ── ③ 라이벌 미니보드 — 팩트 수치만, 평가 워딩 0 ── */}
       {rivalBrief && (
         <section className="px-0.5 pb-3 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
-          <CornerLabel>🥊 라이벌 보드</CornerLabel>
+          <CornerLabel>라이벌 보드</CornerLabel>
           <div className="flex gap-1.5">
             <RivalColumn brief={brief} mine />
             <RivalColumn brief={rivalBrief} mine={false} />
