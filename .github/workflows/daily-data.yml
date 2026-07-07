@@ -96,5 +96,6 @@ jobs:
             echo "변경 없음 — 커밋 생략"
           else
             git commit -m "chore(data): 주간 실거래 갱신 ($(date +%Y-%m-%d))"
+            git pull --rebase origin master || { git rebase --abort; echo "rebase 실패 — 다음 회차가 재시도"; exit 1; }
             git push
           fi
