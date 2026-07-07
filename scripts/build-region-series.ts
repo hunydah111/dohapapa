@@ -54,6 +54,11 @@ import {
   type RegionTopFile,
   type RegionTopTx,
 } from "@/lib/regionTop";
+import {
+  computeRegionPeaks,
+  type RegionPeaksFile,
+  type RegionPeakTx,
+} from "@/lib/regionPeaks";
 
 /** 매매 관측에서 제외하는 source — 분양권 전매(별도 시장) + 직거래(증여성 의심). */
 const EXCLUDED_SOURCES = new Set(["분양권", "입주권", "MOLIT_DIRECT"]);
@@ -90,6 +95,7 @@ async function main() {
   const { db } = await import("@/lib/db");
   let rows: RegionSeriesTx[];
   let tempRows: TempSeriesTx[];
+  let peakRows: RegionPeakTx[]; // 5년 전고점/회복률 집계 입력 — tempSeries와 같은 창·필터
   let validYms: string[]; // 유효 거래(밴드 무관)의 계약월 — 앞쪽 빈 달 잘라내기 판정용
   let topTxs: RegionTopTx[];
   try {
@@ -117,6 +123,13 @@ async function main() {
         ym: ymOf(t.dealDate),
         priceKrw: Number(t.priceKrw),
       }));
+    // 전고점/회복률 입력 — tempSeries와 같은 5년+ 조회 전체(계약월·시군구·가격만).
+    // computeRegionPeaks 가 months 밖 거래를 스스로 무시하므로 필터 없이 전량 넘긴다.
+    peakRows = valid.map((t) => ({
+      sigungu: t.complex.sigungu,
+      ym: ymOf(t.dealDate),
+      priceKrw: Number(t.priceKrw),
+    }));
     // 온도 시계열 입력 — 단지×평형 밴드 그룹. 밴드 밖 면적(초소형 등)은 스킵.
     tempRows = valid.flatMap((t) => {
       const band = bandOfArea(t.area);
@@ -212,6 +225,23 @@ async function main() {
   const totalMatched = tempOut.matched.reduce((a, b) => a + b, 0);
   console.log(
     `tempSeries: ${tempMonths[0] ?? "-"}~${tempMonths[tempMonths.length - 1] ?? "-"} (${tempMonths.length}/${tempMonthsWanted}개월) · matched ${totalMatched.toLocaleString()}건 → ${tempDest}`,
+  );
+
+  // ── 전고점/회복률 — 시군구 5년 전고점 대비 현재 회복률(tempSeries와 동일 창) ─────
+  //   creator/소비 사상: regionPeaks.ts 상단 주석(관측 중위·평형 혼합·시세 지수 아님).
+  //   창은 tempSeries가 trimLeadingEmptyMonths 후 확정한 실데이터 구간과 동일하게 맞춘다.
+  const peakRegions = computeRegionPeaks(peakRows, tempMonths);
+  const peaksOut: RegionPeaksFile = {
+    generatedAt: new Date().toISOString(),
+    windowFrom: tempMonths[0] ?? "",
+    windowTo: tempMonths[tempMonths.length - 1] ?? "",
+    regions: peakRegions,
+  };
+  const peaksDest = resolve(process.cwd(), "src/data/regionPeaks.json");
+  writeFileSync(peaksDest, JSON.stringify(peaksOut) + "\n", "utf8");
+  const peaksKb = Math.round(JSON.stringify(peaksOut).length / 102.4) / 10;
+  console.log(
+    `regionPeaks: 시군구 ${Object.keys(peakRegions).length}곳 · 창 ${peaksOut.windowFrom}~${peaksOut.windowTo} · ${peaksKb}KB → ${peaksDest}`,
   );
 
   // ── [최근 거래 상위] — 시군구 × 밴드(59㎡급/84㎡급) 최근 60일 TOP10 ────────────
