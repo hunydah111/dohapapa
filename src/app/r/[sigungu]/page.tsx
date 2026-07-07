@@ -17,7 +17,9 @@ import { notFound } from "next/navigation";
 import dailyPatchRaw from "@/data/dailyPatch.json";
 import regionSeriesRaw from "@/data/regionSeries.json";
 import regionTopRaw from "@/data/regionTop.json";
+import regionPeaksRaw from "@/data/regionPeaks.json";
 import { LAWD_CODES, SIGUNGU_NAMES } from "@/lib/molit";
+import { rankOf, type RegionPeaksFile } from "@/lib/regionPeaks";
 import {
   medianLineSegments,
   priceAxis,
@@ -80,6 +82,7 @@ interface DailyPatchSubset {
 const patch = dailyPatchRaw as unknown as DailyPatchSubset;
 const series = regionSeriesRaw as unknown as RegionSeriesFile;
 const regionTop = regionTopRaw as unknown as RegionTopFile;
+const peaks = regionPeaksRaw as unknown as RegionPeaksFile;
 
 // ── 포맷터 — DailyFront 지면과 동일 규칙(그쪽은 컴포넌트 프라이빗이라 미러) ───────
 /** "2026-06-28" → "6/28". 깨진 값은 그대로. (당일·당월성 표기 전용 — 계약일 등) */
@@ -117,6 +120,11 @@ function pctAbs(pct: number): string {
 function ymShort(ym: string): string {
   const m = /^(\d{4})-(\d{2})$/.exec(ym);
   return m ? `${m[1].slice(2)}.${Number(m[2])}` : ym;
+}
+/** "2021-10" → "'21.10" — 전고점 월 병기(회복률 기준월 병기 의무). */
+function ymApos(ym: string): string {
+  const m = /^(\d{4})-(\d{2})$/.exec(ym);
+  return m ? `'${m[1].slice(2)}.${Number(m[2])}` : ym;
 }
 
 // ── metadata ─────────────────────────────────────────────────────────────────
@@ -525,6 +533,11 @@ export default async function Page({
     patch.generatedAt !== null &&
     (majors.length > 0 || strongs.length > 0 || cancellations.length > 0 || busiest !== null);
 
+  // [전고점 대비] 상설 헤더 줄(v2.7) — placeholder(generatedAt null)·미수록이면 null(생략).
+  const peakEntry =
+    peaks.generatedAt !== null ? (peaks.regions[sigungu] ?? null) : null;
+  const peakRank = peakEntry ? rankOf(peaks.regions, sigungu) : null;
+
   // [12개월 추이] — regionSeries. placeholder(generatedAt null)·미수록 동네는 안내 문구.
   const entry: RegionSeriesEntry | null =
     series.generatedAt !== null && series.months.length > 0
@@ -626,6 +639,56 @@ export default async function Page({
         {/* ── [오늘 이 동네] ── */}
         <section className="px-0.5 pb-3.5 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
           <CornerLabel>오늘 이 동네</CornerLabel>
+          {/* 전고점 대비 상설 1줄(v2.7 §3.3) — 오늘 활동과 무관하게 상단 고정. 각주 병기.
+              placeholder·미수록이면 통째 생략(빈 값·NaN·"—" 노출 금지). */}
+          {peakEntry && peakRank && (
+            <div className="mb-2 pb-2 tabular-nums" style={{ borderBottom: `1px dotted ${RULE}` }}>
+              <p className="m-0 text-[12.5px] leading-[1.55]" style={{ color: INK_SOFT }}>
+                {ymApos(peakEntry.peakYm)} 전고점 <b style={{ color: INK }}>{eok(peakEntry.peakKrw)}</b>{" "}
+                대비{" "}
+                {peakEntry.recovery >= 1 ? (
+                  <b style={{ color: UP }}>
+                    {Math.round(Math.abs(1 - peakEntry.recovery) * 100) === 0
+                      ? "회복 완료"
+                      : `+${Math.round((peakEntry.recovery - 1) * 100)}%`}
+                  </b>
+                ) : (
+                  <b style={{ color: DOWN }}>
+                    −{Math.round((1 - peakEntry.recovery) * 100)}%
+                  </b>
+                )}{" "}
+                <span className="text-[11px]">
+                  (회복 <b style={{ color: UP }}>{Math.round(peakEntry.recovery * 100)}%</b> ·{" "}
+                  {ymApos(peakEntry.currentYm)} 관측 · {peakRank.total.toLocaleString("ko-KR")}곳 중{" "}
+                  <b style={{ color: INK }}>{peakRank.rank.toLocaleString("ko-KR")}위</b>)
+                </span>
+              </p>
+              {peakEntry.troughKrw != null && peakEntry.troughYm && peakEntry.troughKrw > 0 && (
+                <p className="m-0 mt-0.5 text-[11px] leading-[1.5]" style={{ color: INK_SOFT }}>
+                  바닥({ymApos(peakEntry.troughYm)}) <b style={{ color: INK }}>{eok(peakEntry.troughKrw)}</b>{" "}
+                  대비{" "}
+                  <b
+                    style={{
+                      color:
+                        peakEntry.currentKrw > peakEntry.troughKrw
+                          ? UP
+                          : peakEntry.currentKrw < peakEntry.troughKrw
+                            ? DOWN
+                            : INK,
+                    }}
+                  >
+                    {peakEntry.currentKrw > peakEntry.troughKrw ? "+" : peakEntry.currentKrw < peakEntry.troughKrw ? "−" : "±"}
+                    {Math.round(Math.abs((peakEntry.currentKrw - peakEntry.troughKrw) / peakEntry.troughKrw) * 100)}%
+                  </b>
+                </p>
+              )}
+              <p className="m-0 mt-1 text-[10px] leading-[1.5]" style={{ color: INK_SOFT }}>
+                국토부 실거래 관측 중위(평형 혼합, 해제·직거래 제외) 기준 — 시세 지수 아님.
+                평형 구성 변화로 개별 단지와 다를 수 있음. 회복률 순위는 82개 시군구 중
+                수록된 동네끼리.
+              </p>
+            </div>
+          )}
           {!hasToday ? (
             <CornerNote>
               오늘 공개분에 이 동네 거래 없음 · 다음 호 내일 아침

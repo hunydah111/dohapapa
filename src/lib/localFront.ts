@@ -37,6 +37,11 @@ import {
   type RegionSeriesFile,
   type RegionSeriesSummary,
 } from "@/lib/regionSeries";
+import {
+  rankOf,
+  type RegionPeakEntry,
+  type RegionPeaksFile,
+} from "@/lib/regionPeaks";
 
 /** [오늘 이 동네] 주요·강세 행 상한 — 첫 뷰포트(375px) 무스크롤 완결을 지키는 값. */
 export const LOCAL_ROW_LIMIT = 3;
@@ -190,6 +195,9 @@ export interface LocalFrontData {
   tops: Record<string, { bandLabel: string; deals: number; items: LocalTopRow[] }>;
   /** [12개월 추이] 요약 한 줄 — regionSeriesSummary 결과(유효 월 2개 미만 동네는 생략). */
   seriesSummaries: Record<string, RegionSeriesSummary>;
+  /** 전고점 대비/회복률(v2.7) — 시군구별 entry + 그 시군구의 회복률 순위.
+   *  placeholder(generatedAt null)·미수록 동네는 키 없음 → 회복률 줄 전체 생략. */
+  peaks: Record<string, { entry: RegionPeakEntry; rank: number; total: number }>;
 }
 
 /** 이번 판이 덮는 계약 공개일 집합 — daily 는 발행일 하루, merged 는 합산 구간.
@@ -228,8 +236,9 @@ export function buildLocalFrontData(opts: {
   recentDays: readonly RecentDay[];
   regionTop: RegionTopFile;
   series: RegionSeriesFile;
+  peaks: RegionPeaksFile;
 }): LocalFrontData {
-  const { patch, recentDays, regionTop, series } = opts;
+  const { patch, recentDays, regionTop, series, peaks } = opts;
 
   // ── 주요 거래(15억+) — 시군구별 발췌(상한 LOCAL_ROW_LIMIT, 입력은 가격 내림차순). ──
   const majors: LocalFrontData["majors"] = {};
@@ -389,6 +398,16 @@ export function buildLocalFrontData(opts: {
     }
   }
 
+  // ── 전고점 대비/회복률 — placeholder(generatedAt null) 또는 미수록 동네는 생략. ──
+  const peaksSlice: LocalFrontData["peaks"] = {};
+  if (peaks.generatedAt !== null) {
+    for (const [sigungu, entry] of Object.entries(peaks.regions)) {
+      const r = rankOf(peaks.regions, sigungu);
+      if (!r) continue; // 방어 — regions 에 있으면 항상 non-null이나 안전하게.
+      peaksSlice[sigungu] = { entry, rank: r.rank, total: r.total };
+    }
+  }
+
   return {
     generatedAt: patch.generatedAt,
     mode: patch.mode ?? null,
@@ -405,6 +424,7 @@ export function buildLocalFrontData(opts: {
     todayMax,
     tops,
     seriesSummaries,
+    peaks: peaksSlice,
   };
 }
 
@@ -428,6 +448,8 @@ export interface RegionBrief {
   todayMax: LocalTodayMax | null;
   top: { bandLabel: string; deals: number; items: LocalTopRow[] } | null;
   seriesSummary: RegionSeriesSummary | null;
+  /** 전고점 대비/회복률(v2.7) — entry + 회복률 순위. placeholder·미수록이면 null(줄 생략). */
+  peak: { entry: RegionPeakEntry; rank: number; total: number } | null;
 }
 
 /** 데이터 묶음에서 동네 1곳 브리핑 도출 — 순수 셀렉터. */
@@ -444,6 +466,7 @@ export function briefFor(data: LocalFrontData, sigungu: string): RegionBrief {
     todayMax: data.todayMax[sigungu] ?? null,
     top: data.tops[sigungu] ?? null,
     seriesSummary: data.seriesSummaries[sigungu] ?? null,
+    peak: data.peaks[sigungu] ?? null,
   };
 }
 

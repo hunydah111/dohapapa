@@ -181,12 +181,17 @@ const baseSeries: RegionSeriesFile = {
   },
 };
 
+// 전고점/회복률 — placeholder(generatedAt null). peaks 배선 자체는 regionPeaks.test.ts 가
+// 검증하므로 여기선 graceful 처리(줄 생략)만 확인한다.
+const basePeaks = { generatedAt: null, windowFrom: "", windowTo: "", regions: {} };
+
 function build() {
   return buildLocalFrontData({
     patch: basePatch,
     recentDays: baseRecent,
     regionTop: baseTop,
     series: baseSeries,
+    peaks: basePeaks,
   });
 }
 
@@ -275,6 +280,7 @@ describe("buildLocalFrontData", () => {
       recentDays: [],
       regionTop: { generatedAt: null, windowDays: 60, regions: {} },
       series: { generatedAt: null, months: [], regions: {} },
+      peaks: basePeaks,
     });
     expect(d.generatedAt).toBeNull();
     expect(d.regionCounts).toEqual({});
@@ -323,6 +329,7 @@ describe("issueDates", () => {
       recentDays: baseRecent,
       regionTop: baseTop,
       series: baseSeries,
+      peaks: basePeaks,
     });
     // 7/5 공개된 마포구 12억이 이제 풀에 포함.
     expect(d.todayMax["마포구"]?.priceKrw).toBe(1_200_000_000);
@@ -389,6 +396,56 @@ describe("momentumFor", () => {
   });
 });
 
+// ── peaks 슬라이스 — 전고점/회복률 배선(entry + 순위) + placeholder graceful ────────
+describe("buildLocalFrontData peaks 슬라이스", () => {
+  const peakEntry = (recovery: number) => ({
+    peakKrw: 2_000_000_000,
+    peakYm: "2021-10",
+    currentKrw: Math.round(2_000_000_000 * recovery),
+    currentYm: "2026-06",
+    recovery,
+    troughKrw: null,
+    troughYm: null,
+  });
+  function peakBuild(peaks: Parameters<typeof buildLocalFrontData>[0]["peaks"]) {
+    return buildLocalFrontData({
+      patch: basePatch,
+      recentDays: baseRecent,
+      regionTop: baseTop,
+      series: baseSeries,
+      peaks,
+    });
+  }
+
+  it("수록 동네마다 entry + 회복률 순위(N/M)를 굽고 briefFor 로 노출한다", () => {
+    const d = peakBuild({
+      generatedAt: "2026-07-06",
+      windowFrom: "2020-09",
+      windowTo: "2026-06",
+      regions: { 강남구: peakEntry(0.98), 서초구: peakEntry(0.92), 마포구: peakEntry(0.8) },
+    });
+    expect(d.peaks["강남구"]).toEqual({ entry: peakEntry(0.98), rank: 1, total: 3 });
+    expect(d.peaks["마포구"].rank).toBe(3);
+    expect(briefFor(d, "서초구").peak).toEqual({ entry: peakEntry(0.92), rank: 2, total: 3 });
+  });
+
+  it("placeholder(generatedAt null)면 peaks 슬라이스는 비고 brief.peak 는 null(줄 생략)", () => {
+    const d = peakBuild({ generatedAt: null, windowFrom: "", windowTo: "", regions: {} });
+    expect(d.peaks).toEqual({});
+    expect(briefFor(d, "강남구").peak).toBeNull();
+  });
+
+  it("미수록 동네는 brief.peak 가 null", () => {
+    const d = peakBuild({
+      generatedAt: "2026-07-06",
+      windowFrom: "2020-09",
+      windowTo: "2026-06",
+      regions: { 강남구: peakEntry(0.98) },
+    });
+    expect(briefFor(d, "노원구").peak).toBeNull();
+  });
+});
+
 // ── recentPulses — [직전 대비 평균] 최근 며칠 "합산" 표본(오늘분만이 아님) ────────
 describe("recentPulses (직전 대비 평균 — 3일 합산)", () => {
   function pulseBuild(recentDays: RecentDay[]) {
@@ -397,6 +454,7 @@ describe("recentPulses (직전 대비 평균 — 3일 합산)", () => {
       recentDays,
       regionTop: { generatedAt: null, windowDays: 60, regions: {} },
       series: { generatedAt: null, months: [], regions: {} },
+      peaks: basePeaks,
     });
   }
 

@@ -19,6 +19,7 @@
 import dailyPatchRaw from "@/data/dailyPatch.json";
 import dailyPulseRaw from "@/data/dailyPulse.json";
 import tempSeriesRaw from "@/data/tempSeries.json";
+import regionPeaksRaw from "@/data/regionPeaks.json";
 import {
   pickHeadlines,
   passesStrongGate,
@@ -32,6 +33,11 @@ import {
 } from "@/lib/patchNote";
 import { REFERENCE_PHASES, phaseAvg, type TempSeriesFile } from "@/lib/tempSeries";
 import { TILE_MAP, TILE_GRID_COLS, tileLevel } from "@/lib/tileMap";
+import {
+  recoveryBand,
+  topRecovered,
+  type RegionPeaksFile,
+} from "@/lib/regionPeaks";
 import { ThresholdGauge, DailyFrontPing } from "./ThresholdGauge";
 import { DealMiniMap } from "./DealMiniMap";
 import { ShareButton } from "./ShareButton";
@@ -130,6 +136,7 @@ interface DailyPulse {
 const patch = dailyPatchRaw as unknown as DailyPatch;
 const pulse = dailyPulseRaw as unknown as DailyPulse;
 const tempSeries = tempSeriesRaw as unknown as TempSeriesFile;
+const regionPeaks = regionPeaksRaw as unknown as RegionPeaksFile;
 
 // ── 포맷터 ────────────────────────────────────────────────────────────────────
 /** "2026-06-28" → "6/28". 깨진 값은 그대로 반환. (당일·당월성 표기 전용 — 계약일 등) */
@@ -327,6 +334,120 @@ function TradeMapLegend() {
       <span><TileSwatch bg={TILE_FILL[3]} />7건+</span>
       <span><TileSwatch bg={PAPER} ring={UP} />강세 발생</span>
       <span><TileSwatch bg={PAPER} ring={DOWN} />약세 발생</span>
+    </div>
+  );
+}
+
+// ── [회복률 지도] — TradeMap 기하 재사용, 타일 농도만 회복률 밴드로(시안 B 색문법). ──────
+/** "2021-10" → "'21.10" — 전고점 월 병기(TOP5·각주). */
+function ymApos(ym: string): string {
+  const m = /^(\d{4})-(\d{2})$/.exec(ym);
+  return m ? `'${m[1].slice(2)}.${Number(m[2])}` : ym;
+}
+/** 회복률(0~1+) → "92" (전고점 대비 %, 정수). */
+function recoveryPct(recovery: number): number {
+  return Math.round(recovery * 100);
+}
+
+/** 회복률 밴드별 타일 채움색 — 인덱스 = recoveryBand.
+ *  0 = <75%(진한 파랑) / 1 = 75~90%(연파랑) / 2 = 90~100%(빨강) / 3 = ≥100%(진한 빨강).
+ *  회복=강세=빨강, 미회복=약세=파랑 — 기존 강세/약세 지도 색문법 일치(경보빨강 아님). */
+const RECOVERY_FILL = ["#1f4e82", "#c7d8ea", "#e8a0a4", "#c9252d"] as const;
+/** 밴드별 글자색 — 진한 배경(0·3)은 흰 글씨, 연한 배경(1·2)은 먹. */
+const RECOVERY_TEXT = [PAPER, INK, INK, PAPER] as const;
+
+/** 회복률 지도 본체 — TILE_MAP·TILE_GRID_COLS 기하 재사용, 각 타일 = /r/[시군구] 링크.
+ *  수록 안 된 시군구(peaks.regions 에 없음)는 TradeMap 의 0건 타일과 동일한 바탕색. */
+function RecoveryMap({
+  peaks,
+}: {
+  peaks: RegionPeaksFile;
+}) {
+  return (
+    <div
+      className="grid gap-[2px]"
+      style={{ gridTemplateColumns: `repeat(${TILE_GRID_COLS}, minmax(0, 1fr))` }}
+    >
+      {Object.entries(TILE_MAP).map(([sigungu, tile]) => {
+        const entry = peaks.regions[sigungu];
+        const band = entry ? recoveryBand(entry.recovery) : null;
+        return (
+          <a
+            key={sigungu}
+            href={`/r/${encodeURIComponent(sigungu)}`}
+            title={
+              entry
+                ? `${sigungu} 회복 ${recoveryPct(entry.recovery)}% (${ymApos(entry.peakYm)} 전고점 대비) — 동네면`
+                : `${sigungu} — 동네면`
+            }
+            className="flex aspect-square items-center justify-center text-center text-[8px] font-bold leading-[1.05] tracking-[-0.02em]"
+            style={{
+              gridColumn: tile.col,
+              gridRow: tile.row,
+              background: band === null ? TILE_FILL[0] : RECOVERY_FILL[band],
+              color: band === null ? INK_SOFT : RECOVERY_TEXT[band],
+              border: `1px solid ${TILE_BORDER}`,
+            }}
+          >
+            {tile.label}
+          </a>
+        );
+      })}
+    </div>
+  );
+}
+
+function RecoveryLegend() {
+  return (
+    <div
+      className="mt-[7px] flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[9.5px]"
+      style={{ color: INK_SOFT }}
+    >
+      <span><TileSwatch bg={RECOVERY_FILL[3]} />신고점 돌파</span>
+      <span><TileSwatch bg={RECOVERY_FILL[2]} />90~100%</span>
+      <span><TileSwatch bg={RECOVERY_FILL[1]} />75~90%</span>
+      <span><TileSwatch bg={RECOVERY_FILL[0]} />75% 미만</span>
+      <span><TileSwatch bg={TILE_FILL[0]} />미수록</span>
+    </div>
+  );
+}
+
+/** 가장 빨리 회복한 동네 TOP5 — 회복률 상위(신고점 돌파 우선). 하위/워스트 없음(헌장 ⑤). */
+function RecoveryTop5({
+  top,
+}: {
+  top: { sigungu: string; recovery: number; peakYm: string }[];
+}) {
+  return (
+    <div className="mt-3">
+      <p className="m-0 text-[11px] font-bold tracking-[0.08em]" style={{ color: INK_SOFT }}>
+        가장 빨리 회복한 동네 TOP5
+      </p>
+      <div className="mt-1">
+        {top.map((t, i) => {
+          const breached = t.recovery >= 1;
+          return (
+            <div
+              key={t.sigungu}
+              className={`flex items-baseline gap-2 py-[4px] tabular-nums ${i > 0 ? "border-t border-dotted" : ""}`}
+              style={i > 0 ? { borderColor: RULE } : undefined}
+            >
+              <span className="w-[16px] shrink-0 text-right text-[12px] font-bold" style={{ color: INK_SOFT }}>
+                {i + 1}.
+              </span>
+              <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
+                <RegionLink sigungu={t.sigungu}>{t.sigungu}</RegionLink>{" "}
+                <span className="text-[10px] font-normal" style={{ color: INK_SOFT }}>
+                  {ymApos(t.peakYm)} 전고점 대비
+                </span>
+              </span>
+              <span className="shrink-0 text-right text-[13px] font-extrabold" style={{ color: UP }}>
+                {breached ? "신고점" : `회복 ${recoveryPct(t.recovery)}%`}
+              </span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -843,6 +964,18 @@ export function DailyFront() {
   const regionCounts = patch.regionCounts;
   const strongMapSet = new Set(strongs.map((i) => i.sigungu));
   const weakMapSet = new Set(weakRegions.map((r) => r.sigungu));
+
+  // [회복률 지도] — placeholder(generatedAt null)·수록 0곳이면 코너 자체 생략(regionCounts
+  // 없을 때 지도 생략하는 기존 패턴 미러). 수록 있으면 접힘 코너 + TOP5.
+  const hasPeaks =
+    regionPeaks.generatedAt !== null && Object.keys(regionPeaks.regions).length > 0;
+  const recoveryTop5 = hasPeaks
+    ? topRecovered(regionPeaks.regions, 5).map((r) => ({
+        sigungu: r.sigungu,
+        recovery: r.entry.recovery,
+        peakYm: r.entry.peakYm,
+      }))
+    : [];
   // 가격 바 기준 — 오늘 major 최고가(major는 가격 내림차순 정렬 상태).
   const majorTopKrw = major && major.length > 0 ? major[0].priceKrw : 0;
 
@@ -1075,6 +1208,51 @@ export function DailyFront() {
                   <span>우리동네 설정하기</span>
                   <span aria-hidden="true">→</span>
                 </a>
+              </section>
+            )}
+
+            {/* ── [회복률 지도] — 전고점 대비 회복률(v2.7 §3.2). 오늘의 거래 지도 아래,
+                접힘(details) 기본. placeholder·수록 0곳이면 코너 자체 생략(graceful). ── */}
+            {hasPeaks && (
+              <section className="px-0.5 pb-3.5 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
+                <details className="group">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-2 [&::-webkit-details-marker]:hidden">
+                    <span
+                      className="inline-block px-2 py-[3px] text-[11px] font-bold tracking-[0.18em]"
+                      style={{ background: INK, color: PAPER }}
+                    >
+                      회복률 지도 — 전고점 대비 회복률
+                    </span>
+                    <span className="flex shrink-0 items-center gap-1.5">
+                      <span
+                        aria-hidden="true"
+                        className="text-[10px] tracking-[0.04em]"
+                        style={{ color: INK_SOFT }}
+                      >
+                        bijigo.kr
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className="text-[11px] transition-transform duration-150 group-open:rotate-90"
+                        style={{ color: INK_SOFT }}
+                      >
+                        ▸
+                      </span>
+                    </span>
+                  </summary>
+                  <div className="pt-2.5">
+                    <RecoveryMap peaks={regionPeaks} />
+                    <RecoveryLegend />
+                    {recoveryTop5.length > 0 && <RecoveryTop5 top={recoveryTop5} />}
+                    <CornerNote>
+                      타일 = 수도권 82개 시군구(위치 근사) · 농도 = 전고점 대비 회복률 ·
+                      탭하면 동네면 · 전고점은 천천히 움직임 — 주간 갱신.
+                      <br />
+                      국토부 실거래 관측 중위(평형 혼합, 해제·직거래 제외) 기준 — 시세 지수
+                      아님. 평형 구성 변화로 개별 단지와 다를 수 있음.
+                    </CornerNote>
+                  </div>
+                </details>
               </section>
             )}
 

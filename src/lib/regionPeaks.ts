@@ -137,3 +137,59 @@ export function computeRegionPeaks(
   }
   return regions;
 }
+
+// ── UI 소비용 순수 헬퍼(랭킹·밴드·TOP) — 동네판/동네면/1면 회복률 지도가 공유. ─────────
+//
+// 편집 헌장 ⑤(아래를 때리지 않는다): 랭킹은 "본인 N위" + "회복 상위 TOP5"만 노출.
+// 하위/워스트 실명 랭킹은 절대 만들지 않는다 — topRecovered 는 상위만, rankOf 는 본인 조회용.
+
+/** 회복률 밴드 4단계(시세 방향색 문법) — 인덱스가 곧 농담 단계.
+ *  3 = 신고점 돌파(≥100%, 진한 UP빨강) / 2 = 90~100%(UP빨강) /
+ *  1 = 75~90%(연 DOWN파랑) / 0 = <75%(진한 DOWN파랑). */
+export type RecoveryBand = 0 | 1 | 2 | 3;
+
+/** 회복률(recovery, 0~1+) → 밴드. 경계는 신고점 100% · 90% · 75%(스펙 §5·§3.2). */
+export function recoveryBand(recovery: number): RecoveryBand {
+  if (recovery >= 1) return 3;
+  if (recovery >= 0.9) return 2;
+  if (recovery >= 0.75) return 1;
+  return 0;
+}
+
+/** 회복률 내림차순 정렬 키(시군구명 포함) — 동률은 시군구 가나다순으로 안정 정렬. */
+export function rankByRecovery(
+  regions: Record<string, RegionPeakEntry>,
+): { sigungu: string; entry: RegionPeakEntry }[] {
+  return Object.entries(regions)
+    .map(([sigungu, entry]) => ({ sigungu, entry }))
+    .sort((a, b) => {
+      if (b.entry.recovery !== a.entry.recovery) return b.entry.recovery - a.entry.recovery;
+      return a.sigungu.localeCompare(b.sigungu, "ko");
+    });
+}
+
+/** 본인 순위 — "82곳 중 N위"의 N(1-based)과 총 M. 동률은 같은 순위를 공유(경쟁 랭킹).
+ *  해당 시군구가 regions 에 없으면 null(호출부가 회복률 줄 전체 생략). */
+export function rankOf(
+  regions: Record<string, RegionPeakEntry>,
+  sigungu: string,
+): { rank: number; total: number } | null {
+  const target = regions[sigungu];
+  if (!target) return null;
+  const total = Object.keys(regions).length;
+  // 동률 경쟁 랭킹 — 나보다 회복률이 "엄격히 높은" 동네 수 + 1.
+  let higher = 0;
+  for (const e of Object.values(regions)) {
+    if (e.recovery > target.recovery) higher += 1;
+  }
+  return { rank: higher + 1, total };
+}
+
+/** 가장 빨리 회복한 동네 TOP N(회복률 상위, 신고점 돌파 우선 자동 반영 — 내림차순).
+ *  하위/워스트는 절대 반환하지 않는다(헌장 ⑤). 기본 5. */
+export function topRecovered(
+  regions: Record<string, RegionPeakEntry>,
+  n = 5,
+): { sigungu: string; entry: RegionPeakEntry }[] {
+  return rankByRecovery(regions).slice(0, Math.max(0, n));
+}

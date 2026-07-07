@@ -89,6 +89,19 @@ function ymShort(ym: string): string {
   const m = /^(\d{4})-(\d{2})$/.exec(ym);
   return m ? `${m[1].slice(2)}.${Number(m[2])}` : ym;
 }
+/** "2021-10" → "'21.10" — 전고점 월 병기 전용(회복률 각주 헌장 — 기준월 의무). */
+function ymApos(ym: string): string {
+  const m = /^(\d{4})-(\d{2})$/.exec(ym);
+  return m ? `'${m[1].slice(2)}.${Number(m[2])}` : ym;
+}
+/** 회복률(0~1+) → "92" (전고점 대비 %, 반올림 정수). 신고점 돌파는 100 이상. */
+function recoveryPct(recovery: number): number {
+  return Math.round(recovery * 100);
+}
+/** 전고점 대비 낙폭 → "8" (recovery 0.92 → 8%, 절대값 정수). 돌파(≥1)면 0 또는 +. */
+function peakGapPct(recovery: number): number {
+  return Math.round(Math.abs(1 - recovery) * 100);
+}
 
 // ── 조판 부품 (1면 미러 — 코너 라벨엔 출처 워터마크 의무) ─────────────────────────
 function CornerLabel({ children }: { children: React.ReactNode }) {
@@ -115,6 +128,54 @@ function CornerNote({ children }: { children: React.ReactNode }) {
     <p className="mt-2 text-[10.5px] leading-[1.55]" style={{ color: INK_SOFT }}>
       {children}
     </p>
+  );
+}
+
+/** [우리 동네 전고점 대비] 줄 — 내 동네 브리핑 최상단(눈뜨고 3초, 스펙 §3.1).
+ *  "개포동(강남구) …" 대신 시군구 단위 데이터라 시군구명으로 표기 —
+ *  "강남구 · '21.10 전고점 대비 −8% (회복 92% · 82곳 중 12위)" + trough 있으면 다음 줄
+ *  "바닥('22.12) 대비 +34%". −X% 는 하락색 파랑(DOWN), 회복률은 상승색 빨강(UP).
+ *  전고점=현재 돌파(recovery≥1)면 낙폭 대신 "신고점 회복". peak 없으면 호출부가 생략. */
+function PeakLine({
+  sigungu,
+  peak,
+}: {
+  sigungu: string;
+  peak: NonNullable<RegionBrief["peak"]>;
+}) {
+  const { entry, rank, total } = peak;
+  const breached = entry.recovery >= 1;
+  const gap = peakGapPct(entry.recovery);
+  const rec = recoveryPct(entry.recovery);
+  // 바닥 대비 반등률 — trough 있을 때만(같은 원 단위 계산, 정수 %).
+  const reboundPct =
+    entry.troughKrw != null && entry.troughKrw > 0
+      ? Math.round(((entry.currentKrw - entry.troughKrw) / entry.troughKrw) * 100)
+      : null;
+  return (
+    <div className="pb-2.5 tabular-nums">
+      <p className="m-0 text-[12.5px] leading-[1.55]" style={{ color: INK_SOFT }}>
+        <b style={{ color: INK }}>{sigungu}</b> · {ymApos(entry.peakYm)} 전고점 대비{" "}
+        {breached ? (
+          <b style={{ color: UP }}>{gap === 0 ? "회복 완료" : `+${gap}%`}</b>
+        ) : (
+          <b style={{ color: DOWN }}>−{gap}%</b>
+        )}{" "}
+        <span className="text-[11px]">
+          (회복 <b style={{ color: UP }}>{rec}%</b> · {total.toLocaleString("ko-KR")}곳 중{" "}
+          <b style={{ color: INK }}>{rank.toLocaleString("ko-KR")}위</b>)
+        </span>
+      </p>
+      {reboundPct != null && entry.troughYm && (
+        <p className="m-0 mt-0.5 text-[11px] leading-[1.5]" style={{ color: INK_SOFT }}>
+          바닥({ymApos(entry.troughYm)}) 대비{" "}
+          <b style={{ color: reboundPct > 0 ? UP : reboundPct < 0 ? DOWN : INK }}>
+            {reboundPct > 0 ? "+" : reboundPct < 0 ? "−" : "±"}
+            {Math.abs(reboundPct)}%
+          </b>
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -395,6 +456,17 @@ function RivalColumn({
           </span>
         )}
       </p>
+      {/* 전고점 대비 회복률 1줄(v2.7) — 비교 강화. placeholder·미수록이면 생략.
+          기준월 병기 의무(헌장): "회복 92%"만 쓰지 않고 전고점 월을 붙인다. */}
+      {brief.peak && (
+        <p className="m-0 text-[11px] leading-[1.55] tabular-nums" style={{ color: INK_SOFT }}>
+          회복{" "}
+          <b style={{ color: UP }}>{recoveryPct(brief.peak.entry.recovery)}%</b>
+          <span className="block text-[9.5px]">
+            {ymApos(brief.peak.entry.peakYm)} 전고점 대비
+          </span>
+        </p>
+      )}
     </a>
   );
 }
@@ -426,6 +498,13 @@ function BriefBody({
     leader === "main" ? brief.sigungu : leader === "rival" ? rivalBrief!.sigungu : null;
   return (
     <>
+      {/* ── ⓪ [우리 동네 전고점 대비] — 최상단 1줄(눈뜨고 3초). placeholder·미수록 생략. ── */}
+      {brief.peak && (
+        <div className="px-0.5 pt-3">
+          <PeakLine sigungu={brief.sigungu} peak={brief.peak} />
+        </div>
+      )}
+
       {/* ── ① [오늘 이 동네] — 공개 건수 + 주요·강세 행 (첫 뷰포트 핵심) ── */}
       <section className="px-0.5 pb-3 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
         <CornerLabel>오늘 이 동네</CornerLabel>

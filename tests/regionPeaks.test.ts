@@ -5,6 +5,11 @@ import { describe, expect, it } from "vitest";
 import {
   PEAK_MIN_DEALS,
   computeRegionPeaks,
+  recoveryBand,
+  rankByRecovery,
+  rankOf,
+  topRecovered,
+  type RegionPeakEntry,
   type RegionPeakTx,
 } from "@/lib/regionPeaks";
 
@@ -168,5 +173,100 @@ describe("computeRegionPeaks — 창 밖·비양수·시군구명 처리", () =>
     const out = computeRegionPeaks(rows, months);
     expect(out["수원시 팔달구"]).toBeDefined();
     expect(out["수원시 팔달구"].peakKrw).toBe(700_000_000);
+  });
+});
+
+// ── UI 헬퍼 — 밴드·랭킹·TOP(하위 랭킹 없음). ────────────────────────────────────
+/** 테스트용 최소 엔트리 — recovery 만 중요. 나머지 필드는 형식만 맞춘다. */
+function entry(recovery: number): RegionPeakEntry {
+  return {
+    peakKrw: 1_000_000_000,
+    peakYm: "2021-10",
+    currentKrw: Math.round(1_000_000_000 * recovery),
+    currentYm: "2026-06",
+    recovery,
+    troughKrw: null,
+    troughYm: null,
+  };
+}
+
+describe("recoveryBand — 경계(100/90/75%)", () => {
+  it("신고점 돌파(≥100%)는 밴드 3", () => {
+    expect(recoveryBand(1)).toBe(3);
+    expect(recoveryBand(1.12)).toBe(3);
+  });
+  it("90~100%는 밴드 2", () => {
+    expect(recoveryBand(0.9)).toBe(2);
+    expect(recoveryBand(0.999)).toBe(2);
+  });
+  it("75~90%는 밴드 1", () => {
+    expect(recoveryBand(0.75)).toBe(1);
+    expect(recoveryBand(0.899)).toBe(1);
+  });
+  it("<75%는 밴드 0", () => {
+    expect(recoveryBand(0.749)).toBe(0);
+    expect(recoveryBand(0.5)).toBe(0);
+  });
+});
+
+describe("rankByRecovery — 내림차순 + 동률 가나다 안정 정렬", () => {
+  it("회복률 높은 순, 동률은 시군구 가나다순", () => {
+    const regions = {
+      마포구: entry(0.92),
+      강남구: entry(0.98),
+      // 동률 0.85 — 가나다(성동 < 송파)로 성동구가 먼저.
+      송파구: entry(0.85),
+      성동구: entry(0.85),
+    };
+    const ranked = rankByRecovery(regions).map((r) => r.sigungu);
+    expect(ranked).toEqual(["강남구", "마포구", "성동구", "송파구"]);
+  });
+  it("빈 입력은 빈 배열", () => {
+    expect(rankByRecovery({})).toEqual([]);
+  });
+});
+
+describe("rankOf — 본인 '82곳 중 N위'(동률 경쟁 랭킹)", () => {
+  const regions = {
+    강남구: entry(0.98),
+    마포구: entry(0.92),
+    성동구: entry(0.85),
+    송파구: entry(0.85), // 성동과 동률
+    노원구: entry(0.7),
+  };
+  it("총 M = regions 개수", () => {
+    expect(rankOf(regions, "강남구")!.total).toBe(5);
+  });
+  it("1위·중간 순위", () => {
+    expect(rankOf(regions, "강남구")!.rank).toBe(1);
+    expect(rankOf(regions, "마포구")!.rank).toBe(2);
+  });
+  it("동률은 같은 순위를 공유(둘 다 3위 — 나보다 엄격히 높은 2곳 + 1)", () => {
+    expect(rankOf(regions, "성동구")!.rank).toBe(3);
+    expect(rankOf(regions, "송파구")!.rank).toBe(3);
+  });
+  it("없는 시군구는 null(회복률 줄 생략)", () => {
+    expect(rankOf(regions, "종로구")).toBeNull();
+    expect(rankOf({}, "강남구")).toBeNull();
+  });
+});
+
+describe("topRecovered — 회복 상위만(하위/워스트 없음)", () => {
+  const regions = {
+    강남구: entry(1.05), // 신고점 돌파 — 자동으로 맨 위
+    마포구: entry(0.92),
+    성동구: entry(0.88),
+    노원구: entry(0.7),
+    도봉구: entry(0.6),
+    강북구: entry(0.55),
+  };
+  it("상위 5곳, 신고점 돌파 우선(내림차순)", () => {
+    const top = topRecovered(regions, 5).map((r) => r.sigungu);
+    expect(top).toEqual(["강남구", "마포구", "성동구", "노원구", "도봉구"]);
+    // 최하위(강북구 0.55)는 절대 포함되지 않는다.
+    expect(top).not.toContain("강북구");
+  });
+  it("regions 가 n보다 적으면 있는 만큼만", () => {
+    expect(topRecovered({ 강남구: entry(0.9) }, 5)).toHaveLength(1);
   });
 });

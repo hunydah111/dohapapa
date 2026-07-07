@@ -9,6 +9,7 @@ import dailyPatchRaw from "@/data/dailyPatch.json";
 import dailyRecentRaw from "@/data/dailyRecent.json";
 import regionTopRaw from "@/data/regionTop.json";
 import regionSeriesRaw from "@/data/regionSeries.json";
+import regionPeaksRaw from "@/data/regionPeaks.json";
 import {
   buildLocalFrontData,
   type LocalPatchInput,
@@ -16,6 +17,7 @@ import {
 } from "@/lib/localFront";
 import type { RegionTopFile } from "@/lib/regionTop";
 import type { RegionSeriesFile } from "@/lib/regionSeries";
+import type { RegionPeaksFile } from "@/lib/regionPeaks";
 import { LocalFront } from "./LocalFront";
 
 // placeholder(빈 배열)는 never[] 로 추론되므로 명시 캐스팅 (DailyFront 와 동일 사정).
@@ -23,6 +25,7 @@ const patch = dailyPatchRaw as unknown as LocalPatchInput;
 const recent = dailyRecentRaw as unknown as { updatedAt?: string; days?: RecentDay[] };
 const regionTop = regionTopRaw as unknown as RegionTopFile;
 const series = regionSeriesRaw as unknown as RegionSeriesFile;
+const peaks = regionPeaksRaw as unknown as RegionPeaksFile;
 
 export function LocalFrontHost() {
   const data = buildLocalFrontData({
@@ -30,6 +33,7 @@ export function LocalFrontHost() {
     recentDays: recent.days ?? [],
     regionTop,
     series,
+    peaks,
   });
   return <LocalFront data={data} />;
 }
