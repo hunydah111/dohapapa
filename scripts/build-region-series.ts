@@ -123,13 +123,16 @@ async function main() {
         ym: ymOf(t.dealDate),
         priceKrw: Number(t.priceKrw),
       }));
-    // 전고점/회복률 입력 — tempSeries와 같은 5년+ 조회 전체(계약월·시군구·가격만).
-    // computeRegionPeaks 가 months 밖 거래를 스스로 무시하므로 필터 없이 전량 넘긴다.
-    peakRows = valid.map((t) => ({
-      sigungu: t.complex.sigungu,
-      ym: ymOf(t.dealDate),
-      priceKrw: Number(t.priceKrw),
-    }));
+    // 전고점/회복률 입력 — ★국민평형(84㎡급 = p32_35)으로만 집계★. 시군구 "평형 혼합" 중위로
+    // 절대가 전고점을 잡으면 특정 달의 대형·고가 쏠림이 가짜 전고점을 만든다(2026-07-07 실측:
+    // 78곳 중 42곳의 전고점이 2026년으로 잡히고 송파 "한 달 만에 −38%" 같은 오보 발생). 국평
+    // 한 밴드로 고정하면 평형 구성 왜곡이 원천 제거되고 전고점이 실제 폭등기(2021)로 복귀한다.
+    // computeRegionPeaks 가 months 밖 거래를 스스로 무시하므로 창 필터는 없이 넘긴다.
+    peakRows = valid.flatMap((t) =>
+      bandOfArea(t.area) === "p32_35"
+        ? [{ sigungu: t.complex.sigungu, ym: ymOf(t.dealDate), priceKrw: Number(t.priceKrw) }]
+        : [],
+    );
     // 온도 시계열 입력 — 단지×평형 밴드 그룹. 밴드 밖 면적(초소형 등)은 스킵.
     tempRows = valid.flatMap((t) => {
       const band = bandOfArea(t.area);
