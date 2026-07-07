@@ -40,6 +40,10 @@ import {
   type PatchItem,
 } from "@/lib/patchNote";
 import { ShareButton } from "@/components/ShareButton";
+// 오늘의 반응(v2.6) — 거래 행 아래 시세 평가 스탬프. Provider가 지면 분량 키를 모아
+// 1회 배치 GET — 행마다 fetch 금지. dealKey는 patchNote dealKey와 동일 규격.
+import { DealReactions, ReactionsProvider } from "@/components/DealReactions";
+import { reactionDealKey } from "@/lib/reaction";
 // 지면 조판 토큰·명조 — 공유 단일 소스(중복 선언 금지). UP/DOWN = 시세 방향색(1면과 동일 문법).
 import { serif, PAPER, INK, INK_SOFT, RULE, CORAL, UP, DOWN } from "@/lib/paperTone";
 
@@ -331,7 +335,7 @@ function DealLine({
   left: string;
   meta?: string;
   right: string;
-  sub?: string;
+  sub?: React.ReactNode;
   divider: boolean;
 }) {
   return (
@@ -358,6 +362,37 @@ function DealLine({
         </div>
       )}
     </div>
+  );
+}
+
+/** [주요 거래] 기준점 서브라인 — 1면(DailyFront MajorRow)과 동일 문법 + 최고가 대비 %
+ *  병기(2026-07-07 사장 추가): "(대비 −8.2%)" — pct=(price−refMax)/refMax 소수 1자리.
+ *  갱신·동률 케이스는 그 표기 자체가 비교 서술이라 % 중복 표기 금지. refMax 없으면 생략.
+ *  색은 본문 INK_SOFT, 숫자만 먹 굵게. */
+function refMaxSubline(m: MajorItem): React.ReactNode | undefined {
+  const refMax = m.windowMaxKrw ?? null;
+  if (refMax == null || refMax <= 0 || !m.refMaxPeriod) return undefined;
+  if (m.priceKrw > refMax) {
+    return (
+      <>
+        <b style={{ color: UP }}>— {m.refMaxPeriod} 내 최고가 갱신</b> (종전 {eok(refMax)}
+        {m.windowMaxDate ? ` · ${ymdShort(m.windowMaxDate)}` : ""}
+        {m.windowMaxFloor != null ? ` · ${m.windowMaxFloor}층` : ""})
+      </>
+    );
+  }
+  if (m.priceKrw === refMax) {
+    return <b style={{ color: INK }}>— {m.refMaxPeriod} 내 최고가 동률</b>;
+  }
+  const pct = (m.priceKrw - refMax) / refMax; // 이 분기에선 항상 음수
+  return (
+    <>
+      최근 {m.refMaxPeriod} 최고 {eok(refMax)}
+      {m.windowMaxDate
+        ? ` (${ymdShort(m.windowMaxDate)}${m.windowMaxFloor != null ? `·${m.windowMaxFloor}층` : ""})`
+        : ""}{" "}
+      (대비 <b style={{ color: INK }}>−{pctAbs(pct)}%</b>)
+    </>
   );
 }
 
@@ -443,13 +478,19 @@ function TopBandSection({
         최근 60일 관측 {deals.toLocaleString("ko-KR")}건
       </p>
       {items.map((it, i) => (
-        <TopRow
-          key={`${it.apt}-${it.dealDate}-${it.priceKrw}`}
-          item={it}
-          rank={i + 1}
-          sigungu={sigungu}
-          divider={i > 0}
-        />
+        <div key={`${it.apt}-${it.dealDate}-${it.priceKrw}`}>
+          <TopRow item={it} rank={i + 1} sigungu={sigungu} divider={i > 0} />
+          <DealReactions
+            dealKey={reactionDealKey({
+              sigungu,
+              apt: it.apt,
+              areaM2: it.areaM2,
+              dealDate: it.dealDate,
+              priceKrw: it.priceKrw,
+              floor: it.floor,
+            })}
+          />
+        </div>
       ))}
     </div>
   );
@@ -500,6 +541,44 @@ export default async function Page({
     regionTop.generatedAt !== null ? (regionTop.regions[sigungu] ?? null) : null;
   const topOrder = topBands ? orderedBandKeys(topBands) : [];
 
+  // [오늘의 반응] 배치 키 — [오늘 이 동네](주요·강세)와 [최근 거래 상위] 전 행.
+  // 해제 거래는 평가 대상 아님(체결 아닌 행정 사실). dealKey는 patchNote 규격 재사용.
+  const majorKeys = majors.map((m) =>
+    reactionDealKey({
+      sigungu,
+      apt: m.apt,
+      areaM2: m.areaM2,
+      dealDate: m.dealDate,
+      priceKrw: m.priceKrw,
+      floor: m.floor ?? null,
+    }),
+  );
+  const strongKeys = strongs.map((s) =>
+    reactionDealKey({
+      sigungu,
+      apt: s.apt,
+      areaM2: s.areaM2,
+      dealDate: s.dealDate,
+      priceKrw: s.priceKrw,
+      floor: s.floor ?? null,
+    }),
+  );
+  const topItemKeys = topOrder.flatMap((key) =>
+    (topBands![key]?.items ?? []).map((it) =>
+      reactionDealKey({
+        sigungu,
+        apt: it.apt,
+        areaM2: it.areaM2,
+        dealDate: it.dealDate,
+        priceKrw: it.priceKrw,
+        floor: it.floor,
+      }),
+    ),
+  );
+  const reactionKeys = Array.from(
+    new Set([...majorKeys, ...strongKeys, ...topItemKeys]),
+  );
+
   return (
     <div className="mx-auto w-full max-w-md px-0 py-4 sm:py-6">
       <article
@@ -542,6 +621,8 @@ export default async function Page({
           </h1>
         </header>
 
+        {/* ── [오늘 이 동네]~[최근 거래 상위] — 오늘의 반응 배치 컨텍스트(1회 GET) ── */}
+        <ReactionsProvider dealKeys={reactionKeys}>
         {/* ── [오늘 이 동네] ── */}
         <section className="px-0.5 pb-3.5 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
           <CornerLabel>오늘 이 동네</CornerLabel>
@@ -568,13 +649,16 @@ export default async function Page({
                     주요 거래(15억 이상 중개거래)
                   </p>
                   {majors.map((m, i) => (
-                    <DealLine
-                      key={`m${m.apt}-${m.dealDate}-${m.priceKrw}-${i}`}
-                      left={`${m.dong} ${m.apt}`}
-                      meta={`${sqm(m.areaM2)}㎡${m.floor != null ? ` · ${m.floor}층` : ""}`}
-                      right={`${eok(m.priceKrw)} · 계약 ${md(m.dealDate)}`}
-                      divider={i > 0}
-                    />
+                    <div key={`m${m.apt}-${m.dealDate}-${m.priceKrw}-${i}`}>
+                      <DealLine
+                        left={`${m.dong} ${m.apt}`}
+                        meta={`${sqm(m.areaM2)}㎡${m.floor != null ? ` · ${m.floor}층` : ""}`}
+                        right={`${eok(m.priceKrw)} · 계약 ${md(m.dealDate)}`}
+                        sub={refMaxSubline(m)}
+                        divider={i > 0}
+                      />
+                      <DealReactions dealKey={majorKeys[i]} />
+                    </div>
                   ))}
                 </div>
               )}
@@ -585,14 +669,16 @@ export default async function Page({
                     강세 거래(직전 실거래보다 높게)
                   </p>
                   {strongs.map((s, i) => (
-                    <DealLine
-                      key={`s${s.apt}-${s.dealDate}-${i}`}
-                      left={`▲ ${s.dong} ${s.apt}`}
-                      meta={`${sqm(s.areaM2)}㎡`}
-                      right={`+${pctAbs(s.pctVsPrev!)}%`}
-                      sub={`직전 ${ymdShort(s.prevDate!)} ${eok(s.prevKrw!)}${s.prevFloor != null ? `(${s.prevFloor}층)` : ""} → ${eok(s.priceKrw)} · 계약 ${md(s.dealDate)}`}
-                      divider={i > 0}
-                    />
+                    <div key={`s${s.apt}-${s.dealDate}-${i}`}>
+                      <DealLine
+                        left={`▲ ${s.dong} ${s.apt}`}
+                        meta={`${sqm(s.areaM2)}㎡`}
+                        right={`+${pctAbs(s.pctVsPrev!)}%`}
+                        sub={`직전 ${ymdShort(s.prevDate!)} ${eok(s.prevKrw!)}${s.prevFloor != null ? `(${s.prevFloor}층)` : ""} → ${eok(s.priceKrw)} · 계약 ${md(s.dealDate)}`}
+                        divider={i > 0}
+                      />
+                      <DealReactions dealKey={strongKeys[i]} />
+                    </div>
                   ))}
                 </div>
               )}
@@ -691,6 +777,7 @@ export default async function Page({
             </>
           )}
         </section>
+        </ReactionsProvider>
 
         {/* ── 출구 — 모든 정보엔 출구(30초 판정) ── */}
         <Link
