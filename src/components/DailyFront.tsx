@@ -668,11 +668,18 @@ function MajorRow({
           ) : item.priceKrw === refMax ? (
             <b style={{ color: INK }}>— {item.refMaxPeriod} 내 최고가 동률</b>
           ) : (
+            /* 최고가 대비 % 병기(2026-07-07 사장 지시) — 시세 방향이 아니라 "정점과의
+               거리"라 방향색 금지, 숫자만 먹 굵게. 갱신·동률 분기엔 중복 표기 금지. */
             <>
               최근 {item.refMaxPeriod} 최고 {eok(refMax)}
               {item.windowMaxDate
                 ? ` (${ymdShort(item.windowMaxDate)}${item.windowMaxFloor != null ? `·${item.windowMaxFloor}층` : ""})`
-                : ""}
+                : ""}{" "}
+              (대비{" "}
+              <b style={{ color: INK }}>
+                −{pctAbs((item.priceKrw - refMax) / refMax)}%
+              </b>
+              )
             </>
           )}
         </div>
@@ -1057,6 +1064,17 @@ export function DailyFront() {
                   타일 = 수도권 82개 시군구(위치 근사) · 탭하면 동네면으로 ·{" "}
                   {isMerged ? "합산 기간" : "오늘"} 공개된 거래 기준{mergedNote}.
                 </CornerNote>
+                {/* 동네판 진입점(v2.6) — 지면에서 유일한 1개. #local 해시 → HomeTabs 가
+                    동네판 탭으로 전환(구독 설정은 그쪽 지면에서). */}
+                <p className="m-0 mt-1.5 text-[11.5px]">
+                  <a
+                    href="#local"
+                    className="font-bold underline decoration-dotted underline-offset-2"
+                    style={{ color: INK }}
+                  >
+                    이 동네를 내 동네판으로 — 매일 아침 먼저 보기 →
+                  </a>
+                </p>
               </section>
             )}
 

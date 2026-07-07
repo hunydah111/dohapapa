@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { HomeExperience } from "@/components/HomeExperience";
 import { DailyFront } from "@/components/DailyFront";
+import { HomeTabs } from "@/components/HomeTabs";
+import { LocalFrontHost } from "@/components/LocalFrontHost";
 import { decodeFriend, friendReachName, FRIEND_PARAM } from "@/lib/friendShare";
 import { SITE_URL } from "@/lib/site";
 
@@ -44,12 +46,17 @@ export async function generateMetadata({
 export default function HomePage() {
   return (
     <div className="relative mx-auto max-w-2xl px-4 pt-4">
-      {/* ── 메인 경험 (오늘의 1면 → 랜딩 히어로 → 폼 → 결과) ──
-          오늘의 1면(DailyFront, 서버 컴포넌트)은 prop 으로 넘겨 랜딩 상태에서만 렌더
-          — 판정 폼 진행·결과 화면에선 접힌다(집중 유지, 2026-07-06 폼 UX).
+      {/* ── 메인 경험 (탭[1면|동네판] → 랜딩 히어로 → 폼 → 결과) ──
+          홈 상단은 [1면 | 동네판] 탭(v2.6) — 구독자는 마운트 시 동네판이 기본 선택
+          ("눈뜨고 3초"), 미구독자는 1면. 두 지면(서버 컴포넌트)은 HomeTabs(클라이언트)에
+          children prop 으로 — 표준 "server component as client prop" 패턴.
+          탭 묶음 전체를 frontPage 로 넘겨 랜딩 상태에서만 렌더 — 판정 폼 진행·결과
+          화면에선 접힌다(집중 유지, 2026-07-06 폼 UX — 판정 동선 불변).
           id=biji-verdict 앵커(지면 CTA·게이지의 스크롤 목적지)는 HomeExperience 내부,
           frontPage 아래 본 경험 컨테이너에 붙는다. */}
-      <HomeExperience frontPage={<DailyFront />} />
+      <HomeExperience
+        frontPage={<HomeTabs front={<DailyFront />} local={<LocalFrontHost />} />}
+      />
 
       {/* ── 면책 안내 ── */}
       <p
