@@ -5,7 +5,9 @@
 // 구독자는 홈을 열면 이 지면이 기본 뷰로 즉시 뜬다(탭 전환·로그인·조작 0 — HomeTabs 담당).
 // 첫 뷰포트(375px) 무스크롤 완결: ①[오늘 이 동네](공개 N건 + 주요·강세 행)
 //   ②동네 등락 한 줄(직전 실거래 대비 평균 — 집계 문턱 미달이면 생략)
-//   ③라이벌 미니보드({main} vs {rival} — 팩트 수치만, 평가 워딩 0).
+//   ③라이벌 미니보드({main} vs {rival} — 팩트 수치만: 기세 마크(최근 두 관측월 중위
+//     변화)·우세 딱지(기세 큰 쪽·동률/결측 생략)·공개·최고가·직전 대비 평균(최근 며칠
+//     합산 표본, 3건 미만은 "표본 부족"). 박스 전체가 동네면(/r) 링크. 평가 워딩 0).
 // 이하: [최근 거래 상위] TOP5 → [12개월 추이] 요약+동네면 링크 → 30초 판정 CTA
 //   → PWA 안내 1줄 → 콜로폰(출처 워터마크).
 //
@@ -29,8 +31,10 @@ import {
   type MyRegions,
 } from "@/lib/myRegions";
 import {
+  LOCAL_PULSE_MIN_SAMPLE,
   briefFor,
   pickColdStartSigungu,
+  pickMomentumLeader,
   type LocalFrontData,
   type RegionBrief,
 } from "@/lib/localFront";
@@ -297,24 +301,53 @@ function BriefRow({
   );
 }
 
-/** 라이벌 미니보드 열 1개 — 팩트 수치만(공개 건수·최고가·직전 대비 평균). 평가 워딩 0. */
+/** 기세 마크 보합 밴드 — 관측 중위 변화 ±1% 이내는 방향 없이 "보합"(먹). 인쇄 전용 —
+ *  우세 판정(pickMomentumLeader)은 원값 비교라 이 밴드와 무관하다. */
+const MOMENTUM_FLAT_BAND = 0.01;
+
+/** 라이벌 미니보드 열 1개 — 팩트 수치만(기세 마크·공개 건수·최고가·직전 대비 평균).
+ *  박스 전체가 동네면(/r) 링크 — 점선 밑줄은 동네명에만(RegionLink 문법), 박스는 hover
+ *  배경만. 평가 워딩 0 — 우세는 테두리 두께(leader)로만, 라벨은 "기세" 딱지가 담당. */
 function RivalColumn({
   brief,
   mine,
+  leader,
+  recentDaysCount,
 }: {
   brief: RegionBrief;
-  /** 내 동네 열 — 굵은 테두리로만 구분(우열 표시 아님). */
+  /** 내 동네 열 — "내 동네" 라벨로만 구분. */
   mine: boolean;
+  /** 이번 달 기세 우세 열 — 테두리 2px 강조(둘 다 기세 있고 동률 아닐 때만 한쪽 true). */
+  leader: boolean;
+  /** 직전 대비 평균 표본이 덮는 일수 — "최근 {N}일 · {M}건" 기준점 병기. */
+  recentDaysCount: number;
 }) {
-  const pulse = brief.pulse;
-  const dir = pulse === null || pulse.avgPct === 0 ? INK : pulse.avgPct > 0 ? UP : DOWN;
+  const m = brief.momentum;
+  const flat = m !== null && Math.abs(m.pct) <= MOMENTUM_FLAT_BAND;
+  const rp = brief.recentPulse;
+  const rpOk = rp !== null && rp.count >= LOCAL_PULSE_MIN_SAMPLE;
+  const rpDir = !rpOk || rp.avgPct === 0 ? INK : rp.avgPct > 0 ? UP : DOWN;
   return (
-    <div
-      className="flex min-w-0 flex-1 flex-col gap-1 p-2.5"
-      style={{ border: `${mine ? 2 : 1}px solid ${INK}`, background: PAPER }}
+    <a
+      href={`/r/${encodeURIComponent(brief.sigungu)}`}
+      title={`${brief.sigungu} 동네면`}
+      className="flex min-w-0 flex-1 flex-col gap-1 p-2.5 no-underline transition-colors hover:bg-black/[0.04]"
+      style={{ border: `${leader ? 2 : 1}px solid ${INK}` }}
     >
+      {/* 기세 마크 — "시세" 아님, 관측 중위(라벨 의무). 유효월 2개 미만이면 생략. */}
+      {m && (
+        <p
+          className="m-0 text-[11.5px] font-extrabold leading-[1.4] tabular-nums"
+          style={{ color: flat ? INK : m.pct > 0 ? UP : DOWN }}
+        >
+          {flat ? "― 보합" : m.pct > 0 ? `▲+${pctAbs(m.pct)}%` : `▼−${pctAbs(m.pct)}%`}{" "}
+          <span className="text-[9px] font-normal" style={{ color: INK_SOFT }}>
+            {ymShort(m.fromMonth)}→{ymShort(m.toMonth)} 관측 중위
+          </span>
+        </p>
+      )}
       <p className="m-0 truncate text-[12.5px] font-extrabold" style={{ color: INK }}>
-        {brief.sigungu}
+        <span className="underline decoration-dotted underline-offset-2">{brief.sigungu}</span>
         {mine && (
           <span className="ml-1 text-[9.5px] font-bold" style={{ color: INK_SOFT }}>
             내 동네
@@ -326,25 +359,43 @@ function RivalColumn({
         <b className="text-[13px]" style={{ color: INK }}>
           {brief.todayCount.toLocaleString("ko-KR")}건
         </b>
-        <br />
+      </p>
+      <p
+        className="m-0 truncate text-[11px] leading-[1.55] tabular-nums"
+        style={{ color: INK_SOFT }}
+      >
         최고가{" "}
         {brief.todayMax ? (
-          <b style={{ color: INK }}>{eok(brief.todayMax.priceKrw)}</b>
-        ) : (
-          <span>—</span>
-        )}
-        <br />
-        직전 대비 평균{" "}
-        {pulse ? (
-          <b style={{ color: dir }}>
-            {pulse.avgPct > 0 ? "+" : pulse.avgPct < 0 ? "−" : "±"}
-            {pctAbs(pulse.avgPct)}%
-          </b>
+          <>
+            <b style={{ color: INK }}>{eok(brief.todayMax.priceKrw)}</b>
+            <span className="text-[10px]">
+              {" "}
+              · {brief.todayMax.apt}
+              {brief.todayMax.floor != null && ` ${brief.todayMax.floor}층`}
+            </span>
+          </>
         ) : (
           <span>—</span>
         )}
       </p>
-    </div>
+      <p className="m-0 text-[11px] leading-[1.55] tabular-nums" style={{ color: INK_SOFT }}>
+        직전 대비 평균{" "}
+        {rpOk ? (
+          <b style={{ color: rpDir }}>
+            {rp.avgPct > 0 ? "+" : rp.avgPct < 0 ? "−" : "±"}
+            {pctAbs(rp.avgPct)}%
+          </b>
+        ) : (
+          /* 빈 대시 금지 — 표본이 왜 없는지 말한다(아래 기준점 줄이 N건을 병기). */
+          <b style={{ color: INK }}>표본 부족</b>
+        )}
+        {recentDaysCount > 0 && (
+          <span className="block text-[9.5px]">
+            최근 {recentDaysCount}일 · {(rp?.count ?? 0).toLocaleString("ko-KR")}건
+          </span>
+        )}
+      </p>
+    </a>
   );
 }
 
@@ -367,6 +418,12 @@ function BriefBody({
   const pulseDir = pulse === null || pulse.avgPct === 0 ? INK : pulse.avgPct > 0 ? UP : DOWN;
   const majorRest = brief.majors.total - brief.majors.rows.length;
   const strongRest = brief.strongs.total - brief.strongs.rows.length;
+  // 우세 딱지 — 둘 다 기세 있을 때만(동률·결측은 null → 딱지·테두리 강조 생략).
+  const leader = rivalBrief
+    ? pickMomentumLeader(brief.momentum, rivalBrief.momentum)
+    : null;
+  const leaderName =
+    leader === "main" ? brief.sigungu : leader === "rival" ? rivalBrief!.sigungu : null;
   return (
     <>
       {/* ── ① [오늘 이 동네] — 공개 건수 + 주요·강세 행 (첫 뷰포트 핵심) ── */}
@@ -506,17 +563,39 @@ function BriefBody({
         </CornerNote>
       </section>
 
-      {/* ── ③ 라이벌 미니보드 — 팩트 수치만, 평가 워딩 0 ── */}
+      {/* ── ③ 라이벌 미니보드 — 팩트 수치만, 평가·서열 워딩 0(우세/기세만) ── */}
       {rivalBrief && (
         <section className="px-0.5 pb-3 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
           <CornerLabel>라이벌 보드</CornerLabel>
+          {leaderName && (
+            <p className="m-0 pb-1.5">
+              <span
+                className="inline-block border px-1.5 py-[2px] text-[10.5px] font-bold tracking-[0.04em]"
+                style={{ borderColor: INK, color: INK, background: PAPER }}
+              >
+                이번 달 기세: {leaderName}
+              </span>
+            </p>
+          )}
           <div className="flex gap-1.5">
-            <RivalColumn brief={brief} mine />
-            <RivalColumn brief={rivalBrief} mine={false} />
+            <RivalColumn
+              brief={brief}
+              mine
+              leader={leader === "main"}
+              recentDaysCount={data.recentDaysCount}
+            />
+            <RivalColumn
+              brief={rivalBrief}
+              mine={false}
+              leader={leader === "rival"}
+              recentDaysCount={data.recentDaysCount}
+            />
           </div>
           <CornerNote>
             {when} 공개분 팩트 비교 · 최고가는 중개거래(직거래·해제 제외) · 직전 대비
-            평균은 직전 실거래(60일 내) 있는 거래 5건 이상 동네만{mergedNote}.
+            평균은 최근 {data.recentDaysCount}일 공개 중개거래 중 직전 실거래(60일 내)
+            있는 거래의 평균 · 기세 = 최근 두 관측월 중위 변화 — 단일 지표이며 종합
+            평가 아님{mergedNote}.
           </CornerNote>
         </section>
       )}

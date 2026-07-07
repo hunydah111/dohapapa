@@ -2,12 +2,15 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  LOCAL_PULSE_MIN_SAMPLE,
   LOCAL_ROW_LIMIT,
   LOCAL_TOP_LIMIT,
   briefFor,
   buildLocalFrontData,
   issueDates,
+  momentumFor,
   pickColdStartSigungu,
+  pickMomentumLeader,
   type LocalPatchInput,
   type RecentDay,
 } from "@/lib/localFront";
@@ -233,6 +236,7 @@ describe("buildLocalFrontData", () => {
       apt: "오늘최고",
       areaM2: 84.9,
       priceKrw: 4_000_000_000,
+      floor: 5, // 라이벌 보드 "최고 N억 · 단지 층" 병기 팩트
     });
     expect(d.todayMax["마포구"]).toBeUndefined(); // 7/5 공개분 — 이번 판 아님
   });
@@ -276,6 +280,8 @@ describe("buildLocalFrontData", () => {
     expect(d.regionCounts).toEqual({});
     expect(d.todayMax).toEqual({});
     expect(d.recentDaysCount).toBe(0);
+    expect(d.recentPulses).toEqual({});
+    expect(d.momentums).toEqual({});
     expect(pickColdStartSigungu(d)).toBeNull();
   });
 });
@@ -325,6 +331,217 @@ describe("issueDates", () => {
   });
 });
 
+// ── momentumFor — 동네 기세(최근 2개 유효월 관측 중위 변화) ────────────────────
+describe("momentumFor", () => {
+  // regionSeries 계약 — 마지막 달("2026-06")은 당월(집계 중).
+  const months = ["2026-03", "2026-04", "2026-05", "2026-06"];
+
+  it("최근 2개 유효 완료월의 중위 변화 — 당월(마지막 버킷)은 non-null 이어도 제외", () => {
+    const m = momentumFor(months, {
+      counts: [3, 5, 4, 6],
+      // 당월 12억(반쪽 표본)이 끼면 −43% 왜곡 기세가 찍힌다 — 완료월 04→05 만 비교.
+      medianKrw: [1_900_000_000, 2_000_000_000, 2_100_000_000, 1_200_000_000],
+    });
+    expect(m).toEqual({
+      pct: (2_100_000_000 - 2_000_000_000) / 2_000_000_000, // +5%
+      fromMonth: "2026-04",
+      toMonth: "2026-05",
+    });
+  });
+
+  it("유효월 사이 표본 부족(null) 달이 끼면 건너뛰고 관측된 두 완료월을 비교한다", () => {
+    const m = momentumFor(months, {
+      counts: [4, 1, 6, 0],
+      medianKrw: [2_000_000_000, null, 1_900_000_000, null],
+    });
+    expect(m).toEqual({
+      pct: (1_900_000_000 - 2_000_000_000) / 2_000_000_000, // −5%
+      fromMonth: "2026-03",
+      toMonth: "2026-05",
+    });
+  });
+
+  it("유효 완료월 2개 미만이면 null — 당월만 유효해도 마크는 안 찍는다", () => {
+    expect(
+      momentumFor(months, { counts: [1, 3, 0, 0], medianKrw: [null, 1_900_000_000, null, null] }),
+    ).toBeNull();
+    // 완료월 1개 + 당월 1개 — 당월은 제외라 여전히 null.
+    expect(
+      momentumFor(months, {
+        counts: [0, 3, 0, 5],
+        medianKrw: [null, 1_900_000_000, null, 2_500_000_000],
+      }),
+    ).toBeNull();
+    expect(momentumFor([], { counts: [], medianKrw: [] })).toBeNull();
+  });
+
+  it("buildLocalFrontData 가 시군구별 momentums 로 굽는다 — 유효월 2개 미만 동네는 생략", () => {
+    const d = build();
+    // 강남구: 완료월 05(20억) → 06(22억) — 07은 당월(집계 중)이라 애초에 제외.
+    expect(d.momentums["강남구"]).toEqual({
+      pct: 0.1,
+      fromMonth: "2026-05",
+      toMonth: "2026-06",
+    });
+    expect(d.momentums["서초구"]).toBeUndefined(); // 유효월 1개
+    expect(briefFor(d, "강남구").momentum).not.toBeNull();
+    expect(briefFor(d, "서초구").momentum).toBeNull();
+  });
+});
+
+// ── recentPulses — [직전 대비 평균] 최근 며칠 "합산" 표본(오늘분만이 아님) ────────
+describe("recentPulses (직전 대비 평균 — 3일 합산)", () => {
+  function pulseBuild(recentDays: RecentDay[]) {
+    return buildLocalFrontData({
+      patch: { generatedAt: "2026-07-07", mode: "daily", nerf: [] },
+      recentDays,
+      regionTop: { generatedAt: null, windowDays: 60, regions: {} },
+      series: { generatedAt: null, months: [], regions: {} },
+    });
+  }
+
+  it("전일 공개분이 직전 거래 기준으로 잡힌다 — 일자 경계를 넘는 합산 표본", () => {
+    const d = pulseBuild([
+      {
+        date: "2026-07-05",
+        items: [
+          recentItem({
+            sigunguName: "강남구",
+            apartmentName: "단지X",
+            priceKrw: 1_000_000_000,
+            dealDateISO: "2026-06-20",
+          }),
+        ],
+      },
+      {
+        date: "2026-07-07",
+        items: [
+          recentItem({
+            sigunguName: "강남구",
+            apartmentName: "단지X",
+            priceKrw: 1_100_000_000,
+            dealDateISO: "2026-07-05",
+          }),
+        ],
+      },
+    ]);
+    // 7/5 계약 11억의 직전 = 6/20 계약 10억(이틀 전 공개분) → +10%, 표본 1.
+    expect(d.recentPulses["강남구"]).toEqual({ avgPct: 0.1, count: 1 });
+    expect(briefFor(d, "강남구").recentPulse).toEqual({ avgPct: 0.1, count: 1 });
+  });
+
+  it("직거래는 등락 주체에서 제외(기준으론 유효) · 해제·평형 불일치(±3㎡ 밖)는 매칭 제외", () => {
+    const d = pulseBuild([
+      {
+        date: "2026-07-07",
+        items: [
+          // 직거래 8억(6/25) — 주체론 안 세지만 아래 중개 9억의 "직전" 기준으론 유효.
+          recentItem({
+            sigunguName: "강남구",
+            apartmentName: "단지Y",
+            priceKrw: 800_000_000,
+            dealDateISO: "2026-06-25",
+            dealingGbn: "직거래",
+          }),
+          recentItem({
+            sigunguName: "강남구",
+            apartmentName: "단지Y",
+            priceKrw: 900_000_000,
+            dealDateISO: "2026-07-06",
+          }),
+          // 해제 — 기준·주체 모두 제외(9.5억이 기준이 되면 안 됨).
+          recentItem({
+            sigunguName: "강남구",
+            apartmentName: "단지Y",
+            priceKrw: 950_000_000,
+            dealDateISO: "2026-07-01",
+            canceled: true,
+          }),
+          // 같은 단지지만 59㎡ — ±3㎡ 밖이라 84.9㎡ 거래의 직전이 될 수 없음.
+          recentItem({
+            sigunguName: "서초구",
+            apartmentName: "단지Z",
+            priceKrw: 700_000_000,
+            dealDateISO: "2026-06-28",
+            area: 59.9,
+          }),
+          recentItem({
+            sigunguName: "서초구",
+            apartmentName: "단지Z",
+            priceKrw: 1_200_000_000,
+            dealDateISO: "2026-07-05",
+            area: 84.9,
+          }),
+        ],
+      },
+    ]);
+    // 단지Y: 중개 9억 vs 직전 직거래 8억 = +12.5% — 표본은 중개 1건뿐.
+    expect(d.recentPulses["강남구"]).toEqual({ avgPct: 0.125, count: 1 });
+    // 단지Z: 평형 불일치라 직전 없음 → 서초구 표본 0(키 자체가 없음).
+    expect(d.recentPulses["서초구"]).toBeUndefined();
+    expect(briefFor(d, "서초구").recentPulse).toBeNull();
+  });
+
+  it("60일보다 묵은 직전 거래는 비교 무의미(제외) · 평균은 매칭분끼리만 낸다", () => {
+    const d = pulseBuild([
+      {
+        date: "2026-07-07",
+        items: [
+          // 61일 전 계약 — 기준 후보였다가 나이 컷.
+          recentItem({
+            sigunguName: "송파구",
+            apartmentName: "단지W",
+            priceKrw: 1_000_000_000,
+            dealDateISO: "2026-05-05",
+          }),
+          recentItem({
+            sigunguName: "송파구",
+            apartmentName: "단지W",
+            priceKrw: 1_300_000_000,
+            dealDateISO: "2026-07-06", // 5/5 대비 62일 — 컷
+          }),
+          // 매칭되는 쌍 — 10억(7/1) → 11억(7/6) = +10%.
+          recentItem({
+            sigunguName: "송파구",
+            apartmentName: "단지V",
+            priceKrw: 1_000_000_000,
+            dealDateISO: "2026-07-01",
+          }),
+          recentItem({
+            sigunguName: "송파구",
+            apartmentName: "단지V",
+            priceKrw: 1_100_000_000,
+            dealDateISO: "2026-07-06",
+          }),
+        ],
+      },
+    ]);
+    // 단지V 11억(+10%) 1건 + 단지V 10억(직전 없음·제외) + 단지W(나이 컷·제외) = 표본 1.
+    expect(d.recentPulses["송파구"]).toEqual({ avgPct: 0.1, count: 1 });
+    expect(LOCAL_PULSE_MIN_SAMPLE).toBe(3); // UI "표본 부족" 문턱 — 계약 고정
+  });
+});
+
+// ── pickMomentumLeader — 우세 딱지 판정(동률·결측 생략) ───────────────────────
+describe("pickMomentumLeader", () => {
+  const m = (pct: number) => ({ pct, fromMonth: "2026-05", toMonth: "2026-06" });
+
+  it("momentum pct 큰 쪽이 우세 — 음수끼리도 덜 내린 쪽", () => {
+    expect(pickMomentumLeader(m(0.021), m(-0.014))).toBe("main");
+    expect(pickMomentumLeader(m(-0.03), m(-0.014))).toBe("rival");
+  });
+
+  it("동률이면 null — 딱지·테두리 강조 생략", () => {
+    expect(pickMomentumLeader(m(0.02), m(0.02))).toBeNull();
+  });
+
+  it("둘 중 하나라도 결측이면 null — 반쪽 비교로 우세 딱지 금지", () => {
+    expect(pickMomentumLeader(m(0.02), null)).toBeNull();
+    expect(pickMomentumLeader(null, m(0.02))).toBeNull();
+    expect(pickMomentumLeader(null, null)).toBeNull();
+  });
+});
+
 // ── briefFor · pickColdStartSigungu ─────────────────────────────────────────
 describe("briefFor", () => {
   it("동네 1곳의 브리핑을 온전히 도출한다", () => {
@@ -346,6 +563,8 @@ describe("briefFor", () => {
     expect(b.majors).toEqual({ rows: [], total: 0 });
     expect(b.strongs).toEqual({ rows: [], total: 0 });
     expect(b.pulse).toBeNull();
+    expect(b.recentPulse).toBeNull();
+    expect(b.momentum).toBeNull();
     expect(b.recentCount).toBe(0);
     expect(b.todayMax).toBeNull();
     expect(b.top).toBeNull();
