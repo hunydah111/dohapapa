@@ -66,6 +66,8 @@ jobs:
             echo "변경 없음 — 커밋 생략"
           else
             git commit -m "chore(data): 일간 실거래 펄스 + R-ONE 주간 ($(date +%Y-%m-%d))"
+            # push 경합 자가 치유 — 크론 실행 중 사람이 배포하면 non-FF로 죽던 고질병(7/6~7 3회) 종결.
+            git pull --rebase origin master || { git rebase --abort; echo "rebase 실패 — 다음 회차가 재시도"; exit 1; }
             git push
           fi
 
