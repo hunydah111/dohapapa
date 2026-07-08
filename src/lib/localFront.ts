@@ -16,9 +16,6 @@
 
 import {
   PATCH_MIN_PRICE_KRW,
-  PATCH_PREV_AREA_TOLERANCE_M2,
-  PATCH_PREV_MAX_AGE_DAYS,
-  dealKey,
   passesStrongGate,
   type BusiestRegion,
   type MajorItem,
@@ -228,13 +225,6 @@ function isPriceFact(d: PatchDealInput): boolean {
   return d.canceled !== true && d.dealingGbn !== "직거래";
 }
 
-/** ISO 날짜 간 일수 — patchNote 파일 프라이빗과 동일 규칙(미러). */
-function daysBetweenISO(fromISO: string, toISO: string): number {
-  const from = new Date(`${fromISO}T00:00:00Z`).getTime();
-  const to = new Date(`${toISO}T00:00:00Z`).getTime();
-  return Math.round((to - from) / 86_400_000);
-}
-
 /** dailyPatch·dailyRecent·regionTop·regionSeries → 동네판 압축 데이터(전 시군구). */
 export function buildLocalFrontData(opts: {
   patch: LocalPatchInput;
@@ -299,25 +289,10 @@ export function buildLocalFrontData(opts: {
   const recentCounts: Record<string, number> = {};
   const todayMax: Record<string, LocalTodayMax> = {};
   const inIssue = issueDates(patch);
-  /** 직전 거래 타임라인 — recentDays 유효 거래 전체(직거래 포함 — 비교 "기준"으론 유효,
-   *  1면 computePatch 의 timeline 과 동일 사상). recentPulses 매칭 풀. */
-  type TimelineDeal = { selfKey: string; dateISO: string; priceKrw: number; area: number };
-  const timeline = new Map<string, TimelineDeal[]>();
-  const pulsePool: PatchDealInput[] = [];
   for (const day of recentDays) {
     for (const d of day.items) {
       if (d.canceled === true) continue; // 해제는 공개 건수에서도 제외(유효 거래 아님)
       recentCounts[d.sigunguName] = (recentCounts[d.sigunguName] ?? 0) + 1;
-      pulsePool.push(d);
-      const cxKey = `${d.sigunguName}|${d.apartmentName}`;
-      const list = timeline.get(cxKey) ?? [];
-      list.push({
-        selfKey: dealKey(d),
-        dateISO: d.dealDateISO,
-        priceKrw: d.priceKrw,
-        area: d.area,
-      });
-      timeline.set(cxKey, list);
       // 최고가는 가격 팩트 — 직거래(증여성 의심)까지 제외, 이번 판 확인분만.
       if (!inIssue(day.date) || !isPriceFact(d)) continue;
       const cur = todayMax[d.sigunguName];
@@ -332,38 +307,25 @@ export function buildLocalFrontData(opts: {
     }
   }
 
-  // ── 라이벌 보드 [직전 대비 평균] — 최근 며칠 합산 표본(오늘분 pulses 는 거의 항상
-  //    문턱 미달이라 "—"만 찍혔다 — 사장 지적 2026-07-07). 매칭 규칙은 1면 findPrev 미러:
-  //    같은 단지 ±3㎡ · 계약일 같거나 이른 것 중 최신(동일 날짜는 가격 최고 — 보수적) ·
-  //    60일보다 묵은 직전 거래는 비교 무의미(null) · 자기 자신(dealKey) 제외. ──
+  // ── 라이벌 보드 [직전 대비 평균] — 최근 며칠 합산 표본. 비교 기준은 1면 computePatch가
+  //    이미 계산해 요약에 동봉한 pctVsPrev(60일 창·같은 단지 ±3㎡)를 그대로 합산한다.
+  //    ⚠️ 종전엔 3일 롤링 풀 안에서 직전을 다시 찾아 사실상 매칭 불가(전 동네 0건 — 사장
+  //    제보 2026-07-08 "데이터가 있는데 왜 표본이 부족하냐"). 1면과 기준 통일로 수리.
+  //    pctVsPrev 없는 과거 롤링분(구 스키마)은 건너뜀 — 3일 지나면 자연 충전. ──
   const recentPulses: LocalFrontData["recentPulses"] = {};
   {
     const agg = new Map<string, { sum: number; count: number }>();
-    for (const d of pulsePool) {
-      // 등락(가격 신호)의 "주체"는 중개거래만 — 직거래·초저가(지분성)는 1면과 동일 컷.
-      if (!isPriceFact(d) || d.priceKrw < PATCH_MIN_PRICE_KRW) continue;
-      const list = timeline.get(`${d.sigunguName}|${d.apartmentName}`);
-      if (!list) continue;
-      const self = dealKey(d);
-      let best: TimelineDeal | null = null;
-      for (const c of list) {
-        if (c.selfKey === self) continue;
-        if (Math.abs(c.area - d.area) > PATCH_PREV_AREA_TOLERANCE_M2) continue;
-        if (c.dateISO > d.dealDateISO) continue;
-        if (
-          !best ||
-          c.dateISO > best.dateISO ||
-          (c.dateISO === best.dateISO && c.priceKrw > best.priceKrw)
-        ) {
-          best = c;
-        }
+    for (const day of recentDays) {
+      for (const d of day.items) {
+        if (d.canceled === true) continue;
+        // 등락(가격 신호)의 "주체"는 중개거래만 — 직거래·초저가(지분성)는 1면과 동일 컷.
+        if (!isPriceFact(d) || d.priceKrw < PATCH_MIN_PRICE_KRW) continue;
+        if (d.pctVsPrev == null) continue; // 직전 없음 또는 구 스키마 롤링분
+        const a = agg.get(d.sigunguName) ?? { sum: 0, count: 0 };
+        a.sum += d.pctVsPrev;
+        a.count += 1;
+        agg.set(d.sigunguName, a);
       }
-      if (!best) continue;
-      if (daysBetweenISO(best.dateISO, d.dealDateISO) > PATCH_PREV_MAX_AGE_DAYS) continue;
-      const a = agg.get(d.sigunguName) ?? { sum: 0, count: 0 };
-      a.sum += (d.priceKrw - best.priceKrw) / best.priceKrw;
-      a.count += 1;
-      agg.set(d.sigunguName, a);
     }
     for (const [sigungu, a] of agg) {
       recentPulses[sigungu] = { avgPct: a.sum / a.count, count: a.count };

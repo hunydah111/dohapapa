@@ -458,7 +458,11 @@ describe("recentPulses (직전 대비 평균 — 3일 합산)", () => {
     });
   }
 
-  it("전일 공개분이 직전 거래 기준으로 잡힌다 — 일자 경계를 넘는 합산 표본", () => {
+  // 2026-07-08 계약 교체: 3일 롤링 풀 안에서 직전을 재탐색하던 방식은 실데이터에서
+  // 매칭이 사실상 불가(직전은 대개 몇 주 전 공개분 — 전 동네 0건 사태, 사장 제보).
+  // 이제 1면 computePatch가 요약에 동봉한 pctVsPrev(60일 창)를 그대로 합산한다.
+
+  it("동봉된 pctVsPrev를 일자 경계 없이 합산한다 — 1면과 동일 60일 기준", () => {
     const d = pulseBuild([
       {
         date: "2026-07-05",
@@ -466,8 +470,9 @@ describe("recentPulses (직전 대비 평균 — 3일 합산)", () => {
           recentItem({
             sigunguName: "강남구",
             apartmentName: "단지X",
-            priceKrw: 1_000_000_000,
-            dealDateISO: "2026-06-20",
+            priceKrw: 1_100_000_000,
+            dealDateISO: "2026-07-01",
+            pctVsPrev: 0.1,
           }),
         ],
       },
@@ -477,106 +482,65 @@ describe("recentPulses (직전 대비 평균 — 3일 합산)", () => {
           recentItem({
             sigunguName: "강남구",
             apartmentName: "단지X",
-            priceKrw: 1_100_000_000,
+            priceKrw: 1_200_000_000,
             dealDateISO: "2026-07-05",
+            pctVsPrev: 0.2,
           }),
         ],
       },
     ]);
-    // 7/5 계약 11억의 직전 = 6/20 계약 10억(이틀 전 공개분) → +10%, 표본 1.
-    expect(d.recentPulses["강남구"]).toEqual({ avgPct: 0.1, count: 1 });
-    expect(briefFor(d, "강남구").recentPulse).toEqual({ avgPct: 0.1, count: 1 });
+    // (0.1 + 0.2) / 2 = +15%, 표본 2 — 이틀 합산.
+    expect(d.recentPulses["강남구"]!.count).toBe(2);
+    expect(d.recentPulses["강남구"]!.avgPct).toBeCloseTo(0.15, 10);
+    expect(briefFor(d, "강남구").recentPulse!.count).toBe(2);
   });
 
-  it("직거래는 등락 주체에서 제외(기준으론 유효) · 해제·평형 불일치(±3㎡ 밖)는 매칭 제외", () => {
+  it("직거래·해제·pctVsPrev 없음(직전 없음/구 스키마 롤링분)은 표본에서 제외", () => {
     const d = pulseBuild([
       {
         date: "2026-07-07",
         items: [
-          // 직거래 8억(6/25) — 주체론 안 세지만 아래 중개 9억의 "직전" 기준으론 유효.
+          // 직거래 — pctVsPrev가 있어도 등락 주체 아님(1면과 동일 컷).
           recentItem({
             sigunguName: "강남구",
             apartmentName: "단지Y",
             priceKrw: 800_000_000,
             dealDateISO: "2026-06-25",
             dealingGbn: "직거래",
+            pctVsPrev: 0.5,
           }),
-          recentItem({
-            sigunguName: "강남구",
-            apartmentName: "단지Y",
-            priceKrw: 900_000_000,
-            dealDateISO: "2026-07-06",
-          }),
-          // 해제 — 기준·주체 모두 제외(9.5억이 기준이 되면 안 됨).
+          // 해제 — 제외.
           recentItem({
             sigunguName: "강남구",
             apartmentName: "단지Y",
             priceKrw: 950_000_000,
             dealDateISO: "2026-07-01",
             canceled: true,
+            pctVsPrev: 0.3,
           }),
-          // 같은 단지지만 59㎡ — ±3㎡ 밖이라 84.9㎡ 거래의 직전이 될 수 없음.
+          // 직전 없음(pctVsPrev 미동봉 — 신축 첫 거래·구 스키마 롤링분) — 제외.
           recentItem({
-            sigunguName: "서초구",
-            apartmentName: "단지Z",
-            priceKrw: 700_000_000,
-            dealDateISO: "2026-06-28",
-            area: 59.9,
-          }),
-          recentItem({
-            sigunguName: "서초구",
-            apartmentName: "단지Z",
-            priceKrw: 1_200_000_000,
-            dealDateISO: "2026-07-05",
-            area: 84.9,
-          }),
-        ],
-      },
-    ]);
-    // 단지Y: 중개 9억 vs 직전 직거래 8억 = +12.5% — 표본은 중개 1건뿐.
-    expect(d.recentPulses["강남구"]).toEqual({ avgPct: 0.125, count: 1 });
-    // 단지Z: 평형 불일치라 직전 없음 → 서초구 표본 0(키 자체가 없음).
-    expect(d.recentPulses["서초구"]).toBeUndefined();
-    expect(briefFor(d, "서초구").recentPulse).toBeNull();
-  });
-
-  it("60일보다 묵은 직전 거래는 비교 무의미(제외) · 평균은 매칭분끼리만 낸다", () => {
-    const d = pulseBuild([
-      {
-        date: "2026-07-07",
-        items: [
-          // 61일 전 계약 — 기준 후보였다가 나이 컷.
-          recentItem({
-            sigunguName: "송파구",
-            apartmentName: "단지W",
-            priceKrw: 1_000_000_000,
-            dealDateISO: "2026-05-05",
-          }),
-          recentItem({
-            sigunguName: "송파구",
-            apartmentName: "단지W",
-            priceKrw: 1_300_000_000,
-            dealDateISO: "2026-07-06", // 5/5 대비 62일 — 컷
-          }),
-          // 매칭되는 쌍 — 10억(7/1) → 11억(7/6) = +10%.
-          recentItem({
-            sigunguName: "송파구",
-            apartmentName: "단지V",
-            priceKrw: 1_000_000_000,
-            dealDateISO: "2026-07-01",
-          }),
-          recentItem({
-            sigunguName: "송파구",
-            apartmentName: "단지V",
-            priceKrw: 1_100_000_000,
+            sigunguName: "강남구",
+            apartmentName: "단지Y",
+            priceKrw: 900_000_000,
             dealDateISO: "2026-07-06",
           }),
+          // 유효 1건 — 이것만 표본.
+          recentItem({
+            sigunguName: "강남구",
+            apartmentName: "단지Y",
+            priceKrw: 1_000_000_000,
+            dealDateISO: "2026-07-06",
+            pctVsPrev: 0.125,
+          }),
         ],
       },
     ]);
-    // 단지V 11억(+10%) 1건 + 단지V 10억(직전 없음·제외) + 단지W(나이 컷·제외) = 표본 1.
-    expect(d.recentPulses["송파구"]).toEqual({ avgPct: 0.1, count: 1 });
-    expect(LOCAL_PULSE_MIN_SAMPLE).toBe(3); // UI "표본 부족" 문턱 — 계약 고정
+    expect(d.recentPulses["강남구"]).toEqual({ avgPct: 0.125, count: 1 });
+    // 표본 0 동네는 키 자체가 없음 → UI가 "비교할 거래 없음" 폴백.
+    expect(d.recentPulses["서초구"]).toBeUndefined();
+    expect(briefFor(d, "서초구").recentPulse).toBeNull();
+    expect(LOCAL_PULSE_MIN_SAMPLE).toBe(3); // UI 인쇄 문턱 — 계약 고정
   });
 });
 

@@ -44,6 +44,11 @@ export interface PatchDealInput {
   canceled?: boolean;
   /** 건축년도 — 신축 첫 실거래 헤드라인 판정용. MOLIT 미제공 시 null. */
   buildYear?: number | null;
+  /** 직전 실거래(60일 내·같은 단지 ±3㎡) 대비 % — computePatch가 freshDeals 요약에
+   *  동봉(2026-07-08). 입력으로 들어올 땐 무시. dailyRecent 롤링을 타고 동네판
+   *  [직전 대비 평균]의 재료가 된다 — 3일 풀 안에서 직전을 다시 찾는 결함(전 동네
+   *  0건 사태, 사장 제보) 수리. */
+  pctVsPrev?: number | null;
 }
 
 export interface ComplexMedianCell {
@@ -544,6 +549,8 @@ export function computePatch(opts: {
   const regionAgg = new Map<string, { sum: number; count: number }>();
   // 권역 온도 8행용 — 시군구별 above/below/matched (전역 온도와 같은 풀).
   const regionTempAgg = new Map<string, PatchTemp>();
+  // freshDeals 요약 동봉용 — dealKey → pctVsPrev (동네판 [직전 대비 평균] 재료, 2026-07-08).
+  const pctVsPrevByKey = new Map<string, number>();
   for (const d of fresh) {
     // 직거래 = 가족 간 증여성 거래 가능성 — 가격 신호로 안 씀 (특히 급락 버프 오염 방지)
     if (d.dealingGbn === "직거래") continue;
@@ -552,6 +559,7 @@ export function computePatch(opts: {
     // 직전 거래 팩트 — 화면 노출용 비교 기준(온도·동네 집계·강세 행·헤드라인).
     const prev = findPrev(d);
     const pctVsPrev = prev ? (d.priceKrw - prev.prevKrw) / prev.prevKrw : null;
+    if (pctVsPrev !== null) pctVsPrevByKey.set(dealKey(d), pctVsPrev);
 
     // 중위가 대조 — ⚠️ 내부 선별 필터 전용(±7% 문턱·노이즈컷·표본 신뢰).
     // 우리 추정치라 화면에 "시세"로 단정 노출하지 않는다.
@@ -725,7 +733,15 @@ export function computePatch(opts: {
     newDealCount: fresh.length,
     nextSeenKeys,
     // dailyRecent 롤링용 — 유효 fresh + 신규 해제(canceled 플래그 보존).
-    freshDeals: [...fresh, ...freshCancellations],
+    // fresh엔 직전 대비 %를 동봉(있을 때만) — 동네판 [직전 대비 평균]이 1면과
+    // 동일 기준(60일 창)으로 계산되게 한다.
+    freshDeals: [
+      ...fresh.map((d) => {
+        const p = pctVsPrevByKey.get(dealKey(d));
+        return p !== undefined ? { ...d, pctVsPrev: p } : d;
+      }),
+      ...freshCancellations,
+    ],
   };
 }
 

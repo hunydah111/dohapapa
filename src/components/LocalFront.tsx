@@ -686,7 +686,6 @@ function BriefBody({
               it.prevKrw != null && it.prevKrw > 0
                 ? (it.priceKrw - it.prevKrw) / it.prevKrw
                 : null;
-            const dir = pct == null || pct === 0 ? INK : pct > 0 ? UP : DOWN;
             return (
               <BriefRow
                 key={`t${it.apt}-${it.dealDate}-${it.priceKrw}`}

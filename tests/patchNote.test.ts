@@ -108,6 +108,11 @@ describe("patchNote.computePatch", () => {
     expect(r.temp).toBeNull(); // matched 3 < 20
     // 결정적 직렬화 — 가나다순 키
     expect(Object.keys(r.regionTemp)).toEqual([...Object.keys(r.regionTemp)].sort((a, b) => a.localeCompare(b, "ko")));
+    // freshDeals 요약에 pctVsPrev 동봉(2026-07-08) — 동네판 [직전 대비 평균] 재료.
+    const summarized = r.freshDeals.find((d) => d.apartmentName === "강남업" && d.priceKrw === 1_120_000_000);
+    expect(summarized?.pctVsPrev).toBeCloseTo(0.12, 5);
+    const noPrev = r.freshDeals.find((d) => d.apartmentName === "이력없음");
+    expect(noPrev?.pctVsPrev).toBeUndefined();
   });
 
   it("중위가 필터를 통과해도 직전 거래가 없으면 [강세 거래] 미게재 — 표시할 팩트가 없다", () => {
