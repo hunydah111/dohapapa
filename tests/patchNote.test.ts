@@ -757,6 +757,7 @@ describe("patchNote.pickHeadline", () => {
       pct: null,
       buildYear: 2024,
       sampleCount: null,
+      totalSampleCount: null, // 단지 전체 최근 1년 표본 — 헤드라인 서수는 이것만 쓴다
       ...over,
     };
   }
@@ -786,39 +787,72 @@ describe("patchNote.pickHeadline", () => {
     });
   }
 
-  it("1순위 — 신축(기준연도−3 이내) 첫 실거래: 거래 이력 없음 + 15억 이상", () => {
+  it("1순위 — 신축 첫 실거래: 준공=기준연도면 '입주 후 첫', 아니면 창(1년) 병기", () => {
     const h = pickHeadline({
-      major: [makeMajor()],
+      major: [makeMajor({ buildYear: 2026 })],
       nerf: [makeNerfWithPrev()], // 너프가 있어도 첫거래가 이긴다
       newDealCount: 487,
       todayISO: "2026-07-04",
     });
     expect(h.kind).toBe("first-trade");
     expect(h.text).toBe("디에이치퍼스티어 입주 후 첫 실거래 — 35.6억 공개");
+
+    // 준공이 기준연도보다 과거면 1년 창이 입주 전체를 못 덮음 — "입주 후" 단정 금지.
+    const h2 = pickHeadline({
+      major: [makeMajor({ buildYear: 2024 })],
+      nerf: [],
+      newDealCount: 100,
+      todayISO: "2026-07-04",
+    });
+    expect(h2.text).toBe("디에이치퍼스티어 최근 1년 첫 실거래 — 35.6억 공개");
   });
 
-  it("1순위 변형 — 표본 1~2면 'n번째 거래' (기존 표본 + 이번)", () => {
+  it("1순위 변형 — 단지 전체 표본 1~2면 '1년 새 n번째 거래' (기존 표본 + 이번)", () => {
     const h = pickHeadline({
-      major: [makeMajor({ sampleCount: 1, pct: 0.02 })],
+      major: [makeMajor({ totalSampleCount: 1, sampleCount: 1, pct: 0.02 })],
       nerf: [],
       newDealCount: 100,
       todayISO: "2026-07-04",
     });
     expect(h.kind).toBe("first-trade");
-    expect(h.text).toBe("디에이치퍼스티어 2번째 거래 35.6억");
+    expect(h.text).toBe("디에이치퍼스티어 1년 새 2번째 거래 35.6억");
   });
 
   it("구축(buildYear 오래됨)·표본 충분(≥3)은 첫거래 후보 아님", () => {
     const h = pickHeadline({
       major: [
         makeMajor({ buildYear: 2010 }), // 구축
-        makeMajor({ apt: "표본충분", buildYear: 2025, sampleCount: 3 }), // 표본 3
+        makeMajor({ apt: "표본충분", buildYear: 2025, totalSampleCount: 3, sampleCount: 3 }),
       ],
       nerf: [],
       newDealCount: 100,
       todayISO: "2026-07-04",
     });
     expect(h.kind).toBe("top-major"); // 첫거래 건너뛰고 최고가로
+  });
+
+  it("구성 오보 게이트 — 평형 셀 표본이 적어도 단지 전체가 많으면 서수 금지 (서대문푸르지오 사태)", () => {
+    const h = pickHeadline({
+      // 84㎡ 셀은 2건이지만 단지 전체는 최근 1년 28건 — "3번째 거래" 인쇄 금지.
+      major: [makeMajor({ buildYear: 2023, sampleCount: 2, totalSampleCount: 28 })],
+      nerf: [],
+      newDealCount: 100,
+      todayISO: "2026-07-08",
+    });
+    expect(h.kind).toBe("top-major");
+    expect(h.text).not.toContain("번째");
+  });
+
+  it("구 스키마(totalSampleCount 없음)는 판별 불가 — rung 자체를 건너뜀", () => {
+    const legacy = makeMajor({ sampleCount: 2 });
+    delete (legacy as { totalSampleCount?: number | null }).totalSampleCount;
+    const h = pickHeadline({
+      major: [legacy],
+      nerf: [],
+      newDealCount: 100,
+      todayISO: "2026-07-08",
+    });
+    expect(h.kind).toBe("top-major");
   });
 
   it("첫거래 후보 여럿이면 가격 최고 채택", () => {

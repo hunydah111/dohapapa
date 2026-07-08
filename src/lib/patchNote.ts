@@ -54,6 +54,10 @@ export interface PatchDealInput {
 export interface ComplexMedianCell {
   medianKrw: number;
   sampleCount: number;
+  /** 단지 전체(전 평형 셀 합) 최근 1년 표본 — 신축 첫/N번째 거래 헤드라인 전용.
+   *  평형 셀 표본(sampleCount)을 단지 숫자처럼 인쇄한 구성 오보(서대문푸르지오
+   *  "3번째 거래" 사태, 2026-07-08 사장 제보)의 재발 방지. 구 파이프라인엔 없음. */
+  complexSampleCount?: number | null;
   /** 최근 1년 실거래 최고가(원) — 주간 스냅샷(complexSnapshot)의 maxKrw.
    *  구 스냅샷(다음 주간 갱신 전)엔 없으므로 optional — 없으면 최고가 갱신 판정 생략. */
   maxKrw?: number | null;
@@ -134,8 +138,12 @@ export interface MajorItem {
   pct: number | null;
   /** 건축년도 — 신축 첫 실거래 판정용. 미제공 null. */
   buildYear: number | null;
-  /** 단지 자기 중위가 lookup 성공 시 그 표본수, 실패 시 null("거래 이력 없는 단지" 신호). */
+  /** 단지 자기 중위가 lookup 성공 시 그 표본수, 실패 시 null("거래 이력 없는 단지" 신호).
+   *  ⚠️ 평형(±3㎡) 셀 기준 — 단지 전체 아님. 헤드라인 서수엔 totalSampleCount만 쓸 것. */
   sampleCount: number | null;
+  /** 단지 전체(전 평형) 최근 1년 표본 합. null = 스냅샷 미등재(최근 1년 거래 없음),
+   *  undefined = 구 스키마(첫/N번째 거래 헤드라인 rung 자체를 건너뛴다). */
+  totalSampleCount?: number | null;
   /** 같은 단지 ±3㎡의 직전 실거래가(원) — 60일 내. 없으면 null. */
   prevKrw?: number | null;
   /** 직전 실거래 계약일 YYYY-MM-DD. */
@@ -599,6 +607,7 @@ export function computePatch(opts: {
         pct,
         buildYear: d.buildYear ?? null,
         sampleCount: cell && cell.medianKrw > 0 ? cell.sampleCount : null,
+        totalSampleCount: cell ? (cell.complexSampleCount ?? null) : null,
         prevKrw: prev?.prevKrw ?? null,
         prevDate: prev?.prevDate ?? null,
         prevFloor: prev?.prevFloor ?? null,
@@ -794,7 +803,7 @@ function headlineItemKey(i: {
 
 /**
  * 뉴스가치 사다리 후보 목록 — 위 rung부터 순서대로. 첫 원소가 곧 pickHeadline 결과.
- * 1. 신축 첫/두 번째 실거래(15억 이상) — 가격 내림차순.
+ * 1. 신축 첫/두 번째 실거래(15억 이상, 단지 전체 표본 기준) — 가격 내림차순.
  * 2. 신고가성 상승(nerf, pctVsPrev 내림차순 입력 순서) — 아이템별 문구 사다리
  *    ① 1년 최고가 갱신 ② 두 달 내 최고가 ③ 직전 거래 대비. 팩트 없으면 그 아이템 스킵.
  * 3. 오늘의 최고가 — major 순서(가격 내림차순)대로 전부(서브 차순위 회피용).
@@ -809,22 +818,30 @@ function headlineCandidates(opts: {
   const out: HeadlineCandidate[] = [];
 
   // 1) 신축 첫/두 번째 실거래 — 후보 여럿이면 가격 최고부터.
+  //    판정·서수는 반드시 단지 전체 표본(totalSampleCount) — 평형 셀 표본(sampleCount)을
+  //    쓰면 "84㎡의 3번째"가 "단지 3번째"로 인쇄되는 구성 오보(서대문푸르지오 사태).
+  //    구 스키마(totalSampleCount undefined)는 판별 불가 → rung 자체를 건너뛴다.
   const firstTrades = major
     .filter(
       (m) =>
         m.buildYear !== null &&
         m.buildYear >= baseYear - FIRST_TRADE_BUILD_YEAR_WINDOW &&
-        (m.sampleCount === null || m.sampleCount <= 2) &&
+        m.totalSampleCount !== undefined &&
+        (m.totalSampleCount === null || m.totalSampleCount <= 2) &&
         m.priceKrw >= PATCH_MAJOR_MIN_PRICE_KRW,
     )
     .sort((a, b) => b.priceKrw - a.priceKrw);
   for (const top of firstTrades) {
     const eok = eokText(top.priceKrw);
-    // 시세 이력 자체가 없으면 "입주 후 첫 실거래", 표본 1~2면 "{n}번째 거래"(기존 표본 + 이번).
+    const total = top.totalSampleCount ?? 0;
+    // 표본 창은 최근 1년(스냅샷) — "입주 후 첫"은 창이 입주 이후 전 기간을 확실히 덮는
+    // 준공=기준연도일 때만 단정. 그 외엔 기준(1년)을 문구에 병기한다(헌장 ②).
     const text =
-      top.sampleCount === null || top.sampleCount === 0
-        ? `${top.apt} 입주 후 첫 실거래 — ${eok}억 공개`
-        : `${top.apt} ${top.sampleCount + 1}번째 거래 ${eok}억`;
+      total === 0
+        ? top.buildYear === baseYear
+          ? `${top.apt} 입주 후 첫 실거래 — ${eok}억 공개`
+          : `${top.apt} 최근 1년 첫 실거래 — ${eok}억 공개`
+        : `${top.apt} 1년 새 ${total + 1}번째 거래 ${eok}억`;
     out.push({ kind: "first-trade", text, itemKey: headlineItemKey(top) });
   }
 
@@ -889,8 +906,9 @@ function headlineCandidates(opts: {
 /**
  * 오늘의 헤드라인 선정 — 순수 함수. 비교 문구는 전부 실거래 팩트만
  * (중위가 "시세" 단정 금지 — 2026-07-06 사장 지시).
- * 1. 신축 첫/두 번째 실거래(15억 이상): buildYear ≥ 기준연도−3 AND (거래 이력 없음 OR 표본 ≤ 2)
- *    → 후보 여럿이면 가격 최고. (원래 팩트 서술 — 그대로)
+ * 1. 신축 첫/두 번째 실거래(15억 이상): buildYear ≥ 기준연도−3 AND 단지 전체 표본
+ *    (totalSampleCount, 최근 1년) ≤ 2 → 후보 여럿이면 가격 최고. 문구는 창 병기
+ *    ("1년 새 n번째") — "입주 후 첫"은 준공=기준연도일 때만. 구 스키마는 rung 스킵.
  * 2. 신고가성 상승 — 후보(pctVsPrev 내림차순)를 돌며 문구 사다리 첫 매치:
  *    ① 최근 1년 최고가(maxKrw) 갱신 ② 두 달(폴링창) 내 최고가 ③ 직전 거래 대비
  *    ④ 비교 팩트 없음 → 이 후보 스킵, 다음 후보/다음 rung.

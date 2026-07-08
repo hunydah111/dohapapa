@@ -127,18 +127,35 @@ async function main() {
     const lookupMedian: ComplexMedianLookup = (d) => {
       const cx = cxIndex.get(`${d.sigunguName}|${d.apartmentName.replace(/\s+/g, "")}`);
       if (!cx) return null;
+      // 단지 전체(전 평형 셀 합) 최근 1년 표본 — 신축 첫/N번째 헤드라인 전용.
+      // 평형 셀 표본을 단지 서수로 인쇄한 구성 오보(서대문푸르지오 사태) 재발 방지.
+      const complexSampleCount = cx.medians.reduce((a, m) => a + m.count, 0);
       // 같은 평형 최근접(±3㎡) 중위가. 신뢰 낮은 셀은 스킵.
       let best: SnapMedian | null = null;
       for (const m of cx.medians) {
         const diff = Math.abs(m.area - d.area);
         if (diff <= 3 && (!best || diff < Math.abs(best.area - d.area))) best = m;
       }
-      if (!best || best.lowConfidence) return null;
+      // 평형 셀이 없거나 미신뢰여도 단지는 아는 상태 — medianKrw=0 부분 셀로 단지 표본·
+      // 좌표는 살린다(computePatch가 medianKrw>0 가드로 중위가·평형 표본은 무시).
+      if (!best || best.lowConfidence)
+        return {
+          medianKrw: 0,
+          sampleCount: 0,
+          complexSampleCount,
+          maxKrw: null,
+          maxDate: null,
+          maxFloor: null,
+          lat: cx.lat,
+          lng: cx.lng,
+          nearestSubwayM: cx.nearestSubwayM,
+        };
       // maxKrw(최근 1년 실거래 최고가)는 주간 스냅샷 갱신 후부터 존재 — 없으면 null.
       // maxDate·maxFloor(최고가 거래의 계약일·층)는 그보다 새 스냅샷부터 — 없으면 null.
       return {
         medianKrw: best.medianKrw,
         sampleCount: best.count,
+        complexSampleCount,
         maxKrw: best.maxKrw ?? null,
         maxDate: best.maxDate ?? null,
         maxFloor: best.maxFloor ?? null,
