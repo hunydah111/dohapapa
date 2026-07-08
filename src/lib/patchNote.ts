@@ -203,6 +203,10 @@ export interface PatchResult {
   major: MajorItem[];
   /** 오늘의 온도 — matched < 30(표본 부족)이면 null. */
   temp: PatchTemp | null;
+  /** 권역 온도 8행용 — 시군구별 온도(전역 temp와 같은 풀·같은 규칙, ±1% 중립).
+   *  권역 구획은 앱 쪽(lib/zones.ts)이 담당 — 구획이 바뀌어도 데이터 재발행 불필요.
+   *  키는 시군구 가나다순(결정적 직렬화). 표본 문턱 없이 전부(표시 판단은 UI). */
+  regionTemp: Record<string, PatchTemp>;
   /** [약세 동네] — 시군구별 평균 이탈률 avgPct ≤ −1%·표본 5건 이상, 약세 순 상위 3. */
   weakRegions: RegionPulse[];
   /** 대칭 집계(avgPct ≥ +1%) — 데이터용. UI 는 [강세 거래] 실명이 이미 담당하므로 비게재. */
@@ -538,6 +542,8 @@ export function computePatch(opts: {
   let tempMatched = 0;
   // 시군구별 등락 집계 — fresh 중개거래 중 직전 거래(60일 내) 존재분의 pctVsPrev 평균.
   const regionAgg = new Map<string, { sum: number; count: number }>();
+  // 권역 온도 8행용 — 시군구별 above/below/matched (전역 온도와 같은 풀).
+  const regionTempAgg = new Map<string, PatchTemp>();
   for (const d of fresh) {
     // 직거래 = 가족 간 증여성 거래 가능성 — 가격 신호로 안 씀 (특히 급락 버프 오염 방지)
     if (d.dealingGbn === "직거래") continue;
@@ -610,6 +616,12 @@ export function computePatch(opts: {
       agg.sum += pctVsPrev;
       agg.count += 1;
       regionAgg.set(d.sigunguName, agg);
+      // ── 권역 온도용 시군구별 온도 — 전역 temp와 동일 규칙(±1% 중립은 matched만) ──
+      const rt = regionTempAgg.get(d.sigunguName) ?? { above: 0, below: 0, matched: 0 };
+      rt.matched += 1;
+      if (pctVsPrev > PATCH_TEMP_NEUTRAL_PCT) rt.above += 1;
+      else if (pctVsPrev < -PATCH_TEMP_NEUTRAL_PCT) rt.below += 1;
+      regionTempAgg.set(d.sigunguName, rt);
     }
 
     // ── 너프/버프 선별(eligibility) — 기존 중위가 필터 유지(내부용) ──
@@ -689,6 +701,12 @@ export function computePatch(opts: {
     .sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct))
     .slice(0, PATCH_TOP_N);
 
+  // 권역 온도용 시군구별 온도 — 가나다순 키(결정적 직렬화, regionCounts와 동일 규칙).
+  const regionTemp: Record<string, PatchTemp> = {};
+  for (const sigungu of [...regionTempAgg.keys()].sort((a, b) => a.localeCompare(b, "ko"))) {
+    regionTemp[sigungu] = regionTempAgg.get(sigungu)!;
+  }
+
   return {
     nerf: nerfPublished,
     buff: buffRanked,
@@ -697,6 +715,7 @@ export function computePatch(opts: {
       tempMatched >= PATCH_TEMP_MIN_MATCHED
         ? { above: tempAbove, below: tempBelow, matched: tempMatched }
         : null,
+    regionTemp,
     weakRegions,
     strongRegions,
     cancellations,

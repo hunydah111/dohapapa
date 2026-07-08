@@ -264,6 +264,8 @@ async function main() {
           buff: active.buff,
           major: active.major,
           temp: active.temp,
+          // 권역 온도 8행(#20) — 시군구별 온도(전역 temp와 같은 풀, 가나다순 키).
+          regionTemp: active.regionTemp,
           // [약세 동네] 코너 데이터 + 대칭 강세 집계(데이터용 — UI는 약세만 게재).
           weakRegions: active.weakRegions,
           strongRegions: active.strongRegions,

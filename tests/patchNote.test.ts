@@ -79,6 +79,37 @@ describe("patchNote.computePatch", () => {
     expect(r.buff.map((i) => i.apt)).toEqual(["급락단지"]);
   });
 
+  it("regionTemp — 시군구별 온도가 전역 temp와 같은 풀·같은 규칙으로 집계된다(#20)", () => {
+    const r = computePatch({
+      deals: [
+        // 강남구: 직전 대비 +12%(above) 1건 + ±1% 이내 중립 1건
+        prevDeal("강남업"),
+        makeDeal({ apartmentName: "강남업", priceKrw: 1_120_000_000 }),
+        prevDeal("강남중립"),
+        makeDeal({ apartmentName: "강남중립", priceKrw: 1_005_000_000 }), // +0.5% → 중립
+        // 노원구: 직전 대비 −12%(below) 1건
+        { ...prevDeal("노원다운"), sigunguName: "노원구" },
+        makeDeal({ apartmentName: "노원다운", priceKrw: 880_000_000, sigunguName: "노원구" }),
+        // 직전 거래 없는 단지 — regionTemp에 안 잡힘
+        makeDeal({ apartmentName: "이력없음", priceKrw: 1_120_000_000 }),
+      ],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    expect(r.regionTemp["강남구"]).toEqual({ above: 1, below: 0, matched: 2 });
+    expect(r.regionTemp["노원구"]).toEqual({ above: 0, below: 1, matched: 1 });
+    // 시군구 합 = 전역 카운트와 일치 (temp 자체는 표본<20이라 null이어도 regionTemp는 존재)
+    const sum = Object.values(r.regionTemp).reduce(
+      (s, t) => ({ above: s.above + t.above, below: s.below + t.below, matched: s.matched + t.matched }),
+      { above: 0, below: 0, matched: 0 },
+    );
+    expect(sum).toEqual({ above: 1, below: 1, matched: 3 });
+    expect(r.temp).toBeNull(); // matched 3 < 20
+    // 결정적 직렬화 — 가나다순 키
+    expect(Object.keys(r.regionTemp)).toEqual([...Object.keys(r.regionTemp)].sort((a, b) => a.localeCompare(b, "ko")));
+  });
+
   it("중위가 필터를 통과해도 직전 거래가 없으면 [강세 거래] 미게재 — 표시할 팩트가 없다", () => {
     const r = computePatch({
       deals: [makeDeal({ apartmentName: "이력없는급등", priceKrw: 1_120_000_000 })],

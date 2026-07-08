@@ -32,6 +32,7 @@ import {
   type HeadlinesResult,
 } from "@/lib/patchNote";
 import { REFERENCE_PHASES, phaseAvg, type TempSeriesFile } from "@/lib/tempSeries";
+import { aggregateZoneTemp, type ZoneTemp } from "@/lib/zones";
 import { TILE_MAP, TILE_GRID_COLS, tileLevel } from "@/lib/tileMap";
 import {
   recoveryBand,
@@ -107,6 +108,8 @@ interface DailyPatch {
   major?: MajorItem[];
   /** 오늘의 온도 — 구 스키마엔 없음. 표본 부족이면 null. */
   temp?: PatchTemp | null;
+  /** 권역 온도 8행용 시군구별 온도(#20) — 구 스키마엔 없음 → 8행 조용히 생략. */
+  regionTemp?: Record<string, PatchTemp>;
   /** [약세 동네] — 구 스키마엔 없음(optional 필수). 없거나 비면 코너 자체 생략. */
   weakRegions?: RegionPulse[];
   /** 대칭 강세 집계 — 데이터만, UI 비게재([강세 거래] 실명이 담당). */
@@ -250,6 +253,65 @@ function CornerNote({ children }: { children: React.ReactNode }) {
     <p className="mt-2 text-[10.5px] leading-[1.55]" style={{ color: INK_SOFT }}>
       {children}
     </p>
+  );
+}
+
+// ── 권역 온도 8행 (#20) — 온도 코너의 접힘 하위 블록 (헌장 ⑦ 지면 예산: 기본 접힘) ──────
+/** 권역 행 표시 최소 표본 — 미만이면 비율 대신 "표본 부족"(숫자는 혼자 못 나온다, 헌장 ②). */
+const ZONE_TEMP_MIN_MATCHED = 5;
+
+function ZoneTempRows({ zones }: { zones: ZoneTemp[] }) {
+  return (
+    <details className="group mt-2">
+      <summary
+        className="flex cursor-pointer list-none items-center justify-between gap-2 text-[11px] font-bold [&::-webkit-details-marker]:hidden"
+        style={{ color: INK_SOFT }}
+      >
+        <span>권역별 온도 — 8권역</span>
+        <span
+          aria-hidden="true"
+          className="text-[11px] transition-transform duration-150 group-open:rotate-90"
+        >
+          ▸
+        </span>
+      </summary>
+      <div className="pt-1">
+        {zones.map((z) => {
+          const pct =
+            z.matched >= ZONE_TEMP_MIN_MATCHED
+              ? {
+                  above: Math.round((z.above / z.matched) * 100),
+                  below: Math.round((z.below / z.matched) * 100),
+                }
+              : null;
+          return (
+            <div
+              key={z.id}
+              className="flex items-baseline justify-between gap-2 border-b border-dotted py-[3px] text-[11.5px] tabular-nums"
+              style={{ borderColor: RULE }}
+            >
+              <span style={{ color: INK }}>{z.label}</span>
+              {pct ? (
+                <span style={{ color: INK_SOFT }}>
+                  높게 <b style={{ color: UP }}>{pct.above}%</b> : 낮게{" "}
+                  <b style={{ color: DOWN }}>{pct.below}%</b>
+                  <span className="text-[10px]"> · {z.matched}건</span>
+                </span>
+              ) : (
+                <span className="text-[10.5px]" style={{ color: INK_SOFT }}>
+                  표본 부족{z.matched > 0 ? ` (${z.matched}건)` : ""}
+                </span>
+              )}
+            </div>
+          );
+        })}
+        <CornerNote>
+          권역 = 서울 5개 생활권(2030 서울생활권계획) · 경기 남부/북부(도 북부청사 관할
+          기준) · 인천. 직전 실거래(60일 내)가 있는 오늘 공개 중개거래 기준 — 고정 지리
+          순서(순위 아님).
+        </CornerNote>
+      </div>
+    </details>
   );
 }
 
@@ -921,6 +983,8 @@ export function DailyFront() {
   // 하위호환 — 구 스키마(major/temp 없음)에서도 절대 깨지지 않는다.
   const major = patch.major; // undefined = 구 스키마, [] = 오늘 없음
   const temp = patch.temp ?? null;
+  // 권역 온도 8행(#20) — regionTemp 없는 구 스키마면 null → 블록 조용히 생략.
+  const zoneTemps = aggregateZoneTemp(patch.regionTemp);
 
   // 헤드라인 — 렌더 시점에 지면 데이터(major·nerf)로 재계산한다(v2.5 오보 게이트).
   // ⚠️ 빌드타임 확정값(patch.headlines)은 더 이상 렌더에 쓰지 않는다: 게이트 이전
@@ -1163,6 +1227,9 @@ export function DailyFront() {
                     todayAbovePct={tempPct.above}
                     mergedNote={mergedNote}
                   />
+
+                  {/* 권역 온도 8행(#20) — 접힘 기본(헌장 ⑦). 구 스키마면 생략. */}
+                  {zoneTemps && <ZoneTempRows zones={zoneTemps} />}
                 </div>
               )}
 
