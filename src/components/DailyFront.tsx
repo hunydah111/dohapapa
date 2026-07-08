@@ -1449,7 +1449,10 @@ export function DailyFront() {
           <span>
             국토부 실거래 공개분 기준 · 신고는 계약 후 최대 30일
             <br />
-            실거래 기록 판독이며 투자 권유가 아닙니다
+            실거래 기록 판독이며 투자 권유가 아닙니다 ·{" "}
+            <a href="/principles" className="underline underline-offset-2">
+              편집 원칙
+            </a>
           </span>
           <span className="flex shrink-0 items-center gap-2.5">
             <ShareButton title="비집고 — 오늘의 판" />
