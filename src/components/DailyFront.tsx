@@ -665,6 +665,7 @@ function TempTrendChart({
                 strokeWidth="1.3"
                 strokeDasharray="5 3"
               />
+              {/* 종이색 halo(paintOrder stroke) — 점선·본선 위에서도 라벨이 묻히지 않게. */}
               <text
                 x={clash ? X0 + 3 : 356}
                 y={(y - 2.5).toFixed(1)}
@@ -672,7 +673,10 @@ function TempTrendChart({
                 fontSize="8"
                 fontWeight="700"
                 fill={color}
-                fillOpacity="0.65"
+                stroke={PAPER}
+                strokeWidth="2.6"
+                paintOrder="stroke"
+                strokeLinejoin="round"
               >
                 {phase.label.split("(")[0]} 평균 {Math.round(avg)}%
               </text>
@@ -689,6 +693,10 @@ function TempTrendChart({
           fontSize="9"
           fontWeight="700"
           fill={UP}
+          stroke={PAPER}
+          strokeWidth="2.6"
+          paintOrder="stroke"
+          strokeLinejoin="round"
         >
           오늘 {todayAbovePct}%
         </text>
@@ -835,6 +843,25 @@ function MajorRow({
               }}
             />
           )}
+        </div>
+      )}
+      {/* 직전 거래 서브라인(2026-07-08 사장 지시 — 헌장 ② 숫자는 혼자 못 나온다):
+          같은 단지×평형 60일 내 직전 실거래의 가격·날짜·층 + 대비 %. 없으면 생략. */}
+      {item.prevKrw != null && item.pctVsPrev != null && (
+        <div className="mt-[3px] text-[11px] leading-[1.5]" style={{ color: INK_SOFT }}>
+          직전 {eok(item.prevKrw)}
+          {item.prevDate
+            ? ` (${ymdShort(item.prevDate)}${item.prevFloor != null ? `·${item.prevFloor}층` : ""})`
+            : ""}{" "}
+          대비{" "}
+          <b
+            style={{
+              color: item.pctVsPrev > 0 ? UP : item.pctVsPrev < 0 ? DOWN : INK,
+            }}
+          >
+            {item.pctVsPrev > 0 ? "+" : item.pctVsPrev < 0 ? "−" : "±"}
+            {pctAbs(item.pctVsPrev)}%
+          </b>
         </div>
       )}
       {/* 기준점 서브라인 — 비교 대상 없으면(신축 첫거래 등) 생략.

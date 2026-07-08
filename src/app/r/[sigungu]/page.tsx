@@ -378,28 +378,50 @@ function DealLine({
  *  갱신·동률 케이스는 그 표기 자체가 비교 서술이라 % 중복 표기 금지. refMax 없으면 생략.
  *  색은 본문 INK_SOFT, 숫자만 먹 굵게. */
 function refMaxSubline(m: MajorItem): React.ReactNode | undefined {
+  // 직전 실거래 줄(2026-07-08 사장 지시, 헌장 ②) — 60일 내 같은 단지×평형.
+  // 직전 대비는 시세 방향 팩트라 방향색, 최고가 대비는 "정점과의 거리"라 먹.
+  const prevLine =
+    m.prevKrw != null && m.pctVsPrev != null ? (
+      <>
+        직전 {eok(m.prevKrw)}
+        {m.prevDate
+          ? ` (${ymdShort(m.prevDate)}${m.prevFloor != null ? `·${m.prevFloor}층` : ""})`
+          : ""}{" "}
+        대비{" "}
+        <b style={{ color: m.pctVsPrev > 0 ? UP : m.pctVsPrev < 0 ? DOWN : INK }}>
+          {m.pctVsPrev > 0 ? "+" : m.pctVsPrev < 0 ? "−" : "±"}
+          {pctAbs(m.pctVsPrev)}%
+        </b>
+      </>
+    ) : null;
+
   const refMax = m.windowMaxKrw ?? null;
-  if (refMax == null || refMax <= 0 || !m.refMaxPeriod) return undefined;
-  if (m.priceKrw > refMax) {
-    return (
+  const refLine =
+    refMax == null || refMax <= 0 || !m.refMaxPeriod ? null : m.priceKrw > refMax ? (
       <>
         <b style={{ color: UP }}>— {m.refMaxPeriod} 내 최고가 갱신</b> (종전 {eok(refMax)}
         {m.windowMaxDate ? ` · ${ymdShort(m.windowMaxDate)}` : ""}
         {m.windowMaxFloor != null ? ` · ${m.windowMaxFloor}층` : ""})
       </>
+    ) : m.priceKrw === refMax ? (
+      <b style={{ color: INK }}>— {m.refMaxPeriod} 내 최고가 동률</b>
+    ) : (
+      <>
+        최근 {m.refMaxPeriod} 최고 {eok(refMax)}
+        {m.windowMaxDate
+          ? ` (${ymdShort(m.windowMaxDate)}${m.windowMaxFloor != null ? `·${m.windowMaxFloor}층` : ""})`
+          : ""}{" "}
+        (대비{" "}
+        <b style={{ color: INK }}>−{pctAbs((m.priceKrw - refMax) / refMax)}%</b>)
+      </>
     );
-  }
-  if (m.priceKrw === refMax) {
-    return <b style={{ color: INK }}>— {m.refMaxPeriod} 내 최고가 동률</b>;
-  }
-  const pct = (m.priceKrw - refMax) / refMax; // 이 분기에선 항상 음수
+
+  if (!prevLine && !refLine) return undefined;
   return (
     <>
-      최근 {m.refMaxPeriod} 최고 {eok(refMax)}
-      {m.windowMaxDate
-        ? ` (${ymdShort(m.windowMaxDate)}${m.windowMaxFloor != null ? `·${m.windowMaxFloor}층` : ""})`
-        : ""}{" "}
-      (대비 <b style={{ color: INK }}>−{pctAbs(pct)}%</b>)
+      {prevLine}
+      {prevLine && refLine && <br />}
+      {refLine}
     </>
   );
 }
@@ -770,7 +792,8 @@ export default async function Page({
                 <Link href="/" className="underline decoration-dotted underline-offset-2" style={{ color: INK }}>
                   오늘의 1면
                 </Link>
-                에.
+                에. 스탬프는 지난 거래에 대한 독자 평가 — 매수·매도 권유 아님 · 새벽 3시
+                리셋.
               </CornerNote>
             </>
           )}
@@ -835,7 +858,8 @@ export default async function Page({
                 {regionTop.generatedAt
                   ? ` · 주간 갱신 ${md(regionTop.generatedAt.slice(0, 10))}`
                   : ""}
-                . 단지를 누르면 카카오맵.
+                . 단지를 누르면 카카오맵. 스탬프는 지난 거래에 대한 독자 평가 —
+                매수·매도 권유 아님 · 새벽 3시 리셋.
               </CornerNote>
             </>
           )}

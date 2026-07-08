@@ -6,11 +6,13 @@
 // 넘기면 마운트 시 1회 GET(/api/react?dealKeys=…)으로 전 행 카운트를 받는다 —
 // 행마다 fetch 금지. 탭은 낙관적 갱신 + POST(실패 무시 — 집계는 부가).
 //
-// 규칙(사장 확정): 항상 3종 버튼 고정 배열 + 카운트. 총 5명 미만이면 카운트 숨김
-// (버튼만). 이상 참여 감지면 카운트 대신 "참여 급증 감지 — 집계 보류"(버튼 유지).
-// 중복 방지 localStorage 1일 1거래 1스탬프 — v1은 최초 1회만, 이후 전 버튼 비활성.
-// 캡션 "지난 거래에 대한 독자 평가 · 매수·매도 권유 아님 · 새벽 3시 리셋"은 스탬프
-// 바로 아래 인라인(스크린샷에 함께 잘리도록 — 법적 방어 프레임).
+// 규칙(2026-07-08 개정 — 사장 "클릭보드" 제보): 좋아요 누적식 리액션 pill.
+//  · 카운트는 1부터 표시(count>0) — 5명 문턱 숨김 폐지(빈 투표판처럼 보이던 원인).
+//    이상 참여 감지(anomaly)면 카운트 숨김 + "집계 보류"는 유지(조직 투표 방어).
+//  · 칩은 경량(괘선 1px·소형) — 지면의 본문보다 튀지 않게. 선택만 코랄.
+//  · 중복 방지 localStorage 1일 1거래 1스탬프 — v1은 최초 1회만, 이후 전 버튼 비활성.
+//  · 법적 캡션("지난 거래에 대한 독자 평가…")은 행마다 반복하지 않는다 — 코너당 1회
+//    (게재면이 코너 각주로 배치, ReactionsCaption 참조).
 
 import {
   createContext,
@@ -23,14 +25,14 @@ import {
 } from "react";
 import {
   REACTION_STAMPS,
-  REACTION_MIN_TOTAL,
+  REACTION_MIN_TOTAL, // 낙관적 갱신의 showCounts 계산용(서버 규칙과 동일) — UI 표시는 count>0
   reactedStorageKey,
   reactionDateKey,
   type DealReactionSummary,
   type ReactionStampSlug,
 } from "@/lib/reaction";
 // 지면 조판 토큰 — 공유 단일 소스(중복 선언 금지). 선택 강조만 코랄.
-import { PAPER, INK, INK_SOFT, CORAL } from "@/lib/paperTone";
+import { INK, INK_SOFT, RULE, CORAL } from "@/lib/paperTone";
 
 interface ReactionsCtx {
   /** 서버 집계 — dealKey → 요약. 로드 전엔 비어 있음. */
@@ -173,52 +175,51 @@ function Chips({ ctx, dealKey }: { ctx: ReactionsCtx; dealKey: string }) {
   const s = ctx.summaries.get(dealKey) ?? null;
   const mine = ctx.reactedOf(dealKey);
   const anomaly = s?.anomaly ?? false;
-  const showCounts = !anomaly && (s?.total ?? 0) >= REACTION_MIN_TOTAL;
 
   return (
-    <div className="pb-[3px] pt-[2px]">
-      <div className="flex flex-wrap items-center gap-1.5">
-        {REACTION_STAMPS.map((st) => {
-          const selected = mine === st.slug;
-          const count = s?.counts[st.slug] ?? 0;
-          return (
-            <button
-              key={st.slug}
-              type="button"
-              onClick={() => ctx.react(dealKey, st.slug)}
-              disabled={mine !== null}
-              aria-pressed={selected}
-              aria-label={`이 거래를 '${st.label}'로 평가${
-                showCounts ? ` — 현재 ${count}명` : ""
-              }`}
-              className="px-1.5 py-[2px] text-[10.5px] font-bold tabular-nums"
-              style={{
-                background: selected ? CORAL : PAPER,
-                color: selected ? "#fff" : INK,
-                border: `1.5px solid ${selected ? CORAL : INK}`,
-                opacity: mine !== null && !selected ? 0.4 : 1,
-                cursor: mine !== null ? "default" : "pointer",
-              }}
-            >
-              {st.emoji} {st.label}
-              {showCounts && <span className="ml-1 font-normal">{count}</span>}
-            </button>
-          );
-        })}
-        {anomaly && (
-          <span
-            className="text-[10px] font-bold"
-            style={{ color: INK_SOFT }}
-            role="status"
+    <div className="flex flex-wrap items-center gap-1 pb-[3px] pt-[2px]">
+      {REACTION_STAMPS.map((st) => {
+        const selected = mine === st.slug;
+        const count = s?.counts[st.slug] ?? 0;
+        // 좋아요 누적식 — 1부터 표시. anomaly면 숨김(집계 보류가 대신 말함).
+        const showCount = !anomaly && count > 0;
+        return (
+          <button
+            key={st.slug}
+            type="button"
+            onClick={() => ctx.react(dealKey, st.slug)}
+            disabled={mine !== null}
+            aria-pressed={selected}
+            aria-label={`이 거래를 '${st.label}'로 평가${
+              showCount ? ` — 현재 ${count}명` : ""
+            }`}
+            className="px-1.5 py-[1px] text-[10px] font-semibold tabular-nums"
+            style={{
+              background: selected ? CORAL : "transparent",
+              color: selected ? "#fff" : INK_SOFT,
+              border: `1px solid ${selected ? CORAL : RULE}`,
+              opacity: mine !== null && !selected ? 0.45 : 1,
+              cursor: mine !== null ? "default" : "pointer",
+            }}
           >
-            참여 급증 감지 — 집계 보류
-          </span>
-        )}
-      </div>
-      {/* 법적 방어 캡션 — 스탬프 바로 아래 인라인(스크린샷에 함께 담기게). */}
-      <p className="m-0 mt-[2px] text-[9.5px] leading-[1.5]" style={{ color: INK_SOFT }}>
-        지난 거래에 대한 독자 평가 · 매수·매도 권유 아님 · 새벽 3시 리셋
-      </p>
+            {st.emoji} {st.label}
+            {showCount && (
+              <b className="ml-1" style={{ color: selected ? "#fff" : INK }}>
+                {count}
+              </b>
+            )}
+          </button>
+        );
+      })}
+      {anomaly && (
+        <span
+          className="text-[10px] font-bold"
+          style={{ color: INK_SOFT }}
+          role="status"
+        >
+          참여 급증 감지 — 집계 보류
+        </span>
+      )}
     </div>
   );
 }

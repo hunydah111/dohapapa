@@ -53,7 +53,8 @@ export const LOCAL_TOP_LIMIT = 5;
 export const LOCAL_PULSE_MIN_SAMPLE = 3;
 
 /** 주요 거래 행 — MajorItem 발췌(동네판 조판에 필요한 필드만).
- *  refMax* = 기준점 최고가(1면 서브라인과 동일 팩트) — "최근 {기간} 최고 대비 −x%" 병기용. */
+ *  refMax* = 기준점 최고가(1면 서브라인과 동일 팩트) — "최근 {기간} 최고 대비 −x%" 병기용.
+ *  prev* = 직전 실거래(60일 내) 팩트 — "직전 {억}({날짜}) 대비 +x%" 병기용(2026-07-08 사장 지시). */
 export interface LocalMajorRow {
   dong: string;
   apt: string;
@@ -63,6 +64,10 @@ export interface LocalMajorRow {
   floor: number | null;
   refMaxKrw: number | null;
   refMaxPeriod: "1년" | "2개월" | null;
+  prevKrw: number | null;
+  prevDate: string | null;
+  prevFloor: number | null;
+  pctVsPrev: number | null;
 }
 
 /** 강세 거래 행 — 게이트 통과 PatchItem 발췌. 비교 팩트(직전 거래) 병기 의무. */
@@ -255,6 +260,10 @@ export function buildLocalFrontData(opts: {
         floor: m.floor ?? null,
         refMaxKrw: m.windowMaxKrw ?? null,
         refMaxPeriod: m.refMaxPeriod ?? null,
+        prevKrw: m.prevKrw ?? null,
+        prevDate: m.prevDate ?? null,
+        prevFloor: m.prevFloor ?? null,
+        pctVsPrev: m.pctVsPrev ?? null,
       });
     }
   }
