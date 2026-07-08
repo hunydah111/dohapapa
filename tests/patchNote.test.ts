@@ -920,6 +920,34 @@ describe("patchNote.pickHeadline", () => {
     expect(h.text).toContain("팩트단지, 직전 거래('26.6.25)보다");
   });
 
+  it("2순위 순위 — 등급 우선(①>②>③), 같은 등급은 인쇄되는 % 내림차순 (꽃뫼마을 사태)", () => {
+    // 꽃뫼 사태 재현: 내부 키(pctVsPrev)는 A가 크지만 인쇄 %(1년 갱신폭)는 B가 크다
+    // → B가 위. ③급 22.3%는 %가 최대여도 ①급 아래.
+    const h = pickHeadlines({
+      major: [],
+      nerf: [
+        makeNerfWithPrev({
+          apt: "꽃뫼형", sigungu: "수원시 팔달구",
+          priceKrw: 700_000_000, maxKrw: 675_000_000, // 갱신 +3.7%
+          prevKrw: 545_000_000, pctVsPrev: 0.284,
+        }),
+        makeNerfWithPrev({
+          apt: "에스케이형", sigungu: "화성시 병점구",
+          priceKrw: 597_000_000, maxKrw: 550_000_000, // 갱신 +8.5%
+          prevKrw: 470_000_000, pctVsPrev: 0.27,
+        }),
+        makeNerfWithPrev({
+          apt: "풍림형", sigungu: "용인시 처인구",
+          priceKrw: 263_000_000, windowMaxKrw: 260_000_000, // ② 두 달 내 최고가
+          prevKrw: 215_000_000, pctVsPrev: 0.223,
+        }),
+      ],
+      newDealCount: 100,
+      todayISO: "2026-07-08",
+    });
+    expect(h.top.text).toContain("에스케이형, 최근 1년 최고가 8.5% 갱신");
+  });
+
   it("2순위 전멸(전부 팩트 없음)이면 다음 rung(최고가)로 내려간다", () => {
     const h = pickHeadline({
       major: [makeMajor({ buildYear: 2010 })],

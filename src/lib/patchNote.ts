@@ -845,10 +845,13 @@ function headlineCandidates(opts: {
     out.push({ kind: "first-trade", text, itemKey: headlineItemKey(top) });
   }
 
-  // 2) 신고가성 상승 — 실거래 팩트 사다리. 후보는 입력 순서(computePatch 가
-  //    pctVsPrev 내림차순으로 게재 목록을 만든다)대로 훑고, 팩트가 잡히는 후보만 싣는다.
-  //    오보 게이트 — 게재 목록과 동일한 이중 합의(+7% 합의·+30% 컷)를 헤드라인에도 강제.
-  //    구 데이터(게이트 이전 산출 nerf)로 렌더 시점에 재계산해도 오보 후보가 못 올라온다.
+  // 2) 신고가성 상승 — 실거래 팩트 사다리. 오보 게이트 — 게재 목록과 동일한 이중
+  //    합의(+7% 합의·+30% 컷)를 헤드라인에도 강제. 구 데이터(게이트 이전 산출 nerf)로
+  //    렌더 시점에 재계산해도 오보 후보가 못 올라온다.
+  //    순위는 "독자에게 보이는 숫자" 기준(2026-07-08 사장 제보 — 내부 키 pctVsPrev로
+  //    줄 세우면 3.7% 갱신이 8.5% 갱신 위에 인쇄됨): 사다리 등급(①>②>③) 우선,
+  //    같은 등급 안에서는 인쇄되는 % 내림차순.
+  const nerfCands: { rung: number; dispPct: number; cand: HeadlineCandidate }[] = [];
   for (const cand of nerf) {
     if (!passesStrongGate(cand)) continue;
     const eok = eokText(cand.priceKrw);
@@ -857,12 +860,15 @@ function headlineCandidates(opts: {
     //      등락률은 (price − maxKrw) / maxKrw 로 재계산.
     const maxKrw = cand.maxKrw ?? null;
     if (maxKrw !== null && maxKrw > 0 && cand.priceKrw > maxKrw) {
-      out.push({
-        kind: "nerf",
-        text: `${cand.sigungu} ${cand.apt}, 최근 1년 최고가 ${pctText(
-          (cand.priceKrw - maxKrw) / maxKrw,
-        )}% 갱신 — ${eok}억`,
-        itemKey,
+      const dispPct = (cand.priceKrw - maxKrw) / maxKrw;
+      nerfCands.push({
+        rung: 1,
+        dispPct,
+        cand: {
+          kind: "nerf",
+          text: `${cand.sigungu} ${cand.apt}, 최근 1년 최고가 ${pctText(dispPct)}% 갱신 — ${eok}억`,
+          itemKey,
+        },
       });
       continue;
     }
@@ -873,23 +879,36 @@ function headlineCandidates(opts: {
       // 2-② 두 달(폴링창) 내 최고가 — window 내 자기 제외 최고가보다도 높음.
       const windowMaxKrw = cand.windowMaxKrw ?? null;
       if (windowMaxKrw !== null && cand.priceKrw > windowMaxKrw) {
-        out.push({
-          kind: "nerf",
-          text: `${cand.sigungu} ${cand.apt}, 두 달 내 최고가 — 직전 거래(${prevMd})보다 ${pctText(pctVsPrev)}% 높게 팔렸다`,
-          itemKey,
+        nerfCands.push({
+          rung: 2,
+          dispPct: pctVsPrev,
+          cand: {
+            kind: "nerf",
+            text: `${cand.sigungu} ${cand.apt}, 두 달 내 최고가 — 직전 거래(${prevMd})보다 ${pctText(pctVsPrev)}% 높게 팔렸다`,
+            itemKey,
+          },
         });
         continue;
       }
       // 2-③ 직전 거래 대비 — 날짜 병기 의무.
-      out.push({
-        kind: "nerf",
-        text: `${cand.sigungu} ${cand.apt}, 직전 거래(${prevMd})보다 ${pctText(pctVsPrev)}% 높게 팔렸다 — ${eok}억`,
-        itemKey,
+      nerfCands.push({
+        rung: 3,
+        dispPct: pctVsPrev,
+        cand: {
+          kind: "nerf",
+          text: `${cand.sigungu} ${cand.apt}, 직전 거래(${prevMd})보다 ${pctText(pctVsPrev)}% 높게 팔렸다 — ${eok}억`,
+          itemKey,
+        },
       });
       continue;
     }
     // 2-④ 비교 팩트 없음(구 스키마 등) — 이 후보 스킵, 다음 후보로.
   }
+  // 비교는 인쇄 단위(소수 1자리 %)로 — 원시값 미세 차이로 "같은 8.3%"끼리 순서가
+  // 뒤바뀌지 않게. 동률이면 입력 순서(computePatch의 pctVsPrev 내림차순) 유지(stable).
+  const dispRank = (p: number) => Math.round(p * 1000);
+  nerfCands.sort((a, b) => a.rung - b.rung || dispRank(b.dispPct) - dispRank(a.dispPct));
+  out.push(...nerfCands.map((c) => c.cand));
 
   // 3) 오늘의 최고가 — major 전부(가격 내림차순 입력 순서). 서브 차순위 회피에 쓰인다.
   for (const top of major) {
@@ -909,9 +928,10 @@ function headlineCandidates(opts: {
  * 1. 신축 첫/두 번째 실거래(15억 이상): buildYear ≥ 기준연도−3 AND 단지 전체 표본
  *    (totalSampleCount, 최근 1년) ≤ 2 → 후보 여럿이면 가격 최고. 문구는 창 병기
  *    ("1년 새 n번째") — "입주 후 첫"은 준공=기준연도일 때만. 구 스키마는 rung 스킵.
- * 2. 신고가성 상승 — 후보(pctVsPrev 내림차순)를 돌며 문구 사다리 첫 매치:
- *    ① 최근 1년 최고가(maxKrw) 갱신 ② 두 달(폴링창) 내 최고가 ③ 직전 거래 대비
- *    ④ 비교 팩트 없음 → 이 후보 스킵, 다음 후보/다음 rung.
+ * 2. 신고가성 상승 — 문구 사다리 ① 최근 1년 최고가(maxKrw) 갱신 ② 두 달(폴링창) 내
+ *    최고가 ③ 직전 거래 대비 (④ 비교 팩트 없음 → 후보 스킵). 순위 = 사다리 등급 우선,
+ *    같은 등급 안에선 "인쇄되는 %" 내림차순 — 내부 키로 줄 세우면 3.7%가 8.5% 위에
+ *    인쇄되는 역전이 생긴다(2026-07-08 사장 제보).
  * 3. 오늘의 최고가: major[0].
  * 4. 폴백: "판을 흔든 거래는 없었다".
  */
