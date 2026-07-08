@@ -35,6 +35,7 @@ import {
 import { REFERENCE_PHASES, phaseAvg, type TempSeriesFile } from "@/lib/tempSeries";
 import { aggregateZoneTemp, type ZoneTemp } from "@/lib/zones";
 import { areaMeta } from "@/lib/areaLabel";
+import { CONTACT_EMAIL } from "@/lib/site";
 import { TILE_MAP, TILE_GRID_COLS, tileLevel } from "@/lib/tileMap";
 import {
   recoveryBand,
@@ -1788,6 +1789,14 @@ export function DailyFront() {
             실거래 기록 판독이며 투자 권유가 아닙니다 ·{" "}
             <a href="/principles" className="underline underline-offset-2">
               편집 원칙
+            </a>
+            {/* 정정 창구 — 명예훼손성 분쟁의 최전선 방어는 신속 정정 절차(2026-07-08). */}
+            {" · "}
+            <a
+              href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("[비집고] 지면 정정 요청")}`}
+              className="underline underline-offset-2"
+            >
+              정정 요청
             </a>
           </span>
           <span className="flex shrink-0 items-center gap-2.5">
