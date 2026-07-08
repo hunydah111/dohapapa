@@ -41,6 +41,7 @@ import {
   type MajorItem,
   type PatchItem,
 } from "@/lib/patchNote";
+import { areaMeta } from "@/lib/areaLabel";
 import { ShareButton } from "@/components/ShareButton";
 // 오늘의 반응(v2.6) — 거래 행 아래 시세 평가 스탬프. Provider가 지면 분량 키를 모아
 // 1회 배치 GET — 행마다 fetch 금지. dealKey는 patchNote dealKey와 동일 규격.
@@ -106,11 +107,7 @@ function eok(krw: number): string {
   const s = v.toFixed(1);
   return `${s.endsWith(".0") ? s.slice(0, -2) : s}억`;
 }
-/** 전용면적 → "84.9" (.0 생략). */
-function sqm(area: number): string {
-  const s = area.toFixed(1);
-  return s.endsWith(".0") ? s.slice(0, -2) : s;
-}
+// 면적 표기("84.7㎡ · 32~35평")는 공유 헬퍼(areaLabel.ts).
 /** 등락률(소수) → "8.8" (절대값). */
 function pctAbs(pct: number): string {
   const s = (Math.abs(pct) * 100).toFixed(1);
@@ -460,7 +457,7 @@ function TopRow({
         <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
           {item.dong} {item.apt}{" "}
           <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
-            {sqm(item.areaM2)}㎡{item.floor != null ? ` · ${item.floor}층` : ""}
+            {areaMeta(item.areaM2)}{item.floor != null ? ` · ${item.floor}층` : ""}
           </span>
         </span>
         <span className="shrink-0 text-right text-[13px] font-bold" style={{ color: INK }}>
@@ -737,7 +734,7 @@ export default async function Page({
                     <div key={`m${m.apt}-${m.dealDate}-${m.priceKrw}-${i}`}>
                       <DealLine
                         left={`${m.dong} ${m.apt}`}
-                        meta={`${sqm(m.areaM2)}㎡${m.floor != null ? ` · ${m.floor}층` : ""}`}
+                        meta={`${areaMeta(m.areaM2)}${m.floor != null ? ` · ${m.floor}층` : ""}`}
                         right={`${eok(m.priceKrw)} · 계약 ${md(m.dealDate)}`}
                         sub={refMaxSubline(m)}
                         divider={i > 0}
@@ -757,7 +754,7 @@ export default async function Page({
                     <div key={`s${s.apt}-${s.dealDate}-${i}`}>
                       <DealLine
                         left={`▲ ${s.dong} ${s.apt}`}
-                        meta={`${sqm(s.areaM2)}㎡`}
+                        meta={areaMeta(s.areaM2)}
                         right={`+${pctAbs(s.pctVsPrev!)}%`}
                         sub={`직전 ${ymdShort(s.prevDate!)} ${eok(s.prevKrw!)}${s.prevFloor != null ? `(${s.prevFloor}층)` : ""} → ${eok(s.priceKrw)} · 계약 ${md(s.dealDate)}`}
                         divider={i > 0}
@@ -777,7 +774,7 @@ export default async function Page({
                     <DealLine
                       key={`c${c.apt}-${c.dealDate}-${c.priceKrw}-${i}`}
                       left={`${c.dong} ${c.apt}`}
-                      meta={`${sqm(c.areaM2)}㎡`}
+                      meta={areaMeta(c.areaM2)}
                       right={`${eok(c.priceKrw)} · 계약 ${md(c.dealDate)}`}
                       sub={c.wasTopInWindow ? "— 해제 전까지 이 단지 최고가로 공개돼 있었음" : undefined}
                       divider={i > 0}

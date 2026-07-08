@@ -34,6 +34,7 @@ import {
 } from "@/lib/patchNote";
 import { REFERENCE_PHASES, phaseAvg, type TempSeriesFile } from "@/lib/tempSeries";
 import { aggregateZoneTemp, type ZoneTemp } from "@/lib/zones";
+import { areaMeta } from "@/lib/areaLabel";
 import { TILE_MAP, TILE_GRID_COLS, tileLevel } from "@/lib/tileMap";
 import {
   recoveryBand,
@@ -181,11 +182,7 @@ function eok(krw: number): string {
   return `${s.endsWith(".0") ? s.slice(0, -2) : s}억`;
 }
 
-/** 전용면적 → "84.9" (소수 1자리, .0 은 생략 — 원본 84.898 같은 꼬리 방지). */
-function sqm(area: number): string {
-  const s = area.toFixed(1);
-  return s.endsWith(".0") ? s.slice(0, -2) : s;
-}
+// 면적 표기("84.7㎡ · 32~35평")는 공유 헬퍼(areaLabel.ts) — sqm 3중 중복 통합(2026-07-08).
 
 /** 이탈률(소수) → "8.8" (절대값, 소수 1자리, .0 은 생략). */
 function pctAbs(pct: number): string {
@@ -1048,7 +1045,7 @@ function MajorRow({
         <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
           <RegionLink sigungu={item.sigungu}>{item.dong}</RegionLink> {item.apt}{" "}
           <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
-            {sqm(item.areaM2)}㎡{tag ? ` · ${tag}` : ""}
+            {areaMeta(item.areaM2)}{tag ? ` · ${tag}` : ""}
           </span>
           <RowHint />
         </span>
@@ -1149,7 +1146,7 @@ function StrongRow({ item, divider }: { item: PatchItem; divider: boolean }) {
           </span>
           <RegionLink sigungu={item.sigungu}>{item.sigungu}</RegionLink> {item.apt}{" "}
           <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
-            {sqm(item.areaM2)}㎡{tag ? ` · ${tag}` : ""}
+            {areaMeta(item.areaM2)}{tag ? ` · ${tag}` : ""}
           </span>
           <RowHint />
         </span>
@@ -1180,7 +1177,7 @@ function CancellationRow({ item, divider }: { item: CancellationItem; divider: b
         <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
           <RegionLink sigungu={item.sigungu}>{item.dong}</RegionLink> {item.apt}{" "}
           <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
-            {sqm(item.areaM2)}㎡{tag ? ` · ${tag}` : ""}
+            {areaMeta(item.areaM2)}{tag ? ` · ${tag}` : ""}
           </span>
         </span>
         <span className="shrink-0 text-right text-[13px] font-bold" style={{ color: INK }}>

@@ -38,6 +38,7 @@ import {
   type RegionBrief,
 } from "@/lib/localFront";
 import { ymdShortText } from "@/lib/patchNote";
+import { areaMeta } from "@/lib/areaLabel";
 import { ShareButton } from "./ShareButton";
 import {
   serif,
@@ -73,11 +74,7 @@ function eok(krw: number): string {
   const s = v.toFixed(1);
   return `${s.endsWith(".0") ? s.slice(0, -2) : s}억`;
 }
-/** 전용면적 → "84.9" (.0 생략). */
-function sqm(area: number): string {
-  const s = area.toFixed(1);
-  return s.endsWith(".0") ? s.slice(0, -2) : s;
-}
+// 면적 표기("84.7㎡ · 32~35평")는 공유 헬퍼(areaLabel.ts).
 /** 등락률(소수) → "8.8" (절대값, .0 생략). */
 function pctAbs(pct: number): string {
   const s = (Math.abs(pct) * 100).toFixed(1);
@@ -525,7 +522,7 @@ function BriefBody({
                   <BriefRow
                     key={`m${m.apt}-${m.dealDate}-${m.priceKrw}-${i}`}
                     left={`${m.dong} ${m.apt}`}
-                    meta={`${sqm(m.areaM2)}㎡${m.floor != null ? ` · ${m.floor}층` : ""}`}
+                    meta={`${areaMeta(m.areaM2)}${m.floor != null ? ` · ${m.floor}층` : ""}`}
                     right={`${eok(m.priceKrw)} · 계약 ${md(m.dealDate)}`}
                     /* 서브라인 — 직전 실거래(사장 지시 7/8, 헌장 ②) + 기준점 최고가.
                        최고가 대비 %는 "정점과의 거리"라 방향색 금지(숫자만 먹),
@@ -611,7 +608,7 @@ function BriefBody({
                         {s.dong} {s.apt}
                       </>
                     }
-                    meta={`${sqm(s.areaM2)}㎡`}
+                    meta={areaMeta(s.areaM2)}
                     right={
                       <span style={{ color: UP }}>+{pctAbs(s.pctVsPrev)}%</span>
                     }
@@ -690,7 +687,7 @@ function BriefBody({
               <BriefRow
                 key={`t${it.apt}-${it.dealDate}-${it.priceKrw}`}
                 left={`${i + 1}. ${it.dong} ${it.apt}`}
-                meta={`${sqm(it.areaM2)}㎡${it.floor != null ? ` · ${it.floor}층` : ""}`}
+                meta={`${areaMeta(it.areaM2)}${it.floor != null ? ` · ${it.floor}층` : ""}`}
                 right={`${eok(it.priceKrw)} · 계약 ${md(it.dealDate)}`}
                 sub={
                   pct != null && it.prevDate != null && it.prevKrw != null

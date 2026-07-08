@@ -193,12 +193,15 @@ function Chips({ ctx, dealKey }: { ctx: ReactionsCtx; dealKey: string }) {
             aria-label={`이 거래를 '${st.label}'로 평가${
               showCount ? ` — 현재 ${count}명` : ""
             }`}
-            className="px-1.5 py-[1px] text-[10px] font-semibold tabular-nums"
+            className="px-2 py-[2.5px] text-[10.5px] font-semibold tabular-nums transition-colors"
             style={{
-              background: selected ? CORAL : "transparent",
-              color: selected ? "#fff" : INK_SOFT,
+              // 미선택 = 종이 톤 채움 버튼(투명 외곽선만 있으면 죽은 칩처럼 보임 —
+              // 2026-07-08 사장 "없어보임" 제보). 선택만 코랄. 시드·가짜 카운트는
+              // 헌장 ⑥(조작 금지) 위반이라 금지 — 빈 상태는 디자인으로만 해결.
+              background: selected ? CORAL : "#f0ebdd",
+              color: selected ? "#fff" : INK,
               border: `1px solid ${selected ? CORAL : RULE}`,
-              opacity: mine !== null && !selected ? 0.45 : 1,
+              opacity: mine !== null && !selected ? 0.4 : 1,
               cursor: mine !== null ? "default" : "pointer",
             }}
           >
