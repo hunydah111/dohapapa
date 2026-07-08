@@ -91,7 +91,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data/trendIndex.json src/data/dataMeta.json src/data/complexSnapshot.json src/data/rebWeekly.json src/data/dailyPulse.json src/data/regionSeries.json src/data/tempSeries.json src/data/regionTop.json src/data/regionPeaks.json
+          git add src/data/trendIndex.json src/data/dataMeta.json src/data/complexSnapshot.json src/data/rebWeekly.json src/data/dailyPulse.json src/data/regionSeries.json src/data/tempSeries.json src/data/regionTop.json src/data/regionPeaks.json src/data/regionChase.json
           if git diff --staged --quiet; then
             echo "변경 없음 — 커밋 생략"
           else

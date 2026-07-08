@@ -59,6 +59,14 @@ import {
   type RegionPeaksFile,
   type RegionPeakTx,
 } from "@/lib/regionPeaks";
+import {
+  CHASE_QUARTERS,
+  bucketRegionChase,
+  lastQuarters,
+  yqOf,
+  type RegionChaseFile,
+  type RegionChaseTx,
+} from "@/lib/regionChase";
 
 /** 매매 관측에서 제외하는 source — 분양권 전매(별도 시장) + 직거래(증여성 의심). */
 const EXCLUDED_SOURCES = new Set(["분양권", "입주권", "MOLIT_DIRECT"]);
@@ -96,6 +104,7 @@ async function main() {
   let rows: RegionSeriesTx[];
   let tempRows: TempSeriesTx[];
   let peakRows: RegionPeakTx[]; // 5년 전고점/회복률 집계 입력 — tempSeries와 같은 창·필터
+  let chaseRows: RegionChaseTx[]; // 추격판(#19) 입력 — 같은 6년 조회 재사용(추가 쿼리 0)
   let validYms: string[]; // 유효 거래(밴드 무관)의 계약월 — 앞쪽 빈 달 잘라내기 판정용
   let topTxs: RegionTopTx[];
   try {
@@ -131,6 +140,13 @@ async function main() {
     peakRows = valid.flatMap((t) =>
       bandOfArea(t.area) === "p32_35"
         ? [{ sigungu: t.complex.sigungu, ym: ymOf(t.dealDate), priceKrw: Number(t.priceKrw) }]
+        : [],
+    );
+    // 추격판(#19) 입력 — 평단가(원/㎡). 전 평형 혼합이되 "상위 5% 컷"이라 구성 왜곡에
+    // 강함(그 분기 최상단 진입가 자체가 관심사). area 0 이하 방어.
+    chaseRows = valid.flatMap((t) =>
+      t.area > 0
+        ? [{ sigungu: t.complex.sigungu, yq: yqOf(t.dealDate), pricePerM2: Number(t.priceKrw) / t.area }]
         : [],
     );
     // 온도 시계열 입력 — 단지×평형 밴드 그룹. 밴드 밖 면적(초소형 등)은 스킵.
@@ -245,6 +261,21 @@ async function main() {
   const peaksKb = Math.round(JSON.stringify(peaksOut).length / 102.4) / 10;
   console.log(
     `regionPeaks: 시군구 ${Object.keys(peakRegions).length}곳 · 창 ${peaksOut.windowFrom}~${peaksOut.windowTo} · ${peaksKb}KB → ${peaksDest}`,
+  );
+
+  // ── 추격판(#19)·격차 게이지(#10) — 구별 분기 상위 5%/10% 평단가 5년 ─────────────
+  const chaseQuarters = lastQuarters(new Date(), CHASE_QUARTERS);
+  const chaseRegions = bucketRegionChase(chaseRows, chaseQuarters);
+  const chaseOut: RegionChaseFile = {
+    generatedAt: new Date().toISOString(),
+    quarters: chaseQuarters,
+    regions: chaseRegions,
+  };
+  const chaseDest = resolve(process.cwd(), "src/data/regionChase.json");
+  writeFileSync(chaseDest, JSON.stringify(chaseOut) + "\n", "utf8");
+  const chaseKb = Math.round(JSON.stringify(chaseOut).length / 102.4) / 10;
+  console.log(
+    `regionChase: 시군구 ${Object.keys(chaseRegions).length}곳 · ${chaseQuarters[0]}~${chaseQuarters[chaseQuarters.length - 1]} · ${chaseKb}KB → ${chaseDest}`,
   );
 
   // ── [최근 거래 상위] — 시군구 × 밴드(59㎡급/84㎡급) 최근 60일 TOP10 ────────────

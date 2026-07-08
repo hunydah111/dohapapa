@@ -20,6 +20,7 @@ import dailyPatchRaw from "@/data/dailyPatch.json";
 import dailyPulseRaw from "@/data/dailyPulse.json";
 import tempSeriesRaw from "@/data/tempSeries.json";
 import regionPeaksRaw from "@/data/regionPeaks.json";
+import regionChaseRaw from "@/data/regionChase.json";
 import {
   pickHeadlines,
   passesStrongGate,
@@ -39,6 +40,15 @@ import {
   topRecovered,
   type RegionPeaksFile,
 } from "@/lib/regionPeaks";
+import {
+  CHASE_BASE_SIGUNGU,
+  CHASE_MIN_DEALS,
+  buildChaseBoard,
+  findOvertakes,
+  type ChaseBoard,
+  type ChaseBoardRow,
+  type RegionChaseFile,
+} from "@/lib/regionChase";
 import { ThresholdGauge, DailyFrontPing } from "./ThresholdGauge";
 import { DealMiniMap } from "./DealMiniMap";
 import { ShareButton } from "./ShareButton";
@@ -140,6 +150,7 @@ const patch = dailyPatchRaw as unknown as DailyPatch;
 const pulse = dailyPulseRaw as unknown as DailyPulse;
 const tempSeries = tempSeriesRaw as unknown as TempSeriesFile;
 const regionPeaks = regionPeaksRaw as unknown as RegionPeaksFile;
+const regionChase = regionChaseRaw as unknown as RegionChaseFile;
 
 // ── 포맷터 ────────────────────────────────────────────────────────────────────
 /** "2026-06-28" → "6/28". 깨진 값은 그대로 반환. (당일·당월성 표기 전용 — 계약일 등) */
@@ -511,6 +522,230 @@ function RecoveryTop5({
         })}
       </div>
     </div>
+  );
+}
+
+// ── 월요 분석면 — 추격판(#19: 강남=100 인덱스 궤적·역전 마커) + 격차 게이지(#10) ──────
+//   게재 = 월요일 호에만(헌장 ⑦ 지면 예산 — 요일제). 선정은 전부 기계 규칙(공평):
+//   최신 분기 인덱스 상위 = 강남과 격차가 가장 좁은 구. placeholder·표본 미달이면 코너 생략.
+const CHASE_BOARD_ROWS = 5; // 게이지 행 수
+const CHASE_CHART_LINES = 3; // 차트 궤적 수 — 넘치면 선이 엉켜 못 읽는다
+
+/** "2025-Q4" → "'25.4Q". 깨진 값은 그대로. */
+function quarterApos(q: string): string {
+  const m = /^(\d{4})-Q(\d)$/.exec(q);
+  return m ? `'${m[1].slice(2)}.${m[2]}Q` : q;
+}
+
+function ChaseChart({ file, rows }: { file: RegionChaseFile; rows: ChaseBoardRow[] }) {
+  const charted = rows.slice(0, CHASE_CHART_LINES);
+  const n = file.quarters.length;
+  if (n < 2 || charted.length === 0) return null;
+  const X0 = 8;
+  const X1 = 336; // 우측 여백 — 궤적 끝 라벨("동작구 91")이 잘리지 않게
+  const xOf = (i: number) => X0 + (i / (n - 1)) * (X1 - X0);
+  // y 도메인 — 표시 값 전부 + 기준 100, ±4 여유.
+  let lo = 100;
+  let hi = 100;
+  for (const r of charted)
+    for (const v of r.index)
+      if (v != null) {
+        if (v < lo) lo = v;
+        if (v > hi) hi = v;
+      }
+  const yMin = Math.floor((lo - 4) / 5) * 5;
+  const yMax = Math.ceil((hi + 4) / 5) * 5;
+  const yOf = (v: number) => 12 + ((yMax - v) / (yMax - yMin)) * 74;
+  // 궤적 위계 — 1위 본선, 2·3위 보조(연함·점선). 색은 먹 단색(시세 방향색 오남용 금지).
+  const strokes = [
+    { width: 1.8, opacity: 1, dash: undefined as string | undefined },
+    { width: 1.4, opacity: 0.55, dash: undefined as string | undefined },
+    { width: 1.4, opacity: 0.55, dash: "4 3" },
+  ];
+  const baseY = yOf(100);
+  // 궤적 끝 라벨 충돌 방지 — 기준선 라벨("강남 100")까지 포함해 위→아래로 최소 10px 벌림.
+  const labelY = [baseY - 3, ...charted.map((r) => yOf(r.latest) + 3)];
+  const order = labelY.map((_, i) => i).sort((a, b) => labelY[a] - labelY[b]);
+  for (let k = 1; k < order.length; k++) {
+    if (labelY[order[k]] - labelY[order[k - 1]] < 10)
+      labelY[order[k]] = labelY[order[k - 1]] + 10;
+  }
+  return (
+    <svg
+      viewBox="0 0 396 104"
+      className="block h-auto w-full"
+      role="img"
+      aria-label={`추격판 — 강남 100 기준 분기 인덱스 궤적 (${quarterApos(file.quarters[0])}~)`}
+    >
+      {/* 기준선 — 강남 100 (점선·먹) */}
+      <line x1={X0} y1={baseY.toFixed(1)} x2="392" y2={baseY.toFixed(1)} stroke={INK} strokeWidth="1" strokeDasharray="3 3" strokeOpacity="0.6" />
+      <text x="392" y={labelY[0].toFixed(1)} textAnchor="end" fontSize="8.5" fontWeight="700" fill={INK} stroke={PAPER} strokeWidth="2.6" paintOrder="stroke" strokeLinejoin="round">
+        강남 100
+      </text>
+      {charted.map((r, k) => {
+        const pts: string[] = [];
+        for (let i = 0; i < n; i++) {
+          const v = r.index[i];
+          if (v != null) pts.push(`${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`);
+        }
+        const s = strokes[k];
+        // 역전 마커 — 강남과 우열이 뒤집힌 분기(양쪽 관측 있을 때만, lib가 보장).
+        const marks = findOvertakes(file, CHASE_BASE_SIGUNGU, r.sigungu).filter(
+          (m) => r.index[file.quarters.indexOf(m.quarter)] != null,
+        );
+        return (
+          <g key={r.sigungu}>
+            <polyline fill="none" stroke={INK} strokeWidth={s.width} strokeOpacity={s.opacity} strokeDasharray={s.dash} points={pts.join(" ")} />
+            {marks.map((m) => {
+              const i = file.quarters.indexOf(m.quarter);
+              return (
+                <circle
+                  key={m.quarter}
+                  cx={xOf(i).toFixed(1)}
+                  cy={yOf(r.index[i]!).toFixed(1)}
+                  r="3.2"
+                  fill={PAPER}
+                  stroke={INK}
+                  strokeWidth="1.6"
+                />
+              );
+            })}
+            <text
+              x={(xOf(r.latestQi) + 4).toFixed(1)}
+              y={labelY[k + 1].toFixed(1)}
+              fontSize="9"
+              fontWeight="700"
+              fill={INK}
+              fillOpacity={s.opacity}
+              stroke={PAPER}
+              strokeWidth="2.6"
+              paintOrder="stroke"
+              strokeLinejoin="round"
+            >
+              {r.sigungu} {Math.round(r.latest)}
+            </text>
+          </g>
+        );
+      })}
+      {/* x축 눈금 — 처음·가운데·마지막 분기 */}
+      {[0, Math.floor((n - 1) / 2), n - 1].map((i) => (
+        <text key={i} x={xOf(i).toFixed(1)} y="102" textAnchor={i === 0 ? "start" : i === n - 1 ? "end" : "middle"} fontSize="8.5" fill={INK_SOFT}>
+          {quarterApos(file.quarters[i])}
+        </text>
+      ))}
+    </svg>
+  );
+}
+
+/** 격차 게이지(#10) — 강남 100 만재 바 + 격차가 좁은 순 상위 구. 바 = 인덱스 비율. */
+function ChaseGaugeRows({ file, board }: { file: RegionChaseFile; board: ChaseBoard }) {
+  // 게이지 스케일 — 기준 100과 최고 인덱스 중 큰 쪽(강남 초과 구가 있으면 그 구가 만재).
+  const scale = Math.max(100, ...board.rows.map((r) => r.latest));
+  const rows = [
+    { sigungu: board.base, latest: 100, sub: null as string | null },
+    ...board.rows.map((r) => ({
+      sigungu: r.sigungu,
+      latest: r.latest,
+      sub: `${quarterApos(file.quarters[r.firstQi])} ${Math.round(r.first)} → 지금 ${Math.round(r.latest)} (${r.delta > 0 ? "+" : ""}${r.delta}p)`,
+    })),
+  ];
+  return (
+    <div className="mt-3">
+      <p className="m-0 text-[11px] font-bold tracking-[0.08em]" style={{ color: INK_SOFT }}>
+        격차 게이지 — 강남과 격차가 좁은 순
+      </p>
+      <div className="mt-1">
+        {rows.map((r, i) => (
+          <div
+            key={r.sigungu}
+            className={`py-[4px] ${i > 0 ? "border-t border-dotted" : ""}`}
+            style={i > 0 ? { borderColor: RULE } : undefined}
+          >
+            <div className="flex items-baseline gap-2 tabular-nums">
+              <span className="w-[52px] shrink-0 truncate text-[12px] font-bold" style={{ color: INK }}>
+                {i === 0 ? r.sigungu : <RegionLink sigungu={r.sigungu}>{r.sigungu}</RegionLink>}
+              </span>
+              <span className="h-[7px] min-w-0 flex-1 self-center" style={{ background: "#efeadd" }}>
+                <span
+                  className="block h-full"
+                  style={{
+                    width: `${Math.min(100, (r.latest / scale) * 100).toFixed(1)}%`,
+                    background: i === 0 ? INK : INK_SOFT,
+                  }}
+                />
+              </span>
+              <span className="w-[30px] shrink-0 text-right text-[12.5px] font-extrabold" style={{ color: INK }}>
+                {Math.round(r.latest)}
+              </span>
+            </div>
+            {r.sub && (
+              <p className="m-0 pl-[60px] text-[10px] leading-[1.5] tabular-nums" style={{ color: INK_SOFT }}>
+                {r.sub}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** 월요 분석면 코너 본체 — 회복률 지도 코너와 같은 접힘 문법. 보드 불성립이면 null. */
+function ChaseCorner({ file }: { file: RegionChaseFile }) {
+  const board = buildChaseBoard(file, CHASE_BOARD_ROWS);
+  if (!board) return null;
+  const climber = board.topClimber;
+  return (
+    <section className="px-0.5 pb-3.5 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
+      <details className="group">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 [&::-webkit-details-marker]:hidden">
+          <span
+            className="inline-block px-2 py-[3px] text-[11px] font-bold tracking-[0.18em]"
+            style={{ background: INK, color: PAPER }}
+          >
+            월요 분석 — 추격판 · 강남 100
+          </span>
+          <span className="flex shrink-0 items-center gap-1.5">
+            <span aria-hidden="true" className="text-[10px] tracking-[0.04em]" style={{ color: INK_SOFT }}>
+              bijigo.kr
+            </span>
+            <span
+              aria-hidden="true"
+              className="text-[11px] transition-transform duration-150 group-open:rotate-90"
+              style={{ color: INK_SOFT }}
+            >
+              ▸
+            </span>
+          </span>
+        </summary>
+        <div className="pt-2.5">
+          <ChaseChart file={file} rows={board.rows} />
+          <ChaseGaugeRows file={file} board={board} />
+          {climber && (
+            <p className="mb-0 mt-2 text-[11.5px] leading-[1.6] tabular-nums" style={{ color: INK }}>
+              창 안 추격폭 1위 —{" "}
+              <RegionLink sigungu={climber.sigungu} className="font-bold">
+                {climber.sigungu}
+              </RegionLink>{" "}
+              <b>
+                {climber.delta > 0 ? "+" : ""}
+                {climber.delta}p
+              </b>{" "}
+              <span style={{ color: INK_SOFT }}>
+                ({quarterApos(file.quarters[climber.firstQi])} {Math.round(climber.first)} → 지금{" "}
+                {Math.round(climber.latest)})
+              </span>
+            </p>
+          )}
+          <CornerNote>
+            인덱스 = 그 분기 구 전체 거래 평단가(원/㎡)의 상위 5% 진입값을 강남구 같은 값으로
+            나눈 비율 × 100 — 관측값이지 시세 지수 아님. 분기 표본 {CHASE_MIN_DEALS}건 미만은
+            제외 · ◯ = 강남과 우열이 뒤집힌 분기 · 상위 구 선정은 전 구 동일 규칙(최신 인덱스
+            순) · 주간 갱신.
+          </CornerNote>
+        </div>
+      </details>
+    </section>
   );
 }
 
@@ -1070,6 +1305,12 @@ export function DailyFront() {
   // 가격 바 기준 — 오늘 major 최고가(major는 가격 내림차순 정렬 상태).
   const majorTopKrw = major && major.length > 0 ? major[0].priceKrw : 0;
 
+  // [월요 분석면] — 월요일 호에만 게재(헌장 ⑦ 요일제). 발행 시각(ISO)을 KST로 옮겨 판정
+  //   (Vercel 서버는 UTC). 데이터 placeholder(주간 크론 전)면 ChaseCorner가 스스로 접는다.
+  const isMondayEdition =
+    patch.generatedAt != null &&
+    new Date(Date.parse(patch.generatedAt) + 9 * 3600_000).getUTCDay() === 1;
+
   // 온도 게이지 분할 — 위(먹) : 중립(괘선) : 아래(그린), matched 대비 비율.
   const tempPct = temp
     ? {
@@ -1349,6 +1590,10 @@ export function DailyFront() {
                 </details>
               </section>
             )}
+
+            {/* ── [월요 분석면] — 추격판(#19) + 격차 게이지(#10). 월요일 호 한정(헌장 ⑦),
+                placeholder·보드 불성립이면 코너 자체 생략(graceful). ── */}
+            {isMondayEdition && <ChaseCorner file={regionChase} />}
 
             {/* ── [주요 거래] — 오늘 공개된 수도권 15억 이상 전부 ── */}
             <section className="px-0.5 pb-3.5 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
