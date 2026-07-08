@@ -141,7 +141,8 @@ export async function generateMetadata({
     description,
     alternates: { canonical: path },
     openGraph: { title, description, type: "website", url: path },
-    twitter: { title, description, card: "summary" },
+    // og 이미지(오늘 팩트 카드, opengraph-image.tsx)가 생겨 대형 카드로 승격.
+    twitter: { title, description, card: "summary_large_image" },
   };
 }
 

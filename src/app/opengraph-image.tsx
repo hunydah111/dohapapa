@@ -2,50 +2,58 @@ import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { SITE_DOMAIN } from "@/lib/site";
+import dailyPatchRaw from "@/data/dailyPatch.json";
+import { pickHeadlines, type MajorItem, type PatchItem } from "@/lib/patchNote";
 
 // 카카오톡·페이스북·X 등에서 링크 공유 시 보이는 썸네일(1200×630).
-// 타이포그래피 중심 (2026-07 캐릭터 강등: 일러스트 제거) — 우드톤 배경 위 큰 카피 + 3-티어 칩,
-// 하단 = 코랄 밴드에 흰 워드마크(축소 시에도 대비 확보). 한글은 Black Han Sans(OFL) 번들 폰트.
+// v6 (2026-07-08): 신문 1면 정체성 — 종이 톤 + 코랄 플레이트 제호 + "오늘의 헤드라인"을
+// 그대로 박는다. 크론이 매일 데이터를 커밋 → 재배포 → 썸네일도 그날 지면이 된다.
+// (v5까지의 우드톤 판정기 카드("안정형·균형형·도전형")는 v1 정체성이라 폐기)
 export const contentType = "image/png";
 
 const SIZE = { width: 1200, height: 630 };
-const ALT = "비집고 — 내 돈으로 살 집 어디까지?";
+const ALT = "비집고 — 국토부 실거래로 매일 아침 발행하는 신문 1면";
 
-// og:image URL에 버전 경로(/opengraph-image/<id>)를 박는다. 카카오·페북·폰 로컬은 이미지 URL
-// 글자 단위로 캐싱하므로, 디자인을 바꾸면 OG_VERSION을 올려 "한 번도 본 적 없는 새 URL"로 강제
-// 교체 → 모든 캐시 계층이 새로 긁어간다. (카카오 OG 디버거 캐시 초기화로도 안 풀릴 때의 확실한 우회)
-const OG_VERSION = "5";
+// 지면 톤 — paperTone과 동일 팔레트(og는 폰트/모듈 제약으로 값만 복사).
+const PAPER = "#fbfaf6";
+const INK = "#191713";
+const INK_SOFT = "#5d574c";
+const CORAL = "#e8571f";
+
+interface PatchLike {
+  generatedAt: string | null;
+  newDealCount: number;
+  major?: MajorItem[];
+  nerf?: PatchItem[];
+}
+const patch = dailyPatchRaw as unknown as PatchLike;
+
+// 이미지 URL은 글자 단위로 캐싱된다(카카오·페북·폰 로컬) — 날짜를 경로에 박아
+// 매일 "한 번도 본 적 없는 새 URL"이 되게 한다(디자인 개정은 v 프리픽스 증가).
+const dateSlug = (patch.generatedAt ?? "pre").slice(0, 10);
+const OG_ID = `v6-${dateSlug}`;
 
 export function generateImageMetadata() {
-  return [
-    {
-      id: OG_VERSION,
-      alt: ALT,
-      size: SIZE,
-      contentType,
-    },
-  ];
+  return [{ id: OG_ID, alt: ALT, size: SIZE, contentType }];
+}
+
+function koDateShort(iso: string | null): string {
+  if (!iso) return "창간 준비호";
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  return m ? `${m[1]}년 ${Number(m[2])}월 ${Number(m[3])}일` : iso;
 }
 
 export default async function Image() {
   const font = await readFile(
     join(process.cwd(), "assets/BlackHanSans-Regular.ttf"),
   );
-
-  const chip = (label: string, bg: string) => (
-    <div
-      style={{
-        display: "flex",
-        background: bg,
-        color: "#fffdf8",
-        fontSize: 40,
-        padding: "10px 28px",
-        borderRadius: 999,
-      }}
-    >
-      {label}
-    </div>
-  );
+  // 렌더와 같은 순수 함수로 헤드라인 재계산(v2.5 — 구운 headlines 필드는 신뢰하지 않는다).
+  const top = pickHeadlines({
+    major: patch.major ?? [],
+    nerf: patch.nerf ?? [],
+    newDealCount: patch.newDealCount ?? 0,
+    todayISO: dateSlug === "pre" ? "2026-01-01" : dateSlug,
+  }).top;
 
   return new ImageResponse(
     (
@@ -55,56 +63,111 @@ export default async function Image() {
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          background: "#FBF3E4",
+          background: PAPER,
           fontFamily: "BlackHanSans",
         }}
       >
-        {/* 상단: 후크 카피 — 타이포가 메시지 전부 */}
+        {/* 정보띠 + 먹 괘선(신문 상단 문법) */}
         <div
           style={{
             display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            flex: 1,
-            padding: "20px 72px 8px",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            margin: "34px 56px 0",
+            paddingBottom: 14,
+            borderBottom: `5px solid ${INK}`,
+            color: INK_SOFT,
+            fontSize: 30,
           }}
         >
-          <div style={{ fontSize: 116, color: "#6B4226", lineHeight: 1.12 }}>통장 까면,</div>
-          <div style={{ fontSize: 116, color: "#FF8A4C", lineHeight: 1.12 }}>동네 나온다.</div>
-          <div style={{ display: "flex", flexDirection: "row", gap: 14, marginTop: 30 }}>
-            {chip("안정형", "#e0a23a")}
-            {chip("균형형", "#FF8A4C")}
-            {chip("도전형", "#6B4226")}
-          </div>
-          <div style={{ fontSize: 34, color: "#6B4226", marginTop: 28, opacity: 0.75 }}>
-            수도권 아파트단지 1만 곳 · 30초컷
-          </div>
+          <div style={{ display: "flex" }}>{koDateShort(patch.generatedAt)}</div>
+          <div style={{ display: "flex" }}>오늘의 판 · 매일 아침 발행</div>
         </div>
 
-        {/* 하단 코랄 밴드 — 흰글자 워드마크(최고 대비) */}
+        {/* 제호 플레이트 + 부제 */}
         <div
           style={{
             display: "flex",
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            background: "#e8662f",
-            padding: "0 44px",
-            height: 152,
+            margin: "26px 56px 0",
           }}
         >
-          <div style={{ fontSize: 106, color: "#fffdf8", lineHeight: 1 }}>비집고</div>
-          <div style={{ fontSize: 38, color: "#ffe6dc" }}>
-            {`수도권 아파트 · 국토부 실거래가 · ${SITE_DOMAIN}`}
+          <div
+            style={{
+              display: "flex",
+              background: CORAL,
+              color: PAPER,
+              fontSize: 88,
+              lineHeight: 1,
+              padding: "14px 30px 20px",
+            }}
+          >
+            비집고
           </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              color: INK_SOFT,
+              fontSize: 30,
+              lineHeight: 1.4,
+            }}
+          >
+            <div style={{ display: "flex" }}>국토부 실거래 공개분으로</div>
+            <div style={{ display: "flex" }}>매일 새벽 자동 발행</div>
+          </div>
+        </div>
+
+        {/* 오늘의 헤드라인 — 지면 톱 그대로 */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            flex: 1,
+            justifyContent: "center",
+            margin: "0 56px",
+          }}
+        >
+          <div style={{ display: "flex", color: CORAL, fontSize: 30 }}>오늘의 헤드라인</div>
+          <div
+            style={{
+              display: "flex",
+              color: INK,
+              fontSize: 64,
+              lineHeight: 1.28,
+              marginTop: 10,
+            }}
+          >
+            {top.text}
+          </div>
+        </div>
+
+        {/* 하단 코랄 밴드 */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            background: CORAL,
+            padding: "0 56px",
+            height: 108,
+            color: PAPER,
+            fontSize: 34,
+          }}
+        >
+          <div style={{ display: "flex" }}>통장 까면, 동네 나온다</div>
+          <div style={{ display: "flex" }}>{SITE_DOMAIN}</div>
         </div>
       </div>
     ),
     {
       ...SIZE,
-      fonts: [
-        { name: "BlackHanSans", data: font, style: "normal", weight: 400 },
-      ],
+      fonts: [{ name: "BlackHanSans", data: font, style: "normal", weight: 400 }],
     },
   );
 }
