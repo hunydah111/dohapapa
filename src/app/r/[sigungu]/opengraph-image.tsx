@@ -12,7 +12,9 @@ import { type MajorItem, type PatchTemp } from "@/lib/patchNote";
 // 보여준다 — 퍼나르는 단위가 곧 지면. 크론 재배포로 매일 갱신, 날짜 박은 URL로 캐시 우회.
 export const contentType = "image/png";
 
-const SIZE = { width: 1200, height: 630 };
+// 2x 렌더(2400×1260, 비율은 og 표준 1200×630 유지) — 1x는 고해상도 화면·확대에서
+// 뭉개진다(2026-07-10 사장 제보). 아래 스타일 수치는 전부 2배 기준.
+const SIZE = { width: 2400, height: 1260 };
 
 const PAPER = "#fbfaf6";
 const INK = "#191713";
@@ -129,11 +131,11 @@ export default async function Image({
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
-            margin: "34px 56px 0",
-            paddingBottom: 14,
-            borderBottom: `5px solid ${INK}`,
+            margin: "68px 112px 0",
+            paddingBottom: 28,
+            borderBottom: `10px solid ${INK}`,
             color: INK_SOFT,
-            fontSize: 30,
+            fontSize: 60,
           }}
         >
           <div style={{ display: "flex" }}>{koDateShort(patch.generatedAt)}</div>
@@ -146,8 +148,8 @@ export default async function Image({
             display: "flex",
             flexDirection: "row",
             alignItems: "center",
-            margin: "28px 56px 0",
-            gap: 22,
+            margin: "56px 112px 0",
+            gap: 44,
           }}
         >
           <div
@@ -155,14 +157,14 @@ export default async function Image({
               display: "flex",
               background: CORAL,
               color: PAPER,
-              fontSize: 46,
+              fontSize: 92,
               lineHeight: 1,
-              padding: "10px 18px 14px",
+              padding: "20px 36px 28px",
             }}
           >
             비집고
           </div>
-          <div style={{ display: "flex", color: INK, fontSize: 58, lineHeight: 1 }}>
+          <div style={{ display: "flex", color: INK, fontSize: 116, lineHeight: 1 }}>
             {sigungu ? `${sigungu}판` : "동네판"}
           </div>
           <div
@@ -171,7 +173,7 @@ export default async function Image({
               flex: 1,
               justifyContent: "flex-end",
               color: INK_SOFT,
-              fontSize: 32,
+              fontSize: 64,
             }}
           >
             오늘 공개 {count.toLocaleString("ko-KR")}건
@@ -185,7 +187,7 @@ export default async function Image({
             flexDirection: "column",
             flex: 1,
             justifyContent: rows.length > 0 ? "flex-start" : "center",
-            margin: "18px 56px 0",
+            margin: "36px 112px 0",
           }}
         >
           {/* satori는 React Fragment를 못 그린다 — 조건 블록을 fragment 없이 나열. */}
@@ -204,9 +206,9 @@ export default async function Image({
                       display: "flex",
                       flexDirection: "row",
                       alignItems: "center",
-                      padding: "10px 0",
+                      padding: "20px 0",
                       // satori는 undefined 스타일 값에서 죽는다(trim) — 조건부 스프레드만 허용.
-                      ...(i < rows.length - 1 ? { borderBottom: "2px solid #e7e1d2" } : {}),
+                      ...(i < rows.length - 1 ? { borderBottom: "4px solid #e7e1d2" } : {}),
                     }}
                   >
                     <div
@@ -220,11 +222,11 @@ export default async function Image({
                         whiteSpace: "nowrap",
                       }}
                     >
-                      <div style={{ display: "flex", color: INK, fontSize: 36 }}>
+                      <div style={{ display: "flex", color: INK, fontSize: 72 }}>
                         {`${d.dongName} ${d.apartmentName}`}
                       </div>
                       {/* ㎡(U+33A1)는 BlackHanSans에 글리프가 없다(tofu) — 라틴 m²로 표기. */}
-                      <div style={{ display: "flex", color: INK_SOFT, fontSize: 27, marginLeft: 14 }}>
+                      <div style={{ display: "flex", color: INK_SOFT, fontSize: 54, marginLeft: 28 }}>
                         {`${Math.round(d.area)}m²${d.floor != null ? ` · ${d.floor}층` : ""}${d.dealingGbn === "직거래" ? " · 직거래" : ""}`}
                       </div>
                     </div>
@@ -232,8 +234,8 @@ export default async function Image({
                       style={{
                         display: "flex",
                         color: INK,
-                        fontSize: 40,
-                        marginLeft: 20,
+                        fontSize: 80,
+                        marginLeft: 40,
                       }}
                     >
                       {eok(d.priceKrw)}
@@ -241,10 +243,10 @@ export default async function Image({
                     <div
                       style={{
                         display: "flex",
-                        width: 150,
+                        width: 300,
                         justifyContent: "flex-end",
                         color: pctColor,
-                        fontSize: 30,
+                        fontSize: 60,
                       }}
                     >
                       {pctText ?? " "}
@@ -256,8 +258,8 @@ export default async function Image({
             <div
               style={{
                 display: "flex",
-                marginTop: 12,
-                fontSize: 26,
+                marginTop: 24,
+                fontSize: 52,
                 color: INK_SOFT,
               }}
             >
@@ -265,12 +267,12 @@ export default async function Image({
             </div>
           )}
           {rows.length === 0 && (
-            <div style={{ display: "flex", color: INK, fontSize: 64, lineHeight: 1.25 }}>
+            <div style={{ display: "flex", color: INK, fontSize: 128, lineHeight: 1.25 }}>
               오늘 새로 공개된 거래 없음
             </div>
           )}
           {rows.length === 0 && (
-            <div style={{ display: "flex", marginTop: 20, fontSize: 32, color: INK_SOFT }}>
+            <div style={{ display: "flex", marginTop: 40, fontSize: 64, color: INK_SOFT }}>
               12개월 추이·최근 거래 상위는 지면에서
             </div>
           )}
@@ -284,10 +286,10 @@ export default async function Image({
             alignItems: "center",
             justifyContent: "space-between",
             background: CORAL,
-            padding: "0 56px",
-            height: 108,
+            padding: "0 112px",
+            height: 216,
             color: PAPER,
-            fontSize: 34,
+            fontSize: 68,
           }}
         >
           <div style={{ display: "flex" }}>우리 동네 실거래, 매일 아침 브리핑</div>
