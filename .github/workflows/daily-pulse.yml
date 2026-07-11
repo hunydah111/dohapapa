@@ -37,6 +37,9 @@ jobs:
       TZ: Asia/Seoul # checkedAt·거래월 창을 KST로 일관
       MOLIT_API_KEY: ${{ secrets.MOLIT_API_KEY }}
       REB_API_KEY: ${{ secrets.REB_API_KEY }} # ★ GitHub repo secrets 에 추가 필요(없으면 R-ONE 단계만 스킵)
+      # 정책 브리핑(대출 뉴스) 수집용 — geocode 와 같은 네이버 검색 키. 없으면 뉴스만 placeholder.
+      NAVER_SEARCH_CLIENT_ID: ${{ secrets.NAVER_SEARCH_CLIENT_ID }}
+      NAVER_SEARCH_CLIENT_SECRET: ${{ secrets.NAVER_SEARCH_CLIENT_SECRET }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -58,12 +61,18 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || github.event.schedule == '20 20 * * *'
         continue-on-error: true
 
+      # 2b) [정책 브리핑] 대출·부동산 정책 뉴스 — 네이버 뉴스 검색 자동 + 신뢰 언론사 필터.
+      #     키 없거나 실패해도 placeholder 로 폴백(펄스 커밋은 계속). 본판만(매 회차 3번 호출 방지).
+      - run: npx tsx scripts/fetch-policy-news.ts
+        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '20 20 * * *'
+        continue-on-error: true
+
       # 3) 가벼운 JSON 만 커밋 → push 시 Vercel 자동 배포(매일).
       - name: commit pulse
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data/dailyPulse.json src/data/rebWeekly.json src/data/dailyPatch.json src/data/dailySeen.json src/data/dailyRecent.json
+          git add src/data/dailyPulse.json src/data/rebWeekly.json src/data/dailyPatch.json src/data/dailySeen.json src/data/dailyRecent.json src/data/policyNews.json
           if git diff --staged --quiet; then
             echo "변경 없음 — 커밋 생략"
           else
