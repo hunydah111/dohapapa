@@ -40,7 +40,6 @@ import {
 import { ymdShortText } from "@/lib/patchNote";
 import { areaMeta } from "@/lib/areaLabel";
 import { ShareButton } from "./ShareButton";
-import { InstallButton } from "./InstallButton";
 import {
   serif,
   pretendard,
@@ -766,10 +765,6 @@ function SheetFooter({ shareTitle }: { shareTitle: string }) {
         이 동네, 내 통장으론? — 30초 판정
       </a>
 
-      {/* 홈 화면 앱 설치(A2HS) — 실제 설치 프롬프트/iOS 안내 (2026-07-11 사장). */}
-      <div className="mt-2.5 flex justify-center">
-        <InstallButton />
-      </div>
 
       <div
         className="mt-3 flex items-start justify-between gap-3 pt-2.5 text-[10px] leading-[1.6]"

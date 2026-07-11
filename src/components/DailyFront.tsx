@@ -55,7 +55,6 @@ import {
 import { ThresholdGauge, DailyFrontPing } from "./ThresholdGauge";
 import { DealMiniMap } from "./DealMiniMap";
 import { ShareButton } from "./ShareButton";
-import { InstallButton } from "./InstallButton";
 // 하이브리드 폰트·조판 토큰 — 공유 모듈(단일 소스). 중복 선언 금지.
 // 세리프(serif=나눔명조)=코너 제목·헤드라인·단지명 · pretendard=본문·숫자·제호 워드마크.
 import {
@@ -1097,8 +1096,11 @@ function DealLocation({
   const kakaoMapHref = `https://map.kakao.com/?q=${encodeURIComponent(`${sigungu} ${apt}`)}`;
   // 네이버 부동산(m.land) — CandidateCard 미러(단지명만 넘김, 고유 매칭 시 단지 페이지 직행).
   const naverHref = `https://m.land.naver.com/search/result/${encodeURIComponent(apt)}`;
-  // 카카오 로드뷰 — 좌표 있을 때만(포인트 필요). 없으면 아이콘 생략.
-  const roadviewHref = hasCoords ? `https://map.kakao.com/link/roadview/${lat},${lng}` : null;
+  // 카카오 로드뷰 — 좌표 있을 때만. 좌표는 6자리로 반올림한다: 15자리 부동소수 그대로면
+  // 카카오가 파싱 실패 → 빈 로드뷰 검색창으로 떨어졌다(2026-07-11 사장 리포트). lat,lng 순서.
+  const roadviewHref = hasCoords
+    ? `https://map.kakao.com/link/roadview/${lat!.toFixed(6)},${lng!.toFixed(6)}`
+    : null;
   return (
     <div className="mb-1.5 mt-1 flex flex-col gap-1.5 border p-2" style={{ borderColor: RULE }}>
       {hasCoords && <DealMiniMap label={apt} lat={lat!} lng={lng!} />}
@@ -1993,11 +1995,6 @@ export function DailyFront() {
         >
           그래서 이 동네들, 내 통장으론? — 30초 판정
         </a>
-
-        {/* 홈 화면 앱 설치(A2HS) — 실제 설치 프롬프트/iOS 안내 (2026-07-11 사장). */}
-        <div className="mt-2.5 flex justify-center">
-          <InstallButton />
-        </div>
 
         {/* ── 콜로폰 + 공유(콜로폰 옆 소형 버튼 — 각진 지면 톤) ── */}
         <div

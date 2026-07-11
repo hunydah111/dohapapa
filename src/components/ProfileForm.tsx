@@ -164,6 +164,57 @@ function manwonHint(manwonStr: string): string | undefined {
   return `= ${formatKrwHuman(n * 10_000)}`;
 }
 
+// ── 순자산 "하나씩 계산" 헬퍼 (2026-07-11 사장: "하는사람마다 헷갈려한다") ──────────────
+// 순자산 = 통장+주식+다른 부동산 − 빚. 헷갈리는 사람을 위한 선택형 접이식 계산기 —
+// 각 항목을 넣으면 실시간 합산, "순자산에 넣기"로 상위 필드에 채운다(기본 접힘, 간단파 방해 X).
+function NetWorthHelper({ onApply }: { onApply: (manwon: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [cash, setCash] = useState("");
+  const [stock, setStock] = useState("");
+  const [realty, setRealty] = useState("");
+  const [debt, setDebt] = useState("");
+  const num = (s: string) => {
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  };
+  const sum = Math.round(num(cash) + num(stock) + num(realty) - num(debt));
+
+  return (
+    <div className="rounded-2xl border border-dashed border-[#c9c3b4] bg-[#faf8f2] p-3">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between text-[13px] font-bold text-[#191713]"
+        aria-expanded={open}
+      >
+        <span>순자산이 헷갈리면 — 하나씩 계산</span>
+        <span className="text-[12px] font-normal text-[#8a857a]">{open ? "접기 ▲" : "펼치기 ▼"}</span>
+      </button>
+      {open && (
+        <div className="mt-3 flex flex-col gap-3">
+          <TextField label="예적금·통장 현금" value={cash} onChange={setCash} type="number" placeholder="예: 12000" suffix="만원" hint={manwonHint(cash)} />
+          <TextField label="주식·펀드·코인 (현재 평가액)" value={stock} onChange={setStock} type="number" placeholder="예: 5000" suffix="만원" hint={manwonHint(stock)} />
+          <TextField label="다른 부동산 (지금 사는 집·전세보증금 등 시세)" value={realty} onChange={setRealty} type="number" placeholder="예: 40000" suffix="만원" hint={manwonHint(realty)} />
+          <TextField label="빼기 — 갚아야 할 빚 (대출·전세금 반환 등)" value={debt} onChange={setDebt} type="number" placeholder="예: 30000" suffix="만원" hint={manwonHint(debt)} />
+          <div className="flex items-center justify-between border-t border-[#e5e5ea] pt-2.5">
+            <span className="text-[12px] text-[#5d574c]">합계 = 통장 + 주식 + 부동산 − 빚</span>
+            <span className="tabular-nums text-[15px] font-extrabold text-[#191713]">
+              {sum.toLocaleString()} 만원
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => onApply(String(Math.max(0, sum)))}
+            className="rounded-xl bg-[#e8571f] py-2.5 text-[13px] font-bold text-white"
+          >
+            이 합계를 순자산에 넣기
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── 직장 입력 서브컴포넌트 ─────────────────────────────────────
 
 interface WorkplaceInputProps {
@@ -1441,7 +1492,7 @@ export function ProfileForm({
               hint={
                 seedMoney
                   ? `${manwonHint(seedMoney)} — 이번 집에 넣을 종잣돈 (예적금+팔 주식·자사주 현금화분 포함)`
-                  : "이번 집에 넣을 종잣돈 — 예적금 + 팔 주식·자사주·청약통장 등 현금화해 끌어올 돈(계약금·잔금 재원). 구매력 계산에 사용"
+                  : "이번 집에 넣을 종잣돈(계약금·잔금 재원) — 예적금 + 팔 주식·자사주·청약통장 등. 예: 통장 1.2억 + 팔 주식 5천 → 17000 입력. 구매력 계산에 사용"
               }
             />
 
@@ -1468,6 +1519,9 @@ export function ProfileForm({
                   : "보유현금까지 포함한 전 재산(금융+부동산−부채). 정책대출 자격 판정에만 사용"
               }
             />
+
+            {/* 순자산 하나씩 계산 — 헷갈리는 사람용(2026-07-11 사장). 채우면 위 순자산에 반영. */}
+            <NetWorthHelper onApply={setNetAssets} />
 
             <TextField
               label="매달 갚는 대출"

@@ -14,6 +14,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { loadMyRegions } from "@/lib/myRegions";
 import { INK, PAPER, RULE } from "@/lib/paperTone";
+import { InstallButton } from "./InstallButton";
 
 export const LOCAL_TAB_HASH = "#local";
 
@@ -85,6 +86,8 @@ export function HomeTabs({ front, local }: { front: ReactNode; local: ReactNode 
             </button>
           );
         })}
+        {/* 홈 화면 바로가기 칩 — 탭 줄 맨 오른쪽 상주(2026-07-11 사장). */}
+        <InstallButton />
       </div>
 
       {/* ── 지면 페인 — 둘 다 마운트, display 전환(상태 보존) ── */}

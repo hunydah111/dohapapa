@@ -169,7 +169,11 @@ function LocalProfileOptIn({
         <span className="text-[13px] font-bold text-[#191713]">
           다음에 오면 오늘 시세로 다시 계산
         </span>
-        <span className="text-[11px]" style={{ color: "#5d574c" }}>
+        <span className="text-[11.5px] leading-[1.55]" style={{ color: "#5d574c" }}>
+          입력한 예산·소득·직장을 이 폰에 기억해요. 다음에 오면 다시 안 쳐도 그날 실거래가로
+          자동 재판독. <span className="whitespace-nowrap">(예: 3개월 뒤 방문 → 그 사이 오른/내린 시세 반영)</span>
+        </span>
+        <span className="text-[11px]" style={{ color: "#8a857a" }}>
           이 폰에만 저장 · 서버 미전송{on ? " · 저장됨 (해제하면 즉시 삭제)" : ""}
         </span>
       </span>
