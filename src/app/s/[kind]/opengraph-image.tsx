@@ -1,0 +1,479 @@
+import { ImageResponse } from "next/og";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { SITE_DOMAIN } from "@/lib/site";
+import dailyPatchRaw from "@/data/dailyPatch.json";
+import {
+  passesStrongGate,
+  type MajorItem,
+  type PatchItem,
+  type RegionPulse,
+} from "@/lib/patchNote";
+import { majorAnalysis } from "@/lib/majorAnalysis";
+
+// 클릭되는 공유 링크카드 3종(주요·강세·약세) — 탭하면 홈 유입 (2026-07-11 사장 지시).
+// 종전 /card/major(raw PNG 302)는 스레드·카톡에서 이미지로만 떠 탭해도 홈에 안 왔다.
+// 이제 /s/{kind} = og:image 단 실제 HTML 페이지가 유입 깔때기, 이 파일은 그 카드 비주얼.
+// 카드 문법은 major·동네판 카드(r/[sigungu]/opengraph-image)와 동일 — 제호·표·코랄 밴드.
+// satori 제약: React Fragment 금지 · undefined 스타일 값 금지(조건부 스프레드만) ·
+// ㎡(U+33A1)·▲▼는 BlackHanSans 글리프 없음(tofu) → m²·부호(+/−)+방향색으로 대체.
+export const contentType = "image/png";
+
+// 2x 렌더(2400×1260, 비율 og 표준 1200×630) — 고해상도 화면 뭉개짐 방지(동네판 카드와 동일).
+const SIZE = { width: 2400, height: 1260 };
+
+const PAPER = "#fbfaf6";
+const INK = "#191713";
+const INK_SOFT = "#5d574c";
+const CORAL = "#e8571f";
+const UP = "#c9252d";
+const DOWN = "#2563a8";
+
+type Kind = "major" | "strong" | "weak";
+const KINDS: Kind[] = ["major", "strong", "weak"];
+
+interface PatchLike {
+  generatedAt: string | null;
+  major?: MajorItem[];
+  nerf?: PatchItem[];
+  weakRegions?: RegionPulse[];
+}
+const patch = dailyPatchRaw as unknown as PatchLike;
+
+const dateSlug = (patch.generatedAt ?? "pre").slice(0, 10);
+const OG_ID = `v1-${dateSlug}`;
+
+// 카드별 표 행수 상한 — 하단 코랄 밴드 안 침범하는 선.
+// major는 [주요 거래 분석] 밴드가 상단 공간을 먹으므로 밴드 있을 때 5행(없으면 7행).
+const MAJOR_ROWS = 7;
+const MAJOR_ROWS_WITH_AGG = 4;
+const STRONG_ROWS = 6;
+const WEAK_ROWS = 3;
+
+const META: Record<Kind, { corner: string; right: string; alt: string }> = {
+  major: {
+    corner: "오늘의 주요 거래",
+    right: "수도권 15억 이상 · 가격순",
+    alt: "오늘의 주요 거래 — 수도권 큰 실거래 TOP 7 · 비집고",
+  },
+  strong: {
+    corner: "오늘의 강세 거래",
+    right: "직전 실거래 대비 · 상승순",
+    alt: "오늘의 강세 거래 — 직전 실거래보다 높게 팔린 중개거래 · 비집고",
+  },
+  weak: {
+    corner: "오늘의 약세 동네",
+    right: "직전 실거래 대비 평균 · 약세순",
+    alt: "오늘의 약세 동네 — 시군구 직전 실거래 대비 평균 하락 · 비집고",
+  },
+};
+
+function isKind(v: string): v is Kind {
+  return (KINDS as string[]).includes(v);
+}
+
+export function generateStaticParams(): { kind: Kind }[] {
+  return KINDS.map((kind) => ({ kind }));
+}
+
+export async function generateImageMetadata({
+  params,
+}: {
+  params: Promise<{ kind: string }>;
+}) {
+  const { kind } = await params;
+  const k: Kind = isKind(kind) ? kind : "major";
+  return [{ id: OG_ID, alt: META[k].alt, size: SIZE, contentType }];
+}
+
+function koDateShort(iso: string | null): string {
+  if (!iso) return "창간 준비호";
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  return m ? `${m[1]}년 ${Number(m[2])}월 ${Number(m[3])}일` : iso;
+}
+
+function eok(krw: number): string {
+  const v = krw / 100_000_000;
+  const s = v.toFixed(1);
+  return `${s.endsWith(".0") ? s.slice(0, -2) : s}억`;
+}
+
+/** 직전 대비 등락 → "+14.1%" / "−1.4%" (부호·절대값, .0 생략). null이면 빈칸. */
+function pctText(pct: number | null | undefined): string | null {
+  if (pct == null) return null;
+  const sign = pct > 0 ? "+" : pct < 0 ? "−" : "±";
+  const s = (Math.abs(pct) * 100).toFixed(1);
+  return `${sign}${s.endsWith(".0") ? s.slice(0, -2) : s}%`;
+}
+
+/** 등락률(소수) → 절대값 "8.8"(.0 생략) — 방향은 부호·색으로. */
+function pctAbs(pct: number): string {
+  const s = (Math.abs(pct) * 100).toFixed(1);
+  return s.endsWith(".0") ? s.slice(0, -2) : s;
+}
+
+/** "2026-06-18" → "'26.6.18" — 직전 거래 날짜 병기(연도 의무, 1면과 단일 규칙). */
+function ymdShort(dateISO: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateISO);
+  return m ? `'${m[1].slice(2)}.${Number(m[2])}.${Number(m[3])}` : dateISO;
+}
+
+/** 주요 거래 분석 라인용 짧은 구 이름 — "강남구"→"강남". 복합 시군구는 그대로(오독 방지). */
+function shortRegion(sigungu: string): string {
+  return sigungu.includes(" ") ? sigungu : sigungu.replace(/[구시군]$/, "");
+}
+
+export default async function Image({
+  params,
+}: {
+  params: Promise<{ kind: string }>;
+}) {
+  const font = await readFile(
+    join(process.cwd(), "assets/BlackHanSans-Regular.ttf"),
+  );
+  const { kind: rawKind } = await params;
+  const kind: Kind = isKind(rawKind) ? rawKind : "major";
+  const meta = META[kind];
+
+  // 카드별 데이터·행·각주·빈상태 문구 — 전부 major 카드 비주얼 미러.
+  const majorAll = patch.major ?? [];
+  // [주요 거래 분석] — major 카드 상단 어그로 밴드(구별 직전 대비 평균+건수). 구 시세 아님.
+  // 카드는 세로 지면이 빠듯해 상위 4개 구만(1면·페이지는 6개) — 밴드 2줄로 압축.
+  const majorAgg = kind === "major" ? majorAnalysis(majorAll, 4) : [];
+  const strongAll = (patch.nerf ?? []).filter(
+    (i) => i.prevDate != null && passesStrongGate(i),
+  );
+  const weakAll = patch.weakRegions ?? [];
+
+  const majorCap = majorAgg.length > 0 ? MAJOR_ROWS_WITH_AGG : MAJOR_ROWS;
+  const rowCount =
+    kind === "major"
+      ? Math.min(majorCap, majorAll.length)
+      : kind === "strong"
+        ? Math.min(STRONG_ROWS, strongAll.length)
+        : Math.min(WEAK_ROWS, weakAll.length);
+  const totalCount =
+    kind === "major" ? majorAll.length : kind === "strong" ? strongAll.length : weakAll.length;
+  const restCount = Math.max(0, totalCount - rowCount);
+  const hasRows = rowCount > 0;
+
+  const emptyText =
+    kind === "major"
+      ? "오늘 공개된 큰 거래 없음"
+      : kind === "strong"
+        ? "오늘 강세 거래 없음"
+        : "오늘 약세 동네 없음";
+
+  const footnote =
+    kind === "major"
+      ? `${restCount > 0 ? `외 ${restCount}건 · ` : ""}% = 같은 단지 직전 실거래 대비 · 전체는 지면에서`
+      : kind === "strong"
+        ? `${restCount > 0 ? `외 ${restCount}건 · ` : ""}비교는 같은 단지·평형 최근 60일 내 직전 실거래 기준 · 전체는 지면에서`
+        : `직전 실거래(같은 단지·평형 60일 내) 대비 평균 · 5건 이상 동네만 · 하락 단지 실명 없음`;
+
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          background: PAPER,
+          fontFamily: "BlackHanSans",
+        }}
+      >
+        {/* 정보띠 + 먹 괘선 */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            margin: "56px 112px 0",
+            paddingBottom: 24,
+            borderBottom: `10px solid ${INK}`,
+            color: INK_SOFT,
+            fontSize: 54,
+          }}
+        >
+          <div style={{ display: "flex" }}>{koDateShort(patch.generatedAt)}</div>
+          <div style={{ display: "flex" }}>매일 아침 발행 · 국토부 공개분</div>
+        </div>
+
+        {/* 제호(소) + 코너명 + 우측 메타 */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            margin: "40px 112px 0",
+            gap: 40,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              background: CORAL,
+              color: PAPER,
+              fontSize: 76,
+              lineHeight: 1,
+              padding: "18px 32px 24px",
+            }}
+          >
+            비집고
+          </div>
+          <div style={{ display: "flex", color: INK, fontSize: 92, lineHeight: 1 }}>
+            {meta.corner}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flex: 1,
+              justifyContent: "flex-end",
+              color: INK_SOFT,
+              fontSize: 52,
+            }}
+          >
+            {meta.right}
+          </div>
+        </div>
+
+        {/* [주요 거래 분석] 어그로 밴드 — 구별 직전 대비 평균(+건수). major 카드만.
+            정직성: 라벨·건수·서브라벨로 "구 전체 시세 아님" 명시(satori nowrap 회피 wrap). */}
+        {majorAgg.length > 0 && (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              margin: "28px 112px 0",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                flexWrap: "wrap",
+                alignItems: "baseline",
+                fontSize: 40,
+              }}
+            >
+              <div style={{ display: "flex", color: INK, marginRight: 20 }}>
+                주요 거래 분석 · 직전 대비
+              </div>
+              {majorAgg.map((r, i) => {
+                const c = r.avgPct > 0 ? UP : r.avgPct < 0 ? DOWN : INK_SOFT;
+                const sign = r.avgPct > 0 ? "+" : r.avgPct < 0 ? "−" : "±";
+                return (
+                  <div
+                    key={r.sigungu}
+                    style={{ display: "flex", flexDirection: "row", alignItems: "baseline", marginRight: 24 }}
+                  >
+                    <div style={{ display: "flex", color: c }}>
+                      {`${shortRegion(r.sigungu)} ${sign}${pctAbs(r.avgPct)}%`}
+                    </div>
+                    <div style={{ display: "flex", color: INK_SOFT, fontSize: 34, marginLeft: 4 }}>
+                      {`(${r.count}건)`}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ display: "flex", color: INK_SOFT, fontSize: 32, marginTop: 8 }}>
+              주요 거래(15억+)에 잡힌 단지들의 직전 대비 평균 — 구 전체 시세 아님
+            </div>
+          </div>
+        )}
+
+        {/* 본문 표 */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            flex: 1,
+            // 분석 밴드가 있는 major는 위로 넘쳐 밴드와 겹치지 않게 상단 정렬, 그 외 중앙.
+            justifyContent: majorAgg.length > 0 ? "flex-start" : "center",
+            margin: "24px 112px 0",
+          }}
+        >
+          {/* satori는 Fragment를 못 그린다 — 조건 블록을 나열. */}
+          {hasRows &&
+            kind === "major" &&
+            majorAll.slice(0, rowCount).map((d, i) => {
+              const pt = pctText(d.pctVsPrev);
+              const pc =
+                d.pctVsPrev == null || d.pctVsPrev === 0
+                  ? INK_SOFT
+                  : d.pctVsPrev > 0
+                    ? UP
+                    : DOWN;
+              return (
+                <div
+                  key={`${d.apt}-${d.priceKrw}-${i}`}
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    padding: "18px 0",
+                    ...(i < rowCount - 1 ? { borderBottom: "4px solid #e7e1d2" } : {}),
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "baseline",
+                      flex: 1,
+                      minWidth: 0,
+                      overflow: "hidden",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    <div style={{ display: "flex", color: INK, fontSize: 60 }}>
+                      {`${d.dong} ${d.apt}`}
+                    </div>
+                    <div style={{ display: "flex", color: INK_SOFT, fontSize: 44, marginLeft: 24 }}>
+                      {`${Math.round(d.areaM2)}m²${d.floor != null ? ` · ${d.floor}층` : ""}`}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", color: INK, fontSize: 68, marginLeft: 36 }}>
+                    {eok(d.priceKrw)}
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      width: 260,
+                      justifyContent: "flex-end",
+                      color: pc,
+                      fontSize: 52,
+                    }}
+                  >
+                    {pt ?? " "}
+                  </div>
+                </div>
+              );
+            })}
+
+          {hasRows &&
+            kind === "strong" &&
+            strongAll.slice(0, rowCount).map((d, i) => (
+              <div
+                key={`${d.apt}-${d.priceKrw}-${i}`}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "14px 0",
+                  ...(i < rowCount - 1 ? { borderBottom: "4px solid #e7e1d2" } : {}),
+                }}
+              >
+                <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "baseline",
+                      flex: 1,
+                      minWidth: 0,
+                      overflow: "hidden",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    <div style={{ display: "flex", color: INK, fontSize: 56 }}>
+                      {`${d.dong} ${d.apt}`}
+                    </div>
+                    <div style={{ display: "flex", color: INK_SOFT, fontSize: 40, marginLeft: 24 }}>
+                      {`${Math.round(d.areaM2)}m²${d.floor != null ? ` · ${d.floor}층` : ""}`}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", color: INK, fontSize: 60, marginLeft: 32 }}>
+                    {eok(d.priceKrw)}
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      width: 220,
+                      justifyContent: "flex-end",
+                      color: UP,
+                      fontSize: 52,
+                    }}
+                  >
+                    {`+${pctAbs(d.pctVsPrev ?? 0)}%`}
+                  </div>
+                </div>
+                <div style={{ display: "flex", color: INK_SOFT, fontSize: 38, marginTop: 6 }}>
+                  {`직전 ${ymdShort(d.prevDate ?? "")} ${d.prevKrw != null ? eok(d.prevKrw) : ""}${d.prevFloor != null ? ` (${d.prevFloor}층)` : ""}`}
+                </div>
+              </div>
+            ))}
+
+          {hasRows &&
+            kind === "weak" &&
+            weakAll.slice(0, rowCount).map((r, i) => (
+              <div
+                key={r.sigungu}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  padding: "26px 0",
+                  ...(i < rowCount - 1 ? { borderBottom: "4px solid #e7e1d2" } : {}),
+                }}
+              >
+                <div style={{ display: "flex", flex: 1, color: INK, fontSize: 72 }}>
+                  {r.sigungu}
+                </div>
+                <div style={{ display: "flex", color: DOWN, fontSize: 60 }}>
+                  {`직전 대비 평균 −${pctAbs(r.avgPct)}%`}
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    width: 220,
+                    justifyContent: "flex-end",
+                    color: INK_SOFT,
+                    fontSize: 48,
+                    marginLeft: 32,
+                  }}
+                >
+                  {`${r.count}건`}
+                </div>
+              </div>
+            ))}
+
+          {!hasRows && (
+            <div style={{ display: "flex", color: INK, fontSize: 112, lineHeight: 1.25 }}>
+              {emptyText}
+            </div>
+          )}
+        </div>
+
+        {/* 각주 한 줄 */}
+        <div style={{ display: "flex", margin: "0 112px 20px", fontSize: 42, color: INK_SOFT }}>
+          {footnote}
+        </div>
+
+        {/* 하단 코랄 밴드 */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            background: CORAL,
+            padding: "0 112px",
+            height: 200,
+            color: PAPER,
+            fontSize: 64,
+          }}
+        >
+          <div style={{ display: "flex" }}>수도권 실거래, 매일 아침 브리핑</div>
+          <div style={{ display: "flex" }}>{SITE_DOMAIN}</div>
+        </div>
+      </div>
+    ),
+    {
+      ...SIZE,
+      fonts: [{ name: "BlackHanSans", data: font, style: "normal", weight: 400 }],
+    },
+  );
+}

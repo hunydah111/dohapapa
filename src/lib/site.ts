@@ -10,6 +10,6 @@ export const SITE_DOMAIN = SITE_URL.replace(/^https?:\/\//, "").replace(/^www\./
 export const SITE_NAME = "비집고";
 
 export const CONTACT_EMAIL =
-  process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "hunydah111@gmail.com";
+  process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@bijigo.kr";
 
 export const SERVICE_START_DATE = "2026-05-15";

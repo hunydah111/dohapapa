@@ -32,6 +32,7 @@ import {
   type BusiestRegion,
   type HeadlinesResult,
 } from "@/lib/patchNote";
+import { majorAnalysis } from "@/lib/majorAnalysis";
 import { REFERENCE_PHASES, phaseAvg, type TempSeriesFile } from "@/lib/tempSeries";
 import { aggregateZoneTemp, type ZoneTemp } from "@/lib/zones";
 import { areaMeta } from "@/lib/areaLabel";
@@ -189,6 +190,12 @@ function eok(krw: number): string {
 function pctAbs(pct: number): string {
   const s = (Math.abs(pct) * 100).toFixed(1);
   return s.endsWith(".0") ? s.slice(0, -2) : s;
+}
+
+/** 주요 거래 분석 라인용 짧은 구 이름 — "강남구"→"강남"(어그로 톤). 복합 시군구
+ *  ("수원시 팔달구")는 오독 방지로 그대로. 공유 카드·페이지와 동일 규칙(미러). */
+function shortRegion(sigungu: string): string {
+  return sigungu.includes(" ") ? sigungu : sigungu.replace(/[구시군]$/, "");
 }
 
 /** 역거리 태그 상한(m) — 1km 초과면 "역세권" 정보가치가 없어 생략. */
@@ -1264,6 +1271,9 @@ export function DailyFront() {
 
   const majorVisible = major?.slice(0, MAJOR_VISIBLE) ?? [];
   const majorRest = major?.slice(MAJOR_VISIBLE) ?? [];
+  // [주요 거래 분석] 어그로 라인 — 오늘 큰 거래에 잡힌 구별 직전 대비 평균(+건수).
+  // ⚠️ "구 전체 시세" 아님 — 표본은 주요 거래분(종종 1~2건). 라벨·건수로 한계 명시.
+  const majorAgg = majorAnalysis(major ?? []);
   // 환산 서브라인 — 1위(최고가) 거래 기준.
   const convYears = major && major[0] ? Math.round(major[0].priceKrw / SAVING_KRW_PER_YEAR) : 0;
 
@@ -1596,6 +1606,34 @@ export function DailyFront() {
             {/* ── [주요 거래] — 오늘 공개된 수도권 15억 이상 전부 ── */}
             <section className="px-0.5 pb-3.5 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
               <CornerLabel>주요 거래</CornerLabel>
+              {/* [주요 거래 분석] 어그로 한 줄 — 구별 직전 대비 평균(+건수). 표본이 얇을 수
+                  있어 라벨·건수·서브라벨로 "구 전체 시세 아님"을 명시(정직성 헌장). */}
+              {majorAgg.length > 0 && (
+                <div className="mb-2">
+                  <p className="m-0 text-[12px] leading-[1.6] tabular-nums" style={{ color: INK_SOFT }}>
+                    <span className="mr-1 font-bold tracking-[0.04em]" style={{ color: INK }}>
+                      주요 거래 분석 · 직전 대비
+                    </span>
+                    {majorAgg.map((r, i) => {
+                      const c = r.avgPct > 0 ? UP : r.avgPct < 0 ? DOWN : INK_SOFT;
+                      const sign = r.avgPct > 0 ? "+" : r.avgPct < 0 ? "−" : "±";
+                      return (
+                        <span key={r.sigungu}>
+                          {i > 0 ? " · " : " "}
+                          <b style={{ color: c }}>
+                            {shortRegion(r.sigungu)} {sign}
+                            {pctAbs(r.avgPct)}%
+                          </b>
+                          <span style={{ color: INK_SOFT }}>({r.count}건)</span>
+                        </span>
+                      );
+                    })}
+                  </p>
+                  <p className="m-0 mt-0.5 text-[10px] leading-[1.5]" style={{ color: INK_SOFT }}>
+                    주요 거래(15억+)에 잡힌 단지들의 직전 대비 평균 — 구 전체 시세 아님.
+                  </p>
+                </div>
+              )}
               {major === undefined ? (
                 // 구 스키마(다음 크론 전) — 한 줄 예고로 처리.
                 <CornerNote>「주요 거래」 코너는 다음 호부터 게재됩니다.</CornerNote>
@@ -1658,12 +1696,13 @@ export function DailyFront() {
                     직거래·해제 제외 · 가격 바 = {isMerged ? "합산" : "오늘"} 최고가 대비 ·
                     붉은 눈금 = 그 단지 기간(1년/2개월) 내 최고가 위치{mergedNote}.
                   </CornerNote>
-                  {/* 원탭 공유 — 캡쳐·짤린 크롭 대신 오늘 큰 거래 TOP 7 카드(/card/major).
-                      해석("강남 오르고 송파 내리네")은 퍼나르는 사람 몫 — 카드는 팩트만. */}
+                  {/* 원탭 공유 — 캡쳐 대신 클릭되는 링크카드(/s/major). 붙이면 큰 카드로
+                      언펄되고 탭하면 비집고로 유입된다. 해석("강남 오르고 송파 내리네")은
+                      퍼나르는 사람 몫 — 카드는 팩트만. */}
                   <div className="mt-2.5 flex items-center gap-2">
                     <ShareButton
-                      title="오늘의 주요 거래 TOP 7 — 비집고"
-                      shareUrl="/card/major"
+                      title="오늘의 주요 거래 — 비집고"
+                      shareUrl="/s/major"
                       label="이 목록 공유"
                       ariaLabel="오늘의 주요 거래 카드 공유"
                     />
@@ -1700,6 +1739,18 @@ export function DailyFront() {
                     </b>{" "}
                     · 직거래·해제 제외{mergedNote}.
                   </CornerNote>
+                  {/* 원탭 공유 — 클릭되는 강세 거래 링크카드(/s/major 미러). */}
+                  <div className="mt-2.5 flex items-center gap-2">
+                    <ShareButton
+                      title="오늘의 강세 거래 — 비집고"
+                      shareUrl="/s/strong"
+                      label="이 목록 공유"
+                      ariaLabel="오늘의 강세 거래 카드 공유"
+                    />
+                    <span className="text-[10.5px]" style={{ color: INK_SOFT }}>
+                      캡쳐 없이 — 강세 거래 카드로
+                    </span>
+                  </div>
                 </>
               )}
             </section>
@@ -1718,6 +1769,18 @@ export function DailyFront() {
                   {isMerged ? "합산 기간에" : "오늘"} 공개된 중개거래의 직전 실거래(같은
                   단지·평형, 최근 60일 내) 대비 평균 · 5건 이상 동네만{mergedNote}.
                 </CornerNote>
+                {/* 원탭 공유 — 클릭되는 약세 동네 링크카드. 시군구 집계만(단지 실명 없음). */}
+                <div className="mt-2.5 flex items-center gap-2">
+                  <ShareButton
+                    title="오늘의 약세 동네 — 비집고"
+                    shareUrl="/s/weak"
+                    label="이 목록 공유"
+                    ariaLabel="오늘의 약세 동네 카드 공유"
+                  />
+                  <span className="text-[10.5px]" style={{ color: INK_SOFT }}>
+                    캡쳐 없이 — 약세 동네 카드로
+                  </span>
+                </div>
               </section>
             )}
 
