@@ -54,15 +54,34 @@ export interface RegionPeakTx {
 }
 
 /**
+ * 3개월 이동 중위 — 국평 밴드로도 못 잡는 "한 구 안의 동네 편차"(반포 vs 방배) 단발 스파이크를
+ * 죽인다. 규칙: 중심 i가 null이면 null(관측 없는 달). 양쪽 이웃(i-1, i+1)이 "둘 다" 있을 때만
+ * 세 값의 중위로 평활 — 한 달만 튄 값은 정상 이웃 둘 사이 중위로 밀려나 사라진다(서초 '22.3
+ * 34.1억 스파이크 → 회복 67% 저평가를 보정). 지속된 폭등기 고점은 이웃도 높아 그대로 남는다.
+ * 이웃이 한쪽이라도 비면(양 끝단·표본 공백 인접) 원값을 쓴다 — 2값 평균이 스파이크를 절반
+ * 흡수해 되레 왜곡하는 걸 피한다. (2026-07-11 사장 "다 해" — 7/7 국평 전환의 마무리.)
+ */
+export function smooth3(medians: readonly (number | null)[]): (number | null)[] {
+  return medians.map((v, i) => {
+    if (v === null) return null;
+    const prev = medians[i - 1];
+    const next = medians[i + 1];
+    if (prev == null || next == null) return v; // 끝단·공백 인접 — 원값 유지
+    const m = median([prev, v, next]);
+    return m === null ? v : roundManwon(m);
+  });
+}
+
+/**
  * 시군구별 5년 전고점/현재/회복률 집계.
  *
  * months 밖의 거래는 무시. 시군구 × 월 버킷 관측 중위(regionSeries와 동일 규칙 — 만원 반올림·
- * 표본 REGION_SERIES_MIN_DEALS 미만이면 중위 미채택)를 만든 뒤(호출부가 국민평형 밴드로 이미
- * 걸러 넘기므로 여기서의 "중위"는 국평 단일 밴드 중위다):
- *  - 전고점 = 표본 ≥ PEAK_MIN_DEALS 인 달의 월 중위 최댓값(그 달 인덱스).
- *  - 현재  = 가장 최근 유효월(표본 ≥ REGION_SERIES_MIN_DEALS, 중위 non-null)의 중위.
- *  - trough = 전고점 월 이후~현재 사이 월 중위 최솟값(표본 ≥ REGION_SERIES_MIN_DEALS). 없으면 null.
- *  - 유효월 2개 미만 또는 전고점 후보 0인 시군구는 생략(파일 크기 + 페이지 graceful).
+ * 표본 REGION_SERIES_MIN_DEALS 미만이면 중위 미채택)를 만든 뒤 3개월 이동 중위(smooth3)로
+ * 평활한다(호출부가 국민평형 밴드로 이미 걸러 넘기므로 "중위"는 국평 단일 밴드 중위):
+ *  - 전고점 = 표본 ≥ PEAK_MIN_DEALS 인 달의 "평활 중위" 최댓값(그 달 인덱스).
+ *  - 현재  = 가장 최근 유효월(평활 중위 non-null)의 평활 중위.
+ *  - trough = 전고점 월 이후~현재 사이 평활 중위 최솟값. 없으면 null.
+ *  - 유효월(평활 중위 non-null) 2개 미만 또는 전고점 후보 0인 시군구는 생략(graceful).
  */
 export function computeRegionPeaks(
   rows: readonly RegionPeakTx[],
@@ -88,24 +107,27 @@ export function computeRegionPeaks(
     const pool = pools.get(sigungu)!;
     // 월별 관측 중위(표본 부족이면 null) + 그 달 표본 수 — regionSeries와 동일 규칙.
     const counts = pool.map((p) => p.length);
-    const medians = pool.map((p) => {
+    const rawMedians = pool.map((p) => {
       if (p.length < REGION_SERIES_MIN_DEALS) return null;
       const m = median(p);
       return m === null ? null : roundManwon(m);
     });
+    // 3개월 이동 중위 평활 — 단발 스파이크(동네 편차) 보정. 이하 전고점/현재/trough 는 전부
+    // 이 평활 중위 위에서 뽑는다(recovery = 평활 현재 / 평활 전고점, apples-to-apples).
+    const medians = smooth3(rawMedians);
 
-    // 유효월(중위 non-null) 인덱스 — 2개 미만이면 생략.
+    // 유효월(평활 중위 non-null) 인덱스 — 2개 미만이면 생략.
     const validIdx: number[] = [];
     medians.forEach((v, i) => {
       if (v !== null) validIdx.push(i);
     });
     if (validIdx.length < 2) continue;
 
-    // 전고점 — 표본 ≥ PEAK_MIN_DEALS 인 달의 월 중위 최댓값. 후보 0이면 생략.
+    // 전고점 — 원 표본 ≥ PEAK_MIN_DEALS 인 달의 평활 중위 최댓값. 후보 0이면 생략.
     let peakIdx = -1;
     let peakKrw = -1;
     for (const i of validIdx) {
-      if (counts[i] < PEAK_MIN_DEALS) continue; // 소표본 fluke 방지
+      if (counts[i] < PEAK_MIN_DEALS) continue; // 소표본 fluke 방지(원 표본 기준)
       const v = medians[i]!;
       if (v > peakKrw) {
         peakKrw = v;
@@ -114,11 +136,11 @@ export function computeRegionPeaks(
     }
     if (peakIdx < 0) continue; // 전고점 후보 없음 — 생략
 
-    // 현재 — 가장 최근 유효월(표본 ≥ MIN_DEALS 는 유효월 정의에 이미 포함).
+    // 현재 — 가장 최근 유효월(평활 중위).
     const currentIdx = validIdx[validIdx.length - 1];
     const currentKrw = medians[currentIdx]!;
 
-    // trough — 전고점 월 이후 ~ 현재 사이 월 중위 최솟값(유효월만). 없으면 null.
+    // trough — 전고점 월 이후 ~ 현재 사이 평활 중위 최솟값(유효월만). 없으면 null.
     let troughIdx = -1;
     let troughKrw = Infinity;
     for (const i of validIdx) {
