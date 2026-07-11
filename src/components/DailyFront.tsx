@@ -1658,6 +1658,19 @@ export function DailyFront() {
                     직거래·해제 제외 · 가격 바 = {isMerged ? "합산" : "오늘"} 최고가 대비 ·
                     붉은 눈금 = 그 단지 기간(1년/2개월) 내 최고가 위치{mergedNote}.
                   </CornerNote>
+                  {/* 원탭 공유 — 캡쳐·짤린 크롭 대신 오늘 큰 거래 TOP 7 카드(/card/major).
+                      해석("강남 오르고 송파 내리네")은 퍼나르는 사람 몫 — 카드는 팩트만. */}
+                  <div className="mt-2.5 flex items-center gap-2">
+                    <ShareButton
+                      title="오늘의 주요 거래 TOP 7 — 비집고"
+                      shareUrl="/card/major"
+                      label="이 목록 공유"
+                      ariaLabel="오늘의 주요 거래 카드 공유"
+                    />
+                    <span className="text-[10.5px]" style={{ color: INK_SOFT }}>
+                      캡쳐 없이 — 오늘 큰 거래 카드로
+                    </span>
+                  </div>
                 </>
               )}
             </section>

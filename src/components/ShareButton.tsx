@@ -26,7 +26,19 @@ function legacyCopy(text: string): boolean {
   }
 }
 
-export function ShareButton({ title }: { title: string }) {
+export function ShareButton({
+  title,
+  shareUrl,
+  label = "공유",
+  ariaLabel = "이 지면 링크 공유",
+}: {
+  title: string;
+  /** 공유할 경로(예: "/card/major"). 없으면 현재 지면 URL을 공유(기존 동작). */
+  shareUrl?: string;
+  /** 버튼 문구 — 기본 "공유". */
+  label?: string;
+  ariaLabel?: string;
+}) {
   const [toast, setToast] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(
@@ -43,8 +55,10 @@ export function ShareButton({ title }: { title: string }) {
   }
 
   async function onShare() {
-    // 해시(#biji-verdict 등) 제거 — 공유는 지면 자체로.
-    const url = window.location.origin + window.location.pathname;
+    // shareUrl 지정 시 그 경로(카드 등)를, 없으면 현재 지면(해시 제거)을 공유.
+    const url = shareUrl
+      ? new URL(shareUrl, window.location.origin).toString()
+      : window.location.origin + window.location.pathname;
     if (typeof navigator.share === "function") {
       try {
         await navigator.share({ title, url });
@@ -82,9 +96,9 @@ export function ShareButton({ title }: { title: string }) {
         onClick={onShare}
         className="px-2.5 py-[5px] text-[11px] font-bold tracking-[0.08em]"
         style={{ background: PAPER, color: INK, border: `1.5px solid ${INK}` }}
-        aria-label="이 지면 링크 공유"
+        aria-label={ariaLabel}
       >
-        공유
+        {label}
       </button>
     </span>
   );
