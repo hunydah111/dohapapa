@@ -40,6 +40,7 @@ import {
 import { ymdShortText } from "@/lib/patchNote";
 import { areaMeta } from "@/lib/areaLabel";
 import { ShareButton } from "./ShareButton";
+import { InstallButton } from "./InstallButton";
 import {
   serif,
   pretendard,
@@ -765,11 +766,10 @@ function SheetFooter({ shareTitle }: { shareTitle: string }) {
         이 동네, 내 통장으론? — 30초 판정
       </a>
 
-      {/* PWA 유도 — 문구 1줄만(설치 프롬프트 API는 스코프 밖) */}
-      <p className="mb-0 mt-2.5 text-center text-[11px] leading-[1.6]" style={{ color: INK_SOFT }}>
-        매일 아침 한 번에 — 브라우저 메뉴에서 <b style={{ color: INK }}>홈 화면에 추가</b>
-        하면 앱처럼 열려요
-      </p>
+      {/* 홈 화면 앱 설치(A2HS) — 실제 설치 프롬프트/iOS 안내 (2026-07-11 사장). */}
+      <div className="mt-2.5 flex justify-center">
+        <InstallButton />
+      </div>
 
       <div
         className="mt-3 flex items-start justify-between gap-3 pt-2.5 text-[10px] leading-[1.6]"

@@ -55,6 +55,7 @@ import {
 import { ThresholdGauge, DailyFrontPing } from "./ThresholdGauge";
 import { DealMiniMap } from "./DealMiniMap";
 import { ShareButton } from "./ShareButton";
+import { InstallButton } from "./InstallButton";
 // 하이브리드 폰트·조판 토큰 — 공유 모듈(단일 소스). 중복 선언 금지.
 // 세리프(serif=나눔명조)=코너 제목·헤드라인·단지명 · pretendard=본문·숫자·제호 워드마크.
 import {
@@ -1992,6 +1993,11 @@ export function DailyFront() {
         >
           그래서 이 동네들, 내 통장으론? — 30초 판정
         </a>
+
+        {/* 홈 화면 앱 설치(A2HS) — 실제 설치 프롬프트/iOS 안내 (2026-07-11 사장). */}
+        <div className="mt-2.5 flex justify-center">
+          <InstallButton />
+        </div>
 
         {/* ── 콜로폰 + 공유(콜로폰 옆 소형 버튼 — 각진 지면 톤) ── */}
         <div

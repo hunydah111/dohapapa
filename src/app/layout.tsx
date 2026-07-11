@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import "./globals.css";
 import { Analytics } from "@/components/Analytics";
@@ -41,11 +41,22 @@ export const metadata: Metadata = {
     title: "비집고 — 수도권 아파트 실거래 신문",
     description: "국토부 실거래로 매일 아침 발행 — 동네 시세·회복률·주요 거래·내 통장 판정.",
   },
+  // iOS 사파리 "홈 화면에 추가" 시 앱처럼(상태바·전체화면) + 홈 아이콘(app/apple-icon.png).
+  appleWebApp: {
+    capable: true,
+    title: "비집고",
+    statusBarStyle: "default",
+  },
   verification: {
     other: {
       "naver-site-verification": "19575f0573a982d969ea4b33a64ff4973798a9a6",
     },
   },
+};
+
+// PWA/브라우저 테마색 — Next 는 themeColor 를 viewport 로 받는다(metadata 아님).
+export const viewport: Viewport = {
+  themeColor: "#fbfaf6",
 };
 
 export default function RootLayout({
