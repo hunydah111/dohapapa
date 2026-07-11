@@ -514,7 +514,7 @@ function RecoveryLegend() {
       className="mt-[7px] flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[9.5px]"
       style={{ color: INK_SOFT }}
     >
-      <span><TileSwatch bg={RECOVERY_FILL[3]} />신고점 돌파</span>
+      <span><TileSwatch bg={RECOVERY_FILL[3]} />신고점</span>
       <span><TileSwatch bg={RECOVERY_FILL[2]} />90~100%</span>
       <span><TileSwatch bg={RECOVERY_FILL[1]} />75~90%</span>
       <span><TileSwatch bg={RECOVERY_FILL[0]} />75% 미만</span>
@@ -1846,7 +1846,7 @@ export function DailyFront() {
                       ariaLabel="오늘의 주요 거래 카드 공유"
                     />
                     <span className="text-[10.5px]" style={{ color: INK_SOFT }}>
-                      캡쳐 없이 — 오늘 큰 거래 카드로
+                      캡쳐 없이 — 오늘 큰 거래 TOP 7 카드로
                     </span>
                   </div>
                 </>

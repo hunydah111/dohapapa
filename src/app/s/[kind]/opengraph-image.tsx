@@ -44,13 +44,13 @@ interface PatchLike {
 const patch = dailyPatchRaw as unknown as PatchLike;
 
 const dateSlug = (patch.generatedAt ?? "pre").slice(0, 10);
-// 디자인 개정(프리미엄 하이브리드)으로 캐시 무효화 — v1→v2.
-const OG_ID = `v2-${dateSlug}`;
+// 캐시 무효화 — v1→v2(하이브리드)→v3(major 상위 7행·행 압축, 2026-07-11).
+const OG_ID = `v3-${dateSlug}`;
 
-// 카드별 표 행수 상한 — 하단 코랄 밴드 안 침범하는 선.
-// major는 [주요 거래 분석] 밴드가 상단 공간을 먹으므로 밴드 있을 때 5행(없으면 7행).
+// 카드별 표 행수 상한 — 하단 코랄 밴드 안 침범하는 선. major 카드는 "상위 7개" 고정
+// (사장 2026-07-11: 31개 전부는 과함, TOP 7만). 분석 밴드가 1줄이라 7행도 들어간다.
 const MAJOR_ROWS = 7;
-const MAJOR_ROWS_WITH_AGG = 4;
+const MAJOR_ROWS_WITH_AGG = 7;
 const STRONG_ROWS = 6;
 const WEAK_ROWS = 3;
 
@@ -324,8 +324,8 @@ export default async function Image({
                     display: "flex",
                     flexDirection: "row",
                     alignItems: "center",
-                    padding: "18px 0",
-                    ...(i < rowCount - 1 ? { borderBottom: "4px solid #e7e1d2" } : {}),
+                    padding: "9px 0",
+                    ...(i < rowCount - 1 ? { borderBottom: "3px solid #e7e1d2" } : {}),
                   }}
                 >
                   <div
@@ -339,14 +339,14 @@ export default async function Image({
                       whiteSpace: "nowrap",
                     }}
                   >
-                    <div style={{ display: "flex", color: INK, fontSize: 60, fontFamily: SERIF }}>
+                    <div style={{ display: "flex", color: INK, fontSize: 50, fontFamily: SERIF }}>
                       {`${d.dong} ${d.apt}`}
                     </div>
-                    <div style={{ display: "flex", color: INK_SOFT, fontSize: 40, fontFamily: SANS, marginLeft: 24 }}>
+                    <div style={{ display: "flex", color: INK_SOFT, fontSize: 34, fontFamily: SANS, marginLeft: 20 }}>
                       {`${areaMeta(d.areaM2)}${d.floor != null ? ` · ${d.floor}층` : ""}`}
                     </div>
                   </div>
-                  <div style={{ display: "flex", color: INK, fontSize: 68, fontFamily: SANS_SB, marginLeft: 36 }}>
+                  <div style={{ display: "flex", color: INK, fontSize: 56, fontFamily: SANS_SB, marginLeft: 32 }}>
                     {eok(d.priceKrw)}
                   </div>
                   <div
