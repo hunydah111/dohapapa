@@ -1140,10 +1140,16 @@ function MajorRow({
     >
       <div className="flex items-baseline gap-2">
         <span className="min-w-0 flex-1 truncate text-[13px]" style={{ color: INK }}>
-          {/* 단지명 = 세리프(나눔명조) — 프리미엄 하이브리드. 면적·역거리 메타는 Pretendard. */}
+          {/* 단지명 = 세리프(나눔명조) — 프리미엄 하이브리드. 면적·역거리 메타는 Pretendard.
+              구 병기(사장 2026-07-11) — 수도권 전체가 섞여 동만으론 위치가 안 보임. 구가 링크. */}
           <span className={`${serif.className} text-[14.5px]`}>
-            <RegionLink sigungu={item.sigungu}>{item.dong}</RegionLink> {item.apt}
+            {item.dong} {item.apt}
           </span>{" "}
+          <RegionLink sigungu={item.sigungu}>
+            <span className="text-[11.5px] font-semibold" style={{ color: INK_SOFT }}>
+              ({item.sigungu})
+            </span>
+          </RegionLink>{" "}
           <span className="text-[11px]" style={{ color: INK_SOFT }}>
             {areaMeta(item.areaM2)}{tag ? ` · ${tag}` : ""}
           </span>
