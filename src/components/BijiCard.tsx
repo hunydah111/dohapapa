@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { BudgetTier } from "@/lib/budgetPercentile";
 import { composeReachName } from "@/lib/bijiName";
 import { SITE_DOMAIN } from "@/lib/site";
@@ -40,6 +41,8 @@ export interface BijiCardProps {
   className?: string;
   /** 첫 등장 모션. 기본 true. */
   popIn?: boolean;
+  /** 카드 중앙 미디어 슬롯 — 단지 위치 미니맵 등(2026-07-11 사장: "네모 중간에 지도"). 없으면 빈 여백. */
+  media?: ReactNode;
 }
 
 export function BijiCard({
@@ -53,6 +56,7 @@ export function BijiCard({
   dday,
   className = "",
   popIn = true,
+  media,
 }: BijiCardProps) {
   // 히어로 이름 — 사정권 라벨 합성이 정본. 미지정 호출부는 중립 "판정" 폴백.
   const name = heroName ?? composeReachName(sigungu ?? null, null);
@@ -117,6 +121,16 @@ export function BijiCard({
             </p>
           )}
         </div>
+
+        {/* ── 중앙: 단지 위치 미니맵 슬롯(있을 때만) — 빈 여백을 지도로 채운다 ── */}
+        {media && (
+          <div
+            className="my-2 overflow-hidden"
+            style={{ border: `1px solid ${RULE}` }}
+          >
+            {media}
+          </div>
+        )}
 
         {/* ── 하단: D-day + 칩 + 코랄 플레이트 워터마크 ── */}
         <div className="min-w-0">

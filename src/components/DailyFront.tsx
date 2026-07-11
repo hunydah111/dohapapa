@@ -1672,7 +1672,10 @@ export function DailyFront() {
                 구 스키마(regionCounts 없음)면 코너 생략. ── */}
             {regionCounts && (
               <section className="px-0.5 pb-3.5 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
-                <CornerLabel>오늘의 거래 지도</CornerLabel>
+                <div className="mb-0.5 flex items-center justify-between gap-2">
+                  <CornerLabel>오늘의 거래 지도</CornerLabel>
+                  <ShareButton title="비집고 — 오늘의 거래 지도" ariaLabel="오늘의 거래 지도 공유" />
+                </div>
                 <TradeMap
                   regionCounts={regionCounts}
                   strongSet={strongMapSet}
@@ -1734,6 +1737,9 @@ export function DailyFront() {
                     <RecoveryMap peaks={regionPeaks} />
                     <RecoveryLegend />
                     {recoveryTop5.length > 0 && <RecoveryTop5 top={recoveryTop5} />}
+                    <div className="mt-2.5 flex justify-end">
+                      <ShareButton title="비집고 — 회복률 지도" ariaLabel="회복률 지도 공유" />
+                    </div>
                     <CornerNote>
                       타일 = 수도권 82개 시군구(위치 근사) · 농도 = 전고점 대비 회복률 ·
                       탭하면 동네면 · 전고점은 천천히 움직임 — 주간 갱신.

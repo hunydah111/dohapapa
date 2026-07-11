@@ -7,6 +7,7 @@ import { formatKrwHuman } from "@/lib/format";
 import { budgetTier } from "@/lib/budgetPercentile";
 import { SITE_DOMAIN } from "@/lib/site";
 import { BijiCard } from "./BijiCard";
+import { MiniMap, KAKAO_JS_ENABLED } from "./MiniMap";
 import { composeReachName, reachFromDday } from "@/lib/bijiName";
 import { friendReachName, type FriendTag } from "@/lib/friendShare";
 import { classifyRegulation } from "@/lib/regulation";
@@ -164,6 +165,22 @@ export function HeroResultCard({
                 chips={chips}
                 dday={ddayDisplay}
                 className="w-full"
+                media={
+                  KAKAO_JS_ENABLED &&
+                  candidate.latitude != null &&
+                  candidate.longitude != null ? (
+                    <MiniMap
+                      pins={[
+                        {
+                          lat: candidate.latitude,
+                          lng: candidate.longitude,
+                          label: candidate.complexName,
+                        },
+                      ]}
+                      className="h-[96px] w-full"
+                    />
+                  ) : undefined
+                }
               />
               {/* 카드 아래 단 한 줄 보조 — 구매력 + 백분위(있을 때) + 면책 한 줄 통합.
                   카드 안 drip("골라짓는 비버")은 BijiCard 내부 라벨로 충분 → 외부 quote 제거. */}
