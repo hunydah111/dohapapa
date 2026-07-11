@@ -42,6 +42,7 @@ import { areaMeta } from "@/lib/areaLabel";
 import { ShareButton } from "./ShareButton";
 import {
   serif,
+  pretendard,
   PAPER,
   INK,
   INK_SOFT,
@@ -49,7 +50,6 @@ import {
   CORAL,
   UP,
   DOWN,
-  plateFont,
 } from "@/lib/paperTone";
 
 // ── 포맷터 — 1면(DailyFront)·동네면(/r) 지면과 동일 규칙(그쪽은 파일 프라이빗이라 미러) ──
@@ -337,15 +337,16 @@ function BriefRow({
       style={divider ? { borderColor: RULE } : undefined}
     >
       <div className="flex items-baseline gap-2">
-        <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
+        {/* 단지명 = 세리프(나눔명조), 면적 메타는 Pretendard(프리미엄 하이브리드). */}
+        <span className={`${serif.className} min-w-0 flex-1 truncate text-[14.5px]`} style={{ color: INK }}>
           {left}{" "}
           {meta && (
-            <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
+            <span className={`${pretendard.className} text-[11px]`} style={{ color: INK_SOFT }}>
               {meta}
             </span>
           )}
         </span>
-        <span className="shrink-0 text-right text-[13px] font-bold" style={{ color: INK }}>
+        <span className="shrink-0 text-right text-[13px] font-semibold" style={{ color: INK }}>
           {right}
         </span>
       </div>
@@ -833,7 +834,7 @@ export function LocalFront({ data }: { data: LocalFrontData }) {
   return (
     <section className="mx-auto mb-4 w-full max-w-md">
       <div
-        className="px-[18px] pb-[22px] pt-[18px]"
+        className={`${pretendard.className} px-[18px] pb-[22px] pt-[18px]`}
         style={{
           background: PAPER,
           color: INK,
@@ -864,13 +865,13 @@ export function LocalFront({ data }: { data: LocalFrontData }) {
         >
           <div className="flex min-w-0 items-center gap-2">
             <span
-              className={`${plateFont.className} inline-block shrink-0 px-2 py-1 text-[17px] leading-none tracking-[0.06em]`}
+              className={`${pretendard.className} inline-block shrink-0 px-2 py-1 text-[17px] font-bold leading-none tracking-[0.06em]`}
               style={{ background: CORAL, color: PAPER }}
             >
               비집고
             </span>
             <h2
-              className={`${serif.className} m-0 min-w-0 truncate text-[24px] font-extrabold leading-[1.2] break-keep`}
+              className={`${serif.className} m-0 min-w-0 truncate text-[25px] leading-[1.25] break-keep`}
             >
               {main ?? "내 동네"}
               <span className="text-[17px]">판</span>

@@ -6,9 +6,10 @@ import dailyPatchRaw from "@/data/dailyPatch.json";
 import { pickHeadlines, type MajorItem, type PatchItem } from "@/lib/patchNote";
 
 // 카카오톡·페이스북·X 등에서 링크 공유 시 보이는 썸네일(1200×630).
-// v6 (2026-07-08): 신문 1면 정체성 — 종이 톤 + 코랄 플레이트 제호 + "오늘의 헤드라인"을
-// 그대로 박는다. 크론이 매일 데이터를 커밋 → 재배포 → 썸네일도 그날 지면이 된다.
-// (v5까지의 우드톤 판정기 카드("안정형·균형형·도전형")는 v1 정체성이라 폐기)
+// v7 (2026-07-11): 프리미엄 하이브리드 — 제호 "비집고" = Pretendard Bold, 헤드라인 = 세리프
+//   (나눔명조), 본문 = Pretendard, 코랄 밴드 얇게+굵게(mock-hybrid 검증 매핑).
+// v6 (2026-07-08): 신문 1면 정체성 — 종이 톤 + 코랄 플레이트 제호 + "오늘의 헤드라인".
+// 크론이 매일 데이터를 커밋 → 재배포 → 썸네일도 그날 지면이 된다.
 export const contentType = "image/png";
 
 const SIZE = { width: 1200, height: 630 };
@@ -31,7 +32,7 @@ const patch = dailyPatchRaw as unknown as PatchLike;
 // 이미지 URL은 글자 단위로 캐싱된다(카카오·페북·폰 로컬) — 날짜를 경로에 박아
 // 매일 "한 번도 본 적 없는 새 URL"이 되게 한다(디자인 개정은 v 프리픽스 증가).
 const dateSlug = (patch.generatedAt ?? "pre").slice(0, 10);
-const OG_ID = `v6-${dateSlug}`;
+const OG_ID = `v7-${dateSlug}`;
 
 export function generateImageMetadata() {
   return [{ id: OG_ID, alt: ALT, size: SIZE, contentType }];
@@ -44,9 +45,16 @@ function koDateShort(iso: string | null): string {
 }
 
 export default async function Image() {
-  const font = await readFile(
-    join(process.cwd(), "assets/BlackHanSans-Regular.ttf"),
-  );
+  // 프리미엄 하이브리드 폰트(mock-hybrid 미러): 나눔명조 Regular + Pretendard 3종.
+  const [nanum, preSB, preR, preB] = await Promise.all([
+    readFile(join(process.cwd(), "assets/NanumMyeongjo-Regular.ttf")),
+    readFile(join(process.cwd(), "assets/Pretendard-SemiBold.otf")),
+    readFile(join(process.cwd(), "assets/Pretendard-Regular.otf")),
+    readFile(join(process.cwd(), "assets/Pretendard-Bold.otf")),
+  ]);
+  const SERIF = "Nanum";
+  const SANS = "Pretendard";
+  const SANS_B = "PretendardB";
   // 렌더와 같은 순수 함수로 헤드라인 재계산(v2.5 — 구운 headlines 필드는 신뢰하지 않는다).
   const top = pickHeadlines({
     major: patch.major ?? [],
@@ -64,7 +72,7 @@ export default async function Image() {
           display: "flex",
           flexDirection: "column",
           background: PAPER,
-          fontFamily: "BlackHanSans",
+          fontFamily: SANS,
         }}
       >
         {/* 정보띠 + 먹 괘선(신문 상단 문법) */}
@@ -100,7 +108,8 @@ export default async function Image() {
               display: "flex",
               background: CORAL,
               color: PAPER,
-              fontSize: 88,
+              fontSize: 84,
+              fontFamily: SANS_B,
               lineHeight: 1,
               padding: "14px 30px 20px",
             }}
@@ -132,21 +141,22 @@ export default async function Image() {
             margin: "0 56px",
           }}
         >
-          <div style={{ display: "flex", color: CORAL, fontSize: 30 }}>오늘의 헤드라인</div>
+          <div style={{ display: "flex", color: CORAL, fontSize: 30, fontFamily: SANS_B }}>오늘의 헤드라인</div>
           <div
             style={{
               display: "flex",
               color: INK,
-              fontSize: 64,
-              lineHeight: 1.28,
-              marginTop: 10,
+              fontSize: 66,
+              fontFamily: SERIF,
+              lineHeight: 1.32,
+              marginTop: 12,
             }}
           >
             {top.text}
           </div>
         </div>
 
-        {/* 하단 코랄 밴드 */}
+        {/* 하단 코랄 밴드 — 얇게 + 굵게·크게(Pretendard Bold), mock-hybrid 미러. */}
         <div
           style={{
             display: "flex",
@@ -157,17 +167,21 @@ export default async function Image() {
             padding: "0 56px",
             height: 108,
             color: PAPER,
-            fontSize: 34,
           }}
         >
-          <div style={{ display: "flex" }}>통장 까면, 동네 나온다</div>
-          <div style={{ display: "flex" }}>{SITE_DOMAIN}</div>
+          <div style={{ display: "flex", fontSize: 40, fontFamily: SANS_B }}>통장 까면, 동네 나온다</div>
+          <div style={{ display: "flex", fontSize: 46, fontFamily: SANS_B }}>{SITE_DOMAIN}</div>
         </div>
       </div>
     ),
     {
       ...SIZE,
-      fonts: [{ name: "BlackHanSans", data: font, style: "normal", weight: 400 }],
+      fonts: [
+        { name: "Nanum", data: nanum, style: "normal", weight: 400 },
+        { name: "PretendardSB", data: preSB, style: "normal", weight: 600 },
+        { name: "Pretendard", data: preR, style: "normal", weight: 400 },
+        { name: "PretendardB", data: preB, style: "normal", weight: 700 },
+      ],
     },
   );
 }

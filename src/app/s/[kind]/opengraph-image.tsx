@@ -10,13 +10,16 @@ import {
   type RegionPulse,
 } from "@/lib/patchNote";
 import { majorAnalysis } from "@/lib/majorAnalysis";
+import { areaMeta } from "@/lib/areaLabel";
 
 // 클릭되는 공유 링크카드 3종(주요·강세·약세) — 탭하면 홈 유입 (2026-07-11 사장 지시).
 // 종전 /card/major(raw PNG 302)는 스레드·카톡에서 이미지로만 떠 탭해도 홈에 안 왔다.
 // 이제 /s/{kind} = og:image 단 실제 HTML 페이지가 유입 깔때기, 이 파일은 그 카드 비주얼.
 // 카드 문법은 major·동네판 카드(r/[sigungu]/opengraph-image)와 동일 — 제호·표·코랄 밴드.
-// satori 제약: React Fragment 금지 · undefined 스타일 값 금지(조건부 스프레드만) ·
-// ㎡(U+33A1)·▲▼는 BlackHanSans 글리프 없음(tofu) → m²·부호(+/−)+방향색으로 대체.
+// 프리미엄 하이브리드(2026-07-11 mock-hybrid 검증): 세리프(나눔명조)=코너 제목·단지명 ·
+//   Pretendard=본문·숫자(가격/%=SemiBold)·비집고 워드마크(Bold) · 코랄 밴드 얇게+굵게.
+//   Pretendard는 ㎡(U+33A1)·평 글리프 있음 → areaMeta("84.7㎡ · 32~35평") 그대로 OK.
+// satori 제약: React Fragment 금지 · undefined 스타일 값 금지(조건부 스프레드만).
 export const contentType = "image/png";
 
 // 2x 렌더(2400×1260, 비율 og 표준 1200×630) — 고해상도 화면 뭉개짐 방지(동네판 카드와 동일).
@@ -41,7 +44,8 @@ interface PatchLike {
 const patch = dailyPatchRaw as unknown as PatchLike;
 
 const dateSlug = (patch.generatedAt ?? "pre").slice(0, 10);
-const OG_ID = `v1-${dateSlug}`;
+// 디자인 개정(프리미엄 하이브리드)으로 캐시 무효화 — v1→v2.
+const OG_ID = `v2-${dateSlug}`;
 
 // 카드별 표 행수 상한 — 하단 코랄 밴드 안 침범하는 선.
 // major는 [주요 거래 분석] 밴드가 상단 공간을 먹으므로 밴드 있을 때 5행(없으면 7행).
@@ -128,12 +132,22 @@ export default async function Image({
 }: {
   params: Promise<{ kind: string }>;
 }) {
-  const font = await readFile(
-    join(process.cwd(), "assets/BlackHanSans-Regular.ttf"),
-  );
+  // 프리미엄 하이브리드 폰트 로드(mock-hybrid 미러): 나눔명조 Regular + Pretendard 3종.
+  const [nanum, preSB, preR, preB] = await Promise.all([
+    readFile(join(process.cwd(), "assets/NanumMyeongjo-Regular.ttf")),
+    readFile(join(process.cwd(), "assets/Pretendard-SemiBold.otf")),
+    readFile(join(process.cwd(), "assets/Pretendard-Regular.otf")),
+    readFile(join(process.cwd(), "assets/Pretendard-Bold.otf")),
+  ]);
   const { kind: rawKind } = await params;
   const kind: Kind = isKind(rawKind) ? rawKind : "major";
   const meta = META[kind];
+
+  // 폰트 패밀리 토큰 — 세리프(코너 제목·단지명) / Pretendard 3웨이트(본문·숫자·워드마크).
+  const SERIF = "Nanum";
+  const SANS = "Pretendard";
+  const SANS_SB = "PretendardSB";
+  const SANS_B = "PretendardB";
 
   // 카드별 데이터·행·각주·빈상태 문구 — 전부 major 카드 비주얼 미러.
   const majorAll = patch.major ?? [];
@@ -180,7 +194,7 @@ export default async function Image({
           display: "flex",
           flexDirection: "column",
           background: PAPER,
-          fontFamily: "BlackHanSans",
+          fontFamily: SANS,
         }}
       >
         {/* 정보띠 + 먹 괘선 */}
@@ -195,6 +209,7 @@ export default async function Image({
             borderBottom: `10px solid ${INK}`,
             color: INK_SOFT,
             fontSize: 54,
+            fontFamily: SANS,
           }}
         >
           <div style={{ display: "flex" }}>{koDateShort(patch.generatedAt)}</div>
@@ -216,14 +231,15 @@ export default async function Image({
               display: "flex",
               background: CORAL,
               color: PAPER,
-              fontSize: 76,
+              fontSize: 72,
+              fontFamily: SANS_B,
               lineHeight: 1,
-              padding: "18px 32px 24px",
+              padding: "16px 30px 20px",
             }}
           >
             비집고
           </div>
-          <div style={{ display: "flex", color: INK, fontSize: 92, lineHeight: 1 }}>
+          <div style={{ display: "flex", color: INK, fontSize: 96, fontFamily: SERIF, lineHeight: 1 }}>
             {meta.corner}
           </div>
           <div
@@ -233,6 +249,7 @@ export default async function Image({
               justifyContent: "flex-end",
               color: INK_SOFT,
               fontSize: 52,
+              fontFamily: SANS,
             }}
           >
             {meta.right}
@@ -258,7 +275,7 @@ export default async function Image({
                 fontSize: 40,
               }}
             >
-              <div style={{ display: "flex", color: INK, marginRight: 20 }}>
+              <div style={{ display: "flex", color: INK, fontFamily: SANS_B, marginRight: 20 }}>
                 주요 거래 분석 · 직전 대비
               </div>
               {majorAgg.map((r, i) => {
@@ -269,17 +286,17 @@ export default async function Image({
                     key={r.sigungu}
                     style={{ display: "flex", flexDirection: "row", alignItems: "baseline", marginRight: 24 }}
                   >
-                    <div style={{ display: "flex", color: c }}>
+                    <div style={{ display: "flex", color: c, fontFamily: SANS_SB }}>
                       {`${shortRegion(r.sigungu)} ${sign}${pctAbs(r.avgPct)}%`}
                     </div>
-                    <div style={{ display: "flex", color: INK_SOFT, fontSize: 34, marginLeft: 4 }}>
+                    <div style={{ display: "flex", color: INK_SOFT, fontSize: 34, fontFamily: SANS, marginLeft: 4 }}>
                       {`(${r.count}건)`}
                     </div>
                   </div>
                 );
               })}
             </div>
-            <div style={{ display: "flex", color: INK_SOFT, fontSize: 32, marginTop: 8 }}>
+            <div style={{ display: "flex", color: INK_SOFT, fontSize: 32, fontFamily: SANS, marginTop: 8 }}>
               주요 거래(15억+)에 잡힌 단지들의 직전 대비 평균 — 구 전체 시세 아님
             </div>
           </div>
@@ -329,14 +346,14 @@ export default async function Image({
                       whiteSpace: "nowrap",
                     }}
                   >
-                    <div style={{ display: "flex", color: INK, fontSize: 60 }}>
+                    <div style={{ display: "flex", color: INK, fontSize: 60, fontFamily: SERIF }}>
                       {`${d.dong} ${d.apt}`}
                     </div>
-                    <div style={{ display: "flex", color: INK_SOFT, fontSize: 44, marginLeft: 24 }}>
-                      {`${Math.round(d.areaM2)}m²${d.floor != null ? ` · ${d.floor}층` : ""}`}
+                    <div style={{ display: "flex", color: INK_SOFT, fontSize: 40, fontFamily: SANS, marginLeft: 24 }}>
+                      {`${areaMeta(d.areaM2)}${d.floor != null ? ` · ${d.floor}층` : ""}`}
                     </div>
                   </div>
-                  <div style={{ display: "flex", color: INK, fontSize: 68, marginLeft: 36 }}>
+                  <div style={{ display: "flex", color: INK, fontSize: 68, fontFamily: SANS_SB, marginLeft: 36 }}>
                     {eok(d.priceKrw)}
                   </div>
                   <div
@@ -346,6 +363,7 @@ export default async function Image({
                       justifyContent: "flex-end",
                       color: pc,
                       fontSize: 52,
+                      fontFamily: SANS_SB,
                     }}
                   >
                     {pt ?? " "}
@@ -378,14 +396,14 @@ export default async function Image({
                       whiteSpace: "nowrap",
                     }}
                   >
-                    <div style={{ display: "flex", color: INK, fontSize: 56 }}>
+                    <div style={{ display: "flex", color: INK, fontSize: 56, fontFamily: SERIF }}>
                       {`${d.dong} ${d.apt}`}
                     </div>
-                    <div style={{ display: "flex", color: INK_SOFT, fontSize: 40, marginLeft: 24 }}>
-                      {`${Math.round(d.areaM2)}m²${d.floor != null ? ` · ${d.floor}층` : ""}`}
+                    <div style={{ display: "flex", color: INK_SOFT, fontSize: 38, fontFamily: SANS, marginLeft: 24 }}>
+                      {`${areaMeta(d.areaM2)}${d.floor != null ? ` · ${d.floor}층` : ""}`}
                     </div>
                   </div>
-                  <div style={{ display: "flex", color: INK, fontSize: 60, marginLeft: 32 }}>
+                  <div style={{ display: "flex", color: INK, fontSize: 60, fontFamily: SANS_SB, marginLeft: 32 }}>
                     {eok(d.priceKrw)}
                   </div>
                   <div
@@ -395,12 +413,13 @@ export default async function Image({
                       justifyContent: "flex-end",
                       color: UP,
                       fontSize: 52,
+                      fontFamily: SANS_SB,
                     }}
                   >
                     {`+${pctAbs(d.pctVsPrev ?? 0)}%`}
                   </div>
                 </div>
-                <div style={{ display: "flex", color: INK_SOFT, fontSize: 38, marginTop: 6 }}>
+                <div style={{ display: "flex", color: INK_SOFT, fontSize: 38, fontFamily: SANS, marginTop: 6 }}>
                   {`직전 ${ymdShort(d.prevDate ?? "")} ${d.prevKrw != null ? eok(d.prevKrw) : ""}${d.prevFloor != null ? ` (${d.prevFloor}층)` : ""}`}
                 </div>
               </div>
@@ -419,10 +438,10 @@ export default async function Image({
                   ...(i < rowCount - 1 ? { borderBottom: "4px solid #e7e1d2" } : {}),
                 }}
               >
-                <div style={{ display: "flex", flex: 1, color: INK, fontSize: 72 }}>
+                <div style={{ display: "flex", flex: 1, color: INK, fontSize: 72, fontFamily: SERIF }}>
                   {r.sigungu}
                 </div>
-                <div style={{ display: "flex", color: DOWN, fontSize: 60 }}>
+                <div style={{ display: "flex", color: DOWN, fontSize: 60, fontFamily: SANS_SB }}>
                   {`직전 대비 평균 −${pctAbs(r.avgPct)}%`}
                 </div>
                 <div
@@ -432,6 +451,7 @@ export default async function Image({
                     justifyContent: "flex-end",
                     color: INK_SOFT,
                     fontSize: 48,
+                    fontFamily: SANS,
                     marginLeft: 32,
                   }}
                 >
@@ -441,18 +461,18 @@ export default async function Image({
             ))}
 
           {!hasRows && (
-            <div style={{ display: "flex", color: INK, fontSize: 112, lineHeight: 1.25 }}>
+            <div style={{ display: "flex", color: INK, fontSize: 108, fontFamily: SERIF, lineHeight: 1.25 }}>
               {emptyText}
             </div>
           )}
         </div>
 
         {/* 각주 한 줄 */}
-        <div style={{ display: "flex", margin: "0 112px 20px", fontSize: 42, color: INK_SOFT }}>
+        <div style={{ display: "flex", margin: "0 112px 20px", fontSize: 42, color: INK_SOFT, fontFamily: SANS }}>
           {footnote}
         </div>
 
-        {/* 하단 코랄 밴드 */}
+        {/* 하단 코랄 밴드 — 얇게(138) + 굵게·크게(Pretendard Bold), mock-hybrid 미러. */}
         <div
           style={{
             display: "flex",
@@ -461,19 +481,23 @@ export default async function Image({
             justifyContent: "space-between",
             background: CORAL,
             padding: "0 112px",
-            height: 200,
+            height: 138,
             color: PAPER,
-            fontSize: 64,
           }}
         >
-          <div style={{ display: "flex" }}>수도권 실거래, 매일 아침 브리핑</div>
-          <div style={{ display: "flex" }}>{SITE_DOMAIN}</div>
+          <div style={{ display: "flex", fontSize: 52, fontFamily: SANS_B }}>수도권 실거래, 매일 아침 브리핑</div>
+          <div style={{ display: "flex", fontSize: 60, fontFamily: SANS_B }}>{SITE_DOMAIN}</div>
         </div>
       </div>
     ),
     {
       ...SIZE,
-      fonts: [{ name: "BlackHanSans", data: font, style: "normal", weight: 400 }],
+      fonts: [
+        { name: "Nanum", data: nanum, style: "normal", weight: 400 },
+        { name: "PretendardSB", data: preSB, style: "normal", weight: 600 },
+        { name: "Pretendard", data: preR, style: "normal", weight: 400 },
+        { name: "PretendardB", data: preB, style: "normal", weight: 700 },
+      ],
     },
   );
 }

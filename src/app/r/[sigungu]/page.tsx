@@ -48,7 +48,7 @@ import { ShareButton } from "@/components/ShareButton";
 import { DealReactions, ReactionsProvider } from "@/components/DealReactions";
 import { reactionDealKey } from "@/lib/reaction";
 // 지면 조판 토큰·명조 — 공유 단일 소스(중복 선언 금지). UP/DOWN = 시세 방향색(1면과 동일 문법).
-import { serif, PAPER, INK, INK_SOFT, RULE, CORAL, UP, DOWN } from "@/lib/paperTone";
+import { serif, pretendard, PAPER, INK, INK_SOFT, RULE, CORAL, UP, DOWN } from "@/lib/paperTone";
 
 // ── 라우팅 — LAWD_CODES 81개 키가 곧 전체 지면 목록. 미지 파라미터는 404. ──────
 export const dynamicParams = false;
@@ -350,15 +350,16 @@ function DealLine({
       style={divider ? { borderColor: RULE } : undefined}
     >
       <div className="flex items-baseline gap-2">
-        <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
+        {/* 단지명 = 세리프(나눔명조), 면적 메타는 Pretendard(프리미엄 하이브리드). */}
+        <span className={`${serif.className} min-w-0 flex-1 truncate text-[14.5px]`} style={{ color: INK }}>
           {left}{" "}
           {meta && (
-            <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
+            <span className={`${pretendard.className} text-[11px]`} style={{ color: INK_SOFT }}>
               {meta}
             </span>
           )}
         </span>
-        <span className="shrink-0 text-right text-[13px] font-bold" style={{ color: INK }}>
+        <span className="shrink-0 text-right text-[13px] font-semibold" style={{ color: INK }}>
           {right}
         </span>
       </div>
@@ -455,13 +456,14 @@ function TopRow({
         <span className="w-[18px] shrink-0 text-right text-[12px] font-bold" style={{ color: INK_SOFT }}>
           {rank}.
         </span>
-        <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
-          {item.dong} {item.apt}{" "}
-          <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
+        <span className="min-w-0 flex-1 truncate text-[13px]" style={{ color: INK }}>
+          {/* 단지명 = 세리프(나눔명조), 면적 메타는 Pretendard. */}
+          <span className={`${serif.className} text-[14.5px]`}>{item.dong} {item.apt}</span>{" "}
+          <span className="text-[11px]" style={{ color: INK_SOFT }}>
             {areaMeta(item.areaM2)}{item.floor != null ? ` · ${item.floor}층` : ""}
           </span>
         </span>
-        <span className="shrink-0 text-right text-[13px] font-bold" style={{ color: INK }}>
+        <span className="shrink-0 text-right text-[13px] font-semibold" style={{ color: INK }}>
           {eok(item.priceKrw)}{" "}
           <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
             계약 {md(item.dealDate)}
@@ -615,7 +617,7 @@ export default async function Page({
   return (
     <div className="mx-auto w-full max-w-md px-0 py-4 sm:py-6">
       <article
-        className="px-[18px] pb-[22px] pt-[18px]"
+        className={`${pretendard.className} px-[18px] pb-[22px] pt-[18px]`}
         style={{
           background: PAPER,
           color: INK,
@@ -646,9 +648,9 @@ export default async function Page({
           className="px-0.5 pb-2.5 pt-3"
           style={{ borderTop: `2.5px solid ${INK}`, borderBottom: `1px solid ${INK}` }}
         >
-          <h1 className={`${serif.className} m-0 text-[24px] font-extrabold leading-[1.3] break-keep`}>
+          <h1 className={`${serif.className} m-0 text-[25px] leading-[1.35] break-keep`}>
             {sigungu}{" "}
-            <span className="text-[15px] font-bold tracking-[0.06em]" style={{ color: INK_SOFT }}>
+            <span className={`${pretendard.className} text-[15px] font-bold tracking-[0.06em]`} style={{ color: INK_SOFT }}>
               — 비집고 동네면
             </span>
           </h1>

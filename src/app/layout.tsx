@@ -4,8 +4,8 @@ import "./globals.css";
 import { Analytics } from "@/components/Analytics";
 import { SITE_URL } from "@/lib/site";
 // 지면 제호와 동일 토큰 (공유 단일 소스) — 헤더 로고 = 제호 미니 버전.
-// 제호는 시안 B(2026-07-06)부터 고딕 블랙(PLATE_FONT) — 명조 제호 폐지.
-import { PAPER, INK_SOFT, RULE, CORAL, plateFont } from "@/lib/paperTone";
+// 제호 "비집고" 워드마크 = Pretendard Bold (2026-07-11 프리미엄 하이브리드).
+import { PAPER, INK_SOFT, RULE, CORAL, pretendard } from "@/lib/paperTone";
 
 export const metadata: Metadata = {
   // og:image 등 메타 URL을 절대경로로 만들어 카카오톡·SNS가 썸네일을 가져갈 수 있게 한다.
@@ -72,9 +72,9 @@ export default function RootLayout({
               aria-label="비집고 홈으로"
               className="flex items-center gap-2.5 transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-coral-500"
             >
-              {/* 브랜드 마크 — 지면 제호(코랄 플레이트 흰 고딕 블랙)의 미니 버전. 각진 사각, 라운드 금지. */}
+              {/* 브랜드 마크 — 지면 제호(코랄 플레이트 흰 Pretendard Bold)의 미니 버전. 각진 사각, 라운드 금지. */}
               <span
-                className={`${plateFont.className} inline-block px-2 py-[3px] text-[15px] leading-none tracking-[0.06em]`}
+                className={`${pretendard.className} inline-block px-2 py-[3px] text-[15px] font-bold leading-none tracking-[0.06em]`}
                 style={{ background: CORAL, color: PAPER }}
               >
                 비집고

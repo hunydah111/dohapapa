@@ -6,10 +6,13 @@ import { SIGUNGU_NAMES } from "@/lib/molit";
 import dailyPatchRaw from "@/data/dailyPatch.json";
 import dailyRecentRaw from "@/data/dailyRecent.json";
 import { type MajorItem, type PatchTemp } from "@/lib/patchNote";
+import { areaMeta } from "@/lib/areaLabel";
 
 // 동네면 링크 썸네일 — "그 동네 오늘 팩트 카드" (2026-07-08, 뿌리기 앰프).
 // 커뮤니티·단톡에 /r/{동네} 링크를 던지면 카드가 그날 숫자(공개 N건·온도·최고 거래)를
 // 보여준다 — 퍼나르는 단위가 곧 지면. 크론 재배포로 매일 갱신, 날짜 박은 URL로 캐시 우회.
+// 프리미엄 하이브리드(2026-07-11 mock-hybrid 검증): 세리프(나눔명조)={동네}판·단지명 ·
+//   Pretendard=본문·숫자(가격/%=SemiBold)·비집고 워드마크(Bold) · 코랄 밴드 얇게+굵게.
 export const contentType = "image/png";
 
 // 2x 렌더(2400×1260, 비율은 og 표준 1200×630 유지) — 1x는 고해상도 화면·확대에서
@@ -53,7 +56,8 @@ const todayItems: RecentItem[] =
 const CARD_ROWS = 4; // 표 행 수 — 1200×630에서 하단 밴드 안 침범하는 상한
 
 const dateSlug = (patch.generatedAt ?? "pre").slice(0, 10);
-const OG_ID = `v1-${dateSlug}`;
+// 디자인 개정(프리미엄 하이브리드)으로 캐시 무효화 — v1→v2.
+const OG_ID = `v2-${dateSlug}`;
 
 export async function generateImageMetadata({
   params,
@@ -97,9 +101,17 @@ export default async function Image({
 }: {
   params: Promise<{ sigungu: string }>;
 }) {
-  const font = await readFile(
-    join(process.cwd(), "assets/BlackHanSans-Regular.ttf"),
-  );
+  // 프리미엄 하이브리드 폰트(mock-hybrid 미러): 나눔명조 Regular + Pretendard 3종.
+  const [nanum, preSB, preR, preB] = await Promise.all([
+    readFile(join(process.cwd(), "assets/NanumMyeongjo-Regular.ttf")),
+    readFile(join(process.cwd(), "assets/Pretendard-SemiBold.otf")),
+    readFile(join(process.cwd(), "assets/Pretendard-Regular.otf")),
+    readFile(join(process.cwd(), "assets/Pretendard-Bold.otf")),
+  ]);
+  const SERIF = "Nanum";
+  const SANS = "Pretendard";
+  const SANS_SB = "PretendardSB";
+  const SANS_B = "PretendardB";
   const { sigungu: rawSigungu } = await params;
   const sigungu = decodeSigungu(rawSigungu);
   const count = sigungu ? (patch.regionCounts?.[sigungu] ?? 0) : 0;
@@ -121,7 +133,7 @@ export default async function Image({
           display: "flex",
           flexDirection: "column",
           background: PAPER,
-          fontFamily: "BlackHanSans",
+          fontFamily: SANS,
         }}
       >
         {/* 정보띠 + 먹 괘선 */}
@@ -157,14 +169,15 @@ export default async function Image({
               display: "flex",
               background: CORAL,
               color: PAPER,
-              fontSize: 92,
+              fontSize: 84,
+              fontFamily: SANS_B,
               lineHeight: 1,
-              padding: "20px 36px 28px",
+              padding: "18px 34px 24px",
             }}
           >
             비집고
           </div>
-          <div style={{ display: "flex", color: INK, fontSize: 116, lineHeight: 1 }}>
+          <div style={{ display: "flex", color: INK, fontSize: 112, fontFamily: SERIF, lineHeight: 1 }}>
             {sigungu ? `${sigungu}판` : "동네판"}
           </div>
           <div
@@ -174,6 +187,7 @@ export default async function Image({
               justifyContent: "flex-end",
               color: INK_SOFT,
               fontSize: 64,
+              fontFamily: SANS,
             }}
           >
             오늘 공개 {count.toLocaleString("ko-KR")}건
@@ -222,12 +236,12 @@ export default async function Image({
                         whiteSpace: "nowrap",
                       }}
                     >
-                      <div style={{ display: "flex", color: INK, fontSize: 72 }}>
+                      <div style={{ display: "flex", color: INK, fontSize: 72, fontFamily: SERIF }}>
                         {`${d.dongName} ${d.apartmentName}`}
                       </div>
-                      {/* ㎡(U+33A1)는 BlackHanSans에 글리프가 없다(tofu) — 라틴 m²로 표기. */}
-                      <div style={{ display: "flex", color: INK_SOFT, fontSize: 54, marginLeft: 28 }}>
-                        {`${Math.round(d.area)}m²${d.floor != null ? ` · ${d.floor}층` : ""}${d.dealingGbn === "직거래" ? " · 직거래" : ""}`}
+                      {/* Pretendard는 ㎡·평 글리프 있음 → areaMeta("84.7㎡ · 32~35평") 그대로. */}
+                      <div style={{ display: "flex", color: INK_SOFT, fontSize: 48, fontFamily: SANS, marginLeft: 28 }}>
+                        {`${areaMeta(d.area)}${d.floor != null ? ` · ${d.floor}층` : ""}${d.dealingGbn === "직거래" ? " · 직거래" : ""}`}
                       </div>
                     </div>
                     <div
@@ -235,6 +249,7 @@ export default async function Image({
                         display: "flex",
                         color: INK,
                         fontSize: 80,
+                        fontFamily: SANS_SB,
                         marginLeft: 40,
                       }}
                     >
@@ -247,6 +262,7 @@ export default async function Image({
                         justifyContent: "flex-end",
                         color: pctColor,
                         fontSize: 60,
+                        fontFamily: SANS_SB,
                       }}
                     >
                       {pctText ?? " "}
@@ -259,26 +275,27 @@ export default async function Image({
               style={{
                 display: "flex",
                 marginTop: 24,
-                fontSize: 52,
+                fontSize: 46,
                 color: INK_SOFT,
+                fontFamily: SANS,
               }}
             >
               {`${restCount > 0 ? `외 ${restCount}건 · ` : ""}% = 같은 단지 직전 실거래 대비 · 12개월 추이는 지면에서`}
             </div>
           )}
           {rows.length === 0 && (
-            <div style={{ display: "flex", color: INK, fontSize: 128, lineHeight: 1.25 }}>
+            <div style={{ display: "flex", color: INK, fontSize: 120, fontFamily: SERIF, lineHeight: 1.25 }}>
               오늘 새로 공개된 거래 없음
             </div>
           )}
           {rows.length === 0 && (
-            <div style={{ display: "flex", marginTop: 40, fontSize: 64, color: INK_SOFT }}>
+            <div style={{ display: "flex", marginTop: 40, fontSize: 60, color: INK_SOFT, fontFamily: SANS }}>
               12개월 추이·최근 거래 상위는 지면에서
             </div>
           )}
         </div>
 
-        {/* 하단 코랄 밴드 */}
+        {/* 하단 코랄 밴드 — 얇게 + 굵게·크게(Pretendard Bold), mock-hybrid 미러. */}
         <div
           style={{
             display: "flex",
@@ -287,19 +304,23 @@ export default async function Image({
             justifyContent: "space-between",
             background: CORAL,
             padding: "0 112px",
-            height: 216,
+            height: 150,
             color: PAPER,
-            fontSize: 68,
           }}
         >
-          <div style={{ display: "flex" }}>우리 동네 실거래, 매일 아침 브리핑</div>
-          <div style={{ display: "flex" }}>{SITE_DOMAIN}</div>
+          <div style={{ display: "flex", fontSize: 56, fontFamily: SANS_B }}>우리 동네 실거래, 매일 아침 브리핑</div>
+          <div style={{ display: "flex", fontSize: 62, fontFamily: SANS_B }}>{SITE_DOMAIN}</div>
         </div>
       </div>
     ),
     {
       ...SIZE,
-      fonts: [{ name: "BlackHanSans", data: font, style: "normal", weight: 400 }],
+      fonts: [
+        { name: "Nanum", data: nanum, style: "normal", weight: 400 },
+        { name: "PretendardSB", data: preSB, style: "normal", weight: 600 },
+        { name: "Pretendard", data: preR, style: "normal", weight: 400 },
+        { name: "PretendardB", data: preB, style: "normal", weight: 700 },
+      ],
     },
   );
 }

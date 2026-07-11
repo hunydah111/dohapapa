@@ -55,10 +55,11 @@ import {
 import { ThresholdGauge, DailyFrontPing } from "./ThresholdGauge";
 import { DealMiniMap } from "./DealMiniMap";
 import { ShareButton } from "./ShareButton";
-// 명조·조판 토큰 — 공유 모듈(단일 소스, 2026-07-06 홈 하부 톤 통일). 중복 선언 금지.
-// 제호는 시안 B(2026-07-06)부터 고딕 블랙(PLATE_FONT) — 명조는 헤드라인·등급명 전용.
+// 하이브리드 폰트·조판 토큰 — 공유 모듈(단일 소스). 중복 선언 금지.
+// 세리프(serif=나눔명조)=코너 제목·헤드라인·단지명 · pretendard=본문·숫자·제호 워드마크.
 import {
   serif,
+  pretendard,
   PAPER,
   INK,
   INK_SOFT,
@@ -66,7 +67,6 @@ import {
   CORAL,
   UP,
   DOWN,
-  plateFont,
 } from "@/lib/paperTone";
 
 interface PatchItem {
@@ -196,6 +196,16 @@ function pctAbs(pct: number): string {
  *  ("수원시 팔달구")는 오독 방지로 그대로. 공유 카드·페이지와 동일 규칙(미러). */
 function shortRegion(sigungu: string): string {
   return sigungu.includes(" ") ? sigungu : sigungu.replace(/[구시군]$/, "");
+}
+
+/** 계약일(YYYY-MM-DD) ~ 공개일(ISO) 경과일 — 뒤늦은 신고 판별용(UTC 일수). 깨진 값은 0. */
+function daysSince(dealDate: string, generatedAtISO: string): number {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(dealDate);
+  if (!m) return 0;
+  const deal = Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  const gen = Date.parse(generatedAtISO);
+  if (Number.isNaN(gen)) return 0;
+  return Math.floor((gen - deal) / 86_400_000);
 }
 
 /** 역거리 태그 상한(m) — 1km 초과면 "역세권" 정보가치가 없어 생략. */
@@ -977,7 +987,76 @@ function RowHint() {
   );
 }
 
-/** 행 펼침 내용 — 단지 미니맵(좌표·카카오 JS 키 있을 때만) + 카카오맵 링크(키 불필요). */
+// ── 행 펼침 아이콘(인라인 SVG · 이모지 금지 — Win10 글리프 사태). 16x16 viewBox, currentColor. ──
+/** 지도 핀. */
+function MapPinIcon() {
+  return (
+    <svg aria-hidden="true" width="15" height="15" viewBox="0 0 16 16" fill="none">
+      <path
+        d="M8 1.4C5.4 1.4 3.3 3.5 3.3 6.1c0 3.3 4.7 8.5 4.7 8.5s4.7-5.2 4.7-8.5C12.7 3.5 10.6 1.4 8 1.4z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+      <circle cx="8" cy="6" r="1.7" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  );
+}
+/** 상승 꺾은선(시세). */
+function ChartIcon() {
+  return (
+    <svg aria-hidden="true" width="15" height="15" viewBox="0 0 16 16" fill="none">
+      <polyline
+        points="2,11 6,7 9,9.5 14,4"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <polyline
+        points="10.5,4 14,4 14,7.5"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+/** 원근 도로(로드뷰). */
+function RoadIcon() {
+  return (
+    <svg aria-hidden="true" width="15" height="15" viewBox="0 0 16 16" fill="none">
+      <path d="M5.4 2.2h5.2l2 11.6H3.4z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+      <path d="M8 3.4v1.6M8 6.9v1.6M8 10.4v1.6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+function IconLink({
+  href,
+  label,
+  children,
+}: {
+  href: string;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-1 border px-2 py-1 text-[11px] font-semibold no-underline"
+      style={{ borderColor: RULE, color: INK }}
+    >
+      {children}
+      <span>{label}</span>
+    </a>
+  );
+}
+
+/** 행 펼침 내용 — 단지 미니맵(좌표·카카오 JS 키 있을 때만) + 지도·네이버 시세·로드뷰 아이콘.
+ *  카카오맵은 좌표 오독 방지로 검색(?q=) 우선(CandidateCard 교훈), 로드뷰는 좌표 있을 때만. */
 function DealLocation({
   apt,
   sigungu,
@@ -990,21 +1069,28 @@ function DealLocation({
   lng?: number | null;
 }) {
   const hasCoords = lat != null && lng != null;
-  const kakaoHref = hasCoords
-    ? `https://map.kakao.com/link/map/${encodeURIComponent(apt)},${lat},${lng}`
-    : `https://map.kakao.com/link/search/${encodeURIComponent(`${sigungu} ${apt}`)}`;
+  // 검색 딥링크(?q=)는 좌표 URL 리다이렉트 함정(CandidateCard 주석) 회피 — 단지 위치가 바로 뜬다.
+  const kakaoMapHref = `https://map.kakao.com/?q=${encodeURIComponent(`${sigungu} ${apt}`)}`;
+  // 네이버 부동산(m.land) — CandidateCard 미러(단지명만 넘김, 고유 매칭 시 단지 페이지 직행).
+  const naverHref = `https://m.land.naver.com/search/result/${encodeURIComponent(apt)}`;
+  // 카카오 로드뷰 — 좌표 있을 때만(포인트 필요). 없으면 아이콘 생략.
+  const roadviewHref = hasCoords ? `https://map.kakao.com/link/roadview/${lat},${lng}` : null;
   return (
     <div className="mb-1.5 mt-1 flex flex-col gap-1.5 border p-2" style={{ borderColor: RULE }}>
       {hasCoords && <DealMiniMap label={apt} lat={lat!} lng={lng!} />}
-      <a
-        href={kakaoHref}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="self-start text-[11.5px] font-bold underline underline-offset-2"
-        style={{ color: INK }}
-      >
-        카카오맵에서 보기 →
-      </a>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <IconLink href={kakaoMapHref} label="지도">
+          <MapPinIcon />
+        </IconLink>
+        <IconLink href={naverHref} label="네이버 시세">
+          <ChartIcon />
+        </IconLink>
+        {roadviewHref && (
+          <IconLink href={roadviewHref} label="로드뷰">
+            <RoadIcon />
+          </IconLink>
+        )}
+      </div>
     </div>
   );
 }
@@ -1050,14 +1136,17 @@ function MajorRow({
       style={divider ? { borderColor: RULE } : undefined}
     >
       <div className="flex items-baseline gap-2">
-        <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
-          <RegionLink sigungu={item.sigungu}>{item.dong}</RegionLink> {item.apt}{" "}
-          <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
+        <span className="min-w-0 flex-1 truncate text-[13px]" style={{ color: INK }}>
+          {/* 단지명 = 세리프(나눔명조) — 프리미엄 하이브리드. 면적·역거리 메타는 Pretendard. */}
+          <span className={`${serif.className} text-[14.5px]`}>
+            <RegionLink sigungu={item.sigungu}>{item.dong}</RegionLink> {item.apt}
+          </span>{" "}
+          <span className="text-[11px]" style={{ color: INK_SOFT }}>
             {areaMeta(item.areaM2)}{tag ? ` · ${tag}` : ""}
           </span>
           <RowHint />
         </span>
-        <span className="shrink-0 text-right text-[13px] font-bold" style={{ color: INK }}>
+        <span className="shrink-0 text-right text-[13px] font-semibold" style={{ color: INK }}>
           {eok(item.priceKrw)}
         </span>
         <span className="w-[62px] shrink-0 text-right text-[11px]" style={{ color: INK_SOFT }}>
@@ -1148,17 +1237,20 @@ function StrongRow({ item, divider }: { item: PatchItem; divider: boolean }) {
       style={divider ? { borderColor: RULE } : undefined}
     >
       <div className="flex items-baseline gap-2">
-        <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
-          <span aria-hidden="true" className="mr-1 font-extrabold" style={{ color: UP }}>
+        <span className="min-w-0 flex-1 truncate text-[13px]" style={{ color: INK }}>
+          <span aria-hidden="true" className="mr-1 font-bold" style={{ color: UP }}>
             ▲
           </span>
-          <RegionLink sigungu={item.sigungu}>{item.sigungu}</RegionLink> {item.apt}{" "}
-          <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
+          {/* 단지명 = 세리프(나눔명조) — 프리미엄 하이브리드. 면적 메타는 Pretendard. */}
+          <span className={`${serif.className} text-[14.5px]`}>
+            <RegionLink sigungu={item.sigungu}>{item.sigungu}</RegionLink> {item.apt}
+          </span>{" "}
+          <span className="text-[11px]" style={{ color: INK_SOFT }}>
             {areaMeta(item.areaM2)}{tag ? ` · ${tag}` : ""}
           </span>
           <RowHint />
         </span>
-        <span className="shrink-0 text-right text-[13px] font-extrabold" style={{ color: UP }}>
+        <span className="shrink-0 text-right text-[13px] font-semibold" style={{ color: UP }}>
           +{pctAbs(item.pctVsPrev!)}%
         </span>
       </div>
@@ -1230,6 +1322,9 @@ function WeakRegionRow({ item, divider }: { item: RegionPulse; divider: boolean 
 
 /** [주요 거래] 상위 노출 건수 — 초과분은 <details> 네이티브 펼치기(JS 없이). */
 const MAJOR_VISIBLE = 10;
+/** 뒤늦게 확인된 대형 거래 문턱 — 신고 지연은 정상 최대 30일. 그 배(60일) 넘어 오늘에야
+ *  공개된 15억+ 거래를 "뒤늦게 확인" 줄로 별도 노출(계약월이 최근이 아닌 뒤늦은 신고). */
+const LATE_REPORT_MIN_DAYS = 60;
 /** 환산 가정 — 월급 300 실수령 전액 저축(연 3,600만원). */
 const SAVING_KRW_PER_YEAR = 3_000_000 * 12;
 
@@ -1271,6 +1366,14 @@ export function DailyFront() {
 
   const majorVisible = major?.slice(0, MAJOR_VISIBLE) ?? [];
   const majorRest = major?.slice(MAJOR_VISIBLE) ?? [];
+  // [뒤늦게 확인된 대형 거래] — 오늘 공개된 15억+ 중 계약 후 60일 넘겨 신고된 건(뒤늦은
+  // 신고). 이미 major에 섞여 있으므로 계약일 오래된 순으로 분리해 별도 줄로 부각(팩트만).
+  const lateMajors = patch.generatedAt
+    ? (major ?? [])
+        .map((m) => ({ m, days: daysSince(m.dealDate, patch.generatedAt!) }))
+        .filter((x) => x.days >= LATE_REPORT_MIN_DAYS)
+        .sort((a, b) => b.days - a.days)
+    : [];
   // [주요 거래 분석] 어그로 라인 — 오늘 큰 거래에 잡힌 구별 직전 대비 평균(+건수).
   // ⚠️ "구 전체 시세" 아님 — 표본은 주요 거래분(종종 1~2건). 라벨·건수로 한계 명시.
   const majorAgg = majorAnalysis(major ?? []);
@@ -1332,7 +1435,7 @@ export function DailyFront() {
       <DailyFrontPing />
 
       <div
-        className="px-[18px] pb-[22px] pt-[18px]"
+        className={`${pretendard.className} px-[18px] pb-[22px] pt-[18px]`}
         style={{
           background: PAPER,
           color: INK,
@@ -1357,16 +1460,15 @@ export function DailyFront() {
           <span>오늘의 판 · 매일 아침 발행</span>
         </div>
 
-        {/* ── 제호 — 이코노미스트식 코랄 플레이트(2026-07-06 사장 지시, 判 도장 폐지).
-            각진 사각(라운드·회전 금지), 텍스트에 딱 맞는 패딩, 흰 고딕 블랙 워드마크
-            (시안 B: 명조 제호 폐지 — 명조는 헤드라인·판정서 등급명 전용).
+        {/* ── 제호 — 이코노미스트식 코랄 플레이트. "비집고" 워드마크 = Pretendard Bold
+            (2026-07-11 프리미엄 하이브리드 — mock-hybrid 검증 매핑). 각진 사각(라운드·회전 금지).
             대비: #e8571f 위 #fbfaf6 ≈ 3.5:1 — 34px 굵은 글씨(large text) AA 통과. ── */}
         <header
           className="flex items-center justify-between px-0.5 pb-2.5 pt-3"
           style={{ borderTop: `2.5px solid ${INK}`, borderBottom: `1px solid ${INK}` }}
         >
           <h2
-            className={`${plateFont.className} m-0 inline-block px-3 py-1.5 text-[34px] leading-none tracking-[0.06em]`}
+            className="m-0 inline-block px-3 py-1.5 text-[34px] font-bold leading-none tracking-[0.06em]"
             style={{ background: CORAL, color: PAPER }}
           >
             비집고
@@ -1383,7 +1485,7 @@ export function DailyFront() {
           {isPrelaunch ? (
             <>
               <h3
-                className={`${serif.className} m-0 text-[21px] font-extrabold leading-[1.38] break-keep`}
+                className={`${serif.className} m-0 text-[22px] leading-[1.4] break-keep`}
               >
                 첫 지면은 곧 발행됩니다
               </h3>
@@ -1410,7 +1512,7 @@ export function DailyFront() {
           ) : (
             <>
               <h3
-                className={`${serif.className} m-0 text-[21px] font-extrabold leading-[1.38] break-keep`}
+                className={`${serif.className} m-0 text-[22px] leading-[1.4] break-keep`}
               >
                 {headline!.text}
               </h3>
@@ -1428,7 +1530,7 @@ export function DailyFront() {
                         {s.label}
                       </span>
                       <span
-                        className={`${serif.className} min-w-0 text-[13.5px] font-bold leading-[1.45] break-keep`}
+                        className={`${serif.className} min-w-0 text-[14px] leading-[1.5] break-keep`}
                         style={{ color: INK }}
                       >
                         {s.text}
@@ -1632,6 +1734,36 @@ export function DailyFront() {
                   <p className="m-0 mt-0.5 text-[10px] leading-[1.5]" style={{ color: INK_SOFT }}>
                     주요 거래(15억+)에 잡힌 단지들의 직전 대비 평균 — 구 전체 시세 아님.
                   </p>
+                </div>
+              )}
+              {/* [뒤늦게 확인된 대형 거래] — 계약 후 60일 넘겨 오늘에야 공개된 15억+.
+                  팩트만(계약일·경과일) · 코랄 금지(제호·CTA 전용) → 먹 톤 + 괘선 강조. */}
+              {lateMajors.length > 0 && (
+                <div className="mb-2 border-l-2 pl-2" style={{ borderColor: RULE }}>
+                  <p className="m-0 text-[12px] leading-[1.6]" style={{ color: INK }}>
+                    <span className="font-bold">뒤늦게 확인된 대형 거래</span>{" "}
+                    <span className="text-[10.5px]" style={{ color: INK_SOFT }}>
+                      — 계약 후 오래 지나 오늘에야 공개
+                    </span>
+                  </p>
+                  {lateMajors.slice(0, 3).map(({ m, days }, i) => (
+                    <p
+                      key={`late-${m.apt}-${m.dealDate}-${i}`}
+                      className="m-0 mt-0.5 text-[11.5px] leading-[1.55] tabular-nums"
+                      style={{ color: INK_SOFT }}
+                    >
+                      <span className={`${serif.className} text-[13px]`} style={{ color: INK }}>
+                        {m.dong} {m.apt}
+                      </span>{" "}
+                      <b style={{ color: INK }}>{eok(m.priceKrw)}</b> · 계약 {ymdShort(m.dealDate)}{" "}
+                      <span className="text-[10.5px]">({days}일 만에 공개)</span>
+                    </p>
+                  ))}
+                  {lateMajors.length > 3 && (
+                    <p className="m-0 mt-0.5 text-[10.5px]" style={{ color: INK_SOFT }}>
+                      외 {lateMajors.length - 3}건
+                    </p>
+                  )}
                 </div>
               )}
               {major === undefined ? (

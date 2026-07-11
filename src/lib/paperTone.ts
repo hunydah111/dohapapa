@@ -1,16 +1,35 @@
-// 지면(신문) 조판 토큰 + 명조 폰트 — 단일 소스 (2026-07-06 홈 하부 톤 통일).
-// DailyFront(오늘의 1면)와 홈 하부(LandingHero·BijiCard 판정서·헤더 제호)가 공유한다.
+// 지면(신문) 조판 토큰 + 하이브리드 폰트 — 단일 소스 (2026-07-11 프리미엄 하이브리드 확정).
+// DailyFront(오늘의 1면)·동네판(LocalFront)·동네면(/r)·홈 헤더 제호가 공유한다.
 //
-// 명조는 next/font 셀프호스팅(빌드 시 내장) — 기기에 폰트가 없어도 모든 플랫폼 동일 렌더.
-// next/font 인스턴스는 반드시 여기 한 곳에서만 선언(중복 선언 금지) — 양쪽에서 import.
+// 프리미엄 하이브리드(사장 확정, mock-hybrid 검증):
+//   · 세리프(나눔명조 Regular) = 코너 제목·헤드라인·단지명 — 얇고 우아하게.
+//   · Pretendard(Regular/SemiBold/Bold) = 본문·라벨·숫자·가격·%·제호(비집고) 워드마크.
+// 폰트는 전부 next/font/local 셀프호스팅(빌드 시 내장) — 기기에 폰트가 없어도 전 플랫폼
+// 동일 렌더. ⚠️ 시스템 폰트 스택·CDN 금지("0점 폰트 폴백" 교훈). OG 카드(satori)는
+// assets/ 파일을 readFile 로 직접 로드(여기 인스턴스와 무관).
+// next/font 인스턴스는 반드시 여기 한 곳에서만 선언(중복 선언 금지) — 각 지면에서 import.
 
-import { Noto_Serif_KR, Black_Han_Sans } from "next/font/google";
+import localFont from "next/font/local";
 
-export const serif = Noto_Serif_KR({
-  weight: ["700", "900"],
-  subsets: ["latin"],
+/** 세리프 — 나눔명조 Regular(단일 웨이트). 코너 제목·헤드라인·단지명 전용.
+ *  얇고 우아한 제목체 — 볼드 클래스(font-bold 등) 병용 금지(faux-bold 방지, 파일이 400뿐). */
+export const serif = localFont({
+  src: "../app/fonts/NanumMyeongjo-Regular.ttf",
+  weight: "400",
   display: "swap",
   fallback: ["Nanum Myeongjo", "Batang", "serif"],
+});
+
+/** 본문·숫자 — Pretendard 3웨이트 셀프호스팅. 가격·% 는 SemiBold(font-semibold),
+ *  강조는 Bold(font-bold), 나머지 Regular. 제호 "비집고" 코랄 플레이트도 이 폰트 Bold. */
+export const pretendard = localFont({
+  src: [
+    { path: "../app/fonts/Pretendard-Regular.otf", weight: "400", style: "normal" },
+    { path: "../app/fonts/Pretendard-SemiBold.otf", weight: "600", style: "normal" },
+    { path: "../app/fonts/Pretendard-Bold.otf", weight: "700", style: "normal" },
+  ],
+  display: "swap",
+  fallback: ["Pretendard", "Malgun Gothic", "sans-serif"],
 });
 
 // ── 조판 토큰 (bijigo-front-mockup 시안 A) ──────────────────────────────────
@@ -32,16 +51,6 @@ export const GREEN = "#2e7d52";
 export const UP = "#c9252d";
 export const DOWN = "#2563a8";
 
-/** 제호(코랄 플레이트) 전용 디스플레이 폰트 — 블랙한산스 셀프호스팅 (제호 변형 시안 A).
- *  시스템 고딕 스택은 Pretendard 없는 기기에서 맑은고딕 가짜볼드로 깨져 폐기(사장 "0점" 판정).
- *  next/font 내장이라 전 기기 동일 렌더. 지면 제호·헤더 미니 플레이트·BijiCard 워터마크 공유.
- *  명조(serif)는 헤드라인·판정서 등급명 전용으로 존치. */
-export const plateFont = Black_Han_Sans({
-  weight: "400", // 단일 웨이트 — 자체가 초고밀도 헤드라인체 (합성볼드 아님)
-  subsets: ["latin"],
-  display: "swap",
-  fallback: ["Pretendard", "Malgun Gothic", "sans-serif"],
-});
-
-/** @deprecated plateFont(next/font)로 교체 — 시스템 스택은 기기별 렌더 편차로 폐기. */
-export const PLATE_FONT = 'Pretendard, "Malgun Gothic", sans-serif';
+/** 제호(코랄 플레이트) "비집고" 워드마크 = Pretendard Bold (pretendard export + font-bold).
+ *  종전 Black Han Sans plateFont 는 프리미엄 하이브리드(2026-07-11)에서 폐기 — 코너 제목·
+ *  헤드라인은 세리프(serif), 브랜드 워드마크는 Pretendard Bold(mock-hybrid 검증 매핑). */

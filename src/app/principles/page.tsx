@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { serif, PAPER, INK, INK_SOFT, RULE, CORAL, plateFont } from "@/lib/paperTone";
+import { serif, pretendard, PAPER, INK, INK_SOFT, RULE, CORAL } from "@/lib/paperTone";
 
 // /원칙 — 편집 헌장 7조 + "우리가 하지 않는 것들" 공개 선언문 (#21, 2026-07-08).
 // 미션 회의(2026-07-07) 액션 1. 원칙: 형용사 금지, 측정 가능한 것만 쓴다.
@@ -88,7 +88,7 @@ export default function PrinciplesPage() {
         {/* 제호 플레이트 + 제목 */}
         <header className="mb-8" style={{ borderBottom: `2.5px solid ${INK}` }}>
           <span
-            className={`${plateFont.className} inline-block px-2 py-[3px] text-[12px] leading-none tracking-[0.06em]`}
+            className={`${pretendard.className} inline-block px-2 py-[3px] text-[12px] font-bold leading-none tracking-[0.06em]`}
             style={{ background: CORAL, color: PAPER }}
           >
             비집고
