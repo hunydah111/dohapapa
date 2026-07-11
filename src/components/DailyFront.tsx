@@ -1708,31 +1708,26 @@ export function DailyFront() {
             {/* ── [주요 거래] — 오늘 공개된 수도권 15억 이상 전부 ── */}
             <section className="px-0.5 pb-3.5 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
               <CornerLabel>주요 거래</CornerLabel>
-              {/* [주요 거래 분석] 어그로 한 줄 — 구별 직전 대비 평균(+건수). 표본이 얇을 수
-                  있어 라벨·건수·서브라벨로 "구 전체 시세 아님"을 명시(정직성 헌장). */}
+              {/* [주요 거래 최고 상승] 어그로 한 줄 — 구별 "최고" 직전 대비 상승(평균 아님 —
+                  2건 평균은 무의미·사장 지적). 오보 게이트(직전 60일·이중 합의·≤30%) 통과분만
+                  이라 "직전이 이상치라 뻥튀기된" 상승은 빠진다. 상승 구만 뜬다. */}
               {majorAgg.length > 0 && (
                 <div className="mb-2">
                   <p className="m-0 text-[12px] leading-[1.6] tabular-nums" style={{ color: INK_SOFT }}>
                     <span className="mr-1 font-bold tracking-[0.04em]" style={{ color: INK }}>
-                      주요 거래 분석 · 직전 대비
+                      오늘 최고 상승 · 직전 대비
                     </span>
-                    {majorAgg.map((r, i) => {
-                      const c = r.avgPct > 0 ? UP : r.avgPct < 0 ? DOWN : INK_SOFT;
-                      const sign = r.avgPct > 0 ? "+" : r.avgPct < 0 ? "−" : "±";
-                      return (
-                        <span key={r.sigungu}>
-                          {i > 0 ? " · " : " "}
-                          <b style={{ color: c }}>
-                            {shortRegion(r.sigungu)} {sign}
-                            {pctAbs(r.avgPct)}%
-                          </b>
-                          <span style={{ color: INK_SOFT }}>({r.count}건)</span>
-                        </span>
-                      );
-                    })}
+                    {majorAgg.map((r, i) => (
+                      <span key={r.sigungu}>
+                        {i > 0 ? " · " : " "}
+                        <b style={{ color: UP }}>
+                          {shortRegion(r.sigungu)} +{pctAbs(r.topPct)}%
+                        </b>
+                      </span>
+                    ))}
                   </p>
                   <p className="m-0 mt-0.5 text-[10px] leading-[1.5]" style={{ color: INK_SOFT }}>
-                    주요 거래(15억+)에 잡힌 단지들의 직전 대비 평균 — 구 전체 시세 아님.
+                    각 구에서 오늘 나온 큰 거래(15억+)의 최고 상승 — 직전 실거래 대비, 오보 게이트 통과분. 구 전체 시세 아님.
                   </p>
                 </div>
               )}
@@ -1741,9 +1736,9 @@ export function DailyFront() {
               {lateMajors.length > 0 && (
                 <div className="mb-2 border-l-2 pl-2" style={{ borderColor: RULE }}>
                   <p className="m-0 text-[12px] leading-[1.6]" style={{ color: INK }}>
-                    <span className="font-bold">뒤늦게 확인된 대형 거래</span>{" "}
+                    <span className="font-bold">이제야 공개된 큰 거래</span>{" "}
                     <span className="text-[10.5px]" style={{ color: INK_SOFT }}>
-                      — 계약 후 오래 지나 오늘에야 공개
+                      — 계약은 지났지만 오늘 국토부에 공개
                     </span>
                   </p>
                   {lateMajors.slice(0, 3).map(({ m, days }, i) => (

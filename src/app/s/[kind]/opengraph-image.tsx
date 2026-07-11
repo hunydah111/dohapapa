@@ -276,28 +276,21 @@ export default async function Image({
               }}
             >
               <div style={{ display: "flex", color: INK, fontFamily: SANS_B, marginRight: 20 }}>
-                주요 거래 분석 · 직전 대비
+                오늘 최고 상승 · 직전 대비
               </div>
-              {majorAgg.map((r, i) => {
-                const c = r.avgPct > 0 ? UP : r.avgPct < 0 ? DOWN : INK_SOFT;
-                const sign = r.avgPct > 0 ? "+" : r.avgPct < 0 ? "−" : "±";
-                return (
-                  <div
-                    key={r.sigungu}
-                    style={{ display: "flex", flexDirection: "row", alignItems: "baseline", marginRight: 24 }}
-                  >
-                    <div style={{ display: "flex", color: c, fontFamily: SANS_SB }}>
-                      {`${shortRegion(r.sigungu)} ${sign}${pctAbs(r.avgPct)}%`}
-                    </div>
-                    <div style={{ display: "flex", color: INK_SOFT, fontSize: 34, fontFamily: SANS, marginLeft: 4 }}>
-                      {`(${r.count}건)`}
-                    </div>
+              {majorAgg.map((r) => (
+                <div
+                  key={r.sigungu}
+                  style={{ display: "flex", flexDirection: "row", alignItems: "baseline", marginRight: 24 }}
+                >
+                  <div style={{ display: "flex", color: UP, fontFamily: SANS_SB }}>
+                    {`${shortRegion(r.sigungu)} +${pctAbs(r.topPct)}%`}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
             <div style={{ display: "flex", color: INK_SOFT, fontSize: 32, fontFamily: SANS, marginTop: 8 }}>
-              주요 거래(15억+)에 잡힌 단지들의 직전 대비 평균 — 구 전체 시세 아님
+              각 구에서 오늘 나온 큰 거래(15억+)의 최고 상승 — 오보 게이트 통과분, 구 전체 시세 아님
             </div>
           </div>
         )}

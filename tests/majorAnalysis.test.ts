@@ -1,44 +1,50 @@
-// 주요 거래 분석(majorAnalysis) 순수 함수 테스트 — 코너·공유 카드가 같은 함수를 쓴다.
+// 주요 거래 분석(majorAnalysis) — 구별 "최고 상승"(오보 게이트 통과분) 테스트.
 import { describe, expect, it } from "vitest";
-import { majorAnalysis } from "@/lib/majorAnalysis";
+import { majorAnalysis, type MajorAnalysisInput } from "@/lib/majorAnalysis";
 
-describe("majorAnalysis — 시군구별 직전 대비 평균(주요 거래분)", () => {
-  it("구별로 pctVsPrev 평균 + 건수, 상승 큰 순 정렬", () => {
-    const rows = [
-      { sigungu: "강남구", pctVsPrev: 0.141 },
-      { sigungu: "강남구", pctVsPrev: 0.059 }, // 강남 평균 (0.141+0.059)/2 = 0.10
-      { sigungu: "송파구", pctVsPrev: -0.014 },
-      { sigungu: "마포구", pctVsPrev: 0.023 },
-    ];
+// 게이트 통과 조건: prevKrw 존재 · pctVsPrev +7%~+30% · pct(자기중위 대비) +7%↑.
+const rows: MajorAnalysisInput[] = [
+  // 강남: 둘 다 통과 — 최고 = +14.1%(개포A).
+  { sigungu: "강남구", apt: "개포A", pct: 0.1, prevKrw: 2_500_000_000, pctVsPrev: 0.141 },
+  { sigungu: "강남구", apt: "개포B", pct: 0.08, prevKrw: 2_000_000_000, pctVsPrev: 0.08 },
+  // 광진: 통과(+9%).
+  { sigungu: "광진구", apt: "광진A", pct: 0.09, prevKrw: 1_800_000_000, pctVsPrev: 0.09 },
+  // 송파: pctVsPrev 5% < 7% → 게이트 탈락(제외).
+  { sigungu: "송파구", apt: "송파A", pct: 0.1, prevKrw: 2_000_000_000, pctVsPrev: 0.05 },
+  // 마포: 자기중위 대비 pct 3% < 7% → 이중합의 실패(직전이 이상치 의심) → 제외.
+  { sigungu: "마포구", apt: "마포A", pct: 0.03, prevKrw: 1_500_000_000, pctVsPrev: 0.12 },
+  // 서초: pctVsPrev 40% > 30% 상한 → 제외.
+  { sigungu: "서초구", apt: "서초A", pct: 0.2, prevKrw: 2_000_000_000, pctVsPrev: 0.4 },
+  // 용산: 직전 없음(pctVsPrev null) → 제외.
+  { sigungu: "용산구", apt: "용산A", pct: 0.1, prevKrw: null, pctVsPrev: null },
+];
+
+describe("majorAnalysis — 구별 최고 상승(게이트 통과)", () => {
+  it("게이트 통과분 중 구별 '최고' 상승률, 상승 큰 순", () => {
     const out = majorAnalysis(rows);
-    expect(out.map((r) => r.sigungu)).toEqual(["강남구", "마포구", "송파구"]); // 상승 desc
-    expect(out[0].sigungu).toBe("강남구");
-    expect(out[0].count).toBe(2);
-    expect(out[0].avgPct).toBeCloseTo(0.1, 10); // (0.141+0.059)/2
-    expect(out[2].avgPct).toBeCloseTo(-0.014, 10); // 하락 구도 그대로(그날 데이터대로)
+    expect(out.map((r) => r.sigungu)).toEqual(["강남구", "광진구"]); // 나머지 게이트 탈락
+    expect(out[0]).toEqual({ sigungu: "강남구", topPct: 0.141, apt: "개포A" }); // 평균(0.11) 아님, 최고
+    expect(out[1].topPct).toBeCloseTo(0.09, 10);
   });
 
-  it("pctVsPrev 없는 거래는 집계에서 제외", () => {
-    const rows = [
-      { sigungu: "강남구", pctVsPrev: 0.1 },
-      { sigungu: "강남구", pctVsPrev: null }, // 제외
-      { sigungu: "서초구" }, // pctVsPrev undefined — 제외 → 서초 자체가 안 뜸
-    ];
+  it("게이트 탈락 구(송파 5%·마포 이중합의·서초 상한·용산 무직전)는 제외", () => {
     const out = majorAnalysis(rows);
-    expect(out).toEqual([{ sigungu: "강남구", avgPct: 0.1, count: 1 }]);
+    const names = out.map((r) => r.sigungu);
+    expect(names).not.toContain("송파구");
+    expect(names).not.toContain("마포구");
+    expect(names).not.toContain("서초구");
+    expect(names).not.toContain("용산구");
   });
 
-  it("집계 가능한 거래가 없으면 빈 배열", () => {
+  it("limit 상한", () => {
+    expect(majorAnalysis(rows, 1)).toHaveLength(1);
+    expect(majorAnalysis(rows, 1)[0].sigungu).toBe("강남구");
+  });
+
+  it("게이트 통과 0건이면 빈 배열", () => {
     expect(majorAnalysis([])).toEqual([]);
-    expect(majorAnalysis([{ sigungu: "강남구", pctVsPrev: null }])).toEqual([]);
-  });
-
-  it("동률은 시군구 가나다순, limit 개까지", () => {
-    const rows = [
-      { sigungu: "송파구", pctVsPrev: 0.05 },
-      { sigungu: "성동구", pctVsPrev: 0.05 }, // 동률 → 가나다(성동 < 송파)
-      { sigungu: "강남구", pctVsPrev: 0.09 },
-    ];
-    expect(majorAnalysis(rows, 2).map((r) => r.sigungu)).toEqual(["강남구", "성동구"]);
+    expect(
+      majorAnalysis([{ sigungu: "강남구", apt: "x", pct: 0.02, prevKrw: 1e9, pctVsPrev: 0.03 }]),
+    ).toEqual([]);
   });
 });

@@ -253,25 +253,19 @@ export default async function Page({
                 <div className="mb-2">
                   <p className="m-0 text-[12px] leading-[1.6] tabular-nums" style={{ color: INK_SOFT }}>
                     <span className="mr-1 font-bold tracking-[0.04em]" style={{ color: INK }}>
-                      주요 거래 분석 · 직전 대비
+                      오늘 최고 상승 · 직전 대비
                     </span>
-                    {majorAgg.map((r, i) => {
-                      const c = r.avgPct > 0 ? UP : r.avgPct < 0 ? DOWN : INK_SOFT;
-                      const sign = r.avgPct > 0 ? "+" : r.avgPct < 0 ? "−" : "±";
-                      return (
-                        <span key={r.sigungu}>
-                          {i > 0 ? " · " : " "}
-                          <b style={{ color: c }}>
-                            {shortRegion(r.sigungu)} {sign}
-                            {pctAbs(r.avgPct)}%
-                          </b>
-                          <span style={{ color: INK_SOFT }}>({r.count}건)</span>
-                        </span>
-                      );
-                    })}
+                    {majorAgg.map((r, i) => (
+                      <span key={r.sigungu}>
+                        {i > 0 ? " · " : " "}
+                        <b style={{ color: UP }}>
+                          {shortRegion(r.sigungu)} +{pctAbs(r.topPct)}%
+                        </b>
+                      </span>
+                    ))}
                   </p>
                   <p className="m-0 mt-0.5 text-[10px] leading-[1.5]" style={{ color: INK_SOFT }}>
-                    주요 거래(15억+)에 잡힌 단지들의 직전 대비 평균 — 구 전체 시세 아님.
+                    각 구에서 오늘 나온 큰 거래(15억+)의 최고 상승 — 오보 게이트 통과분, 구 전체 시세 아님.
                   </p>
                 </div>
               )}
