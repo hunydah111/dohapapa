@@ -1674,7 +1674,7 @@ export function DailyFront() {
               <section className="px-0.5 pb-3.5 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
                 <div className="mb-0.5 flex items-center justify-between gap-2">
                   <CornerLabel>오늘의 거래 지도</CornerLabel>
-                  <ShareButton title="비집고 — 오늘의 거래 지도" ariaLabel="오늘의 거래 지도 공유" />
+                  <ShareButton title="비집고 — 오늘의 거래 지도" shareUrl="/s/trade" ariaLabel="오늘의 거래 지도 공유" />
                 </div>
                 <TradeMap
                   regionCounts={regionCounts}
@@ -1738,7 +1738,7 @@ export function DailyFront() {
                     <RecoveryLegend />
                     {recoveryTop5.length > 0 && <RecoveryTop5 top={recoveryTop5} />}
                     <div className="mt-2.5 flex justify-end">
-                      <ShareButton title="비집고 — 회복률 지도" ariaLabel="회복률 지도 공유" />
+                      <ShareButton title="비집고 — 회복률 지도" shareUrl="/s/recovery" ariaLabel="회복률 지도 공유" />
                     </div>
                     <CornerNote>
                       타일 = 수도권 82개 시군구(위치 근사) · 농도 = 전고점 대비 회복률 ·

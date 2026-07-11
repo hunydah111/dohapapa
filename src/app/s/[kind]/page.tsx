@@ -21,12 +21,22 @@ import {
 import { majorAnalysis } from "@/lib/majorAnalysis";
 import { areaMeta } from "@/lib/areaLabel";
 import { serif, PAPER, INK, INK_SOFT, RULE, CORAL, UP, DOWN } from "@/lib/paperTone";
+import {
+  buildShareMap,
+  MAP_COLS,
+  TILE_BORDER,
+  type MapKind,
+} from "@/lib/shareMapData";
 
-// ── 라우팅 — 세 kind 정적 생성. 그 외 세그먼트는 404. ─────────────────────────
+// ── 라우팅 — 다섯 kind 정적 생성. 그 외 세그먼트는 404. ────────────────────────
 export const dynamicParams = false;
 
-type Kind = "major" | "strong" | "weak";
-const KINDS: Kind[] = ["major", "strong", "weak"];
+type Kind = "major" | "strong" | "weak" | "recovery" | "trade";
+const KINDS: Kind[] = ["major", "strong", "weak", "recovery", "trade"];
+const MAP_KINDS = ["recovery", "trade"] as const;
+function isMapKind(k: Kind): k is MapKind {
+  return (MAP_KINDS as readonly string[]).includes(k);
+}
 
 export function generateStaticParams(): { kind: Kind }[] {
   return KINDS.map((kind) => ({ kind }));
@@ -107,6 +117,20 @@ const KIND_COPY: Record<
       "시군구별로 오늘 공개된 중개거래의 직전 실거래 대비 평균 등락. 5건 이상 동네만 — 하락 단지 실명은 싣지 않습니다. 비집고.",
     right: "직전 실거래 대비 평균 · 약세순",
   },
+  recovery: {
+    corner: "회복률 지도",
+    title: "회복률 지도 — 수도권 시군구 전고점 대비 회복률",
+    description:
+      "수도권 82개 시군구를 전고점 대비 회복률로 색칠한 지도. 국민평형(전용 84㎡급) 실거래 중위 기준 — 시세 지수 아님. 매일 아침 갱신 · 비집고.",
+    right: "전고점 대비 회복률 · 국민평형",
+  },
+  trade: {
+    corner: "오늘의 거래 지도",
+    title: "오늘의 거래 지도 — 수도권 시군구 오늘 공개 실거래",
+    description:
+      "오늘 국토부에 공개된 수도권 시군구별 실거래 건수를 색 농도로 그린 지도. 직거래·해제 제외 · 매일 아침 갱신 · 비집고.",
+    right: "오늘 공개 건수 · 시군구",
+  },
 };
 
 // ── metadata — 큰 카드 언펄 필수(twitter summary_large_image) ─────────────────
@@ -179,14 +203,17 @@ export default async function Page({
     (i) => i.prevDate != null && passesStrongGate(i),
   );
   const weaks = patch.weakRegions ?? [];
+  // 지도 카드(회복률·거래) — 타일·범례·콜아웃(HTML은 CSS grid로 그린다).
+  const shareMap = isMapKind(kind) ? buildShareMap(kind) : null;
 
-  const hasData =
-    patch.generatedAt !== null &&
-    (kind === "major"
-      ? majors.length > 0
-      : kind === "strong"
-        ? strongs.length > 0
-        : weaks.length > 0);
+  const hasData = shareMap
+    ? shareMap.tiles.length > 0 // 82개 타일 상수 → 항상 렌더(색만 데이터에 따름)
+    : patch.generatedAt !== null &&
+      (kind === "major"
+        ? majors.length > 0
+        : kind === "strong"
+          ? strongs.length > 0
+          : weaks.length > 0);
 
   const majorsShown = majors.slice(0, PAGE_ROWS);
   const strongsShown = strongs.slice(0, PAGE_ROWS);
@@ -247,6 +274,66 @@ export default async function Page({
               </Link>
               에서 전체 보기
             </CornerNote>
+          ) : shareMap ? (
+            <>
+              <div
+                className="grid gap-[2px]"
+                style={{ gridTemplateColumns: `repeat(${MAP_COLS}, minmax(0, 1fr))` }}
+              >
+                {shareMap.tiles.map((t) => (
+                  <a
+                    key={t.sigungu}
+                    href={`/r/${encodeURIComponent(t.sigungu)}`}
+                    title={`${t.sigungu} — 동네면`}
+                    className="flex aspect-square items-center justify-center text-center text-[8px] font-bold leading-[1.05] tracking-[-0.02em]"
+                    style={{
+                      gridColumn: t.col,
+                      gridRow: t.row,
+                      background: t.fill,
+                      color: t.text,
+                      border: `1px solid ${TILE_BORDER}`,
+                    }}
+                  >
+                    {t.label}
+                  </a>
+                ))}
+              </div>
+              {/* 범례 */}
+              <div
+                className="mt-[7px] flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[9.5px]"
+                style={{ color: INK_SOFT }}
+              >
+                {shareMap.legend.map((l) => (
+                  <span key={l.label} className="inline-flex items-center gap-1">
+                    <span
+                      className="inline-block h-[10px] w-[10px]"
+                      style={{ background: l.bg, border: `1px solid ${TILE_BORDER}` }}
+                    />
+                    {l.label}
+                  </span>
+                ))}
+              </div>
+              {shareMap.callouts.length > 0 && (
+                <p className="mt-2 text-[12px] leading-[1.6]" style={{ color: INK_SOFT }}>
+                  <span className="mr-1 font-bold" style={{ color: INK }}>
+                    {kind === "recovery" ? "회복 최상위" : "가장 활발"}
+                  </span>
+                  {shareMap.callouts.map((c, i) => (
+                    <span key={c.sigungu}>
+                      {i > 0 ? " · " : " "}
+                      {c.sigungu}{" "}
+                      <b style={{ color: kind === "recovery" ? UP : INK }}>{c.value}</b>
+                    </span>
+                  ))}
+                </p>
+              )}
+              <CornerNote>
+                타일 = 수도권 82개 시군구(위치 근사) · 탭하면 동네면으로 ·{" "}
+                {kind === "recovery"
+                  ? "농도 = 전고점 대비 회복률(국민평형 실거래 중위) · 시세 지수 아님."
+                  : "농도 = 오늘 국토부 공개 실거래 건수 · 직거래·해제 제외."}
+              </CornerNote>
+            </>
           ) : kind === "major" ? (
             <>
               {majorAgg.length > 0 && (

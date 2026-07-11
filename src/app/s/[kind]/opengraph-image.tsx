@@ -11,6 +11,7 @@ import {
 } from "@/lib/patchNote";
 import { majorAnalysis } from "@/lib/majorAnalysis";
 import { areaMeta } from "@/lib/areaLabel";
+import { buildShareMap, MAP_COLS, MAP_ROWS, TILE_BORDER, type MapKind } from "@/lib/shareMapData";
 
 // 클릭되는 공유 링크카드 3종(주요·강세·약세) — 탭하면 홈 유입 (2026-07-11 사장 지시).
 // 종전 /card/major(raw PNG 302)는 스레드·카톡에서 이미지로만 떠 탭해도 홈에 안 왔다.
@@ -32,8 +33,12 @@ const CORAL = "#e8571f";
 const UP = "#c9252d";
 const DOWN = "#2563a8";
 
-type Kind = "major" | "strong" | "weak";
-const KINDS: Kind[] = ["major", "strong", "weak"];
+type Kind = "major" | "strong" | "weak" | "recovery" | "trade";
+const KINDS: Kind[] = ["major", "strong", "weak", "recovery", "trade"];
+const MAP_KINDS = ["recovery", "trade"] as const;
+function isMapKind(k: Kind): k is MapKind {
+  return (MAP_KINDS as readonly string[]).includes(k);
+}
 
 interface PatchLike {
   generatedAt: string | null;
@@ -44,8 +49,8 @@ interface PatchLike {
 const patch = dailyPatchRaw as unknown as PatchLike;
 
 const dateSlug = (patch.generatedAt ?? "pre").slice(0, 10);
-// 캐시 무효화 — v1→v2(하이브리드)→v3(major 상위 7행·행 압축, 2026-07-11).
-const OG_ID = `v3-${dateSlug}`;
+// 캐시 무효화 — v1→v2(하이브리드)→v3(major 상위 7행)→v4(회복률·거래 지도 카드 추가).
+const OG_ID = `v4-${dateSlug}`;
 
 // 카드별 표 행수 상한 — 하단 코랄 밴드 안 침범하는 선. major 카드는 "상위 7개" 고정
 // (사장 2026-07-11: 31개 전부는 과함, TOP 7만). 분석 밴드가 1줄이라 7행도 들어간다.
@@ -69,6 +74,16 @@ const META: Record<Kind, { corner: string; right: string; alt: string }> = {
     corner: "오늘의 약세 동네",
     right: "직전 실거래 대비 평균 · 약세순",
     alt: "오늘의 약세 동네 — 시군구 직전 실거래 대비 평균 하락 · 비집고",
+  },
+  recovery: {
+    corner: "회복률 지도",
+    right: "전고점 대비 회복률 · 국민평형",
+    alt: "회복률 지도 — 수도권 시군구 전고점 대비 회복률 · 비집고",
+  },
+  trade: {
+    corner: "오늘의 거래 지도",
+    right: "오늘 공개 건수 · 시군구",
+    alt: "오늘의 거래 지도 — 수도권 시군구 오늘 공개 실거래 건수 · 비집고",
   },
 };
 
@@ -159,6 +174,12 @@ export default async function Image({
   );
   const weakAll = patch.weakRegions ?? [];
 
+  // 지도 카드(회복률·거래) — 타일·범례·콜아웃. satori는 CSS grid 미지원 → 절대배치로 그린다.
+  const shareMap = isMapKind(kind) ? buildShareMap(kind) : null;
+  const CELL = 48; // 타일 한 칸(px, 2x 캔버스)
+  const mapW = MAP_COLS * CELL;
+  const mapH = MAP_ROWS * CELL;
+
   const majorCap = majorAgg.length > 0 ? MAJOR_ROWS_WITH_AGG : MAJOR_ROWS;
   const rowCount =
     kind === "major"
@@ -178,8 +199,11 @@ export default async function Image({
         ? "오늘 강세 거래 없음"
         : "오늘 약세 동네 없음";
 
-  const footnote =
-    kind === "major"
+  const footnote = shareMap
+    ? kind === "recovery"
+      ? "타일 = 수도권 82개 시군구(위치 근사) · 국민평형(전용 84㎡급) 실거래 중위 · 전고점 대비 · 시세 지수 아님"
+      : "타일 = 수도권 82개 시군구(위치 근사) · 농도 = 오늘 국토부에 공개된 실거래 건수 · 직거래·해제 제외"
+    : kind === "major"
       ? `${restCount > 0 ? `외 ${restCount}건 · ` : ""}% = 같은 단지 직전 실거래 대비 · 전체는 지면에서`
       : kind === "strong"
         ? `${restCount > 0 ? `외 ${restCount}건 · ` : ""}비교는 같은 단지·평형 최근 60일 내 직전 실거래 기준 · 전체는 지면에서`
@@ -307,6 +331,64 @@ export default async function Image({
           }}
         >
           {/* satori는 Fragment를 못 그린다 — 조건 블록을 나열. */}
+
+          {/* 지도 카드(회복률·거래) — 절대배치 타일 격자 + 우측 범례·콜아웃 */}
+          {shareMap && (
+            <div style={{ display: "flex", flexDirection: "row", alignItems: "center", width: "100%" }}>
+              <div style={{ display: "flex", position: "relative", width: mapW, height: mapH }}>
+                {shareMap.tiles.map((t) => (
+                  <div
+                    key={t.sigungu}
+                    style={{
+                      display: "flex",
+                      position: "absolute",
+                      left: (t.col - 1) * CELL,
+                      top: (t.row - 1) * CELL,
+                      width: CELL - 3,
+                      height: CELL - 3,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: t.fill,
+                      color: t.text,
+                      border: `1px solid ${TILE_BORDER}`,
+                      fontSize: 17,
+                      fontFamily: SANS_B,
+                      overflow: "hidden",
+                    }}
+                  >
+                    {t.label}
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", flex: 1, marginLeft: 96, justifyContent: "center" }}>
+                <div style={{ display: "flex", color: INK, fontSize: 64, fontFamily: SERIF, lineHeight: 1.2 }}>
+                  {kind === "recovery" ? "전고점 대비 회복률" : "오늘 공개된 실거래"}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", marginTop: 40 }}>
+                  {shareMap.legend.map((l) => (
+                    <div key={l.label} style={{ display: "flex", flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
+                      <div style={{ display: "flex", width: 44, height: 44, background: l.bg, border: `1px solid ${TILE_BORDER}` }} />
+                      <div style={{ display: "flex", color: INK_SOFT, fontSize: 40, fontFamily: SANS, marginLeft: 20 }}>{l.label}</div>
+                    </div>
+                  ))}
+                </div>
+                {shareMap.callouts.length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", marginTop: 36 }}>
+                    <div style={{ display: "flex", color: INK_SOFT, fontSize: 36, fontFamily: SANS_B, marginBottom: 12 }}>
+                      {kind === "recovery" ? "회복 최상위" : "가장 활발"}
+                    </div>
+                    {shareMap.callouts.map((c) => (
+                      <div key={c.sigungu} style={{ display: "flex", flexDirection: "row", alignItems: "baseline", marginBottom: 10, width: 520 }}>
+                        <div style={{ display: "flex", flex: 1, color: INK, fontSize: 46, fontFamily: SANS_B }}>{c.sigungu}</div>
+                        <div style={{ display: "flex", color: kind === "recovery" ? UP : INK, fontSize: 46, fontFamily: SANS_SB }}>{c.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {hasRows &&
             kind === "major" &&
             majorAll.slice(0, rowCount).map((d, i) => {
@@ -453,7 +535,7 @@ export default async function Image({
               </div>
             ))}
 
-          {!hasRows && (
+          {!shareMap && !hasRows && (
             <div style={{ display: "flex", color: INK, fontSize: 108, fontFamily: SERIF, lineHeight: 1.25 }}>
               {emptyText}
             </div>
