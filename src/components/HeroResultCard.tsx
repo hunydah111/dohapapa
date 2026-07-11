@@ -158,6 +158,7 @@ export function HeroResultCard({
                   dday ? reachFromDday(dday) : null,
                 )}
                 sigungu={candidate.sigungu}
+                complexName={candidate.complexName}
                 dongName={candidate.dongName}
                 areaM2={candidate.representativeArea}
                 chips={chips}

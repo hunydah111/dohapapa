@@ -6,6 +6,16 @@ import { recordBijiDistribution, getBijiDistribution } from "@/lib/bijiDistribut
 import { budgetTier, budgetTopPercent } from "@/lib/budgetPercentile";
 
 export const runtime = "nodejs";
+// 추천 엔진 + 부가 DB 집계까지 여유 — 기본(10~15s)보다 넉넉히(플랜 상한 내로 자동 캡).
+export const maxDuration = 30;
+
+/** 부가 작업(DB 집계 등)에 시간 상한 — 초과·실패 시 fallback 으로 조용히 진행. */
+function withTimeout<T>(p: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    p.catch(() => fallback),
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
 
 // ── 2-pass 재랭킹 옵션 — 클라가 모은 대중교통 실측을 넘겨 티어를 실측 기준으로 재계산 ──
 const recommendOptionsSchema = z.object({
@@ -172,9 +182,14 @@ export async function POST(req: Request): Promise<Response> {
     // ── 2. Zod 유효성 검증 ────────────────────────────────────
     const parsed = coupleProfileSchema.safeParse(body);
     if (!parsed.success) {
+      // message 를 반드시 채운다 — 클라는 errData.message 없으면 "분석 중 오류"만 띄워
+      // 진짜 원인이 가려졌다(2026-07-11 사장 "분석 오류" 리포트). 첫 이슈를 사람 문구로.
+      const first = parsed.error.issues[0];
+      const where = first?.path.join(".") || "입력값";
       return Response.json(
         {
           error: "VALIDATION",
+          message: `입력값을 확인해 주세요 (${where}: ${first?.message ?? "형식 오류"}).`,
           issues: parsed.error.issues,
         },
         { status: 400 },
@@ -203,8 +218,15 @@ export async function POST(req: Request): Promise<Response> {
       const topPct = budgetTopPercent(result.budget.netPurchasePowerKrw);
       if (topPct != null && src.length > 0) {
         const tier = budgetTier(topPct);
-        await recordBijiDistribution(src[0].sigungu, tier.slug);
-        result.bijiDistribution = await getBijiDistribution(src[0].sigungu, tier.slug);
+        // ⚠️ 부가 집계(Neon DB)에 시간 상한 — 콜드스타트/풀 고갈로 느려도 추천 응답을 볼모로
+        // 잡지 않는다. 상한 초과 시 분포만 조용히 생략(추천 본문은 이미 완성). 초과가 곧
+        // 함수 타임아웃→504(비JSON)→클라 "분석 중 오류"였다(2026-07-11 경화).
+        await withTimeout(recordBijiDistribution(src[0].sigungu, tier.slug), 1500, undefined);
+        result.bijiDistribution = await withTimeout(
+          getBijiDistribution(src[0].sigungu, tier.slug),
+          1500,
+          result.bijiDistribution,
+        );
       }
     }
 

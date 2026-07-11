@@ -23,6 +23,8 @@ export interface BijiCardProps {
   heroName?: string;
   /** 시군구 — 히어로 이름 폴백·메타 표시용. */
   sigungu?: string | null;
+  /** 단지명(아파트 이름) — 있으면 메타 맨 앞에 표기(2026-07-11 사장: "아파트 이름이 왜 없어"). */
+  complexName?: string | null;
   /** 동(읍·면) 이름. 표시용 — 없으면 시군구만. */
   dongName?: string | null;
   /** 평형(전용 ㎡). */
@@ -44,6 +46,7 @@ export function BijiCard({
   tier,
   heroName,
   sigungu,
+  complexName,
   dongName,
   areaM2,
   chips,
@@ -53,7 +56,10 @@ export function BijiCard({
 }: BijiCardProps) {
   // 히어로 이름 — 사정권 라벨 합성이 정본. 미지정 호출부는 중립 "판정" 폴백.
   const name = heroName ?? composeReachName(sigungu ?? null, null);
-  const meta = [sigungu, dongName, areaM2 ? `전용 ${areaM2}㎡` : null].filter(Boolean).join(" · ");
+  // 메타 — 단지명 있으면 맨 앞(히어로가 이미 시군구를 담으므로 시군구는 단지명 없을 때만 폴백).
+  const meta = [complexName ?? sigungu, dongName, areaM2 ? `전용 ${areaM2}㎡` : null]
+    .filter(Boolean)
+    .join(" · ");
   // 등급(tier) 액센트 — 상단 밴드 1줄에만 사용. 배경·큰 타이포에는 쓰지 않는다.
   const accentColor = tier.theme.accent;
 

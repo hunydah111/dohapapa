@@ -58,7 +58,6 @@ const REFUSALS: { what: string; giveUp: string }[] = [
   { what: "하락 단지 실명 랭킹", giveUp: "조회수를 포기" },
   { what: "자랑 카드·자랑 공유 유도", giveUp: "바이럴을 포기" },
   { what: "호가·매물 정보", giveUp: "체류시간을 포기" },
-  { what: "광고", giveUp: "수익을 포기" },
   { what: "회원가입·개인정보 서버 저장", giveUp: "데이터 자산을 포기" },
   { what: "“시세” 단정·미래 가격 예측", giveUp: "단정의 화력을 포기" },
   { what: "투기 도구(호가 추적·수익률 계산기)", giveUp: "투기 수요 트래픽을 포기" },
