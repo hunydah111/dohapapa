@@ -1122,11 +1122,14 @@ function MajorRow({
   item,
   divider,
   maxKrw,
+  lateDays,
 }: {
   item: MajorItem;
   divider: boolean;
   /** 오늘 major 최고가(원) — 가격 바 기준. 0이면 바 생략. */
   maxKrw: number;
+  /** 계약 후 공개까지 걸린 일수 — 뒤늦은 신고면 "N일 만에 공개" 태그. 아니면 null. */
+  lateDays?: number | null;
 }) {
   const refMax = item.windowMaxKrw ?? null;
   const tag = floorSubwayTag(item.floor, item.nearestSubwayM);
@@ -1144,6 +1147,15 @@ function MajorRow({
           <span className="text-[11px]" style={{ color: INK_SOFT }}>
             {areaMeta(item.areaM2)}{tag ? ` · ${tag}` : ""}
           </span>
+          {lateDays != null && (
+            <span
+              className="ml-1 whitespace-nowrap rounded-sm px-1 text-[10px] font-bold"
+              style={{ background: "#efe9da", color: INK_SOFT }}
+              title="계약은 지났지만 오늘 국토부에 처음 공개된 거래"
+            >
+              {lateDays}일 만에 공개
+            </span>
+          )}
           <RowHint />
         </span>
         <span className="shrink-0 text-right text-[13px] font-semibold" style={{ color: INK }}>
@@ -1322,9 +1334,10 @@ function WeakRegionRow({ item, divider }: { item: RegionPulse; divider: boolean 
 
 /** [주요 거래] 상위 노출 건수 — 초과분은 <details> 네이티브 펼치기(JS 없이). */
 const MAJOR_VISIBLE = 10;
-/** 뒤늦게 확인된 대형 거래 문턱 — 신고 지연은 정상 최대 30일. 그 배(60일) 넘어 오늘에야
- *  공개된 15억+ 거래를 "뒤늦게 확인" 줄로 별도 노출(계약월이 최근이 아닌 뒤늦은 신고). */
-const LATE_REPORT_MIN_DAYS = 60;
+/** "N일 만에 공개" 태그 문턱 — 계약 후 이 일수 넘겨 오늘 공개된 15억+ 거래는 주요 거래
+ *  행에 "N일 만에 공개" 태그를 붙인다(별도 코너 대신 인라인 — 2026-07-11 사장). 스코프
+ *  14일보다 여유(21일)를 둬 갓 지난 건 태그 안 붙임(정상 신고 지연과 뒤늦은 신고 구분). */
+const LATE_REPORT_MIN_DAYS = 21;
 /** 환산 가정 — 월급 300 실수령 전액 저축(연 3,600만원). */
 const SAVING_KRW_PER_YEAR = 3_000_000 * 12;
 
@@ -1366,14 +1379,14 @@ export function DailyFront() {
 
   const majorVisible = major?.slice(0, MAJOR_VISIBLE) ?? [];
   const majorRest = major?.slice(MAJOR_VISIBLE) ?? [];
-  // [뒤늦게 확인된 대형 거래] — 오늘 공개된 15억+ 중 계약 후 60일 넘겨 신고된 건(뒤늦은
-  // 신고). 이미 major에 섞여 있으므로 계약일 오래된 순으로 분리해 별도 줄로 부각(팩트만).
-  const lateMajors = patch.generatedAt
-    ? (major ?? [])
-        .map((m) => ({ m, days: daysSince(m.dealDate, patch.generatedAt!) }))
-        .filter((x) => x.days >= LATE_REPORT_MIN_DAYS)
-        .sort((a, b) => b.days - a.days)
-    : [];
+  // "N일 만에 공개" 태그 — 계약 후 LATE_REPORT_MIN_DAYS 넘겨 오늘 공개된 15억+(뒤늦은 신고).
+  // 별도 코너 대신 주요 거래 행에 인라인 태그로(2026-07-11 사장 — "그냥 주요거래에 넣어").
+  // late 대형은 computePatch 가 이미 major(가격순)에 섞어 넣는다 → 원베일리급이 맨 위에.
+  const lateDaysOf = (dealDate: string): number | null => {
+    if (!patch.generatedAt) return null;
+    const d = daysSince(dealDate, patch.generatedAt);
+    return d >= LATE_REPORT_MIN_DAYS ? d : null;
+  };
   // [주요 거래 분석] 어그로 라인 — 오늘 큰 거래에 잡힌 구별 직전 대비 평균(+건수).
   // ⚠️ "구 전체 시세" 아님 — 표본은 주요 거래분(종종 1~2건). 라벨·건수로 한계 명시.
   const majorAgg = majorAnalysis(major ?? []);
@@ -1731,36 +1744,6 @@ export function DailyFront() {
                   </p>
                 </div>
               )}
-              {/* [뒤늦게 확인된 대형 거래] — 계약 후 60일 넘겨 오늘에야 공개된 15억+.
-                  팩트만(계약일·경과일) · 코랄 금지(제호·CTA 전용) → 먹 톤 + 괘선 강조. */}
-              {lateMajors.length > 0 && (
-                <div className="mb-2 border-l-2 pl-2" style={{ borderColor: RULE }}>
-                  <p className="m-0 text-[12px] leading-[1.6]" style={{ color: INK }}>
-                    <span className="font-bold">이제야 공개된 큰 거래</span>{" "}
-                    <span className="text-[10.5px]" style={{ color: INK_SOFT }}>
-                      — 계약은 지났지만 오늘 국토부에 공개
-                    </span>
-                  </p>
-                  {lateMajors.slice(0, 3).map(({ m, days }, i) => (
-                    <p
-                      key={`late-${m.apt}-${m.dealDate}-${i}`}
-                      className="m-0 mt-0.5 text-[11.5px] leading-[1.55] tabular-nums"
-                      style={{ color: INK_SOFT }}
-                    >
-                      <span className={`${serif.className} text-[13px]`} style={{ color: INK }}>
-                        {m.dong} {m.apt}
-                      </span>{" "}
-                      <b style={{ color: INK }}>{eok(m.priceKrw)}</b> · 계약 {ymdShort(m.dealDate)}{" "}
-                      <span className="text-[10.5px]">({days}일 만에 공개)</span>
-                    </p>
-                  ))}
-                  {lateMajors.length > 3 && (
-                    <p className="m-0 mt-0.5 text-[10.5px]" style={{ color: INK_SOFT }}>
-                      외 {lateMajors.length - 3}건
-                    </p>
-                  )}
-                </div>
-              )}
               {major === undefined ? (
                 // 구 스키마(다음 크론 전) — 한 줄 예고로 처리.
                 <CornerNote>「주요 거래」 코너는 다음 호부터 게재됩니다.</CornerNote>
@@ -1772,7 +1755,7 @@ export function DailyFront() {
                     {majorVisible.map((item, i) => (
                       <div key={`${item.apt}-${item.dealDate}-${item.priceKrw}-${i}`}>
                         <DealDetails item={item}>
-                          <MajorRow item={item} divider={i > 0} maxKrw={majorTopKrw} />
+                          <MajorRow item={item} divider={i > 0} maxKrw={majorTopKrw} lateDays={lateDaysOf(item.dealDate)} />
                         </DealDetails>
                         {i === 0 && (
                           <div
@@ -1812,7 +1795,7 @@ export function DailyFront() {
                             key={`${item.apt}-${item.dealDate}-${item.priceKrw}-r${i}`}
                             item={item}
                           >
-                            <MajorRow item={item} divider={i > 0} maxKrw={majorTopKrw} />
+                            <MajorRow item={item} divider={i > 0} maxKrw={majorTopKrw} lateDays={lateDaysOf(item.dealDate)} />
                           </DealDetails>
                         ))}
                       </div>

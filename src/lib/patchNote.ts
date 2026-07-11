@@ -475,6 +475,50 @@ export function computePatch(opts: {
     return mx ? { priceKrw: mx.priceKrw, dateISO: mx.dateISO, floor: mx.floor } : null;
   };
 
+  /** [주요 거래] MajorItem 조립 — fresh 루프와 "늦은 대형" 루프가 공유(DRY). d 로부터
+   *  직전·중위·기준점을 전부 재계산해 자기완결(결정적). 두 호출부 출력은 동일해야 한다. */
+  const buildMajorItem = (d: PatchDealInput): MajorItem => {
+    const prev = findPrev(d);
+    const pctVsPrev = prev ? (d.priceKrw - prev.prevKrw) / prev.prevKrw : null;
+    const cell = lookupMedian(d);
+    const trustedMedianKrw =
+      cell && cell.sampleCount >= PATCH_MIN_SAMPLE && cell.medianKrw > 0 ? cell.medianKrw : null;
+    const pct =
+      trustedMedianKrw !== null ? (d.priceKrw - trustedMedianKrw) / trustedMedianKrw : null;
+    const snapMax = cell?.maxKrw ?? null;
+    const wm = findWindowMax(d);
+    const refMax =
+      snapMax !== null && snapMax > 0
+        ? { krw: snapMax, date: cell?.maxDate ?? null, floor: cell?.maxFloor ?? null, period: "1년" as const }
+        : wm
+          ? { krw: wm.priceKrw, date: wm.dateISO, floor: wm.floor, period: "2개월" as const }
+          : null;
+    return {
+      sigungu: d.sigunguName,
+      dong: d.dongName,
+      apt: d.apartmentName,
+      areaM2: d.area,
+      priceKrw: d.priceKrw,
+      dealDate: d.dealDateISO,
+      pct,
+      buildYear: d.buildYear ?? null,
+      sampleCount: cell && cell.medianKrw > 0 ? cell.sampleCount : null,
+      totalSampleCount: cell ? (cell.complexSampleCount ?? null) : null,
+      prevKrw: prev?.prevKrw ?? null,
+      prevDate: prev?.prevDate ?? null,
+      prevFloor: prev?.prevFloor ?? null,
+      pctVsPrev,
+      windowMaxKrw: refMax?.krw ?? null,
+      windowMaxDate: refMax?.date ?? null,
+      windowMaxFloor: refMax?.floor ?? null,
+      refMaxPeriod: refMax?.period ?? null,
+      lat: cell?.lat ?? null,
+      lng: cell?.lng ?? null,
+      floor: d.floor ?? null,
+      nearestSubwayM: cell?.nearestSubwayM ?? null,
+    };
+  };
+
   // 1) 스코프: 계약일이 오늘로부터 scopeDays 이내 (미래 날짜·해제 거래는 제외)
   const scope = deals.filter((d) => {
     if (d.canceled) return false;
@@ -580,48 +624,8 @@ export function computePatch(opts: {
     const pct =
       trustedMedianKrw !== null ? (d.priceKrw - trustedMedianKrw) / trustedMedianKrw : null;
 
-    // ── [주요 거래] — 15억 이상 중개거래 전부 (band·표본과 무관하게 게재) ──
-    if (d.priceKrw >= PATCH_MAJOR_MIN_PRICE_KRW) {
-      // 기준점(기간 내 최고 거래가) — 스냅샷 1년 최고가 우선, 없으면 폴링창(2개월) 최고.
-      // "1년" 날짜·층은 새 스냅샷(maxDate·maxFloor 동봉)부터 — 구 스냅샷은 null(표기 생략).
-      const snapMax = cell?.maxKrw ?? null;
-      const wm = findWindowMax(d);
-      const refMax =
-        snapMax !== null && snapMax > 0
-          ? {
-              krw: snapMax,
-              date: cell?.maxDate ?? null,
-              floor: cell?.maxFloor ?? null,
-              period: "1년" as const,
-            }
-          : wm
-            ? { krw: wm.priceKrw, date: wm.dateISO, floor: wm.floor, period: "2개월" as const }
-            : null;
-      major.push({
-        sigungu: d.sigunguName,
-        dong: d.dongName,
-        apt: d.apartmentName,
-        areaM2: d.area,
-        priceKrw: d.priceKrw,
-        dealDate: d.dealDateISO,
-        pct,
-        buildYear: d.buildYear ?? null,
-        sampleCount: cell && cell.medianKrw > 0 ? cell.sampleCount : null,
-        totalSampleCount: cell ? (cell.complexSampleCount ?? null) : null,
-        prevKrw: prev?.prevKrw ?? null,
-        prevDate: prev?.prevDate ?? null,
-        prevFloor: prev?.prevFloor ?? null,
-        pctVsPrev,
-        windowMaxKrw: refMax?.krw ?? null,
-        windowMaxDate: refMax?.date ?? null,
-        windowMaxFloor: refMax?.floor ?? null,
-        refMaxPeriod: refMax?.period ?? null,
-        lat: cell?.lat ?? null,
-        lng: cell?.lng ?? null,
-        floor: d.floor ?? null,
-        nearestSubwayM: cell?.nearestSubwayM ?? null,
-      });
-    }
+    // ── [주요 거래] — 15억 이상 중개거래 전부 (band·표본과 무관하게 게재). buildMajorItem 공유. ──
+    if (d.priceKrw >= PATCH_MAJOR_MIN_PRICE_KRW) major.push(buildMajorItem(d));
 
     // ── 오늘의 온도 — 직전 실거래 대비(팩트 기준). ±1% 이내는 중립(matched에만) ──
     if (pctVsPrev !== null) {
@@ -689,6 +693,20 @@ export function computePatch(opts: {
     .filter((r) => r.avgPct >= PATCH_REGION_MIN_AVG_PCT)
     .sort((a, b) => b.avgPct - a.avgPct) // 가장 강세부터
     .slice(0, PATCH_REGION_TOP_N);
+
+  // [이제야 공개된 큰 거래] — 계약일이 스코프(scopeDays) 밖이라 위 fresh 에서 빠졌지만, 오늘
+  // 처음 확인된 15억+ 중개거래(늦은 신고). 온도·강세·약세·분석은 오염시키지 않고 major(주요
+  // 거래)에만 얹는다 — 원베일리 '26.5.29 72억이 7월에 신고된 사태(2026-07-11 사장). 계약일
+  // 병기 + 렌더의 "N일 만에 공개" 태그로 옛 계약임을 드러낸다. 계약 120일 초과(신고 지연
+  // 상한을 크게 넘김 = 정정·재신고성)는 뒷북이 과해 제외. seenKeys·age로 fresh 와 중복 없음.
+  for (const d of deals) {
+    if (d.canceled || d.dealingGbn === "직거래") continue;
+    if (d.priceKrw < PATCH_MAJOR_MIN_PRICE_KRW) continue;
+    if (seenKeys.has(dealKey(d))) continue; // 오늘 처음 확인만
+    const age = daysBetweenISO(d.dealDateISO, todayISO);
+    if (age <= scopeDays || age > 120) continue; // 스코프 안(fresh 처리)·너무 옛것 제외
+    major.push(buildMajorItem(d));
+  }
 
   // 주요 거래 — 가격 내림차순 (동가는 계약일 최신 우선).
   major.sort((a, b) => b.priceKrw - a.priceKrw || b.dealDate.localeCompare(a.dealDate));

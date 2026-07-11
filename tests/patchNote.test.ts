@@ -442,19 +442,41 @@ describe("patchNote.computePatch — major", () => {
   });
 
   it("major에도 직전 거래 팩트(prevKrw·prevDate·pctVsPrev)가 실린다", () => {
+    // 직전(baseline)은 이미 공개된 거래 → seen. (안 넣으면 늦은-대형 루프가 새 대형으로 잡음)
+    const base = prevDeal("대장주", 2_000_000_000, "2026-06-15");
     const r = computePatch({
-      deals: [
-        prevDeal("대장주", 2_000_000_000, "2026-06-15"),
-        makeDeal({ apartmentName: "대장주", priceKrw: 2_100_000_000 }),
-      ],
+      deals: [base, makeDeal({ apartmentName: "대장주", priceKrw: 2_100_000_000 })],
+      seenKeys: new Set([dealKey(base)]),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    expect(r.major).toHaveLength(1); // 기준 거래(6/15)는 스코프 밖 + seen — major 아님
+    expect(r.major[0].prevKrw).toBe(2_000_000_000);
+    expect(r.major[0].prevDate).toBe("2026-06-15");
+    expect(r.major[0].pctVsPrev).toBeCloseTo(0.05, 5);
+  });
+
+  it("[이제야 공개된 큰 거래] — 계약 스코프(14일) 밖이어도 오늘 처음 확인된 15억+는 major에 (늦은 신고)", () => {
+    const r = computePatch({
+      deals: [prevDeal("늦은대형", 7_200_000_000, "2026-06-10")], // 계약 6/10(24일 전=스코프 밖)·오늘 첫 확인
       seenKeys: new Set(),
       lookupMedian: lookup,
       todayISO: TODAY,
     });
-    expect(r.major).toHaveLength(1); // 기준 거래(6/15)는 스코프 밖 — fresh 아님
-    expect(r.major[0].prevKrw).toBe(2_000_000_000);
-    expect(r.major[0].prevDate).toBe("2026-06-15");
-    expect(r.major[0].pctVsPrev).toBeCloseTo(0.05, 5);
+    expect(r.major).toHaveLength(1);
+    expect(r.major[0].priceKrw).toBe(7_200_000_000);
+    expect(r.major[0].dealDate).toBe("2026-06-10");
+  });
+
+  it("늦은 대형도 이미 seen이면 major에 안 실린다(중복 방지)", () => {
+    const late = prevDeal("늦은대형2", 7_000_000_000, "2026-06-10");
+    const r = computePatch({
+      deals: [late],
+      seenKeys: new Set([dealKey(late)]),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    expect(r.major).toHaveLength(0);
   });
 
   it("기준점(2개월) — 자기 자신이 최고면 windowMax는 차순위(자기 제외) 거래", () => {
@@ -1754,12 +1776,10 @@ describe("patchNote — ymdShortText · 기준점 maxDate/maxFloor", () => {
   });
 
   it("major 기준점 '2개월' — 폴링창 최고 거래의 계약일·층 전파 + prevFloor 병기", () => {
+    const base = prevDeal("창내단지", 2_000_000_000, "2026-05-02", 12); // 창 내 최고(5/2·12층)
     const r = computePatch({
-      deals: [
-        prevDeal("창내단지", 2_000_000_000, "2026-05-02", 12), // 창 내 최고(5/2·12층)
-        makeDeal({ apartmentName: "창내단지", priceKrw: 1_900_000_000 }),
-      ],
-      seenKeys: new Set(),
+      deals: [base, makeDeal({ apartmentName: "창내단지", priceKrw: 1_900_000_000 })],
+      seenKeys: new Set([dealKey(base)]), // 직전(baseline)은 이미 공개됨 → seen
       lookupMedian: lookup,
       todayISO: TODAY,
     });
