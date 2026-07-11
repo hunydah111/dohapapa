@@ -79,9 +79,10 @@ export function smooth3(medians: readonly (number | null)[]): (number | null)[] 
  * 표본 REGION_SERIES_MIN_DEALS 미만이면 중위 미채택)를 만든 뒤 3개월 이동 중위(smooth3)로
  * 평활한다(호출부가 국민평형 밴드로 이미 걸러 넘기므로 "중위"는 국평 단일 밴드 중위):
  *  - 전고점 = 표본 ≥ PEAK_MIN_DEALS 인 달의 "평활 중위" 최댓값(그 달 인덱스).
- *  - 현재  = 가장 최근 유효월(평활 중위 non-null)의 평활 중위.
+ *  - 현재  = 표본 ≥ PEAK_MIN_DEALS 인 "가장 최근" 달의 평활 중위(얇은 미완성 달 제외 —
+ *           전고점과 같은 문턱이라 현재 ≤ 전고점 → 회복률 ≤ 100%, 신고점 돌파 = 100%).
  *  - trough = 전고점 월 이후~현재 사이 평활 중위 최솟값. 없으면 null.
- *  - 유효월(평활 중위 non-null) 2개 미만 또는 전고점 후보 0인 시군구는 생략(graceful).
+ *  - 유효월(평활 중위 non-null) 2개 미만·전고점 후보 0·믿을 만한 현재월 0인 시군구는 생략.
  */
 export function computeRegionPeaks(
   rows: readonly RegionPeakTx[],
@@ -136,8 +137,18 @@ export function computeRegionPeaks(
     }
     if (peakIdx < 0) continue; // 전고점 후보 없음 — 생략
 
-    // 현재 — 가장 최근 유효월(평활 중위).
-    const currentIdx = validIdx[validIdx.length - 1];
+    // 현재 — 가장 최근 "믿을 만한" 월(원 표본 ≥ PEAK_MIN_DEALS). 월초·신고 지연으로 얇은
+    // 미완성 달(예: 송파 '26.7 국평 3건 → 29억)이 회복률을 118%로 부풀리는 걸 막는다
+    // (2026-07-11 사장 — 송파는 실제 상승이 맞고, 부풀린 크기만 뺀다). 얇은 현재월은 건너뛰고
+    // 직전의 표본 충분한 달을 현재로 삼는다. 이러면 현재 ≤ 전고점 → 회복률 ≤ 100%(신고점=100%).
+    let currentIdx = -1;
+    for (let k = validIdx.length - 1; k >= 0; k--) {
+      if (counts[validIdx[k]] >= PEAK_MIN_DEALS) {
+        currentIdx = validIdx[k];
+        break;
+      }
+    }
+    if (currentIdx < 0) continue; // 믿을 만한 현재월 없음 — 생략
     const currentKrw = medians[currentIdx]!;
 
     // trough — 전고점 월 이후 ~ 현재 사이 평활 중위 최솟값(유효월만). 없으면 null.
