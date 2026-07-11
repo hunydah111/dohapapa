@@ -514,7 +514,7 @@ function RecoveryLegend() {
       className="mt-[7px] flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[9.5px]"
       style={{ color: INK_SOFT }}
     >
-      <span><TileSwatch bg={RECOVERY_FILL[3]} />신고점</span>
+      <span><TileSwatch bg={RECOVERY_FILL[3]} />신고가</span>
       <span><TileSwatch bg={RECOVERY_FILL[2]} />90~100%</span>
       <span><TileSwatch bg={RECOVERY_FILL[1]} />75~90%</span>
       <span><TileSwatch bg={RECOVERY_FILL[0]} />75% 미만</span>
@@ -553,7 +553,7 @@ function RecoveryTop5({
                 </span>
               </span>
               <span className="shrink-0 text-right text-[13px] font-extrabold" style={{ color: UP }}>
-                {breached ? "신고점" : `회복 ${recoveryPct(t.recovery)}%`}
+                {breached ? "신고가" : `회복 ${recoveryPct(t.recovery)}%`}
               </span>
             </div>
           );
