@@ -286,6 +286,29 @@ function CornerNote({ children }: { children: React.ReactNode }) {
 /** 권역 행 표시 최소 표본 — 미만이면 비율 대신 "표본 부족"(숫자는 혼자 못 나온다, 헌장 ②). */
 const ZONE_TEMP_MIN_MATCHED = 5;
 
+/** 8권역 지리 배치 (3열 × 4행 타일 지도). 라벨 키. 빈 칸은 비워둔다.
+ *  경기북부(위) · 서울 5분면(서북/도심/동북 · 서남/동남) · 인천(좌) · 경기남부(아래). */
+const ZONE_GRID: Record<string, { col: number; row: number }> = {
+  "경기 북부": { col: 2, row: 1 },
+  "서북권": { col: 1, row: 2 },
+  "도심권": { col: 2, row: 2 },
+  "동북권": { col: 3, row: 2 },
+  "인천": { col: 1, row: 3 },
+  "서남권": { col: 2, row: 3 },
+  "동남권": { col: 3, row: 3 },
+  "경기 남부": { col: 2, row: 4 },
+};
+/** 온도 net(높게−낮게 비율) → 타일 배경·글자색. 표본 부족은 회색. 시세 방향색(빨강=높게 우세). */
+function zoneTint(above: number, below: number, matched: number): { bg: string; fg: string } {
+  if (matched < ZONE_TEMP_MIN_MATCHED) return { bg: "#efe9da", fg: INK_SOFT };
+  const net = (above - below) / matched; // -1 ~ 1
+  if (net >= 0.15) return { bg: "#f0b2ac", fg: "#711410" };
+  if (net > 0) return { bg: "#f7d8d3", fg: "#a5231c" };
+  if (net > -0.15) return { bg: "#d6e0ee", fg: "#1f4e82" };
+  return { bg: "#b4c7e2", fg: "#143761" };
+}
+
+// 권역 온도 "지도"(사장 2026-07-11: 8행 텍스트 → 타일 지도). 이름은 호출부 호환 유지.
 function ZoneTempRows({ zones }: { zones: ZoneTemp[] }) {
   return (
     <details className="group mt-2">
@@ -293,7 +316,7 @@ function ZoneTempRows({ zones }: { zones: ZoneTemp[] }) {
         className="flex cursor-pointer list-none items-center justify-between gap-2 text-[11px] font-bold [&::-webkit-details-marker]:hidden"
         style={{ color: INK_SOFT }}
       >
-        <span>권역별 온도 — 8권역</span>
+        <span>권역별 온도 지도 — 8권역</span>
         <span
           aria-hidden="true"
           className="text-[11px] transition-transform duration-150 group-open:rotate-90"
@@ -301,40 +324,40 @@ function ZoneTempRows({ zones }: { zones: ZoneTemp[] }) {
           ▸
         </span>
       </summary>
-      <div className="pt-1">
-        {zones.map((z) => {
-          const pct =
-            z.matched >= ZONE_TEMP_MIN_MATCHED
-              ? {
-                  above: Math.round((z.above / z.matched) * 100),
-                  below: Math.round((z.below / z.matched) * 100),
-                }
-              : null;
-          return (
-            <div
-              key={z.id}
-              className="flex items-baseline justify-between gap-2 border-b border-dotted py-[3px] text-[11.5px] tabular-nums"
-              style={{ borderColor: RULE }}
-            >
-              <span style={{ color: INK }}>{z.label}</span>
-              {pct ? (
-                <span style={{ color: INK_SOFT }}>
-                  높게 <b style={{ color: UP }}>{pct.above}%</b> : 낮게{" "}
-                  <b style={{ color: DOWN }}>{pct.below}%</b>
-                  <span className="text-[10px]"> · {z.matched}건</span>
+      <div className="pt-1.5">
+        <div className="grid gap-1" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+          {zones.map((z) => {
+            const pos = ZONE_GRID[z.label];
+            if (!pos) return null;
+            const ok = z.matched >= ZONE_TEMP_MIN_MATCHED;
+            const above = ok ? Math.round((z.above / z.matched) * 100) : 0;
+            const below = ok ? Math.round((z.below / z.matched) * 100) : 0;
+            const t = zoneTint(z.above, z.below, z.matched);
+            return (
+              <div
+                key={z.id}
+                className="flex min-h-[58px] flex-col items-center justify-center rounded-[3px] px-1 py-1.5 text-center leading-tight tabular-nums"
+                style={{ gridColumn: pos.col, gridRow: pos.row, background: t.bg, color: t.fg }}
+              >
+                <span className="text-[11.5px] font-bold">{z.label}</span>
+                {ok ? (
+                  <span className="mt-0.5 text-[10.5px] font-semibold">
+                    ▲{above} ▼{below}
+                  </span>
+                ) : (
+                  <span className="mt-0.5 text-[9.5px]">표본 부족</span>
+                )}
+                <span className="text-[8.5px]" style={{ opacity: 0.75 }}>
+                  {z.matched}건
                 </span>
-              ) : (
-                <span className="text-[10.5px]" style={{ color: INK_SOFT }}>
-                  표본 부족{z.matched > 0 ? ` (${z.matched}건)` : ""}
-                </span>
-              )}
-            </div>
-          );
-        })}
+              </div>
+            );
+          })}
+        </div>
         <CornerNote>
-          권역 = 서울 5개 생활권(2030 서울생활권계획) · 경기 남부/북부(도 북부청사 관할
-          기준) · 인천. 직전 실거래(60일 내)가 있는 오늘 공개 중개거래 기준 — 고정 지리
-          순서(순위 아님).
+          색 = 직전 실거래(60일 내) 대비 높게(빨강)·낮게(파랑) 우세 · ▲높게% ▼낮게% · 권역 =
+          서울 5개 생활권(2030 서울생활권계획)·경기 남부/북부(도 북부청사 관할)·인천. 지리
+          배치(순위 아님).
         </CornerNote>
       </div>
     </details>
