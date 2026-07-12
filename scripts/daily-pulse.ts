@@ -25,7 +25,10 @@ import {
 import complexSnapshot from "@/data/complexSnapshot.json";
 
 const arg = (k: string) => process.argv.find((a) => a.startsWith(`--${k}=`))?.split("=").slice(1).join("=");
-const MONTHS_BACK = Number(arg("months") ?? 2); // 현재월 포함 뒤로 N개월(지연 신고 포착)
+// ⚠️ 실제 창 = N+1개월: fromYM이 (현재월 − N)이라 현재월 포함 N+1개 계약월을 폴링한다
+// (months=3 → 4~7월). 창을 늘리면 편입 구간이 "오늘 처음 확인"으로 오인될 수 있는데,
+// computePatch의 창 편입 가드(seen 커버 범위 기준)가 늦은 신고 오인을 막는다(2026-07-12).
+const MONTHS_BACK = Number(arg("months") ?? 2);
 const guArg = arg("gu") ?? "all";
 
 const ymCompact = (d: Date) => `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}`;

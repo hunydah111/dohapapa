@@ -699,10 +699,22 @@ export function computePatch(opts: {
   // 거래)에만 얹는다 — 원베일리 '26.5.29 72억이 7월에 신고된 사태(2026-07-11 사장). 계약일
   // 병기 + 렌더의 "N일 만에 공개" 태그로 옛 계약임을 드러낸다. 계약 120일 초과(신고 지연
   // 상한을 크게 넘김 = 정정·재신고성)는 뒷북이 과해 제외. seenKeys·age로 fresh 와 중복 없음.
+  //
+  // ⚠️ 창 편입 가드(2026-07-12 사장 제보 — 4월 계약 2,555건 홍수): "seen에 없음"은 폴링창이
+  // 넓어진 날엔 "오늘 공개"가 아니라 "우리 창에 오늘 처음 들어옴"일 수 있다. 직전 seen이
+  // 커버했던 최소 계약월 이후의 거래만 늦은 신고로 인정하고, 편입 신구간은 조용히 seen에만
+  // 흡수한다(다음날부터 그 구간의 진짜 늦은 신고는 정상 포착). 첫 실행(seen 없음)도 스킵.
+  let seenCoveredFromYM: string | null = null;
+  for (const k of seenKeys) {
+    const m = /\|(\d{4}-\d{2})-\d{2}\|/.exec(k);
+    if (m && (seenCoveredFromYM === null || m[1] < seenCoveredFromYM)) seenCoveredFromYM = m[1];
+  }
+  const coveredFrom = seenCoveredFromYM ? `${seenCoveredFromYM}-01` : null;
   for (const d of deals) {
     if (d.canceled || d.dealingGbn === "직거래") continue;
     if (d.priceKrw < PATCH_MAJOR_MIN_PRICE_KRW) continue;
     if (seenKeys.has(dealKey(d))) continue; // 오늘 처음 확인만
+    if (coveredFrom === null || d.dealDateISO < coveredFrom) continue; // 창 편입 신구간·첫 실행
     const age = daysBetweenISO(d.dealDateISO, todayISO);
     if (age <= scopeDays || age > 120) continue; // 스코프 안(fresh 처리)·너무 옛것 제외
     major.push(buildMajorItem(d));

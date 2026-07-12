@@ -457,15 +457,40 @@ describe("patchNote.computePatch — major", () => {
   });
 
   it("[이제야 공개된 큰 거래] — 계약 스코프(14일) 밖이어도 오늘 처음 확인된 15억+는 major에 (늦은 신고)", () => {
+    // 창 편입 가드: 직전 seen이 그 계약월을 커버했어야 "오늘 공개"가 성립 — 5월 키 하나로 증거.
+    const covered = prevDeal("커버증거", 1_000_000_000, "2026-05-05");
     const r = computePatch({
       deals: [prevDeal("늦은대형", 7_200_000_000, "2026-06-10")], // 계약 6/10(24일 전=스코프 밖)·오늘 첫 확인
-      seenKeys: new Set(),
+      seenKeys: new Set([dealKey(covered)]),
       lookupMedian: lookup,
       todayISO: TODAY,
     });
     expect(r.major).toHaveLength(1);
     expect(r.major[0].priceKrw).toBe(7_200_000_000);
     expect(r.major[0].dealDate).toBe("2026-06-10");
+  });
+
+  it("창 편입 가드 — 직전 seen이 커버 안 한 옛 계약월은 늦은 신고로 오인하지 않는다 (4월 홍수 사태)", () => {
+    // 직전 seen 커버 = 5월부터. 폴링창 확대로 4월 계약 15억+가 처음 들어와도 major 금지,
+    // seen에는 흡수(다음날부터 그 구간 진짜 늦은 신고는 정상 포착).
+    const covered = prevDeal("커버증거", 1_000_000_000, "2026-05-05");
+    const aprilBig = prevDeal("사월대형", 12_700_000_000, "2026-04-06");
+    const r = computePatch({
+      deals: [aprilBig],
+      seenKeys: new Set([dealKey(covered)]),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    expect(r.major).toHaveLength(0);
+    expect(r.nextSeenKeys.some((k) => k.includes("2026-04-06"))).toBe(true);
+    // 첫 실행(seen 비어 있음)도 늦은 신고 불성립 — 전부 편입이므로.
+    const boot = computePatch({
+      deals: [aprilBig, prevDeal("유월대형", 7_000_000_000, "2026-06-10")],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    expect(boot.major).toHaveLength(0);
   });
 
   it("늦은 대형도 이미 seen이면 major에 안 실린다(중복 방지)", () => {
