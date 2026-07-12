@@ -916,7 +916,8 @@ function headlineCandidates(opts: {
           dispPct: pctVsPrev,
           cand: {
             kind: "nerf",
-            text: `${cand.sigungu} ${aptDisplayName(cand.apt)}, 두 달 내 최고가 — 직전 거래(${prevMd})보다 ${pctText(pctVsPrev)}% 높게 팔렸다`,
+            // 카피 압축(2026-07-12 사장): "…보다 N% 높게 팔렸다" → "대비 +N% 상승".
+            text: `${cand.sigungu} ${aptDisplayName(cand.apt)}, 두 달 내 최고가 — 직전(${prevMd}) 대비 +${pctText(pctVsPrev)}% 상승`,
             itemKey,
           },
         });
@@ -928,7 +929,7 @@ function headlineCandidates(opts: {
         dispPct: pctVsPrev,
         cand: {
           kind: "nerf",
-          text: `${cand.sigungu} ${aptDisplayName(cand.apt)}, 직전 거래(${prevMd})보다 ${pctText(pctVsPrev)}% 높게 팔렸다 — ${eok}억`,
+          text: `${cand.sigungu} ${aptDisplayName(cand.apt)}, 직전(${prevMd}) 대비 +${pctText(pctVsPrev)}% 상승 — ${eok}억`,
           itemKey,
         },
       });

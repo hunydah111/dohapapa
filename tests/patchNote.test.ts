@@ -988,7 +988,7 @@ describe("patchNote.pickHeadline", () => {
     });
     expect(h.kind).toBe("nerf");
     expect(h.text).toBe(
-      "안양시 만안구 관악성원, 두 달 내 최고가 — 직전 거래('26.6.25)보다 8.3% 높게 팔렸다",
+      "안양시 만안구 관악성원, 두 달 내 최고가 — 직전('26.6.25) 대비 +8.3% 상승",
     );
   });
 
@@ -1001,7 +1001,7 @@ describe("patchNote.pickHeadline", () => {
     });
     expect(h.kind).toBe("nerf");
     expect(h.text).toBe(
-      "안양시 만안구 관악성원, 직전 거래('26.6.25)보다 8.3% 높게 팔렸다 — 5.2억",
+      "안양시 만안구 관악성원, 직전('26.6.25) 대비 +8.3% 상승 — 5.2억",
     );
   });
 
@@ -1016,7 +1016,7 @@ describe("patchNote.pickHeadline", () => {
       todayISO: "2026-07-04",
     });
     expect(h.kind).toBe("nerf");
-    expect(h.text).toContain("팩트단지, 직전 거래('26.6.25)보다");
+    expect(h.text).toContain("팩트단지, 직전('26.6.25) 대비");
   });
 
   it("2순위 순위 — 등급 우선(①>②>③), 같은 등급은 인쇄되는 % 내림차순 (꽃뫼마을 사태)", () => {
