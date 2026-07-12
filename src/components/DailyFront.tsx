@@ -39,6 +39,7 @@ import { areaMeta } from "@/lib/areaLabel";
 import { CONTACT_EMAIL } from "@/lib/site";
 import { aptDisplayName } from "@/lib/aptName";
 import { tempStory, tempStoryLine } from "@/lib/tempStory";
+import { ogSlug } from "@/lib/ogSlug";
 import { TILE_MAP, TILE_GRID_COLS, tileLevel } from "@/lib/tileMap";
 import {
   recoveryBand,
@@ -1208,10 +1209,7 @@ function MajorRow({
             <span className="text-[11.5px] font-semibold" style={{ color: INK_SOFT }}>
               ({item.sigungu})
             </span>
-          </RegionLink>{" "}
-          <span className="text-[11px]" style={{ color: INK_SOFT }}>
-            {areaMeta(item.areaM2)}{tag ? ` · ${tag}` : ""}
-          </span>
+          </RegionLink>
           {lateDays != null && (
             <span
               className="ml-1 whitespace-nowrap rounded-sm px-1 text-[10px] font-bold"
@@ -1229,6 +1227,12 @@ function MajorRow({
         <span className="w-[62px] shrink-0 text-right text-[11px]" style={{ color: INK_SOFT }}>
           계약 {md(item.dealDate)}
         </span>
+      </div>
+      {/* 면적·평·층 메타 — 제 줄로(2026-07-13 사장: 이름 길면 잘려서 몇 평인지 안 보임).
+          제목 줄 truncate 는 단지명만 먹게 하고, 메타는 항상 완전 노출. */}
+      <div className="mt-[1px] text-[11px] leading-[1.45]" style={{ color: INK_SOFT }}>
+        {areaMeta(item.areaM2)}
+        {tag ? ` · ${tag}` : ""}
       </div>
       {/* 가격 바 — 폭 = 오늘 최고가 대비. 붉은 눈금 = 그 단지 기간 내 최고가 위치(우측 클램프). */}
       {maxKrw > 0 && (
@@ -1321,15 +1325,17 @@ function StrongRow({ item, divider }: { item: PatchItem; divider: boolean }) {
           {/* 단지명 = 세리프(나눔명조) — 프리미엄 하이브리드. 면적 메타는 Pretendard. */}
           <span className={`${serif.className} text-[14.5px]`}>
             <RegionLink sigungu={item.sigungu}>{item.sigungu}</RegionLink> {aptDisplayName(item.apt)}
-          </span>{" "}
-          <span className="text-[11px]" style={{ color: INK_SOFT }}>
-            {areaMeta(item.areaM2)}{tag ? ` · ${tag}` : ""}
           </span>
           <RowHint />
         </span>
         <span className="shrink-0 text-right text-[13px] font-semibold" style={{ color: UP }}>
           +{pctAbs(item.pctVsPrev!)}%
         </span>
+      </div>
+      {/* 면적·평·층 메타 — 제 줄로(2026-07-13 사장: 이름 길면 메타가 잘림). */}
+      <div className="mt-[1px] pl-[18px] text-[11px] leading-[1.45]" style={{ color: INK_SOFT }}>
+        {areaMeta(item.areaM2)}
+        {tag ? ` · ${tag}` : ""}
       </div>
       {/* 팩트 라인 — 직전 거래 날짜(연도 병기 의무)·층(값 있을 때만) 병기. */}
       <div className="mt-[1px] pl-[18px] text-[11px] leading-[1.5]" style={{ color: INK_SOFT }}>
@@ -1499,6 +1505,11 @@ export function DailyFront() {
   const isMondayEdition =
     patch.generatedAt != null &&
     new Date(Date.parse(patch.generatedAt) + 9 * 3600_000).getUTCDay() === 1;
+
+  // 공유 링크 발행판 슬러그(2026-07-13 사장 제보 — 카드와 페이지가 어긋남): 메신저는
+  // "링크 URL" 단위로 미리보기를 캐싱한다 — 같은 /s/strong 을 다시 공유해도 옛 카드가
+  // 뜬다. 발행판마다 ?v=슬러그 를 붙여 매번 새 링크가 되게 → 새로 스크랩 → 최신판 카드.
+  const editionSlug = ogSlug(patch.generatedAt, dailyPatchRaw);
 
   // 온도 비교 앵커(2026-07-12 사장) — 폭등기·급락기 평균, 시계열 최저점.
   const tStory = temp ? tempStory(tempSeries, temp) : null;
@@ -1699,7 +1710,7 @@ export function DailyFront() {
                   <div className="mt-2 flex justify-end">
                     <ShareButton
                       title="오늘의 온도 — 비집고"
-                      shareUrl="/s/temp"
+                      shareUrl={`/s/temp?v=${editionSlug}`}
                       label="온도 카드 공유"
                       ariaLabel="오늘의 온도 카드 공유"
                     />
@@ -1728,7 +1739,7 @@ export function DailyFront() {
               <section className="px-0.5 pb-3.5 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
                 <div className="mb-0.5 flex items-center justify-between gap-2">
                   <CornerLabel>오늘의 거래 지도</CornerLabel>
-                  <ShareButton title="비집고 — 오늘의 거래 지도" shareUrl="/s/trade" ariaLabel="오늘의 거래 지도 공유" />
+                  <ShareButton title="비집고 — 오늘의 거래 지도" shareUrl={`/s/trade?v=${editionSlug}`} ariaLabel="오늘의 거래 지도 공유" />
                 </div>
                 <TradeMap
                   regionCounts={regionCounts}
@@ -1792,7 +1803,7 @@ export function DailyFront() {
                     <RecoveryLegend />
                     {recoveryTop5.length > 0 && <RecoveryTop5 top={recoveryTop5} />}
                     <div className="mt-2.5 flex justify-end">
-                      <ShareButton title="비집고 — 회복률 지도" shareUrl="/s/recovery" ariaLabel="회복률 지도 공유" />
+                      <ShareButton title="비집고 — 회복률 지도" shareUrl={`/s/recovery?v=${editionSlug}`} ariaLabel="회복률 지도 공유" />
                     </div>
                     <CornerNote>
                       타일 = 수도권 82개 시군구(위치 근사) · 농도 = 전고점 대비 회복률 ·
@@ -1906,7 +1917,7 @@ export function DailyFront() {
                   <div className="mt-2.5 flex items-center gap-2">
                     <ShareButton
                       title="오늘의 주요 거래 — 비집고"
-                      shareUrl="/s/major"
+                      shareUrl={`/s/major?v=${editionSlug}`}
                       label="이 목록 공유"
                       ariaLabel="오늘의 주요 거래 카드 공유"
                     />
@@ -1947,7 +1958,7 @@ export function DailyFront() {
                   <div className="mt-2.5 flex items-center gap-2">
                     <ShareButton
                       title="오늘의 강세 거래 — 비집고"
-                      shareUrl="/s/strong"
+                      shareUrl={`/s/strong?v=${editionSlug}`}
                       label="이 목록 공유"
                       ariaLabel="오늘의 강세 거래 카드 공유"
                     />
@@ -1977,7 +1988,7 @@ export function DailyFront() {
                 <div className="mt-2.5 flex items-center gap-2">
                   <ShareButton
                     title="오늘의 약세 동네 — 비집고"
-                    shareUrl="/s/weak"
+                    shareUrl={`/s/weak?v=${editionSlug}`}
                     label="이 목록 공유"
                     ariaLabel="오늘의 약세 동네 카드 공유"
                   />

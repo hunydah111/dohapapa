@@ -437,10 +437,7 @@ export default async function Page({
                   >
                     <div className="flex items-baseline gap-2">
                       <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
-                        {m.dong} {aptDisplayName(m.apt)}{" "}
-                        <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
-                          {areaMeta(m.areaM2)}{m.floor != null ? ` · ${m.floor}층` : ""}
-                        </span>
+                        {m.dong} {aptDisplayName(m.apt)}
                       </span>
                       <span className="shrink-0 text-right text-[13px] font-bold" style={{ color: INK }}>
                         {eok(m.priceKrw)}
@@ -448,6 +445,10 @@ export default async function Page({
                       <span className="w-[54px] shrink-0 text-right text-[11px]" style={{ color: INK_SOFT }}>
                         계약 {md(m.dealDate)}
                       </span>
+                    </div>
+                    {/* 면적·평·층 메타 — 제 줄로(2026-07-13 사장: 이름 길면 메타가 잘림). */}
+                    <div className="mt-[1px] text-[11px] leading-[1.45]" style={{ color: INK_SOFT }}>
+                      {areaMeta(m.areaM2)}{m.floor != null ? ` · ${m.floor}층` : ""}
                     </div>
                     {m.prevKrw != null && m.pctVsPrev != null && (
                       <div className="mt-[2px] text-[11px] leading-[1.5]" style={{ color: INK_SOFT }}>
@@ -480,14 +481,15 @@ export default async function Page({
                   >
                     <div className="flex items-baseline gap-2">
                       <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
-                        {s.dong} {aptDisplayName(s.apt)}{" "}
-                        <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
-                          {areaMeta(s.areaM2)}{s.floor != null ? ` · ${s.floor}층` : ""}
-                        </span>
+                        {s.dong} {aptDisplayName(s.apt)}
                       </span>
                       <span className="shrink-0 text-right text-[13px] font-extrabold" style={{ color: UP }}>
                         +{pctAbs(s.pctVsPrev!)}%
                       </span>
+                    </div>
+                    {/* 면적·평·층 메타 — 제 줄로(2026-07-13 사장: 이름 길면 메타가 잘림). */}
+                    <div className="mt-[1px] text-[11px] leading-[1.45]" style={{ color: INK_SOFT }}>
+                      {areaMeta(s.areaM2)}{s.floor != null ? ` · ${s.floor}층` : ""}
                     </div>
                     <div className="mt-[1px] text-[11px] leading-[1.5]" style={{ color: INK_SOFT }}>
                       직전 {ymdShort(s.prevDate!)} {eok(s.prevKrw!)}
