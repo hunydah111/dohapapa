@@ -428,29 +428,29 @@ export function computePatch(opts: {
   /** 직전 거래 — 같은 단지 ±3㎡, 계약일이 같거나 이른 것 중 최신. 자기 자신(동일 dealKey)
    *  제외, 같은 날짜 타거래는 층이 달라도 허용. 같은 날짜가 여럿이면 가격 최고를 채택
    *  (결정적이면서 pctVsPrev 과대 방지 쪽으로 보수적). 계약일 기준
-   *  PATCH_PREV_MAX_AGE_DAYS(60일)보다 묵은 직전 거래는 비교 무의미 — null. */
+   *  PATCH_PREV_MAX_AGE_DAYS(60일)보다 묵은 직전 거래는 비교 무의미 — null.
+   *
+   *  ⚠️ 이상 거래 스킵(2026-07-12 사장 "이상 저가거래 왜 못잡아내"): 후보와의 상호 대비가
+   *  노이즈 대역(−PATCH_NOISE_MAX_DOWN ~ +PATCH_NOISE_MAX_UP) 밖이면 둘 중 하나가 증여성·
+   *  특수관계·입력오류 의심 — 그 후보를 건너뛰고 다음(더 이전) 후보와 비교한다. 수지구
+   *  사태: 직전 8.2억(증여성, 시세 15억대) 채택 → "+89%"가 온도·평균·병기·분석 전부 오염.
+   *  스킵 후 정상 후보가 없으면 null(비교 불성립) — 하류가 자동으로 비교·집계 생략. */
   const findPrev = (
     d: PatchDealInput,
   ): { prevKrw: number; prevDate: string; prevFloor: number | null } | null => {
     const list = timeline.get(cxKeyOf(d));
     if (!list) return null;
     const self = dealKey(d);
-    let best: TimelineDeal | null = null;
-    for (const c of list) {
-      if (c.selfKey === self) continue;
-      if (!sameAreaType(c.area, d.area)) continue;
-      if (c.dateISO > d.dealDateISO) continue;
-      if (
-        !best ||
-        c.dateISO > best.dateISO ||
-        (c.dateISO === best.dateISO && c.priceKrw > best.priceKrw)
-      ) {
-        best = c;
-      }
+    const cands = list
+      .filter((c) => c.selfKey !== self && sameAreaType(c.area, d.area) && c.dateISO <= d.dealDateISO)
+      .sort((a, b) => (a.dateISO !== b.dateISO ? b.dateISO.localeCompare(a.dateISO) : b.priceKrw - a.priceKrw));
+    for (const c of cands) {
+      const ratio = (d.priceKrw - c.priceKrw) / c.priceKrw;
+      if (ratio > PATCH_NOISE_MAX_UP || ratio < -PATCH_NOISE_MAX_DOWN) continue; // 이상 의심 — 다음 후보
+      if (daysBetweenISO(c.dateISO, d.dealDateISO) > PATCH_PREV_MAX_AGE_DAYS) return null; // 이후는 더 묵음
+      return { prevKrw: c.priceKrw, prevDate: c.dateISO, prevFloor: c.floor };
     }
-    if (!best) return null;
-    if (daysBetweenISO(best.dateISO, d.dealDateISO) > PATCH_PREV_MAX_AGE_DAYS) return null;
-    return { prevKrw: best.priceKrw, prevDate: best.dateISO, prevFloor: best.floor };
+    return null;
   };
   /** window 내 같은 단지 ±3㎡의 자기 제외 최고가(+계약일·층) — "두 달 내 최고가" rung
    *  판정과 [주요 거래] 기준점 서브라인용. 동가면 계약일 최신 채택. */

@@ -125,6 +125,58 @@ describe("patchNote.computePatch", () => {
     expect(r.nerf).toHaveLength(0);
   });
 
+  it("이상 저가 직전 스킵 — 상호 대비가 노이즈 대역 밖이면 그 이전 정상 후보와 비교 (수지구 +89% 사태)", () => {
+    // 6/20 14억(정상) → 7/1 8.2억(증여성 이상 저가) → 오늘 15.5억.
+    // 8.2억 대비 +89%는 대역 밖 → 스킵, 14억 대비 +10.7%로 비교.
+    const r = computePatch({
+      deals: [
+        prevDeal("수지형단지", 1_400_000_000, "2026-06-20"),
+        prevDeal("수지형단지", 820_000_000, "2026-07-01", 3),
+        makeDeal({ apartmentName: "수지형단지", priceKrw: 1_550_000_000, dealDateISO: TODAY, floor: 9 }),
+      ],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    const m = r.major.find((x) => x.dealDate === TODAY)!;
+    expect(m.prevKrw).toBe(1_400_000_000);
+    expect(m.prevDate).toBe("2026-06-20");
+    expect(m.pctVsPrev).toBeCloseTo((1_550_000_000 - 1_400_000_000) / 1_400_000_000, 5);
+  });
+
+  it("이상 후보뿐이면 비교 불성립(null) — 온도·평균·병기에서 자동 제외", () => {
+    const r = computePatch({
+      deals: [
+        prevDeal("이상뿐단지", 820_000_000, "2026-07-01", 3),
+        makeDeal({ apartmentName: "이상뿐단지", priceKrw: 1_550_000_000, dealDateISO: TODAY }),
+      ],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    const m = r.major.find((x) => x.dealDate === TODAY)!;
+    expect(m.prevKrw).toBeNull();
+    expect(m.pctVsPrev).toBeNull();
+    // 온도 집계에도 안 들어간다(매칭 불성립).
+    expect(r.regionTemp["강남구"] ?? { matched: 0 }).toMatchObject({ matched: 0 });
+  });
+
+  it("이상 고가 직전도 대칭으로 스킵 — 가짜 '폭락' 방지", () => {
+    // 직전 30억(이상 고가) → 오늘 15.5억 = −48% → 스킵 → 그 전 14억 대비 +10.7%.
+    const r = computePatch({
+      deals: [
+        prevDeal("고가이상단지", 1_400_000_000, "2026-06-20"),
+        prevDeal("고가이상단지", 3_000_000_000, "2026-07-01", 30),
+        makeDeal({ apartmentName: "고가이상단지", priceKrw: 1_550_000_000, dealDateISO: TODAY }),
+      ],
+      seenKeys: new Set(),
+      lookupMedian: lookup,
+      todayISO: TODAY,
+    });
+    const m = r.major.find((x) => x.dealDate === TODAY)!;
+    expect(m.prevKrw).toBe(1_400_000_000);
+  });
+
   it("직전 거래가 60일(PREV_MAX_AGE)보다 묵으면 비교 무효 → 미게재, 경계 60일은 유효", () => {
     // 4/30 → 7/1 = 62일 → 무효
     const stale = computePatch({
