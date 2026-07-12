@@ -8,6 +8,7 @@ import dailyRecentRaw from "@/data/dailyRecent.json";
 import { type MajorItem, type PatchTemp } from "@/lib/patchNote";
 import { areaMeta } from "@/lib/areaLabel";
 import { aptDisplayName } from "@/lib/aptName";
+import { ogSlug } from "@/lib/ogSlug";
 
 // 동네면 링크 썸네일 — "그 동네 오늘 팩트 카드" (2026-07-08, 뿌리기 앰프).
 // 커뮤니티·단톡에 /r/{동네} 링크를 던지면 카드가 그날 숫자(공개 N건·온도·최고 거래)를
@@ -56,7 +57,9 @@ const todayItems: RecentItem[] =
 
 const CARD_ROWS = 4; // 표 행 수 — 1200×630에서 하단 밴드 안 침범하는 상한
 
-const dateSlug = (patch.generatedAt ?? "pre").slice(0, 10);
+// 발행판 슬러그(날짜+내용 해시) — 3단 발행 중 내용 바뀐 판만 새 URL(2026-07-13).
+// /card/{동네} 리다이렉트와 반드시 같은 헬퍼·같은 content·같은 버전 프리픽스를 쓸 것.
+const dateSlug = ogSlug(patch.generatedAt, dailyPatchRaw);
 // 디자인 개정(프리미엄 하이브리드)으로 캐시 무효화 — v1→v2.
 const OG_ID = `v2-${dateSlug}`;
 

@@ -8,10 +8,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SIGUNGU_NAMES } from "@/lib/molit";
 import dailyPatchRaw from "@/data/dailyPatch.json";
+import { ogSlug } from "@/lib/ogSlug";
 
 const patch = dailyPatchRaw as unknown as { generatedAt: string | null };
-// opengraph-image 라우트들의 OG_ID 규약과 동일해야 한다(홈 v6- / 동네 v1- + 발행일).
-const dateSlug = (patch.generatedAt ?? "pre").slice(0, 10);
+// ⚠️ opengraph-image 라우트들의 OG_ID 규약과 동일해야 한다(홈 v7- / 동네 v2- + ogSlug).
+// 2026-07-13: 버전 프리픽스가 v1/v6에 묶여 있어 og v2/v7 승격 후 /card가 깨져 있었음 —
+// 프리픽스를 바꾸면 이 파일도 반드시 같이(og 파일들 주석에도 명시).
+const dateSlug = ogSlug(patch.generatedAt, dailyPatchRaw);
 
 export async function GET(
   req: NextRequest,
@@ -26,7 +29,7 @@ export async function GET(
   }
   const target =
     decoded && SIGUNGU_NAMES.has(decoded)
-      ? `/r/${encodeURIComponent(decoded)}/opengraph-image/v1-${dateSlug}`
-      : `/opengraph-image/v6-${dateSlug}`;
+      ? `/r/${encodeURIComponent(decoded)}/opengraph-image/v2-${dateSlug}`
+      : `/opengraph-image/v7-${dateSlug}`;
   return NextResponse.redirect(new URL(target, req.url), 302);
 }

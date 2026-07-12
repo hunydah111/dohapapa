@@ -12,6 +12,7 @@ import {
 import { majorAnalysis } from "@/lib/majorAnalysis";
 import { areaMeta } from "@/lib/areaLabel";
 import { aptDisplayName } from "@/lib/aptName";
+import { ogSlug } from "@/lib/ogSlug";
 import tempSeriesRaw from "@/data/tempSeries.json";
 import type { TempSeriesFile } from "@/lib/tempSeries";
 import { tempStory, ymApos, type TempStory } from "@/lib/tempStory";
@@ -97,7 +98,9 @@ function tempChartDataUri(series: TempSeriesFile, story: TempStory, w: number, h
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
-const dateSlug = (patch.generatedAt ?? "pre").slice(0, 10);
+// 발행판 슬러그(날짜+내용 해시) — 3단 발행 중 내용이 바뀐 판만 새 URL(2026-07-13 사장
+// 제보: 05:20판 캐시가 06:12판 페이지와 어긋남). 미리보기는 스크랩 시점 스냅샷이 한계.
+const dateSlug = ogSlug(patch.generatedAt, dailyPatchRaw);
 // 캐시 무효화 — v1→v2(하이브리드)→v3(major 상위 7행)→v4(회복률·거래 지도 카드 추가).
 const OG_ID = `v4-${dateSlug}`;
 

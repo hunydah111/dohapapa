@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { SITE_DOMAIN } from "@/lib/site";
+import { ogSlug } from "@/lib/ogSlug";
 import dailyPatchRaw from "@/data/dailyPatch.json";
 import { pickHeadlines, type MajorItem, type PatchItem } from "@/lib/patchNote";
 
@@ -31,8 +32,9 @@ const patch = dailyPatchRaw as unknown as PatchLike;
 
 // 이미지 URL은 글자 단위로 캐싱된다(카카오·페북·폰 로컬) — 날짜를 경로에 박아
 // 매일 "한 번도 본 적 없는 새 URL"이 되게 한다(디자인 개정은 v 프리픽스 증가).
-const dateSlug = (patch.generatedAt ?? "pre").slice(0, 10);
-const OG_ID = `v7-${dateSlug}`;
+// 발행판 슬러그(날짜+내용 해시) — 3단 발행 중 내용 바뀐 판만 새 URL(2026-07-13, ogSlug 참조).
+const OG_ID = `v7-${ogSlug(patch.generatedAt, dailyPatchRaw)}`;
+const dayISO = (patch.generatedAt ?? "pre").slice(0, 10);
 
 export function generateImageMetadata() {
   return [{ id: OG_ID, alt: ALT, size: SIZE, contentType }];
@@ -60,7 +62,7 @@ export default async function Image() {
     major: patch.major ?? [],
     nerf: patch.nerf ?? [],
     newDealCount: patch.newDealCount ?? 0,
-    todayISO: dateSlug === "pre" ? "2026-01-01" : dateSlug,
+    todayISO: dayISO === "pre" ? "2026-01-01" : dayISO,
   }).top;
 
   return new ImageResponse(
