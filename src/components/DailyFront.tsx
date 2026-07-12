@@ -37,6 +37,7 @@ import { REFERENCE_PHASES, phaseAvg, type TempSeriesFile } from "@/lib/tempSerie
 import { aggregateZoneTemp, type ZoneTemp } from "@/lib/zones";
 import { areaMeta } from "@/lib/areaLabel";
 import { CONTACT_EMAIL } from "@/lib/site";
+import { aptDisplayName } from "@/lib/aptName";
 import { TILE_MAP, TILE_GRID_COLS, tileLevel } from "@/lib/tileMap";
 import {
   recoveryBand,
@@ -1134,7 +1135,7 @@ function DealDetails({
       <summary className="block cursor-pointer list-none [&::-webkit-details-marker]:hidden">
         {children}
       </summary>
-      <DealLocation apt={item.apt} sigungu={item.sigungu} lat={item.lat} lng={item.lng} />
+      <DealLocation apt={aptDisplayName(item.apt)} sigungu={item.sigungu} lat={item.lat} lng={item.lng} />
     </details>
   );
 }
@@ -1169,7 +1170,7 @@ function MajorRow({
           {/* 단지명 = 세리프(나눔명조) — 프리미엄 하이브리드. 면적·역거리 메타는 Pretendard.
               구 병기(사장 2026-07-11) — 수도권 전체가 섞여 동만으론 위치가 안 보임. 구가 링크. */}
           <span className={`${serif.className} text-[14.5px]`}>
-            {item.dong} {item.apt}
+            {item.dong} {aptDisplayName(item.apt)}
           </span>{" "}
           <RegionLink sigungu={item.sigungu}>
             <span className="text-[11.5px] font-semibold" style={{ color: INK_SOFT }}>
@@ -1287,7 +1288,7 @@ function StrongRow({ item, divider }: { item: PatchItem; divider: boolean }) {
           </span>
           {/* 단지명 = 세리프(나눔명조) — 프리미엄 하이브리드. 면적 메타는 Pretendard. */}
           <span className={`${serif.className} text-[14.5px]`}>
-            <RegionLink sigungu={item.sigungu}>{item.sigungu}</RegionLink> {item.apt}
+            <RegionLink sigungu={item.sigungu}>{item.sigungu}</RegionLink> {aptDisplayName(item.apt)}
           </span>{" "}
           <span className="text-[11px]" style={{ color: INK_SOFT }}>
             {areaMeta(item.areaM2)}{tag ? ` · ${tag}` : ""}
@@ -1319,7 +1320,7 @@ function CancellationRow({ item, divider }: { item: CancellationItem; divider: b
     >
       <div className="flex items-baseline gap-2">
         <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
-          <RegionLink sigungu={item.sigungu}>{item.dong}</RegionLink> {item.apt}{" "}
+          <RegionLink sigungu={item.sigungu}>{item.dong}</RegionLink> {aptDisplayName(item.apt)}{" "}
           <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
             {areaMeta(item.areaM2)}{tag ? ` · ${tag}` : ""}
           </span>
@@ -1761,18 +1762,20 @@ export function DailyFront() {
               <CornerLabel>주요 거래</CornerLabel>
               {/* [주요 거래 최고 상승] 어그로 한 줄 — 구별 "최고" 직전 대비 상승(평균 아님 —
                   2건 평균은 무의미·사장 지적). 오보 게이트(직전 60일·이중 합의·≤30%) 통과분만
-                  이라 "직전이 이상치라 뻥튀기된" 상승은 빠진다. 상승 구만 뜬다. */}
+                  이라 "직전이 이상치라 뻥튀기된" 상승은 빠진다. 상승 구만 뜬다.
+                  ⚠️ 주어는 단지(2026-07-12 사장 — "마포 +14.7%"는 구 전체가 오른 걸로 읽혀
+                  리딩단지 하락과 충돌해 보임). "마포 창전래미안 +14.7%"로 인쇄. */}
               {majorAgg.length > 0 && (
                 <div className="mb-2">
                   <p className="m-0 text-[12px] leading-[1.6] tabular-nums" style={{ color: INK_SOFT }}>
                     <span className="mr-1 font-bold tracking-[0.04em]" style={{ color: INK }}>
-                      오늘 최고 상승 · 직전 대비
+                      오늘 최고 상승 거래 · 직전 대비
                     </span>
                     {majorAgg.map((r, i) => (
                       <span key={r.sigungu}>
                         {i > 0 ? " · " : " "}
                         <b style={{ color: UP }}>
-                          {shortRegion(r.sigungu)} +{pctAbs(r.topPct)}%
+                          {shortRegion(r.sigungu)} {aptDisplayName(r.apt)} +{pctAbs(r.topPct)}%
                         </b>
                       </span>
                     ))}

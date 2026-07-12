@@ -7,6 +7,7 @@ import dailyPatchRaw from "@/data/dailyPatch.json";
 import dailyRecentRaw from "@/data/dailyRecent.json";
 import { type MajorItem, type PatchTemp } from "@/lib/patchNote";
 import { areaMeta } from "@/lib/areaLabel";
+import { aptDisplayName } from "@/lib/aptName";
 
 // 동네면 링크 썸네일 — "그 동네 오늘 팩트 카드" (2026-07-08, 뿌리기 앰프).
 // 커뮤니티·단톡에 /r/{동네} 링크를 던지면 카드가 그날 숫자(공개 N건·온도·최고 거래)를
@@ -237,7 +238,7 @@ export default async function Image({
                       }}
                     >
                       <div style={{ display: "flex", color: INK, fontSize: 72, fontFamily: SERIF }}>
-                        {`${d.dongName} ${d.apartmentName}`}
+                        {`${d.dongName} ${aptDisplayName(d.apartmentName)}`}
                       </div>
                       {/* Pretendard는 ㎡·평 글리프 있음 → areaMeta("84.7㎡ · 32~35평") 그대로. */}
                       <div style={{ display: "flex", color: INK_SOFT, fontSize: 48, fontFamily: SANS, marginLeft: 28 }}>

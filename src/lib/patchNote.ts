@@ -26,6 +26,7 @@
 
 import { bandOfArea } from "@/lib/plan/dday";
 import { SEOUL_SIGUNGU } from "@/lib/molit";
+import { aptDisplayName } from "@/lib/aptName";
 
 /** MolitDeal의 직렬화 가능 서브셋 (bigint → number 변환은 호출부 책임). */
 export interface PatchDealInput {
@@ -866,12 +867,13 @@ function headlineCandidates(opts: {
     const total = top.totalSampleCount ?? 0;
     // 표본 창은 최근 1년(스냅샷) — "입주 후 첫"은 창이 입주 이후 전 기간을 확실히 덮는
     // 준공=기준연도일 때만 단정. 그 외엔 기준(1년)을 문구에 병기한다(헌장 ②).
+    const aptName = aptDisplayName(top.apt);
     const text =
       total === 0
         ? top.buildYear === baseYear
-          ? `${top.apt} 입주 후 첫 실거래 — ${eok}억 공개`
-          : `${top.apt} 최근 1년 첫 실거래 — ${eok}억 공개`
-        : `${top.apt} 1년 새 ${total + 1}번째 거래 ${eok}억`;
+          ? `${aptName} 입주 후 첫 실거래 — ${eok}억 공개`
+          : `${aptName} 최근 1년 첫 실거래 — ${eok}억 공개`
+        : `${aptName} 1년 새 ${total + 1}번째 거래 ${eok}억`;
     out.push({ kind: "first-trade", text, itemKey: headlineItemKey(top) });
   }
 
@@ -896,7 +898,7 @@ function headlineCandidates(opts: {
         dispPct,
         cand: {
           kind: "nerf",
-          text: `${cand.sigungu} ${cand.apt}, 최근 1년 최고가 ${pctText(dispPct)}% 갱신 — ${eok}억`,
+          text: `${cand.sigungu} ${aptDisplayName(cand.apt)}, 최근 1년 최고가 ${pctText(dispPct)}% 갱신 — ${eok}억`,
           itemKey,
         },
       });
@@ -914,7 +916,7 @@ function headlineCandidates(opts: {
           dispPct: pctVsPrev,
           cand: {
             kind: "nerf",
-            text: `${cand.sigungu} ${cand.apt}, 두 달 내 최고가 — 직전 거래(${prevMd})보다 ${pctText(pctVsPrev)}% 높게 팔렸다`,
+            text: `${cand.sigungu} ${aptDisplayName(cand.apt)}, 두 달 내 최고가 — 직전 거래(${prevMd})보다 ${pctText(pctVsPrev)}% 높게 팔렸다`,
             itemKey,
           },
         });
@@ -926,7 +928,7 @@ function headlineCandidates(opts: {
         dispPct: pctVsPrev,
         cand: {
           kind: "nerf",
-          text: `${cand.sigungu} ${cand.apt}, 직전 거래(${prevMd})보다 ${pctText(pctVsPrev)}% 높게 팔렸다 — ${eok}억`,
+          text: `${cand.sigungu} ${aptDisplayName(cand.apt)}, 직전 거래(${prevMd})보다 ${pctText(pctVsPrev)}% 높게 팔렸다 — ${eok}억`,
           itemKey,
         },
       });
@@ -944,7 +946,7 @@ function headlineCandidates(opts: {
   for (const top of major) {
     out.push({
       kind: "top-major",
-      text: `오늘 공개 최고가 — ${top.apt} ${eokText(top.priceKrw)}억`,
+      text: `오늘 공개 최고가 — ${aptDisplayName(top.apt)} ${eokText(top.priceKrw)}억`,
       itemKey: headlineItemKey(top),
     });
   }

@@ -39,6 +39,7 @@ import {
 } from "@/lib/localFront";
 import { ymdShortText } from "@/lib/patchNote";
 import { areaMeta } from "@/lib/areaLabel";
+import { aptDisplayName } from "@/lib/aptName";
 import { ShareButton } from "./ShareButton";
 import {
   serif,
@@ -522,7 +523,7 @@ function BriefBody({
                 {brief.majors.rows.map((m, i) => (
                   <BriefRow
                     key={`m${m.apt}-${m.dealDate}-${m.priceKrw}-${i}`}
-                    left={`${m.dong} ${m.apt}`}
+                    left={`${m.dong} ${aptDisplayName(m.apt)}`}
                     meta={`${areaMeta(m.areaM2)}${m.floor != null ? ` · ${m.floor}층` : ""}`}
                     right={`${eok(m.priceKrw)} · 계약 ${md(m.dealDate)}`}
                     /* 서브라인 — 직전 실거래(사장 지시 7/8, 헌장 ②) + 기준점 최고가.
@@ -606,7 +607,7 @@ function BriefBody({
                         <span aria-hidden="true" className="mr-1 font-extrabold" style={{ color: UP }}>
                           ▲
                         </span>
-                        {s.dong} {s.apt}
+                        {s.dong} {aptDisplayName(s.apt)}
                       </>
                     }
                     meta={areaMeta(s.areaM2)}
@@ -687,7 +688,7 @@ function BriefBody({
             return (
               <BriefRow
                 key={`t${it.apt}-${it.dealDate}-${it.priceKrw}`}
-                left={`${i + 1}. ${it.dong} ${it.apt}`}
+                left={`${i + 1}. ${it.dong} ${aptDisplayName(it.apt)}`}
                 meta={`${areaMeta(it.areaM2)}${it.floor != null ? ` · ${it.floor}층` : ""}`}
                 right={`${eok(it.priceKrw)} · 계약 ${md(it.dealDate)}`}
                 sub={

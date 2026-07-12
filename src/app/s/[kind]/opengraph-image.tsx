@@ -11,6 +11,7 @@ import {
 } from "@/lib/patchNote";
 import { majorAnalysis } from "@/lib/majorAnalysis";
 import { areaMeta } from "@/lib/areaLabel";
+import { aptDisplayName } from "@/lib/aptName";
 import { buildShareMap, MAP_COLS, MAP_ROWS, TILE_BORDER, type MapKind } from "@/lib/shareMapData";
 
 // 클릭되는 공유 링크카드 3종(주요·강세·약세) — 탭하면 홈 유입 (2026-07-11 사장 지시).
@@ -300,15 +301,16 @@ export default async function Image({
               }}
             >
               <div style={{ display: "flex", color: INK, fontFamily: SANS_B, marginRight: 20 }}>
-                오늘 최고 상승 · 직전 대비
+                오늘 최고 상승 거래 · 직전 대비
               </div>
+              {/* 주어는 단지(2026-07-12 사장) — 구만 쓰면 구 전체 시세로 읽힘. */}
               {majorAgg.map((r) => (
                 <div
                   key={r.sigungu}
                   style={{ display: "flex", flexDirection: "row", alignItems: "baseline", marginRight: 24 }}
                 >
                   <div style={{ display: "flex", color: UP, fontFamily: SANS_SB }}>
-                    {`${shortRegion(r.sigungu)} +${pctAbs(r.topPct)}%`}
+                    {`${shortRegion(r.sigungu)} ${aptDisplayName(r.apt)} +${pctAbs(r.topPct)}%`}
                   </div>
                 </div>
               ))}
@@ -422,7 +424,7 @@ export default async function Image({
                     }}
                   >
                     <div style={{ display: "flex", color: INK, fontSize: 50, fontFamily: SERIF }}>
-                      {`${d.dong} ${d.apt}`}
+                      {`${d.dong} ${aptDisplayName(d.apt)}`}
                     </div>
                     <div style={{ display: "flex", color: INK_SOFT, fontSize: 34, fontFamily: SANS, marginLeft: 20 }}>
                       {`${areaMeta(d.areaM2)}${d.floor != null ? ` · ${d.floor}층` : ""}`}
@@ -472,7 +474,7 @@ export default async function Image({
                     }}
                   >
                     <div style={{ display: "flex", color: INK, fontSize: 56, fontFamily: SERIF }}>
-                      {`${d.dong} ${d.apt}`}
+                      {`${d.dong} ${aptDisplayName(d.apt)}`}
                     </div>
                     <div style={{ display: "flex", color: INK_SOFT, fontSize: 38, fontFamily: SANS, marginLeft: 24 }}>
                       {`${areaMeta(d.areaM2)}${d.floor != null ? ` · ${d.floor}층` : ""}`}

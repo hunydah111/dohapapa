@@ -42,6 +42,7 @@ import {
   type PatchItem,
 } from "@/lib/patchNote";
 import { areaMeta } from "@/lib/areaLabel";
+import { aptDisplayName } from "@/lib/aptName";
 import { ShareButton } from "@/components/ShareButton";
 // 오늘의 반응(v2.6) — 거래 행 아래 시세 평가 스탬프. Provider가 지면 분량 키를 모아
 // 1회 배치 GET — 행마다 fetch 금지. dealKey는 patchNote dealKey와 동일 규격.
@@ -446,7 +447,7 @@ function TopRow({
   const sign = pct == null ? "" : pct > 0 ? "+" : pct < 0 ? "−" : "±";
   return (
     <a
-      href={`https://map.kakao.com/link/search/${encodeURIComponent(`${sigungu} ${item.apt}`)}`}
+      href={`https://map.kakao.com/link/search/${encodeURIComponent(`${sigungu} ${aptDisplayName(item.apt)}`)}`}
       target="_blank"
       rel="noopener noreferrer"
       className={`block py-[5.5px] tabular-nums ${divider ? "border-t border-dotted" : ""}`}
@@ -458,7 +459,7 @@ function TopRow({
         </span>
         <span className="min-w-0 flex-1 truncate text-[13px]" style={{ color: INK }}>
           {/* 단지명 = 세리프(나눔명조), 면적 메타는 Pretendard. */}
-          <span className={`${serif.className} text-[14.5px]`}>{item.dong} {item.apt}</span>{" "}
+          <span className={`${serif.className} text-[14.5px]`}>{item.dong} {aptDisplayName(item.apt)}</span>{" "}
           <span className="text-[11px]" style={{ color: INK_SOFT }}>
             {areaMeta(item.areaM2)}{item.floor != null ? ` · ${item.floor}층` : ""}
           </span>
@@ -736,7 +737,7 @@ export default async function Page({
                   {majors.map((m, i) => (
                     <div key={`m${m.apt}-${m.dealDate}-${m.priceKrw}-${i}`}>
                       <DealLine
-                        left={`${m.dong} ${m.apt}`}
+                        left={`${m.dong} ${aptDisplayName(m.apt)}`}
                         meta={`${areaMeta(m.areaM2)}${m.floor != null ? ` · ${m.floor}층` : ""}`}
                         right={`${eok(m.priceKrw)} · 계약 ${md(m.dealDate)}`}
                         sub={refMaxSubline(m)}
@@ -756,7 +757,7 @@ export default async function Page({
                   {strongs.map((s, i) => (
                     <div key={`s${s.apt}-${s.dealDate}-${i}`}>
                       <DealLine
-                        left={`▲ ${s.dong} ${s.apt}`}
+                        left={`▲ ${s.dong} ${aptDisplayName(s.apt)}`}
                         meta={areaMeta(s.areaM2)}
                         right={`+${pctAbs(s.pctVsPrev!)}%`}
                         sub={`직전 ${ymdShort(s.prevDate!)} ${eok(s.prevKrw!)}${s.prevFloor != null ? `(${s.prevFloor}층)` : ""} → ${eok(s.priceKrw)} · 계약 ${md(s.dealDate)}`}
@@ -776,7 +777,7 @@ export default async function Page({
                   {cancellations.map((c, i) => (
                     <DealLine
                       key={`c${c.apt}-${c.dealDate}-${c.priceKrw}-${i}`}
-                      left={`${c.dong} ${c.apt}`}
+                      left={`${c.dong} ${aptDisplayName(c.apt)}`}
                       meta={areaMeta(c.areaM2)}
                       right={`${eok(c.priceKrw)} · 계약 ${md(c.dealDate)}`}
                       sub={c.wasTopInWindow ? "— 해제 전까지 이 단지 최고가로 공개돼 있었음" : undefined}
