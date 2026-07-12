@@ -16,8 +16,12 @@ import {
   ymdShortText,
   type MajorItem,
   type PatchItem,
+  type PatchTemp,
   type RegionPulse,
 } from "@/lib/patchNote";
+import tempSeriesRaw from "@/data/tempSeries.json";
+import type { TempSeriesFile } from "@/lib/tempSeries";
+import { tempStory, tempStoryLine, ymApos } from "@/lib/tempStory";
 import { majorAnalysis } from "@/lib/majorAnalysis";
 import { areaMeta } from "@/lib/areaLabel";
 import { aptDisplayName } from "@/lib/aptName";
@@ -32,8 +36,8 @@ import {
 // ── 라우팅 — 다섯 kind 정적 생성. 그 외 세그먼트는 404. ────────────────────────
 export const dynamicParams = false;
 
-type Kind = "major" | "strong" | "weak" | "recovery" | "trade";
-const KINDS: Kind[] = ["major", "strong", "weak", "recovery", "trade"];
+type Kind = "major" | "strong" | "weak" | "recovery" | "trade" | "temp";
+const KINDS: Kind[] = ["major", "strong", "weak", "recovery", "trade", "temp"];
 const MAP_KINDS = ["recovery", "trade"] as const;
 function isMapKind(k: Kind): k is MapKind {
   return (MAP_KINDS as readonly string[]).includes(k);
@@ -56,8 +60,10 @@ interface PatchSubset {
   major?: MajorItem[];
   nerf?: PatchItem[];
   weakRegions?: RegionPulse[];
+  temp?: PatchTemp | null;
 }
 const patch = dailyPatchRaw as unknown as PatchSubset;
+const tempSeries = tempSeriesRaw as unknown as TempSeriesFile;
 
 // ── 포맷터 — 지면(DailyFront·동네면)과 동일 규칙 ──────────────────────────────
 /** "2026-06-28" → "6/28". (계약일 등 당일성 표기 전용) */
@@ -131,6 +137,13 @@ const KIND_COPY: Record<
     description:
       "오늘 국토부에 공개된 수도권 시군구별 실거래 건수를 색 농도로 그린 지도. 직거래·해제 제외 · 매일 아침 갱신 · 비집고.",
     right: "오늘 공개 건수 · 시군구",
+  },
+  temp: {
+    corner: "오늘의 온도",
+    title: "오늘의 온도 — 직전 실거래보다 높게 팔린 비율",
+    description:
+      "오늘 공개된 수도권 아파트 실거래 중 직전 실거래보다 높게 팔린 비율을 폭등기('20.11~'21.10)·급락기('22) 관측 평균, 시계열 최저점과 나란히. 판정 없이 관측값만 — 매일 아침 갱신 · 비집고.",
+    right: "직전 실거래 대비 · 계약월 기준",
   },
 };
 
@@ -206,15 +219,20 @@ export default async function Page({
   const weaks = patch.weakRegions ?? [];
   // 지도 카드(회복률·거래) — 타일·범례·콜아웃(HTML은 CSS grid로 그린다).
   const shareMap = isMapKind(kind) ? buildShareMap(kind) : null;
+  // 온도 카드(2026-07-12 사장) — 오늘 vs 폭등기·급락기·최저점 관측값 나란히.
+  const story = kind === "temp" ? tempStory(tempSeries, patch.temp ?? null) : null;
+  const storyLine = story ? tempStoryLine(story) : null;
 
   const hasData = shareMap
     ? shareMap.tiles.length > 0 // 82개 타일 상수 → 항상 렌더(색만 데이터에 따름)
-    : patch.generatedAt !== null &&
-      (kind === "major"
-        ? majors.length > 0
-        : kind === "strong"
-          ? strongs.length > 0
-          : weaks.length > 0);
+    : kind === "temp"
+      ? story !== null
+      : patch.generatedAt !== null &&
+        (kind === "major"
+          ? majors.length > 0
+          : kind === "strong"
+            ? strongs.length > 0
+            : weaks.length > 0);
 
   const majorsShown = majors.slice(0, PAGE_ROWS);
   const strongsShown = strongs.slice(0, PAGE_ROWS);
@@ -333,6 +351,58 @@ export default async function Page({
                 {kind === "recovery"
                   ? "농도 = 전고점 대비 회복률(국민평형 실거래 중위) · 시세 지수 아님."
                   : "농도 = 오늘 국토부 공개 실거래 건수 · 직거래·해제 제외."}
+              </CornerNote>
+            </>
+          ) : kind === "temp" && story ? (
+            <>
+              {/* 오늘 크게 + 게이지 — 1면 온도 문법 미러. */}
+              <p className="m-0 text-[13px] leading-[1.6] tabular-nums" style={{ color: INK_SOFT }}>
+                오늘 직전 거래보다 높게{" "}
+                <b className="text-[20px]" style={{ color: UP }}>
+                  {Math.round(story.todayPct)}%
+                </b>{" "}
+                <span className="text-[10.5px]">
+                  (직전 실거래가 있는 거래 {patch.temp!.matched.toLocaleString("ko-KR")}건 기준)
+                </span>
+              </p>
+              {/* 비교 앵커 표 — 누구나 아는 국면들 옆에 오늘을 나란히(판정 없음). */}
+              <div className="mt-2.5">
+                {[
+                  story.boomAvg !== null
+                    ? { label: "폭등기('20.11~'21.10) 관측 평균", pct: story.boomAvg, color: UP }
+                    : null,
+                  story.slumpAvg !== null
+                    ? { label: "급락기('22) 관측 평균", pct: story.slumpAvg, color: DOWN }
+                    : null,
+                  story.min
+                    ? { label: `시계열 최저 (${ymApos(story.min.ym)})`, pct: story.min.pct, color: DOWN }
+                    : null,
+                ]
+                  .filter((r): r is { label: string; pct: number; color: string } => r !== null)
+                  .map((r, i) => (
+                    <div
+                      key={r.label}
+                      className={`flex items-baseline justify-between gap-2 py-[5px] tabular-nums ${i > 0 ? "border-t border-dotted" : ""}`}
+                      style={i > 0 ? { borderColor: RULE } : undefined}
+                    >
+                      <span className="text-[12.5px]" style={{ color: INK }}>
+                        {r.label}
+                      </span>
+                      <b className="text-[14px]" style={{ color: r.color }}>
+                        {Math.round(r.pct)}%
+                      </b>
+                    </div>
+                  ))}
+              </div>
+              {storyLine && (
+                <p className="m-0 mt-2 text-[12px] font-semibold leading-[1.6] tabular-nums" style={{ color: INK }}>
+                  {storyLine}
+                </p>
+              )}
+              <CornerNote>
+                온도 = 같은 단지·평형의 직전 실거래(60일 내)보다 높게 팔린 비율 · 계약월 기준 ·
+                참조값은 해당 기간 관측 평균(임의 기준 아님) — 판정은 싣지 않습니다. 추이
+                차트는 1면에서.
               </CornerNote>
             </>
           ) : kind === "major" ? (

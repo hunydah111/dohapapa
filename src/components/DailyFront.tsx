@@ -38,6 +38,7 @@ import { aggregateZoneTemp, type ZoneTemp } from "@/lib/zones";
 import { areaMeta } from "@/lib/areaLabel";
 import { CONTACT_EMAIL } from "@/lib/site";
 import { aptDisplayName } from "@/lib/aptName";
+import { tempStory, tempStoryLine } from "@/lib/tempStory";
 import { TILE_MAP, TILE_GRID_COLS, tileLevel } from "@/lib/tileMap";
 import {
   recoveryBand,
@@ -821,10 +822,13 @@ function TempTrendChart({
   series,
   todayAbovePct,
   mergedNote,
+  minMark,
 }: {
   series: TempSeriesFile;
   todayAbovePct: number;
   mergedNote: string;
+  /** 시계열 최저점 마커(tempStory.min) — "누구나 아는 그 하락기 바닥" 앵커(2026-07-12 사장). */
+  minMark?: { ym: string; pct: number } | null;
 }) {
   const n = series.months.length;
   if (!series.generatedAt || n < 2) return null;
@@ -958,6 +962,34 @@ function TempTrendChart({
           );
         })}
         <polyline fill="none" stroke={INK} strokeWidth="1.8" points={line} />
+        {/* 시계열 최저점 마커 — 하락기 바닥 앵커(관측값). 라벨은 점 아래(바닥 근처면 위). */}
+        {minMark &&
+          (() => {
+            const mi = series.months.indexOf(minMark.ym);
+            if (mi < 0) return null;
+            const mx = xOf(mi);
+            const my = yOf(minMark.pct);
+            const labelAbove = my > 58;
+            return (
+              <g>
+                <circle cx={mx.toFixed(1)} cy={my.toFixed(1)} r="3.2" fill={DOWN} />
+                <text
+                  x={Math.min(Math.max(mx, 30), 320).toFixed(1)}
+                  y={(labelAbove ? my - 6 : my + 12).toFixed(1)}
+                  textAnchor="middle"
+                  fontSize="8.5"
+                  fontWeight="700"
+                  fill={DOWN}
+                  stroke={PAPER}
+                  strokeWidth="2.6"
+                  paintOrder="stroke"
+                  strokeLinejoin="round"
+                >
+                  최저 {Math.round(minMark.pct)}% ({ymApos(minMark.ym)})
+                </text>
+              </g>
+            );
+          })()}
         {/* 오늘 점 (공개 기준) */}
         <circle cx={TODAY_X} cy={todayY.toFixed(1)} r="3.4" fill={UP} />
         <text
@@ -1468,6 +1500,10 @@ export function DailyFront() {
     patch.generatedAt != null &&
     new Date(Date.parse(patch.generatedAt) + 9 * 3600_000).getUTCDay() === 1;
 
+  // 온도 비교 앵커(2026-07-12 사장) — 폭등기·급락기 평균, 시계열 최저점.
+  const tStory = temp ? tempStory(tempSeries, temp) : null;
+  const tStoryLine = tStory ? tempStoryLine(tStory) : null;
+
   // 온도 게이지 분할 — 위(먹) : 중립(괘선) : 아래(그린), matched 대비 비율.
   const tempPct = temp
     ? {
@@ -1650,7 +1686,24 @@ export function DailyFront() {
                     series={tempSeries}
                     todayAbovePct={tempPct.above}
                     mergedNote={mergedNote}
+                    minMark={tStory?.min ?? null}
                   />
+
+                  {/* 비교 앵커 한 줄(2026-07-12 사장) — 오늘을 폭등기·급락기·최저점 관측값
+                      옆에 나란히. 판정("상승기 초입") 금지 — 결론은 독자 몫. */}
+                  {tStoryLine && (
+                    <p className="m-0 mt-1.5 text-[11.5px] font-semibold leading-[1.6] tabular-nums" style={{ color: INK }}>
+                      {tStoryLine}
+                    </p>
+                  )}
+                  <div className="mt-2 flex justify-end">
+                    <ShareButton
+                      title="오늘의 온도 — 비집고"
+                      shareUrl="/s/temp"
+                      label="온도 카드 공유"
+                      ariaLabel="오늘의 온도 카드 공유"
+                    />
+                  </div>
 
                   {/* 권역 온도 8행(#20) — 접힘 기본(헌장 ⑦). 구 스키마면 생략. */}
                   {zoneTemps && <ZoneTempRows zones={zoneTemps} />}

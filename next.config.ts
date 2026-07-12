@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
   // 옛 공유/북마크 링크는 홈으로 308. /s/b/:grade/:region(등급 OG)은 3세그먼트라 안 걸림.
   // 2026-07-11: 클릭되는 공유 링크카드 /s/major·strong·weak·recovery·trade 신설 — 이 kind들은
   // 홈 리다이렉트에서 제외(negative lookahead)해 실제 착지 페이지가 뜨게 한다.
+  // 2026-07-12: /s/temp(온도 카드) 추가 — 새 kind 만들면 이 제외 목록도 같이 늘릴 것.
   async redirects() {
     return [
       { source: "/league", destination: "/", permanent: true },
@@ -17,7 +18,7 @@ const nextConfig: NextConfig = {
       { source: "/persona", destination: "/", permanent: true },
       { source: "/updates", destination: "/", permanent: true },
       {
-        source: "/s/:type((?!major$|strong$|weak$|recovery$|trade$)[^/]+)",
+        source: "/s/:type((?!major$|strong$|weak$|recovery$|trade$|temp$)[^/]+)",
         destination: "/",
         permanent: true,
       },

@@ -12,6 +12,10 @@ import {
 import { majorAnalysis } from "@/lib/majorAnalysis";
 import { areaMeta } from "@/lib/areaLabel";
 import { aptDisplayName } from "@/lib/aptName";
+import tempSeriesRaw from "@/data/tempSeries.json";
+import type { TempSeriesFile } from "@/lib/tempSeries";
+import { tempStory, ymApos, type TempStory } from "@/lib/tempStory";
+import type { PatchTemp } from "@/lib/patchNote";
 import { buildShareMap, MAP_COLS, MAP_ROWS, TILE_BORDER, type MapKind } from "@/lib/shareMapData";
 
 // 클릭되는 공유 링크카드 3종(주요·강세·약세) — 탭하면 홈 유입 (2026-07-11 사장 지시).
@@ -34,8 +38,8 @@ const CORAL = "#e8571f";
 const UP = "#c9252d";
 const DOWN = "#2563a8";
 
-type Kind = "major" | "strong" | "weak" | "recovery" | "trade";
-const KINDS: Kind[] = ["major", "strong", "weak", "recovery", "trade"];
+type Kind = "major" | "strong" | "weak" | "recovery" | "trade" | "temp";
+const KINDS: Kind[] = ["major", "strong", "weak", "recovery", "trade", "temp"];
 const MAP_KINDS = ["recovery", "trade"] as const;
 function isMapKind(k: Kind): k is MapKind {
   return (MAP_KINDS as readonly string[]).includes(k);
@@ -46,8 +50,52 @@ interface PatchLike {
   major?: MajorItem[];
   nerf?: PatchItem[];
   weakRegions?: RegionPulse[];
+  temp?: PatchTemp | null;
 }
 const patch = dailyPatchRaw as unknown as PatchLike;
+const tempSeries = tempSeriesRaw as unknown as TempSeriesFile;
+
+/** 온도 추이 폴리라인 SVG(글자 없음 — 폰트 미탑재 환경 회피) → data URI.
+ *  참조선(폭등기·급락기 평균)·50% 점선·최저점(파랑)·오늘(빨강) 점 포함. */
+function tempChartDataUri(series: TempSeriesFile, story: TempStory, w: number, h: number): string | null {
+  const n = series.months.length;
+  if (n < 2) return null;
+  const X0 = 8;
+  const X1 = w - 70;
+  const TODAY_X = w - 30;
+  const xOf = (i: number) => X0 + (i * (X1 - X0)) / (n - 1);
+  const vals: number[] = [story.todayPct];
+  if (story.boomAvg !== null) vals.push(story.boomAvg);
+  if (story.slumpAvg !== null) vals.push(story.slumpAvg);
+  const pts: { x: number; y: number; p: number }[] = [];
+  for (let i = 0; i < n; i++) {
+    if (!(series.matched[i] > 0)) continue;
+    const p = (series.above[i] / series.matched[i]) * 100;
+    vals.push(p);
+    pts.push({ x: xOf(i), y: 0, p });
+  }
+  if (pts.length < 2) return null;
+  const yMin = Math.min(45, Math.floor((Math.min(...vals) - 4) / 5) * 5);
+  const yMax = Math.max(55, Math.ceil((Math.max(...vals) + 4) / 5) * 5);
+  const yOf = (p: number) => 12 + ((yMax - p) / (yMax - yMin)) * (h - 24);
+  for (const pt of pts) pt.y = yOf(pt.p);
+  const todayY = yOf(story.todayPct);
+  const line = [...pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`), `${TODAY_X},${todayY.toFixed(1)}`].join(" ");
+  const minIdx = story.min ? series.months.indexOf(story.min.ym) : -1;
+  const parts: string[] = [
+    `<line x1="${X0}" y1="${yOf(50).toFixed(1)}" x2="${w - 8}" y2="${yOf(50).toFixed(1)}" stroke="#c9c3b4" stroke-width="2" stroke-dasharray="7 7"/>`,
+  ];
+  if (story.boomAvg !== null)
+    parts.push(`<line x1="${X0}" y1="${yOf(story.boomAvg).toFixed(1)}" x2="${w - 8}" y2="${yOf(story.boomAvg).toFixed(1)}" stroke="#c9252d" stroke-opacity="0.35" stroke-width="3" stroke-dasharray="12 8"/>`);
+  if (story.slumpAvg !== null)
+    parts.push(`<line x1="${X0}" y1="${yOf(story.slumpAvg).toFixed(1)}" x2="${w - 8}" y2="${yOf(story.slumpAvg).toFixed(1)}" stroke="#2563a8" stroke-opacity="0.35" stroke-width="3" stroke-dasharray="12 8"/>`);
+  parts.push(`<polyline fill="none" stroke="#191713" stroke-width="4.5" points="${line}"/>`);
+  if (minIdx >= 0 && story.min)
+    parts.push(`<circle cx="${xOf(minIdx).toFixed(1)}" cy="${yOf(story.min.pct).toFixed(1)}" r="10" fill="#2563a8"/>`);
+  parts.push(`<circle cx="${TODAY_X}" cy="${todayY.toFixed(1)}" r="12" fill="#c9252d"/>`);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${parts.join("")}</svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
 
 const dateSlug = (patch.generatedAt ?? "pre").slice(0, 10);
 // 캐시 무효화 — v1→v2(하이브리드)→v3(major 상위 7행)→v4(회복률·거래 지도 카드 추가).
@@ -85,6 +133,11 @@ const META: Record<Kind, { corner: string; right: string; alt: string }> = {
     corner: "오늘의 거래 지도",
     right: "오늘 공개 건수 · 시군구",
     alt: "오늘의 거래 지도 — 수도권 시군구 오늘 공개 실거래 건수 · 비집고",
+  },
+  temp: {
+    corner: "오늘의 온도",
+    right: "직전 실거래 대비 · 계약월 기준",
+    alt: "오늘의 온도 — 직전 실거래보다 높게 팔린 비율, 폭등기·급락기 관측 평균과 비교 · 비집고",
   },
 };
 
@@ -177,30 +230,47 @@ export default async function Image({
 
   // 지도 카드(회복률·거래) — 타일·범례·콜아웃. satori는 CSS grid 미지원 → 절대배치로 그린다.
   const shareMap = isMapKind(kind) ? buildShareMap(kind) : null;
+  // 온도 카드(2026-07-12 사장) — 오늘 vs 폭등기·급락기·최저점, 추이 차트는 SVG data URI.
+  const story = kind === "temp" ? tempStory(tempSeries, patch.temp ?? null) : null;
+  const CHART_W = 2176;
+  const CHART_H = 340;
+  const chartUri = story ? tempChartDataUri(tempSeries, story, CHART_W, CHART_H) : null;
   const CELL = 48; // 타일 한 칸(px, 2x 캔버스)
   const mapW = MAP_COLS * CELL;
   const mapH = MAP_ROWS * CELL;
 
   const majorCap = majorAgg.length > 0 ? MAJOR_ROWS_WITH_AGG : MAJOR_ROWS;
   const rowCount =
-    kind === "major"
-      ? Math.min(majorCap, majorAll.length)
-      : kind === "strong"
-        ? Math.min(STRONG_ROWS, strongAll.length)
-        : Math.min(WEAK_ROWS, weakAll.length);
+    kind === "temp"
+      ? (story ? 1 : 0)
+      : kind === "major"
+        ? Math.min(majorCap, majorAll.length)
+        : kind === "strong"
+          ? Math.min(STRONG_ROWS, strongAll.length)
+          : Math.min(WEAK_ROWS, weakAll.length);
   const totalCount =
-    kind === "major" ? majorAll.length : kind === "strong" ? strongAll.length : weakAll.length;
+    kind === "temp"
+      ? rowCount
+      : kind === "major"
+        ? majorAll.length
+        : kind === "strong"
+          ? strongAll.length
+          : weakAll.length;
   const restCount = Math.max(0, totalCount - rowCount);
   const hasRows = rowCount > 0;
 
   const emptyText =
-    kind === "major"
-      ? "오늘 공개된 큰 거래 없음"
-      : kind === "strong"
-        ? "오늘 강세 거래 없음"
-        : "오늘 약세 동네 없음";
+    kind === "temp"
+      ? "오늘 온도 표본 부족"
+      : kind === "major"
+        ? "오늘 공개된 큰 거래 없음"
+        : kind === "strong"
+          ? "오늘 강세 거래 없음"
+          : "오늘 약세 동네 없음";
 
-  const footnote = shareMap
+  const footnote = kind === "temp"
+    ? "온도 = 같은 단지·평형 직전 실거래(60일 내)보다 높게 팔린 비율 · 계약월 기준 · 참조 = 해당 기간 관측 평균(임의 기준 아님)"
+    : shareMap
     ? kind === "recovery"
       ? "타일 = 수도권 82개 시군구(위치 근사) · 국민평형(전용 84㎡급) 실거래 중위 · 전고점 대비 · 시세 지수 아님"
       : "타일 = 수도권 82개 시군구(위치 근사) · 농도 = 오늘 국토부에 공개된 실거래 건수 · 직거래·해제 제외"
@@ -333,6 +403,43 @@ export default async function Image({
           }}
         >
           {/* satori는 Fragment를 못 그린다 — 조건 블록을 나열. */}
+
+          {/* 온도 카드 — 오늘 크게 + 국면 비교 칩 + 추이 차트(SVG data URI, 글자 없음) */}
+          {story && (
+            <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+              <div style={{ display: "flex", flexDirection: "row", alignItems: "baseline" }}>
+                <div style={{ display: "flex", color: INK, fontSize: 60, fontFamily: SANS }}>
+                  오늘 직전 거래보다 높게&nbsp;
+                </div>
+                <div style={{ display: "flex", color: UP, fontSize: 112, fontFamily: SANS_B, lineHeight: 1 }}>
+                  {`${Math.round(story.todayPct)}%`}
+                </div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", marginTop: 28, fontSize: 42 }}>
+                {story.boomAvg !== null && (
+                  <div style={{ display: "flex", flexDirection: "row", marginRight: 44, alignItems: "baseline" }}>
+                    <div style={{ display: "flex", color: INK_SOFT }}>{"폭등기('20.11~'21.10) 평균 "}</div>
+                    <div style={{ display: "flex", color: UP, fontFamily: SANS_SB }}>{`${Math.round(story.boomAvg)}%`}</div>
+                  </div>
+                )}
+                {story.slumpAvg !== null && (
+                  <div style={{ display: "flex", flexDirection: "row", marginRight: 44, alignItems: "baseline" }}>
+                    <div style={{ display: "flex", color: INK_SOFT }}>{"급락기('22) 평균 "}</div>
+                    <div style={{ display: "flex", color: DOWN, fontFamily: SANS_SB }}>{`${Math.round(story.slumpAvg)}%`}</div>
+                  </div>
+                )}
+                {story.min && (
+                  <div style={{ display: "flex", flexDirection: "row", alignItems: "baseline" }}>
+                    <div style={{ display: "flex", color: INK_SOFT }}>{`최저(${ymApos(story.min.ym)}) `}</div>
+                    <div style={{ display: "flex", color: DOWN, fontFamily: SANS_SB }}>{`${Math.round(story.min.pct)}%`}</div>
+                  </div>
+                )}
+              </div>
+              {chartUri && (
+                <img src={chartUri} width={CHART_W} height={CHART_H} style={{ marginTop: 30 }} />
+              )}
+            </div>
+          )}
 
           {/* 지도 카드(회복률·거래) — 절대배치 타일 격자 + 우측 범례·콜아웃 */}
           {shareMap && (
