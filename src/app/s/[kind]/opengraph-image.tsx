@@ -102,7 +102,7 @@ function tempChartDataUri(series: TempSeriesFile, story: TempStory, w: number, h
 // 제보: 05:20판 캐시가 06:12판 페이지와 어긋남). 미리보기는 스크랩 시점 스냅샷이 한계.
 const dateSlug = ogSlug(patch.generatedAt, dailyPatchRaw);
 // 캐시 무효화 — v1→v2(하이브리드)→v3(major 상위 7행)→v4(회복률·거래 지도 카드 추가).
-const OG_ID = `v4-${dateSlug}`;
+const OG_ID = `v5-${dateSlug}`; // v5: 자료 문법(코랄 밴드→출처 줄, 2026-07-13)
 
 // 카드별 표 행수 상한 — 하단 코랄 밴드 안 침범하는 선. major 카드는 "상위 7개" 고정
 // (사장 2026-07-11: 31개 전부는 과함, TOP 7만). 분석 밴드가 1줄이라 7행도 들어간다.
@@ -659,21 +659,24 @@ export default async function Image({
           {footnote}
         </div>
 
-        {/* 하단 코랄 밴드 — 얇게(138) + 굵게·크게(Pretendard Bold), mock-hybrid 미러. */}
+        {/* 하단 출처 줄 — 자료 문법(2026-07-13 사장 "공유하면 광고 같다"): 슬로건·코랄
+            밴드 폐지, 보도자료/리포트처럼 출처 각주만. 브랜드 키는 "정리 {도메인}"으로 절제. */}
         <div
           style={{
             display: "flex",
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            background: CORAL,
-            padding: "0 112px",
-            height: 138,
-            color: PAPER,
+            margin: "0 112px",
+            borderTop: `6px solid ${INK}`,
+            padding: "26px 0 40px",
+            color: INK_SOFT,
+            fontSize: 44,
+            fontFamily: SANS,
           }}
         >
-          <div style={{ display: "flex", fontSize: 52, fontFamily: SANS_B }}>수도권 실거래, 매일 아침 브리핑</div>
-          <div style={{ display: "flex", fontSize: 60, fontFamily: SANS_B }}>{SITE_DOMAIN}</div>
+          <div style={{ display: "flex" }}>자료: 국토교통부 실거래가 공개시스템</div>
+          <div style={{ display: "flex" }}>{`정리 ${SITE_DOMAIN}`}</div>
         </div>
       </div>
     ),

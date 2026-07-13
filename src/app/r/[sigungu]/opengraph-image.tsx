@@ -61,7 +61,7 @@ const CARD_ROWS = 4; // 표 행 수 — 1200×630에서 하단 밴드 안 침범
 // /card/{동네} 리다이렉트와 반드시 같은 헬퍼·같은 content·같은 버전 프리픽스를 쓸 것.
 const dateSlug = ogSlug(patch.generatedAt, dailyPatchRaw);
 // 디자인 개정(프리미엄 하이브리드)으로 캐시 무효화 — v1→v2.
-const OG_ID = `v2-${dateSlug}`;
+const OG_ID = `v3-${dateSlug}`; // v3: 자료 문법(코랄 밴드→출처 줄, 2026-07-13)
 
 export async function generateImageMetadata({
   params,
@@ -299,21 +299,24 @@ export default async function Image({
           )}
         </div>
 
-        {/* 하단 코랄 밴드 — 얇게 + 굵게·크게(Pretendard Bold), mock-hybrid 미러. */}
+        {/* 하단 출처 줄 — 자료 문법(2026-07-13 사장 "공유하면 광고 같다"): 슬로건·코랄
+            밴드 폐지, 보도자료처럼 출처 각주만. 브랜드 키는 "정리 {도메인}"으로 절제. */}
         <div
           style={{
             display: "flex",
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            background: CORAL,
-            padding: "0 112px",
-            height: 150,
-            color: PAPER,
+            margin: "0 112px",
+            borderTop: `6px solid ${INK}`,
+            padding: "26px 0 40px",
+            color: INK_SOFT,
+            fontSize: 44,
+            fontFamily: SANS,
           }}
         >
-          <div style={{ display: "flex", fontSize: 56, fontFamily: SANS_B }}>우리 동네 실거래, 매일 아침 브리핑</div>
-          <div style={{ display: "flex", fontSize: 62, fontFamily: SANS_B }}>{SITE_DOMAIN}</div>
+          <div style={{ display: "flex" }}>자료: 국토교통부 실거래가 공개시스템</div>
+          <div style={{ display: "flex" }}>{`정리 ${SITE_DOMAIN}`}</div>
         </div>
       </div>
     ),

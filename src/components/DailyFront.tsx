@@ -1709,7 +1709,7 @@ export function DailyFront() {
                   )}
                   <div className="mt-2 flex justify-end">
                     <ShareButton
-                      title="오늘의 온도 — 비집고"
+                      title="오늘의 온도 — 국토부 실거래 공개분 정리"
                       shareUrl={`/s/temp?v=${editionSlug}`}
                       label="온도 카드 공유"
                       ariaLabel="오늘의 온도 카드 공유"
@@ -1739,7 +1739,7 @@ export function DailyFront() {
               <section className="px-0.5 pb-3.5 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
                 <div className="mb-0.5 flex items-center justify-between gap-2">
                   <CornerLabel>오늘의 거래 지도</CornerLabel>
-                  <ShareButton title="비집고 — 오늘의 거래 지도" shareUrl={`/s/trade?v=${editionSlug}`} ariaLabel="오늘의 거래 지도 공유" />
+                  <ShareButton title="오늘의 거래 지도 — 국토부 실거래 공개분 정리" shareUrl={`/s/trade?v=${editionSlug}`} ariaLabel="오늘의 거래 지도 공유" />
                 </div>
                 <TradeMap
                   regionCounts={regionCounts}
@@ -1803,7 +1803,7 @@ export function DailyFront() {
                     <RecoveryLegend />
                     {recoveryTop5.length > 0 && <RecoveryTop5 top={recoveryTop5} />}
                     <div className="mt-2.5 flex justify-end">
-                      <ShareButton title="비집고 — 회복률 지도" shareUrl={`/s/recovery?v=${editionSlug}`} ariaLabel="회복률 지도 공유" />
+                      <ShareButton title="회복률 지도 — 국토부 실거래 공개분 정리" shareUrl={`/s/recovery?v=${editionSlug}`} ariaLabel="회복률 지도 공유" />
                     </div>
                     <CornerNote>
                       타일 = 수도권 82개 시군구(위치 근사) · 농도 = 전고점 대비 회복률 ·
@@ -1916,7 +1916,7 @@ export function DailyFront() {
                       퍼나르는 사람 몫 — 카드는 팩트만. */}
                   <div className="mt-2.5 flex items-center gap-2">
                     <ShareButton
-                      title="오늘의 주요 거래 — 비집고"
+                      title="오늘의 주요 거래 — 국토부 실거래 공개분 정리"
                       shareUrl={`/s/major?v=${editionSlug}`}
                       label="이 목록 공유"
                       ariaLabel="오늘의 주요 거래 카드 공유"
@@ -1957,7 +1957,7 @@ export function DailyFront() {
                   {/* 원탭 공유 — 클릭되는 강세 거래 링크카드(/s/major 미러). */}
                   <div className="mt-2.5 flex items-center gap-2">
                     <ShareButton
-                      title="오늘의 강세 거래 — 비집고"
+                      title="오늘의 강세 거래 — 국토부 실거래 공개분 정리"
                       shareUrl={`/s/strong?v=${editionSlug}`}
                       label="이 목록 공유"
                       ariaLabel="오늘의 강세 거래 카드 공유"
@@ -1987,7 +1987,7 @@ export function DailyFront() {
                 {/* 원탭 공유 — 클릭되는 약세 동네 링크카드. 시군구 집계만(단지 실명 없음). */}
                 <div className="mt-2.5 flex items-center gap-2">
                   <ShareButton
-                    title="오늘의 약세 동네 — 비집고"
+                    title="오늘의 약세 동네 — 국토부 실거래 공개분 정리"
                     shareUrl={`/s/weak?v=${editionSlug}`}
                     label="이 목록 공유"
                     ariaLabel="오늘의 약세 동네 카드 공유"
