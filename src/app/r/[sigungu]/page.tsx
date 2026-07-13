@@ -45,6 +45,7 @@ import {
 import regionTempSeriesRaw from "@/data/regionTempSeries.json";
 import { regionSeriesFor, type RegionTempSeriesFile } from "@/lib/regionTempSeries";
 import { tempStory, tempStoryLine, seriesMin } from "@/lib/tempStory";
+import { ogSlug } from "@/lib/ogSlug";
 import { TempTrendChart } from "@/components/TempTrendChart";
 import { areaMeta } from "@/lib/areaLabel";
 import { aptDisplayName } from "@/lib/aptName";
@@ -87,6 +88,8 @@ interface DailyPatchSubset {
   busiestRegions?: BusiestRegion[];
   /** 시군구별 오늘 온도(#20) — [온도 추이] 오늘 점·비교줄용. 구 스키마엔 없음. */
   regionTemp?: Record<string, PatchTemp>;
+  /** 시군구별 오늘 공개 건수 — 게재 요건 미달 날의 정직한 건수 병기용. */
+  regionCounts?: Record<string, number>;
 }
 const patch = dailyPatchRaw as unknown as DailyPatchSubset;
 const regionTempSeries = regionTempSeriesRaw as unknown as RegionTempSeriesFile;
@@ -569,6 +572,10 @@ export default async function Page({
     peaks.generatedAt !== null ? (peaks.regions[sigungu] ?? null) : null;
   const peakRank = peakEntry ? rankOf(peaks.regions, sigungu) : null;
 
+  // 오늘 이 동네 공개 건수 + 공유 링크 발행판 슬러그(메신저 링크 캐시 우회).
+  const todayCount = patch.regionCounts?.[sigungu] ?? 0;
+  const editionSlug = ogSlug(patch.generatedAt, dailyPatchRaw);
+
   // [온도 추이] — 동네별 온도 시계열(2026-07-13 확장). placeholder·미수록이면 코너 생략.
   const rTempSeries = regionSeriesFor(regionTempSeries, sigungu);
   const rToday = patch.regionTemp?.[sigungu] ?? null;
@@ -731,8 +738,12 @@ export default async function Page({
             </div>
           )}
           {!hasToday ? (
+            // 정직성(2026-07-13 감사): "거래 없음"은 거짓일 수 있다 — 공개는 됐는데 게재
+            // 요건(주요 15억+·강세 게이트·최다 동네)에 못 들었을 뿐인 날이 흔함. 건수 병기.
             <CornerNote>
-              오늘 공개분에 이 동네 거래 없음 · 다음 호 내일 아침
+              {todayCount > 0
+                ? `${isMerged ? "이번 합산에" : "오늘"} 공개 ${todayCount.toLocaleString("ko-KR")}건 — 지면 게재 기준(주요 15억+·강세)에 든 거래는 없었습니다 · 다음 호 내일 아침`
+                : "오늘 공개분에 이 동네 거래 없음 · 다음 호 내일 아침"}
             </CornerNote>
           ) : (
             <>
@@ -918,7 +929,12 @@ export default async function Page({
             실거래 기록 판독이며 투자 권유가 아닙니다
           </span>
           <span className="flex shrink-0 items-center gap-2.5">
-            <ShareButton title={`비집고 — ${sigungu} 동네면`} />
+            {/* 발행판 슬러그(?v=) — 메신저가 링크 URL 단위로 미리보기를 캐싱하므로
+                고정 URL 공유는 옛 카드가 뜬다(1면 공유 버튼과 동일 처방, 2026-07-13). */}
+            <ShareButton
+              title={`${sigungu} 오늘 실거래 — 국토부 공개분 정리`}
+              shareUrl={`/r/${encodeURIComponent(sigungu)}?v=${editionSlug}`}
+            />
             <span className="text-right">
               다음 호
               <br />
