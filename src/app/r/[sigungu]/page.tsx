@@ -40,7 +40,12 @@ import {
   type CancellationItem,
   type MajorItem,
   type PatchItem,
+  type PatchTemp,
 } from "@/lib/patchNote";
+import regionTempSeriesRaw from "@/data/regionTempSeries.json";
+import { regionSeriesFor, type RegionTempSeriesFile } from "@/lib/regionTempSeries";
+import { tempStory, tempStoryLine, seriesMin } from "@/lib/tempStory";
+import { TempTrendChart } from "@/components/TempTrendChart";
 import { areaMeta } from "@/lib/areaLabel";
 import { aptDisplayName } from "@/lib/aptName";
 import { ShareButton } from "@/components/ShareButton";
@@ -80,8 +85,11 @@ interface DailyPatchSubset {
   major?: MajorItem[];
   cancellations?: CancellationItem[];
   busiestRegions?: BusiestRegion[];
+  /** 시군구별 오늘 온도(#20) — [온도 추이] 오늘 점·비교줄용. 구 스키마엔 없음. */
+  regionTemp?: Record<string, PatchTemp>;
 }
 const patch = dailyPatchRaw as unknown as DailyPatchSubset;
+const regionTempSeries = regionTempSeriesRaw as unknown as RegionTempSeriesFile;
 const series = regionSeriesRaw as unknown as RegionSeriesFile;
 const regionTop = regionTopRaw as unknown as RegionTopFile;
 const peaks = regionPeaksRaw as unknown as RegionPeaksFile;
@@ -561,6 +569,16 @@ export default async function Page({
     peaks.generatedAt !== null ? (peaks.regions[sigungu] ?? null) : null;
   const peakRank = peakEntry ? rankOf(peaks.regions, sigungu) : null;
 
+  // [온도 추이] — 동네별 온도 시계열(2026-07-13 확장). placeholder·미수록이면 코너 생략.
+  const rTempSeries = regionSeriesFor(regionTempSeries, sigungu);
+  const rToday = patch.regionTemp?.[sigungu] ?? null;
+  // 오늘 점은 전역 지면과 같은 표본 문턱(≥5) — 미달이면 선만(오늘 점 생략).
+  const rTodayPct =
+    rToday && rToday.matched >= 5 ? Math.round((rToday.above / rToday.matched) * 100) : null;
+  const rStory = rTempSeries ? tempStory(rTempSeries, rToday) : null;
+  const rStoryLine = rStory && rTodayPct !== null ? tempStoryLine(rStory) : null;
+  const rMinMark = rTempSeries ? seriesMin(rTempSeries) : null;
+
   // [12개월 추이] — regionSeries. placeholder(generatedAt null)·미수록 동네는 안내 문구.
   const entry: RegionSeriesEntry | null =
     series.generatedAt !== null && series.months.length > 0
@@ -781,6 +799,37 @@ export default async function Page({
             </>
           )}
         </section>
+
+        {/* ── [온도 추이] — 이 동네의 6년 온도(직전 거래보다 높게 팔린 비율). 참조선·
+            최저점이 전부 "이 동네" 관측값(2026-07-13 확장). placeholder·미수록 생략. ── */}
+        {rTempSeries && (
+          <section className="px-0.5 pb-3.5 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
+            <CornerLabel>온도 추이 — 이 동네</CornerLabel>
+            {rTodayPct !== null && rToday && (
+              <p className="m-0 text-[12px] leading-[1.6] tabular-nums" style={{ color: INK_SOFT }}>
+                오늘 직전 거래보다 높게 <b style={{ color: UP }}>{rTodayPct}%</b>{" "}
+                <span className="text-[10.5px]">
+                  (직전 실거래가 있는 이 동네 거래 {rToday.matched.toLocaleString("ko-KR")}건 기준)
+                </span>
+              </p>
+            )}
+            <TempTrendChart
+              series={rTempSeries}
+              todayAbovePct={rTodayPct}
+              mergedNote={mergedNote}
+              minMark={rMinMark}
+            />
+            {rStoryLine && (
+              <p className="m-0 mt-1.5 text-[11.5px] font-semibold leading-[1.6] tabular-nums" style={{ color: INK }}>
+                {rStoryLine}
+              </p>
+            )}
+            <CornerNote>
+              이 동네 거래만 집계 — 참조선·최저점도 이 동네 관측값. 동네 단위는 월 표본이
+              얇아 출렁임이 큽니다(표본 0 달은 선 끊김) · 주간 갱신.
+            </CornerNote>
+          </section>
+        )}
 
         {/* ── [12개월 추이] ── */}
         <section className="px-0.5 pb-3.5 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>

@@ -23,6 +23,18 @@ export interface TempStory {
   todayPct: number;
 }
 
+/** 시계열 최저점(표본 TEMP_STORY_MIN_MATCHED 이상 달만) — 동네면 코너가 오늘 온도 없이도
+ *  마커를 쓸 수 있게 분리 노출(2026-07-13 동네별 시계열 확장). */
+export function seriesMin(series: TempSeriesFile): { ym: string; pct: number } | null {
+  let min: { ym: string; pct: number } | null = null;
+  for (let i = 0; i < series.months.length; i++) {
+    if (!(series.matched[i] >= TEMP_STORY_MIN_MATCHED)) continue;
+    const pct = (series.above[i] / series.matched[i]) * 100;
+    if (!min || pct < min.pct) min = { ym: series.months[i], pct };
+  }
+  return min;
+}
+
 /** 시계열 + 오늘 온도 → 비교 앵커 묶음. 시리즈가 placeholder면 null. */
 export function tempStory(
   series: TempSeriesFile,
@@ -30,12 +42,7 @@ export function tempStory(
 ): TempStory | null {
   if (!series.generatedAt || series.months.length < 2 || !today || today.matched <= 0)
     return null;
-  let min: { ym: string; pct: number } | null = null;
-  for (let i = 0; i < series.months.length; i++) {
-    if (!(series.matched[i] >= TEMP_STORY_MIN_MATCHED)) continue;
-    const pct = (series.above[i] / series.matched[i]) * 100;
-    if (!min || pct < min.pct) min = { ym: series.months[i], pct };
-  }
+  const min = seriesMin(series);
   const boom = REFERENCE_PHASES.find((p) => p.key === "boom");
   const slump = REFERENCE_PHASES.find((p) => p.key === "slump");
   return {

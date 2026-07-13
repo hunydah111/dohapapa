@@ -49,6 +49,11 @@ import {
   type TempSeriesTx,
 } from "@/lib/tempSeries";
 import {
+  bucketRegionTempSeries,
+  type RegionTempSeriesFile,
+  type RegionTempSeriesTx,
+} from "@/lib/regionTempSeries";
+import {
   REGION_TOP_WINDOW_DAYS,
   buildRegionTop,
   type RegionTopFile,
@@ -102,7 +107,7 @@ async function main() {
 
   const { db } = await import("@/lib/db");
   let rows: RegionSeriesTx[];
-  let tempRows: TempSeriesTx[];
+  let tempRows: RegionTempSeriesTx[]; // TempSeriesTx + sigungu — 전역·동네별 온도가 공용
   let peakRows: RegionPeakTx[]; // 5년 전고점/회복률 집계 입력 — tempSeries와 같은 창·필터
   let chaseRows: RegionChaseTx[]; // 추격판(#19) 입력 — 같은 6년 조회 재사용(추가 쿼리 0)
   let validYms: string[]; // 유효 거래(밴드 무관)의 계약월 — 앞쪽 빈 달 잘라내기 판정용
@@ -150,6 +155,7 @@ async function main() {
         : [],
     );
     // 온도 시계열 입력 — 단지×평형 밴드 그룹. 밴드 밖 면적(초소형 등)은 스킵.
+    // sigungu 동봉 — 동네별 온도 시계열(regionTempSeries)이 같은 행을 재사용(추가 쿼리 0).
     tempRows = valid.flatMap((t) => {
       const band = bandOfArea(t.area);
       if (!band) return [];
@@ -161,6 +167,7 @@ async function main() {
           id: t.id,
           dealDateISO: iso,
           priceKrw: Number(t.priceKrw),
+          sigungu: t.complex.sigungu,
         },
       ];
     });
@@ -241,6 +248,31 @@ async function main() {
   };
   const tempDest = resolve(process.cwd(), "src/data/tempSeries.json");
   writeFileSync(tempDest, JSON.stringify(tempOut) + "\n", "utf8");
+
+  // ── 동네별 온도 시계열(2026-07-13 사장 "시계열 확장") — 같은 행·같은 창·같은 규칙을
+  //    시군구로 쪼갬. 전역과 같은 트리밍(start)으로 months 정렬을 공유한다.
+  const regionBuckets = bucketRegionTempSeries(tempRows, tempMonthsAll);
+  const regionTempOut: RegionTempSeriesFile = {
+    generatedAt: new Date().toISOString(),
+    months: tempMonths,
+    regions: Object.fromEntries(
+      Object.entries(regionBuckets).map(([sig, b]) => [
+        sig,
+        {
+          above: b.above.slice(start),
+          below: b.below.slice(start),
+          matched: b.matched.slice(start),
+        },
+      ]),
+    ),
+  };
+  const regionTempDest = resolve(process.cwd(), "src/data/regionTempSeries.json");
+  writeFileSync(regionTempDest, JSON.stringify(regionTempOut) + "\n", "utf8");
+  const rtKb = Math.round(JSON.stringify(regionTempOut).length / 102.4) / 10;
+  console.log(
+    `regionTempSeries: 시군구 ${Object.keys(regionTempOut.regions).length}곳 · ${tempMonths[0]}~${tempMonths[tempMonths.length - 1]} · ${rtKb}KB → ${regionTempDest}`,
+  );
+
   const totalMatched = tempOut.matched.reduce((a, b) => a + b, 0);
   console.log(
     `tempSeries: ${tempMonths[0] ?? "-"}~${tempMonths[tempMonths.length - 1] ?? "-"} (${tempMonths.length}/${tempMonthsWanted}개월) · matched ${totalMatched.toLocaleString()}건 → ${tempDest}`,

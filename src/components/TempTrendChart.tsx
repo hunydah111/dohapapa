@@ -22,7 +22,8 @@ export function TempTrendChart({
   minMark,
 }: {
   series: TempSeriesFile;
-  todayAbovePct: number;
+  /** 오늘 공개분 온도(%) — null이면(동네면에서 그날 그 동네 매칭 0건 등) 오늘 점·라벨 생략. */
+  todayAbovePct: number | null;
   mergedNote: string;
   /** 시계열 최저점 마커(tempStory.min) — "누구나 아는 그 하락기 바닥" 앵커(2026-07-12 사장). */
   minMark?: { ym: string; pct: number } | null;
@@ -40,7 +41,7 @@ export function TempTrendChart({
     if (series.matched[i] > 0) pctVals.push((series.above[i] / series.matched[i]) * 100);
   }
   if (pctVals.length < 2) return null;
-  pctVals.push(todayAbovePct);
+  if (todayAbovePct !== null) pctVals.push(todayAbovePct);
   // 국면 참조 척도(v2.4 사장 지시) — 임의 임계("불장=60%") 단정 금지, 역사적 관측 평균만.
   // phaseAvg는 구간 월 6개 이상 관측 시에만 값 — 소급 백필이 차면 참조선이 자동 등장.
   const phaseLines = REFERENCE_PHASES.flatMap((phase) => {
@@ -58,10 +59,10 @@ export function TempTrendChart({
     pts.push({ x: xOf(i), y: yOf((series.above[i] / series.matched[i]) * 100) });
   }
   if (pts.length < 2) return null;
-  const todayY = yOf(todayAbovePct);
-  // "오늘 nn%" 라벨 기준선 y — 국면 참조선 라벨의 충돌 회피 판정에도 쓴다.
-  const todayLabelY = todayY >= 52 ? todayY - 7 : todayY + 13;
-  const line = [...pts, { x: TODAY_X, y: todayY }]
+  const todayY = todayAbovePct !== null ? yOf(todayAbovePct) : null;
+  // "오늘 nn%" 라벨 기준선 y — 국면 참조선 라벨의 충돌 회피 판정에도 쓴다(오늘 없으면 화면 밖).
+  const todayLabelY = todayY !== null ? (todayY >= 52 ? todayY - 7 : todayY + 13) : -99;
+  const line = [...pts, ...(todayY !== null ? [{ x: TODAY_X, y: todayY }] : [])]
     .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`)
     .join(" ");
   // x축 눈금 — 연 단위(1월 달) 또는 3분위. "오늘" 라벨(x=370)과 안 겹치는 범위.
@@ -114,7 +115,7 @@ export function TempTrendChart({
         viewBox="0 0 396 76"
         className="block h-auto w-full"
         role="img"
-        aria-label={`온도 추이 — 직전 거래보다 높게 팔린 비율(계약월 기준, ${series.months[0]}~). 오늘 ${todayAbovePct}%`}
+        aria-label={`온도 추이 — 직전 거래보다 높게 팔린 비율(계약월 기준, ${series.months[0]}~). ${todayAbovePct !== null ? `오늘 ${todayAbovePct}%` : ""}`}
       >
         <text x="0" y="12" fontSize="8.5" fill={INK_SOFT}>{yMax}%</text>
         <text x="7" y={(yMid + 3).toFixed(1)} fontSize="8.5" fill={INK_SOFT}>50</text>
@@ -123,12 +124,21 @@ export function TempTrendChart({
         {/* 50% 균형 점선 — 동적 도메인 안에서 위치 계산 */}
         <line x1={X0} y1={yMid.toFixed(1)} x2="392" y2={yMid.toFixed(1)} stroke={RULE} strokeWidth="1" strokeDasharray="3 3" />
         <line x1={X0} y1="68" x2="392" y2="68" stroke={RULE} strokeWidth="1" />
-        {/* 국면 참조선 — 해당 기간 관측 평균(임의 기준 아님). "오늘" 라벨과 겹치면 좌측 배치. */}
-        {phaseLines.map(({ phase, avg }) => {
-          const y = yOf(avg);
-          const color = phase.tone === "up" ? UP : DOWN;
-          const clash = Math.abs(y - todayLabelY) < 11;
-          return (
+        {/* 국면 참조선 — 해당 기간 관측 평균(임의 기준 아님). "오늘" 라벨과 겹치면 좌측 배치.
+            참조선끼리 가까우면(동네 시계열에서 흔함) 앞 라벨과 반대편으로 갈라 앉힌다. */}
+        {(() => {
+          const sorted = [...phaseLines].sort((a, b) => yOf(a.avg) - yOf(b.avg));
+          let prevY: number | null = null;
+          let prevLeft = false;
+          return sorted.map(({ phase, avg }) => {
+            const y = yOf(avg);
+            const color = phase.tone === "up" ? UP : DOWN;
+            const todayClash = Math.abs(y - todayLabelY) < 11;
+            const phaseClash = prevY !== null && Math.abs(y - prevY) < 11;
+            const clash = todayClash || (phaseClash && !prevLeft);
+            prevY = y;
+            prevLeft = clash;
+            return (
             <g key={phase.key}>
               <line
                 x1={X0}
@@ -156,8 +166,9 @@ export function TempTrendChart({
                 {phase.label.split("(")[0]} 평균 {Math.round(avg)}%
               </text>
             </g>
-          );
-        })}
+            );
+          });
+        })()}
         <polyline fill="none" stroke={INK} strokeWidth="1.8" points={line} />
         {/* 시계열 최저점 마커 — 하락기 바닥 앵커(관측값). 라벨은 점 아래(바닥 근처면 위). */}
         {minMark &&
@@ -187,32 +198,38 @@ export function TempTrendChart({
               </g>
             );
           })()}
-        {/* 오늘 점 (공개 기준) */}
-        <circle cx={TODAY_X} cy={todayY.toFixed(1)} r="3.4" fill={UP} />
-        <text
-          x="378"
-          y={todayLabelY.toFixed(1)}
-          textAnchor="end"
-          fontSize="9"
-          fontWeight="700"
-          fill={UP}
-          stroke={PAPER}
-          strokeWidth="2.6"
-          paintOrder="stroke"
-          strokeLinejoin="round"
-        >
-          오늘 {todayAbovePct}%
-        </text>
+        {/* 오늘 점 (공개 기준) — 오늘 온도가 없으면(동네 표본 0) 생략 */}
+        {todayY !== null && (
+          <circle cx={TODAY_X} cy={todayY.toFixed(1)} r="3.4" fill={UP} />
+        )}
+        {todayY !== null && (
+          <text
+            x="378"
+            y={todayLabelY.toFixed(1)}
+            textAnchor="end"
+            fontSize="9"
+            fontWeight="700"
+            fill={UP}
+            stroke={PAPER}
+            strokeWidth="2.6"
+            paintOrder="stroke"
+            strokeLinejoin="round"
+          >
+            오늘 {todayAbovePct}%
+          </text>
+        )}
         {ticks.map((t) => (
           <text key={t.label} x={t.x.toFixed(1)} y="76" fontSize="8.5" fill={INK_SOFT}>
             {t.label}
           </text>
         ))}
-        <text x="370" y="76" fontSize="8.5" fill={INK_SOFT}>오늘</text>
+        {todayY !== null && (
+          <text x="370" y="76" fontSize="8.5" fill={INK_SOFT}>오늘</text>
+        )}
       </svg>
       <p className="m-0 mt-1 text-[10px] leading-[1.5]" style={{ color: INK_SOFT }}>
-        온도 추이 — 직전 거래보다 높게 팔린 비율. 점선 = 50% 균형선 · 선 = 계약월 기준 ·
-        붉은 점 = 오늘 공개분
+        온도 추이 — 직전 거래보다 높게 팔린 비율. 점선 = 50% 균형선 · 선 = 계약월 기준
+        {todayAbovePct !== null && " · 붉은 점 = 오늘 공개분"}
         {phaseLines.length > 0 && " · 참조선 = 해당 기간 관측 평균(임의 기준 아님)"}
         {shortWindow && " · 국토부 수집 구간 기준 — 소급 수집 중"}
         {mergedNote}.
