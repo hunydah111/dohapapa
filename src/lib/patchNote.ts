@@ -535,14 +535,26 @@ export function computePatch(opts: {
   // 2) 오늘 처음 확인된 거래
   const fresh = scope.filter((d) => !seenKeys.has(dealKey(d)));
 
+  // 창 편입 가드 공용 값 — 직전 seen이 커버했던 최소 계약월(월초로 내림). 폴링창이
+  // 넓어진 날, 편입 구간의 옛 거래·해제가 "오늘 처음 확인"으로 둔갑하는 것을 막는다
+  // (2026-07-12 4월 홍수 사태 — 늦은 신고 major와 해제 집계가 같은 구멍).
+  let seenCoveredFromYM: string | null = null;
+  for (const k of seenKeys) {
+    const m = /\|(\d{4}-\d{2})-\d{2}\|/.exec(k);
+    if (m && (seenCoveredFromYM === null || m[1] < seenCoveredFromYM)) seenCoveredFromYM = m[1];
+  }
+  const coveredFrom = seenCoveredFromYM ? `${seenCoveredFromYM}-01` : null;
+
   // 2-a) [오늘의 해제] — canceled이면서 seen에 없던 것(해제 키 기준). 초저가(지분성)만 컷.
   //      wasTopInWindow = 같은 단지 ±3㎡ window 내 "다른 유효 거래들"(timeline, canceled 제외)
   //      전부보다 강하게 높았는지 — 비교 대상이 없으면 false(공허한 최고가 주장 금지).
   //      직전 거래 매칭과 동일 기준(±3㎡) — 평형 혼합이면 '최고가였다' 주장도 왜곡된다.
+  //      창 편입 가드(coveredFrom) — 편입 구간 해제("939건 제외" 사태)는 오늘 등록이 아님.
   const freshCancellations = deals.filter(
     (d) =>
       d.canceled === true &&
       !seenKeys.has(seenKeyOf(d)) &&
+      (coveredFrom === null || d.dealDateISO >= coveredFrom) &&
       d.priceKrw >= PATCH_MIN_PRICE_KRW,
   );
   const cancellations: CancellationItem[] = freshCancellations.map((d) => {
@@ -703,14 +715,8 @@ export function computePatch(opts: {
   //
   // ⚠️ 창 편입 가드(2026-07-12 사장 제보 — 4월 계약 2,555건 홍수): "seen에 없음"은 폴링창이
   // 넓어진 날엔 "오늘 공개"가 아니라 "우리 창에 오늘 처음 들어옴"일 수 있다. 직전 seen이
-  // 커버했던 최소 계약월 이후의 거래만 늦은 신고로 인정하고, 편입 신구간은 조용히 seen에만
-  // 흡수한다(다음날부터 그 구간의 진짜 늦은 신고는 정상 포착). 첫 실행(seen 없음)도 스킵.
-  let seenCoveredFromYM: string | null = null;
-  for (const k of seenKeys) {
-    const m = /\|(\d{4}-\d{2})-\d{2}\|/.exec(k);
-    if (m && (seenCoveredFromYM === null || m[1] < seenCoveredFromYM)) seenCoveredFromYM = m[1];
-  }
-  const coveredFrom = seenCoveredFromYM ? `${seenCoveredFromYM}-01` : null;
+  // 커버했던 최소 계약월(coveredFrom — 위 2-a 앞에서 공용 계산) 이후의 거래만 늦은 신고로
+  // 인정하고, 편입 신구간은 조용히 seen에만 흡수. 첫 실행(seen 없음)도 스킵.
   for (const d of deals) {
     if (d.canceled || d.dealingGbn === "직거래") continue;
     if (d.priceKrw < PATCH_MAJOR_MIN_PRICE_KRW) continue;

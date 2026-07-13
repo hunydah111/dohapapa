@@ -549,12 +549,12 @@ export default async function Page({
   const strongs = patch.nerf.filter(
     (i) => i.sigungu === sigungu && i.prevDate != null && passesStrongGate(i),
   );
-  const cancellations = (patch.cancellations ?? []).filter((c) => c.sigungu === sigungu);
+  // 해제 실명 리스트는 2026-07-13 사장 지시로 폐지 — 지면 게재 없음(데이터는 제외 처리용).
   const busiestRank = (patch.busiestRegions ?? []).findIndex((b) => b.sigungu === sigungu);
   const busiest = busiestRank >= 0 ? (patch.busiestRegions ?? [])[busiestRank] : null;
   const hasToday =
     patch.generatedAt !== null &&
-    (majors.length > 0 || strongs.length > 0 || cancellations.length > 0 || busiest !== null);
+    (majors.length > 0 || strongs.length > 0 || busiest !== null);
 
   // [전고점 대비] 상설 헤더 줄(v2.7) — placeholder(generatedAt null)·미수록이면 null(생략).
   const peakEntry =
@@ -765,24 +765,6 @@ export default async function Page({
                       />
                       <DealReactions dealKey={strongKeys[i]} />
                     </div>
-                  ))}
-                </div>
-              )}
-
-              {cancellations.length > 0 && (
-                <div className="pt-1.5">
-                  <p className="m-0 text-[11px] font-bold tracking-[0.08em]" style={{ color: INK_SOFT }}>
-                    오늘 등록된 해제거래(국토부 공개 행정 사실 — 사유는 알 수 없음)
-                  </p>
-                  {cancellations.map((c, i) => (
-                    <DealLine
-                      key={`c${c.apt}-${c.dealDate}-${c.priceKrw}-${i}`}
-                      left={`${c.dong} ${aptDisplayName(c.apt)}`}
-                      meta={areaMeta(c.areaM2)}
-                      right={`${eok(c.priceKrw)} · 계약 ${md(c.dealDate)}`}
-                      sub={c.wasTopInWindow ? "— 해제 전까지 이 단지 최고가로 공개돼 있었음" : undefined}
-                      divider={i > 0}
-                    />
                   ))}
                 </div>
               )}

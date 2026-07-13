@@ -1347,38 +1347,8 @@ function StrongRow({ item, divider }: { item: PatchItem; divider: boolean }) {
   );
 }
 
-/** [오늘의 해제] 행 — 국토부 공개 행정 사실만 인쇄. 해제 사유는 데이터에 없으므로
- *  어떤 해석·단정도 붙이지 않는다("조작" 류 단어 금지). 경보색 금지 — 먹 톤. */
-function CancellationRow({ item, divider }: { item: CancellationItem; divider: boolean }) {
-  const tag = floorSubwayTag(item.floor, item.nearestSubwayM);
-  return (
-    <div
-      className={`py-[5.5px] tabular-nums ${divider ? "border-t border-dotted" : ""}`}
-      style={divider ? { borderColor: RULE } : undefined}
-    >
-      <div className="flex items-baseline gap-2">
-        <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
-          <RegionLink sigungu={item.sigungu}>{item.dong}</RegionLink> {aptDisplayName(item.apt)}{" "}
-          <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
-            {areaMeta(item.areaM2)}{tag ? ` · ${tag}` : ""}
-          </span>
-        </span>
-        <span className="shrink-0 text-right text-[13px] font-bold" style={{ color: INK }}>
-          {eok(item.priceKrw)}
-        </span>
-        <span className="w-[62px] shrink-0 text-right text-[11px]" style={{ color: INK_SOFT }}>
-          계약 {md(item.dealDate)}
-        </span>
-      </div>
-      {/* 최고가 공개 이력 — wasTopInWindow(다른 유효 거래 전부보다 높았음)일 때만 인쇄. */}
-      {item.wasTopInWindow && (
-        <div className="mt-[1px] text-[11px] leading-[1.5]" style={{ color: INK_SOFT }}>
-          — 해제 전까지 이 단지 최고가로 공개돼 있었음
-        </div>
-      )}
-    </div>
-  );
-}
+// [오늘의 해제] 실명 행/코너는 2026-07-13 사장 지시로 폐지 — 데이터(cancellations)는
+// 집계·제외 처리용으로 보존, 지면엔 콜로폰 "해제 N건 제외" 건수 공시만 남는다.
 
 /** [약세 동네] 행 — 시군구 집계(실명 단지 없음), 그린 톤. 기준은 직전 실거래(팩트). */
 function WeakRegionRow({ item, divider }: { item: RegionPulse; divider: boolean }) {
@@ -1475,9 +1445,8 @@ export function DailyFront() {
     patch.nerf.length > 0 &&
     patch.nerf.every((i) => i.prevKrw === undefined);
   const weakRegions = patch.weakRegions ?? []; // 구 스키마(undefined)·표본 없음([]) → 코너 생략
-  const cancellations = patch.cancellations ?? []; // 구 스키마·0건 → 코너 생략
-  // 요약 줄 "그중 M건은 해제 전까지 최고가로 공개돼 있었음"용 — wasTop 수.
-  const cancelWasTopCount = cancellations.filter((c) => c.wasTopInWindow).length;
+  // 해제 — 실명 코너 폐지(2026-07-13 사장). 건수만 콜로폰에 공시(/principles 약속 승계).
+  const cancelCount = (patch.cancellations ?? []).length;
   const busiestRegions = patch.busiestRegions ?? []; // 구 스키마·비면 줄 생략
 
   // [오늘의 거래 지도] — 구 스키마(regionCounts 없음)면 코너 자체 생략(graceful).
@@ -1999,61 +1968,10 @@ export function DailyFront() {
               </section>
             )}
 
-            {/* ── [오늘의 해제] — 신고가-해제 감시. 국토부 공개 행정 사실만 인쇄, 사유
-                단정 금지("조작" 류 단어 금지 — 편집 헌장). 0건·구 스키마면 코너 생략. ── */}
-            {cancellations.length > 0 && (
-              <section className="px-0.5 pb-3.5 pt-3" style={{ borderBottom: `1px solid ${RULE}` }}>
-                <CornerLabel>오늘 등록된 해제거래</CornerLabel>
-                {/* 코너 설명 — "해제"가 뭔지 모르는 독자를 위한 1줄(2026-07-07 사장 지시). */}
-                <p className="m-0 pb-1 text-[11px] leading-[1.55]" style={{ color: INK_SOFT }}>
-                  계약 신고 후 취소(해제) 신고된 거래 — 국토부 공개 행정 사실이며 해제
-                  사유는 공개되지 않습니다.
-                </p>
-                {/* 요약 줄 = 이 코너의 결론(항상 노출 — 무조작 완결, 헌장 6조).
-                    wasTop 요약은 0건이면 공허한 문장이라 생략. 정렬은 현행 wasTop 우선 유지. */}
-                <p className="m-0 text-[12.5px] leading-[1.6]" style={{ color: INK_SOFT }}>
-                  {isMerged
-                    ? `주말 합산 ${md(patch.mergedFromDate!)}~${md(patch.mergedToDate!)} 등록 해제거래`
-                    : "오늘 등록된 해제거래"}{" "}
-                  <b className="tabular-nums" style={{ color: INK }}>
-                    {cancellations.length.toLocaleString("ko-KR")}건
-                  </b>
-                  {cancelWasTopCount > 0 && (
-                    <>
-                      {" "}
-                      · 그중{" "}
-                      <b className="tabular-nums" style={{ color: INK }}>
-                        {cancelWasTopCount.toLocaleString("ko-KR")}건
-                      </b>
-                      은 해제 전까지 그 단지 최고가로 공개돼 있었음
-                    </>
-                  )}
-                </p>
-                {/* 행 리스트 — 기본 접힘(수십 건 나열이 지면을 늘림 — 헌장 7조 강등).
-                    요약이 결론이므로 펼치지 않아도 완결. 네이티브 details — JS 0. */}
-                <details className="mt-1">
-                  <summary
-                    className="cursor-pointer list-none py-1 text-[11.5px] font-bold"
-                    style={{ color: INK_SOFT }}
-                  >
-                    전체 {cancellations.length.toLocaleString("ko-KR")}건 펼치기 ▾
-                  </summary>
-                  <div className="border-t border-dotted" style={{ borderColor: RULE }}>
-                    {cancellations.map((item, i) => (
-                      <CancellationRow
-                        key={`${item.apt}-${item.dealDate}-${item.priceKrw}-${i}`}
-                        item={item}
-                        divider={i > 0}
-                      />
-                    ))}
-                  </div>
-                </details>
-                <CornerNote>
-                  계약 해제는 국토부 공개 행정 사실이며, 해제 사유는 알 수 없습니다 · 국토부는
-                  신고가 신고 후 해제 행위를 별도 조사하고 있습니다{mergedNote}.
-                </CornerNote>
-              </section>
-            )}
+            {/* [오늘의 해제] 실명 코너는 2026-07-13 사장 지시로 폐지 — "누구 좋으라고 적나"
+                + 소송 리스크 1순위(실명+해제 = 자전거래 암시로 읽힐 유일 지점). 데이터는
+                보존(집계·제외 처리엔 계속 사용), 공시 약속(/principles "걸러낸 건수 공시")은
+                콜로폰의 "해제 N건 제외" 숫자 한 줄이 승계한다. */}
           </>
         )}
 
@@ -2076,6 +1994,8 @@ export function DailyFront() {
         >
           <span>
             국토부 실거래 공개분 기준 · 신고는 계약 후 최대 30일
+            {/* 해제 건수 공시 — 실명 코너 폐지(2026-07-13) 후 /principles "걸러낸 건수 공시" 승계. */}
+            {cancelCount > 0 && ` · 해제 ${cancelCount.toLocaleString("ko-KR")}건 제외`}
             <br />
             실거래 기록 판독이며 투자 권유가 아닙니다 ·{" "}
             <a href="/principles" className="underline underline-offset-2">
