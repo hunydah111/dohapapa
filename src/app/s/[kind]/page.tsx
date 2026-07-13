@@ -22,6 +22,7 @@ import {
 import tempSeriesRaw from "@/data/tempSeries.json";
 import type { TempSeriesFile } from "@/lib/tempSeries";
 import { tempStory, tempStoryLine, ymApos } from "@/lib/tempStory";
+import { TempTrendChart } from "@/components/TempTrendChart";
 import { majorAnalysis } from "@/lib/majorAnalysis";
 import { areaMeta } from "@/lib/areaLabel";
 import { aptDisplayName } from "@/lib/aptName";
@@ -394,6 +395,13 @@ export default async function Page({
                     </div>
                   ))}
               </div>
+              {/* 추이 차트 — 1면과 공용 컴포넌트(카드에만 차트가 있던 역전 해소, 2026-07-13). */}
+              <TempTrendChart
+                series={tempSeries}
+                todayAbovePct={Math.round(story.todayPct)}
+                mergedNote={mergedNote}
+                minMark={story.min}
+              />
               {storyLine && (
                 <p className="m-0 mt-2 text-[12px] font-semibold leading-[1.6] tabular-nums" style={{ color: INK }}>
                   {storyLine}
@@ -401,8 +409,7 @@ export default async function Page({
               )}
               <CornerNote>
                 온도 = 같은 단지·평형의 직전 실거래(60일 내)보다 높게 팔린 비율 · 계약월 기준 ·
-                참조값은 해당 기간 관측 평균(임의 기준 아님) — 판정은 싣지 않습니다. 추이
-                차트는 1면에서.
+                참조값은 해당 기간 관측 평균(임의 기준 아님) — 판정은 싣지 않습니다.
               </CornerNote>
             </>
           ) : kind === "major" ? (
