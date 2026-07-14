@@ -444,7 +444,10 @@ export default async function Page({
                   >
                     <div className="flex items-baseline gap-2">
                       <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
-                        {m.dong} {aptDisplayName(m.apt)}
+                        {m.dong} {aptDisplayName(m.apt)}{" "}
+                        <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
+                          ({m.sigungu})
+                        </span>
                       </span>
                       <span className="shrink-0 text-right text-[13px] font-bold" style={{ color: INK }}>
                         {eok(m.priceKrw)}
@@ -488,7 +491,10 @@ export default async function Page({
                   >
                     <div className="flex items-baseline gap-2">
                       <span className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
-                        {s.dong} {aptDisplayName(s.apt)}
+                        {s.dong} {aptDisplayName(s.apt)}{" "}
+                        <span className="text-[11px] font-normal" style={{ color: INK_SOFT }}>
+                          ({s.sigungu})
+                        </span>
                       </span>
                       <span className="shrink-0 text-right text-[13px] font-extrabold" style={{ color: UP }}>
                         +{pctAbs(s.pctVsPrev!)}%

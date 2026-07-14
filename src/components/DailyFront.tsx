@@ -1109,10 +1109,16 @@ function StrongRow({ item, divider }: { item: PatchItem; divider: boolean }) {
           <span aria-hidden="true" className="mr-1 font-bold" style={{ color: UP }}>
             ▲
           </span>
-          {/* 단지명 = 세리프(나눔명조) — 프리미엄 하이브리드. 면적 메타는 Pretendard. */}
+          {/* 단지명 = 세리프. 행 문법 "동 단지명 (구)" — 주요 거래·공유 카드와 통일
+              (2026-07-14 사장 "카드랑 안 맞아 보임" — 구/동 표기가 제각각이던 원인). */}
           <span className={`${serif.className} text-[14.5px]`}>
-            <RegionLink sigungu={item.sigungu}>{item.sigungu}</RegionLink> {aptDisplayName(item.apt)}
-          </span>
+            {item.dong} {aptDisplayName(item.apt)}
+          </span>{" "}
+          <RegionLink sigungu={item.sigungu}>
+            <span className="text-[11.5px] font-semibold" style={{ color: INK_SOFT }}>
+              ({item.sigungu})
+            </span>
+          </RegionLink>
           <RowHint />
         </span>
         <span className="shrink-0 text-right text-[13px] font-semibold" style={{ color: UP }}>

@@ -536,6 +536,10 @@ export default async function Image({
                     <div style={{ display: "flex", color: INK, fontSize: 50, fontFamily: SERIF }}>
                       {`${d.dong} ${aptDisplayName(d.apt)}`}
                     </div>
+                    {/* (구) 병기 — 1면·착지와 행 문법 통일(2026-07-14). */}
+                    <div style={{ display: "flex", color: INK_SOFT, fontSize: 34, fontFamily: SANS, marginLeft: 14 }}>
+                      {`(${d.sigungu})`}
+                    </div>
                     <div style={{ display: "flex", color: INK_SOFT, fontSize: 34, fontFamily: SANS, marginLeft: 20 }}>
                       {`${areaMeta(d.areaM2)}${d.floor != null ? ` · ${d.floor}층` : ""}`}
                     </div>
@@ -585,6 +589,10 @@ export default async function Image({
                   >
                     <div style={{ display: "flex", color: INK, fontSize: 56, fontFamily: SERIF }}>
                       {`${d.dong} ${aptDisplayName(d.apt)}`}
+                    </div>
+                    {/* (구) 병기 — 1면·착지와 행 문법 통일(2026-07-14). */}
+                    <div style={{ display: "flex", color: INK_SOFT, fontSize: 38, fontFamily: SANS, marginLeft: 14 }}>
+                      {`(${d.sigungu})`}
                     </div>
                     <div style={{ display: "flex", color: INK_SOFT, fontSize: 38, fontFamily: SANS, marginLeft: 24 }}>
                       {`${areaMeta(d.areaM2)}${d.floor != null ? ` · ${d.floor}층` : ""}`}
