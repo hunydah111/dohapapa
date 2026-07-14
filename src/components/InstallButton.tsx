@@ -5,7 +5,8 @@
 //  · Android·데스크톱 크로미움: beforeinstallprompt 잡히면 클릭 시 네이티브 추가 프롬프트.
 //  · 없으면(사파리·이미 프롬프트 소진) 클릭 시 "브라우저 메뉴 → 홈 화면에 추가" 안내 토글.
 //  · 추가해도 칩은 사라지지 않는다(사장: 남아있게) — 프롬프트 소진 후엔 안내로 전환.
-//  · 이미 홈 화면 앱(standalone)으로 실행 중일 때만 숨김(그땐 이미 있으니).
+//  · 2026-07-14 사장 재확인: standalone(설치된 앱)에서도 숨기지 않는다 — 어떤 상태에서도
+//    상주. 설치된 앱 안에서 누르면 "이미 설치된 상태" 안내.
 
 import { useEffect, useRef, useState } from "react";
 import { INK, INK_SOFT, PAPER, RULE } from "@/lib/paperTone";
@@ -45,9 +46,11 @@ export function InstallButton() {
     };
   }, []);
 
-  if (standalone) return null; // 이미 홈 화면 앱으로 실행 중
-
   async function onClick() {
+    if (standalone) {
+      setShowHelp((v) => !v); // 설치된 앱 안 — 상태 안내만
+      return;
+    }
     if (deferred) {
       await deferred.prompt();
       await deferred.userChoice.catch(() => {});
@@ -75,7 +78,9 @@ export function InstallButton() {
           style={{ background: PAPER, color: INK_SOFT, border: `1.5px solid ${INK}` }}
           role="dialog"
         >
-          {isIOS ? (
+          {standalone ? (
+            <>지금 홈 화면 바로가기로 보고 있어요 — 이미 추가된 상태입니다.</>
+          ) : isIOS ? (
             <>
               사파리 하단 <b style={{ color: INK }}>공유</b> 버튼(⬆︎) →{" "}
               <b style={{ color: INK }}>홈 화면에 추가</b>를 누르면 홈에 바로가기가 생겨요.
