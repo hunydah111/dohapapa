@@ -277,7 +277,9 @@ export const PATCH_PREV_AREA_TOLERANCE_M2 = 3;
 export const PATCH_MIN_SAMPLE = 3;
 /** 초저가(원) 컷 — 지분·특수 거래 방어. */
 export const PATCH_MIN_PRICE_KRW = 50_000_000;
-/** 너프/버프 각각 상위 N건. */
+/** 버프(데이터 보존용) 상위 N건. 너프(강세)는 2026-07-14부터 컷 없이 게이트 통과 전부
+ *  게재(사장 "펼치면 더 나오게") — 도배 방지는 단지×밴드 dedupe + 오보 게이트가 담당,
+ *  UI가 상위 5 + 펼치기로 지면 예산을 지킨다. */
 export const PATCH_TOP_N = 5;
 
 // ── 오보 게이트(2026-07-07 사장 적발) — [강세 거래] 게재·헤드라인 신고가성 rung 공통 ──
@@ -745,10 +747,10 @@ export function computePatch(opts: {
   // [강세 거래] 게재 요건 — 오보 게이트(passesStrongGate): 직전 거래 팩트(60일 내)가
   // 있고, pctVsPrev·pct 둘 다 +7% 이상(두 신호 합의)이며, pctVsPrev ≤ +30%(직전 거래
   // 이상치 컷)인 것만. 셋 중 하나라도 어기면 미게재 — 금강펜테리움 사례 참조(상수 주석).
+  // 컷 없음(2026-07-14) — 게이트 통과 전부. UI가 상위 5 + 펼치기로 접는다.
   const nerfPublished = deduped
     .filter((i) => i.kind === "nerf" && passesStrongGate(i))
-    .sort((a, b) => (b.pctVsPrev ?? 0) - (a.pctVsPrev ?? 0))
-    .slice(0, PATCH_TOP_N);
+    .sort((a, b) => (b.pctVsPrev ?? 0) - (a.pctVsPrev ?? 0));
   // buff 는 데이터 보존용(렌더 안 함) — 기존 |pct| 정렬 유지.
   const buffRanked = deduped
     .filter((i) => i.kind === "buff")

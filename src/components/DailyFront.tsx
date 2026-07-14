@@ -1168,6 +1168,8 @@ function WeakRegionRow({ item, divider }: { item: RegionPulse; divider: boolean 
 
 /** [주요 거래] 상위 노출 건수 — 초과분은 <details> 네이티브 펼치기(JS 없이). */
 const MAJOR_VISIBLE = 10;
+/** [강세 거래] 상위 노출 건수 — 초과분은 펼치기(2026-07-14 사장, 데이터 컷도 해제). */
+const STRONG_VISIBLE = 5;
 /** "N일 만에 공개" 태그 문턱 — 계약 후 이 일수 넘겨 오늘 공개된 15억+ 거래는 주요 거래
  *  행에 "N일 만에 공개" 태그를 붙인다(별도 코너 대신 인라인 — 2026-07-11 사장). 스코프
  *  14일보다 여유(21일)를 둬 갓 지난 건 태그 안 붙임(정상 신고 지연과 뒤늦은 신고 구분). */
@@ -1700,13 +1702,32 @@ export function DailyFront() {
                 <CornerNote>오늘 공개분엔 직전 거래보다 눈에 띄게 높게 팔린 중개거래가 없었습니다.</CornerNote>
               ) : (
                 <>
+                  {/* 상위 5 기본 + 전체 펼치기(2026-07-14 사장 — 데이터 컷도 함께 해제).
+                      주요 거래의 접힘 문법과 동일 — 지면 예산은 UI가 지킨다. */}
                   <div>
-                    {strongs.map((item, i) => (
+                    {strongs.slice(0, STRONG_VISIBLE).map((item, i) => (
                       <DealDetails key={`${item.kind}-${item.apt}-${item.dealDate}`} item={item}>
                         <StrongRow item={item} divider={i > 0} />
                       </DealDetails>
                     ))}
                   </div>
+                  {strongs.length > STRONG_VISIBLE && (
+                    <details className="mt-1">
+                      <summary
+                        className="cursor-pointer list-none py-1 text-[11.5px] font-bold"
+                        style={{ color: INK_SOFT }}
+                      >
+                        전체 {strongs.length.toLocaleString("ko-KR")}건 펼치기 ▾
+                      </summary>
+                      <div className="border-t border-dotted" style={{ borderColor: RULE }}>
+                        {strongs.slice(STRONG_VISIBLE).map((item, i) => (
+                          <DealDetails key={`${item.kind}-${item.apt}-${item.dealDate}-r${i}`} item={item}>
+                            <StrongRow item={item} divider={i > 0} />
+                          </DealDetails>
+                        ))}
+                      </div>
+                    </details>
+                  )}
                   <CornerNote>
                     비교는 <b style={{ color: INK }}>같은 단지·평형의 최근 60일 내 직전 실거래</b>{" "}
                     기준 · 단지 최근 거래 기록과 대조해 선별 · {isMerged ? "합산" : "오늘"} 공개{" "}

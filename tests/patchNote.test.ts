@@ -316,7 +316,7 @@ describe("patchNote.computePatch", () => {
     expect(도배[0].priceKrw).toBe(1_080_000_000); // pctVsPrev(+8%) 최대 건이 대표
   });
 
-  it("[강세 거래]는 pctVsPrev 내림차순 상위 N건", () => {
+  it("[강세 거래]는 pctVsPrev 내림차순 — 컷 없이 게이트 통과 전부 (2026-07-14, UI가 상위 5+펼치기)", () => {
     const many: PatchDealInput[] = [];
     for (let i = 0; i < 7; i++) {
       many.push(prevDeal(`단지${i}`)); // 각 단지 기준 거래 1.0억×10
@@ -333,7 +333,7 @@ describe("patchNote.computePatch", () => {
       lookupMedian: lookup,
       todayISO: TODAY,
     });
-    expect(r.nerf).toHaveLength(PATCH_TOP_N);
+    expect(r.nerf).toHaveLength(7); // 게이트 통과 전부 — 상위 N 컷 없음
     expect(r.nerf[0].apt).toBe("단지6"); // 가장 큰 +14%부터
     const pcts = r.nerf.map((i) => i.pctVsPrev ?? 0);
     expect([...pcts].sort((a, b) => b - a)).toEqual(pcts);
