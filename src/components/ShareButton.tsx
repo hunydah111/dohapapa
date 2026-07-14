@@ -76,7 +76,16 @@ export function ShareButton({
       ok = legacyCopy(url); // 권한 거부 환경 폴백
     }
     // 실패를 성공으로 꾸미지 않는다 — 정직한 실패 안내.
-    showToast(ok ? "링크 복사됨" : "복사 실패 — 주소창 링크를 이용해 주세요");
+    // 카톡 내장 브라우저는 OS 공유 시트가 없어 항상 이 복사 폴백으로 온다(2026-07-14 사장
+    // "선택창이 안 나온다") — 붙여넣기가 다음 동작임을 문구로 안내.
+    const inKakao = /KAKAOTALK/i.test(navigator.userAgent);
+    showToast(
+      !ok
+        ? "복사 실패 — 주소창 링크를 이용해 주세요"
+        : inKakao
+          ? "링크 복사됨 — 대화방에 붙여넣으면 카드가 뜹니다"
+          : "링크 복사됨",
+    );
   }
 
   return (
