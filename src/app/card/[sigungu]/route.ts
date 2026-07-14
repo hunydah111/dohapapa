@@ -29,7 +29,7 @@ export async function GET(
   }
   const target =
     decoded && SIGUNGU_NAMES.has(decoded)
-      ? `/r/${encodeURIComponent(decoded)}/opengraph-image/v3-${dateSlug}`
+      ? `/r/${encodeURIComponent(decoded)}/opengraph-image/v4-${dateSlug}`
       : `/opengraph-image/v7-${dateSlug}`;
   return NextResponse.redirect(new URL(target, req.url), 302);
 }

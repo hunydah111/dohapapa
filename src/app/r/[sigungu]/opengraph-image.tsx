@@ -17,9 +17,9 @@ import { ogSlug } from "@/lib/ogSlug";
 //   Pretendard=본문·숫자(가격/%=SemiBold)·비집고 워드마크(Bold) · 코랄 밴드 얇게+굵게.
 export const contentType = "image/png";
 
-// 2x 렌더(2400×1260, 비율은 og 표준 1200×630 유지) — 1x는 고해상도 화면·확대에서
-// 뭉개진다(2026-07-10 사장 제보). 아래 스타일 수치는 전부 2배 기준.
-const SIZE = { width: 2400, height: 1260 };
+// 정사각 2400×2400(2026-07-14 사장 "반반으로 나온다") — 카톡은 1:1 이미지를 크게 그려
+// 미리보기에서 이미지가 지배하게 된다. 2x 해상도 유지(뭉개짐 방지, 2026-07-10).
+const SIZE = { width: 2400, height: 2400 };
 
 const PAPER = "#fbfaf6";
 const INK = "#191713";
@@ -55,13 +55,13 @@ const recentDays = (dailyRecentRaw as unknown as { days: { date: string; items: 
 const todayItems: RecentItem[] =
   recentDays.length > 0 ? recentDays[recentDays.length - 1].items : [];
 
-const CARD_ROWS = 4; // 표 행 수 — 1200×630에서 하단 밴드 안 침범하는 상한
+const CARD_ROWS = 10; // 표 행 수 — 정사각 캔버스에서 출처 줄 안 침범하는 상한
 
 // 발행판 슬러그(날짜+내용 해시) — 3단 발행 중 내용 바뀐 판만 새 URL(2026-07-13).
 // /card/{동네} 리다이렉트와 반드시 같은 헬퍼·같은 content·같은 버전 프리픽스를 쓸 것.
 const dateSlug = ogSlug(patch.generatedAt, dailyPatchRaw);
 // 디자인 개정(프리미엄 하이브리드)으로 캐시 무효화 — v1→v2.
-const OG_ID = `v3-${dateSlug}`; // v3: 자료 문법(코랄 밴드→출처 줄, 2026-07-13)
+const OG_ID = `v4-${dateSlug}`; // v4: 정사각(2026-07-14) · v3: 자료 문법
 
 export async function generateImageMetadata({
   params,

@@ -29,8 +29,10 @@ import { buildShareMap, MAP_COLS, MAP_ROWS, TILE_BORDER, type MapKind } from "@/
 // satori 제약: React Fragment 금지 · undefined 스타일 값 금지(조건부 스프레드만).
 export const contentType = "image/png";
 
-// 2x 렌더(2400×1260, 비율 og 표준 1200×630) — 고해상도 화면 뭉개짐 방지(동네판 카드와 동일).
-const SIZE = { width: 2400, height: 1260 };
+// 정사각 2400×2400(2026-07-14 사장 "반반으로 나온다") — 카톡은 1:1 이미지를 크게 그려
+// 미리보기에서 이미지가 지배한다. 행 수도 2배 수용. 2x 해상도 유지(뭉개짐 방지).
+// (스레드 링크 언펄은 중앙 크롭 가능 — 스레드는 이미지 직접 첨부가 기본 동선이라 수용.)
+const SIZE = { width: 2400, height: 2400 };
 
 const PAPER = "#fbfaf6";
 const INK = "#191713";
@@ -102,14 +104,14 @@ function tempChartDataUri(series: TempSeriesFile, story: TempStory, w: number, h
 // 제보: 05:20판 캐시가 06:12판 페이지와 어긋남). 미리보기는 스크랩 시점 스냅샷이 한계.
 const dateSlug = ogSlug(patch.generatedAt, dailyPatchRaw);
 // 캐시 무효화 — v1→v2(하이브리드)→v3(major 상위 7행)→v4(회복률·거래 지도 카드 추가).
-const OG_ID = `v5-${dateSlug}`; // v5: 자료 문법(코랄 밴드→출처 줄, 2026-07-13)
+const OG_ID = `v6-${dateSlug}`; // v6: 정사각 캔버스(2026-07-14) · v5: 자료 문법
 
 // 카드별 표 행수 상한 — 하단 코랄 밴드 안 침범하는 선. major 카드는 "상위 7개" 고정
 // (사장 2026-07-11: 31개 전부는 과함, TOP 7만). 분석 밴드가 1줄이라 7행도 들어간다.
-const MAJOR_ROWS = 7;
-const MAJOR_ROWS_WITH_AGG = 7;
-const STRONG_ROWS = 6;
-const WEAK_ROWS = 3;
+const MAJOR_ROWS = 12;
+const MAJOR_ROWS_WITH_AGG = 12;
+const STRONG_ROWS = 12;
+const WEAK_ROWS = 9;
 
 const META: Record<Kind, { corner: string; right: string; alt: string }> = {
   major: {
@@ -236,9 +238,9 @@ export default async function Image({
   // 온도 카드(2026-07-12 사장) — 오늘 vs 폭등기·급락기·최저점, 추이 차트는 SVG data URI.
   const story = kind === "temp" ? tempStory(tempSeries, patch.temp ?? null) : null;
   const CHART_W = 2176;
-  const CHART_H = 340;
+  const CHART_H = 900;
   const chartUri = story ? tempChartDataUri(tempSeries, story, CHART_W, CHART_H) : null;
-  const CELL = 48; // 타일 한 칸(px, 2x 캔버스)
+  const CELL = 72; // 타일 한 칸(px, 2x 캔버스)
   const mapW = MAP_COLS * CELL;
   const mapH = MAP_ROWS * CELL;
 
@@ -400,8 +402,10 @@ export default async function Image({
             display: "flex",
             flexDirection: "column",
             flex: 1,
-            // 분석 밴드가 있는 major는 위로 넘쳐 밴드와 겹치지 않게 상단 정렬, 그 외 중앙.
-            justifyContent: majorAgg.length > 0 ? "flex-start" : "center",
+            // 행 리스트(강세·약세·주요)는 지면처럼 헤더 아래 상단 정렬 — 정사각에서 행이
+            // 적은 날(주말) 위아래 공백으로 붕 뜨는 것 방지. 온도·지도만 중앙 배치.
+            justifyContent:
+              kind === "temp" || kind === "recovery" || kind === "trade" ? "center" : "flex-start",
             margin: "24px 112px 0",
           }}
         >
