@@ -149,6 +149,24 @@ const KIND_COPY: Record<
 };
 
 // ── metadata — 큰 카드 언펄 필수(twitter summary_large_image) ─────────────────
+// 2026-07-14 사장: 미리보기에서 이미지 아래 텍스트 블록이 너무 두껍다 — 제목은 날짜형
+// 한 줄("'26.7.14 강세 거래"), 부제·긴 설명 폐지(설명은 출처 한 토막). 블록이 얇아지고
+// 제목에 발행일이 박혀 "며칠 자료인지"도 즉답된다.
+const SHARE_NAME: Record<Kind, string> = {
+  major: "주요 거래",
+  strong: "강세 거래",
+  weak: "약세 동네",
+  recovery: "회복률 지도",
+  trade: "거래 지도",
+  temp: "시장 온도",
+};
+
+/** "2026-07-14" → "'26.7.14" — 카드 제목 발행일. null(창간 전)은 빈 문자열. */
+function edDateApos(iso: string | null): string {
+  const m = iso ? /^(\d{4})-(\d{2})-(\d{2})/.exec(iso) : null;
+  return m ? `'${m[1].slice(2)}.${Number(m[2])}.${Number(m[3])}` : "";
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -156,7 +174,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { kind } = await params;
   if (!isKind(kind)) return { title: "비집고 — 내 통장으로 비집고 들어갈 집" };
-  const { title, description } = KIND_COPY[kind];
+  const d = edDateApos(patch.generatedAt);
+  const title = d ? `${d} ${SHARE_NAME[kind]}` : SHARE_NAME[kind];
+  const description = "국토교통부 실거래가 공개분 정리 — 비집고";
   const path = `/s/${kind}`;
   return {
     title: `${title} | 비집고`,
