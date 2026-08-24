@@ -1,10 +1,10 @@
 {
-  "checkedAt": "2026-08-24",
+  "checkedAt": "2026-08-25",
   "windowFromMonth": "2026-05",
   "windowToMonth": "2026-08",
-  "latestDealDate": "2026-08-22",
-  "recentCount": 80824,
+  "latestDealDate": null,
+  "recentCount": 0,
   "newSincePrev": 0,
-  "prevCheckedAt": "2026-08-23",
+  "prevCheckedAt": "2026-08-24",
   "guCount": 82
 }
