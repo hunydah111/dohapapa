@@ -1,34 +1,12 @@
 {
-  "generatedAt": "2026-09-27",
+  "generatedAt": "2026-09-28",
   "scopeDays": 14,
   "mode": "merged",
-  "mergedFromDate": "2026-09-25",
-  "mergedToDate": "2026-09-27",
-  "newDealCount": 20,
-  "scopeDealCount": 2900,
+  "mergedFromDate": "2026-09-26",
+  "mergedToDate": "2026-09-28",
+  "newDealCount": 11,
+  "scopeDealCount": 2734,
   "nerf": [
-    {
-      "kind": "nerf",
-      "sigungu": "수원시 영통구",
-      "dong": "영통동",
-      "apt": "풍림",
-      "areaM2": 84.84,
-      "band": "p32_35",
-      "priceKrw": 750000000,
-      "medianKrw": 673999485,
-      "pct": 0.11276049417159421,
-      "dealDate": "2026-09-22",
-      "maxKrw": 727000000,
-      "prevKrw": 650000000,
-      "prevDate": "2026-08-28",
-      "prevFloor": 15,
-      "pctVsPrev": 0.15384615384615385,
-      "windowMaxKrw": 750000000,
-      "lat": 37.24957554377456,
-      "lng": 127.0678077797044,
-      "floor": 13,
-      "nearestSubwayM": null
-    },
     {
       "kind": "nerf",
       "sigungu": "금천구",
@@ -50,53 +28,9 @@
       "lng": 126.8986810586933,
       "floor": 8,
       "nearestSubwayM": null
-    },
-    {
-      "kind": "nerf",
-      "sigungu": "수원시 영통구",
-      "dong": "영통동",
-      "apt": "황골마을주공1",
-      "areaM2": 49.76,
-      "band": "p19_25",
-      "priceKrw": 575000000,
-      "medianKrw": 509295863,
-      "pct": 0.12900975989274824,
-      "dealDate": "2026-09-19",
-      "maxKrw": 529000000,
-      "prevKrw": 535000000,
-      "prevDate": "2026-09-08",
-      "prevFloor": 16,
-      "pctVsPrev": 0.07476635514018691,
-      "windowMaxKrw": 590000000,
-      "lat": 37.26291263471496,
-      "lng": 127.0796263801132,
-      "floor": 14,
-      "nearestSubwayM": null
     }
   ],
   "buff": [
-    {
-      "kind": "buff",
-      "sigungu": "부천시 원미구",
-      "dong": "중동",
-      "apt": "미리내마을(한신)",
-      "areaM2": 41.53,
-      "band": "under18",
-      "priceKrw": 288000000,
-      "medianKrw": 328306077,
-      "pct": -0.12276981702047507,
-      "dealDate": "2026-09-18",
-      "maxKrw": 360000000,
-      "prevKrw": 318000000,
-      "prevDate": "2026-09-01",
-      "prevFloor": 9,
-      "pctVsPrev": -0.09433962264150944,
-      "windowMaxKrw": 320000000,
-      "lat": 37.49990325235889,
-      "lng": 126.7734310447399,
-      "floor": 1,
-      "nearestSubwayM": null
-    },
     {
       "kind": "buff",
       "sigungu": "용인시 수지구",
@@ -177,27 +111,7 @@
       "below": 0,
       "matched": 1
     },
-    "부천시 원미구": {
-      "above": 0,
-      "below": 1,
-      "matched": 1
-    },
     "성남시 수정구": {
-      "above": 0,
-      "below": 1,
-      "matched": 1
-    },
-    "수원시 영통구": {
-      "above": 6,
-      "below": 1,
-      "matched": 7
-    },
-    "수원시 팔달구": {
-      "above": 1,
-      "below": 0,
-      "matched": 1
-    },
-    "오산시": {
       "above": 0,
       "below": 1,
       "matched": 1
@@ -206,34 +120,17 @@
       "above": 3,
       "below": 0,
       "matched": 4
+    },
+    "화성시 향남구": {
+      "above": 0,
+      "below": 1,
+      "matched": 1
     }
   },
   "weakRegions": [],
-  "strongRegions": [
-    {
-      "sigungu": "수원시 영통구",
-      "avgPct": 0.07699166991490924,
-      "count": 7
-    }
-  ],
-  "cancellations": [
-    {
-      "sigungu": "강서구",
-      "dong": "마곡동",
-      "apt": "벽산",
-      "areaM2": 59.98,
-      "priceKrw": 866000000,
-      "dealDate": "2026-07-14",
-      "wasTopInWindow": false,
-      "floor": 4,
-      "nearestSubwayM": null
-    }
-  ],
+  "strongRegions": [],
+  "cancellations": [],
   "busiestRegions": [
-    {
-      "sigungu": "수원시 영통구",
-      "count": 7
-    },
     {
       "sigungu": "용인시 수지구",
       "count": 5
@@ -242,13 +139,10 @@
   "regionCounts": {
     "광진구": 1,
     "금천구": 1,
-    "부천시 원미구": 1,
     "성남시 수정구": 2,
     "송파구": 1,
-    "수원시 영통구": 7,
-    "수원시 팔달구": 1,
-    "오산시": 1,
-    "용인시 수지구": 5
+    "용인시 수지구": 5,
+    "화성시 향남구": 1
   },
   "headlines": {
     "top": {
@@ -260,18 +154,8 @@
         "label": "서울",
         "kind": "top-major",
         "text": "오늘 공개 최고가 — 갤러리아팰리스 29.7억"
-      },
-      {
-        "label": "경기·인천",
-        "kind": "nerf",
-        "text": "수원시 영통구 황골마을주공1, 최근 1년 최고가 8.7% 갱신 — 5.8억"
-      },
-      {
-        "label": "9억 이하",
-        "kind": "nerf",
-        "text": "수원시 영통구 풍림아파트, 최근 1년 최고가 3.2% 갱신 — 7.5억"
       }
     ]
   },
-  "latestDealDate": "2026-09-23"
+  "latestDealDate": "2026-09-24"
 }
