@@ -1,161 +1,27 @@
 {
-  "generatedAt": "2026-09-28",
+  "generatedAt": "2026-09-29",
   "scopeDays": 14,
   "mode": "merged",
-  "mergedFromDate": "2026-09-26",
-  "mergedToDate": "2026-09-28",
-  "newDealCount": 11,
-  "scopeDealCount": 2734,
-  "nerf": [
-    {
-      "kind": "nerf",
-      "sigungu": "금천구",
-      "dong": "시흥동",
-      "apt": "남서울건영아파트",
-      "areaM2": 53.39,
-      "band": "p19_25",
-      "priceKrw": 475000000,
-      "medianKrw": 427947825,
-      "pct": 0.10994839148907931,
-      "dealDate": "2026-09-15",
-      "maxKrw": 435000000,
-      "prevKrw": 420000000,
-      "prevDate": "2026-07-30",
-      "prevFloor": 7,
-      "pctVsPrev": 0.13095238095238096,
-      "windowMaxKrw": 450000000,
-      "lat": 37.45288310519955,
-      "lng": 126.8986810586933,
-      "floor": 8,
-      "nearestSubwayM": null
-    }
-  ],
-  "buff": [
-    {
-      "kind": "buff",
-      "sigungu": "용인시 수지구",
-      "dong": "신봉동",
-      "apt": "동부센트레빌6단지",
-      "areaM2": 149.217,
-      "band": "over45",
-      "priceKrw": 988000000,
-      "medianKrw": 1082735142,
-      "pct": -0.08749613670524051,
-      "dealDate": "2026-09-19",
-      "maxKrw": 1100000000,
-      "prevKrw": 960000000,
-      "prevDate": "2026-08-15",
-      "prevFloor": 1,
-      "pctVsPrev": 0.029166666666666667,
-      "windowMaxKrw": 1100000000,
-      "lat": 37.33314122940585,
-      "lng": 127.0648914557162,
-      "floor": 16,
-      "nearestSubwayM": null
-    }
-  ],
-  "major": [
-    {
-      "sigungu": "송파구",
-      "dong": "잠실동",
-      "apt": "갤러리아팰리스",
-      "areaM2": 138.561,
-      "priceKrw": 2970000000,
-      "dealDate": "2026-09-18",
-      "pct": null,
-      "buildYear": 2005,
-      "sampleCount": null,
-      "totalSampleCount": 11,
-      "prevKrw": null,
-      "prevDate": null,
-      "prevFloor": null,
-      "pctVsPrev": null,
-      "windowMaxKrw": null,
-      "windowMaxDate": null,
-      "windowMaxFloor": null,
-      "refMaxPeriod": null,
-      "lat": 37.51110518261132,
-      "lng": 127.0939189978996,
-      "floor": 29,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "광진구",
-      "dong": "자양동",
-      "apt": "이튼타워리버5차",
-      "areaM2": 84.92,
-      "priceKrw": 2320000000,
-      "dealDate": "2026-09-21",
-      "pct": 0.0034602076124567475,
-      "buildYear": 2009,
-      "sampleCount": 4,
-      "totalSampleCount": 6,
-      "prevKrw": null,
-      "prevDate": null,
-      "prevFloor": null,
-      "pctVsPrev": null,
-      "windowMaxKrw": 2330000000,
-      "windowMaxDate": "2026-06-03",
-      "windowMaxFloor": 16,
-      "refMaxPeriod": "1년",
-      "lat": 37.53218418637383,
-      "lng": 127.0690323988321,
-      "floor": 13,
-      "nearestSubwayM": null
-    }
-  ],
+  "mergedFromDate": "2026-09-27",
+  "mergedToDate": "2026-09-29",
+  "newDealCount": 0,
+  "scopeDealCount": 0,
+  "nerf": [],
+  "buff": [],
+  "major": [],
   "temp": null,
-  "regionTemp": {
-    "금천구": {
-      "above": 1,
-      "below": 0,
-      "matched": 1
-    },
-    "성남시 수정구": {
-      "above": 0,
-      "below": 1,
-      "matched": 1
-    },
-    "용인시 수지구": {
-      "above": 3,
-      "below": 0,
-      "matched": 4
-    },
-    "화성시 향남구": {
-      "above": 0,
-      "below": 1,
-      "matched": 1
-    }
-  },
+  "regionTemp": {},
   "weakRegions": [],
   "strongRegions": [],
   "cancellations": [],
-  "busiestRegions": [
-    {
-      "sigungu": "용인시 수지구",
-      "count": 5
-    }
-  ],
-  "regionCounts": {
-    "광진구": 1,
-    "금천구": 1,
-    "성남시 수정구": 2,
-    "송파구": 1,
-    "용인시 수지구": 5,
-    "화성시 향남구": 1
-  },
+  "busiestRegions": [],
+  "regionCounts": {},
   "headlines": {
     "top": {
-      "kind": "nerf",
-      "text": "금천구 남서울건영아파트, 최근 1년 최고가 9.2% 갱신 — 4.8억"
+      "kind": "none",
+      "text": "오늘 공개 0건 — 판을 흔든 거래는 없었다"
     },
-    "subs": [
-      {
-        "label": "서울",
-        "kind": "top-major",
-        "text": "오늘 공개 최고가 — 갤러리아팰리스 29.7억"
-      }
-    ]
+    "subs": []
   },
-  "latestDealDate": "2026-09-24"
+  "latestDealDate": null
 }
