@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-10-10",
+  "generatedAt": "2026-10-11",
   "scopeDays": 14,
   "mode": "merged",
-  "mergedFromDate": "2026-10-08",
-  "mergedToDate": "2026-10-10",
-  "newDealCount": 1019,
-  "scopeDealCount": 2894,
+  "mergedFromDate": "2026-10-09",
+  "mergedToDate": "2026-10-11",
+  "newDealCount": 521,
+  "scopeDealCount": 2908,
   "nerf": [
     {
       "kind": "nerf",
@@ -97,28 +97,6 @@
     },
     {
       "kind": "nerf",
-      "sigungu": "남동구",
-      "dong": "논현동",
-      "apt": "논현 파크 포레",
-      "areaM2": 84.88,
-      "band": "p32_35",
-      "priceKrw": 490000000,
-      "medianKrw": 377769238,
-      "pct": 0.2970881445884167,
-      "dealDate": "2026-10-07",
-      "maxKrw": 470000000,
-      "prevKrw": 402000000,
-      "prevDate": "2026-10-03",
-      "prevFloor": 14,
-      "pctVsPrev": 0.21890547263681592,
-      "windowMaxKrw": 420000000,
-      "lat": 37.40702464186256,
-      "lng": 126.7104311186546,
-      "floor": 19,
-      "nearestSubwayM": null
-    },
-    {
-      "kind": "nerf",
       "sigungu": "군포시",
       "dong": "산본동",
       "apt": "한라주공4",
@@ -163,28 +141,6 @@
     },
     {
       "kind": "nerf",
-      "sigungu": "시흥시",
-      "dong": "배곧동",
-      "apt": "시흥배곧C2호반써밋플레이스",
-      "areaM2": 84.9906,
-      "band": "p32_35",
-      "priceKrw": 695000000,
-      "medianKrw": 645268545,
-      "pct": 0.07707094261041347,
-      "dealDate": "2026-09-29",
-      "maxKrw": 717000000,
-      "prevKrw": 580000000,
-      "prevDate": "2026-09-11",
-      "prevFloor": 3,
-      "pctVsPrev": 0.19827586206896552,
-      "windowMaxKrw": 717000000,
-      "lat": 37.36826782657437,
-      "lng": 126.7250166686285,
-      "floor": 21,
-      "nearestSubwayM": null
-    },
-    {
-      "kind": "nerf",
       "sigungu": "양평군",
       "dong": "양평읍 공흥리",
       "apt": "양평공흥3휴먼빌아틀리에",
@@ -203,28 +159,6 @@
       "lat": 37.4889791442775,
       "lng": 127.504490465452,
       "floor": 19,
-      "nearestSubwayM": null
-    },
-    {
-      "kind": "nerf",
-      "sigungu": "구로구",
-      "dong": "개봉동",
-      "apt": "한마을",
-      "areaM2": 59.57,
-      "band": "p19_25",
-      "priceKrw": 1100000000,
-      "medianKrw": 1020352074,
-      "pct": 0.07805925820071397,
-      "dealDate": "2026-10-03",
-      "maxKrw": 1017000000,
-      "prevKrw": 925000000,
-      "prevDate": "2026-09-19",
-      "prevFloor": 20,
-      "pctVsPrev": 0.1891891891891892,
-      "windowMaxKrw": 1040000000,
-      "lat": 37.49526607305872,
-      "lng": 126.8625007820463,
-      "floor": 8,
       "nearestSubwayM": null
     },
     {
@@ -251,28 +185,6 @@
     },
     {
       "kind": "nerf",
-      "sigungu": "구리시",
-      "dong": "인창동",
-      "apt": "구리인창2차동문굿모닝힐",
-      "areaM2": 84.967,
-      "band": "p32_35",
-      "priceKrw": 760000000,
-      "medianKrw": 666230282,
-      "pct": 0.1407467065569379,
-      "dealDate": "2026-10-05",
-      "maxKrw": 705000000,
-      "prevKrw": 645000000,
-      "prevDate": "2026-09-22",
-      "prevFloor": 10,
-      "pctVsPrev": 0.17829457364341086,
-      "windowMaxKrw": 725000000,
-      "lat": 37.60558586503,
-      "lng": 127.1329319711866,
-      "floor": 4,
-      "nearestSubwayM": null
-    },
-    {
-      "kind": "nerf",
       "sigungu": "파주시",
       "dong": "다율동",
       "apt": "청석마을9단지대원효성",
@@ -291,28 +203,6 @@
       "lat": 37.72856297301657,
       "lng": 126.7194315070224,
       "floor": 10,
-      "nearestSubwayM": null
-    },
-    {
-      "kind": "nerf",
-      "sigungu": "이천시",
-      "dong": "관고동",
-      "apt": "두산",
-      "areaM2": 84.9,
-      "band": "p32_35",
-      "priceKrw": 200000000,
-      "medianKrw": 185215403,
-      "pct": 0.0798237984558984,
-      "dealDate": "2026-10-06",
-      "maxKrw": 232000000,
-      "prevKrw": 170000000,
-      "prevDate": "2026-09-10",
-      "prevFloor": 9,
-      "pctVsPrev": 0.17647058823529413,
-      "windowMaxKrw": 178000000,
-      "lat": 37.28401213900445,
-      "lng": 127.433237631883,
-      "floor": 17,
       "nearestSubwayM": null
     },
     {
@@ -357,28 +247,6 @@
       "lat": 37.3411127965836,
       "lng": 126.741846940739,
       "floor": 8,
-      "nearestSubwayM": null
-    },
-    {
-      "kind": "nerf",
-      "sigungu": "광주시",
-      "dong": "태전동",
-      "apt": "태전효성해링턴플레이스",
-      "areaM2": 84.7473,
-      "band": "p32_35",
-      "priceKrw": 565000000,
-      "medianKrw": 526457761,
-      "pct": 0.07321050586620567,
-      "dealDate": "2026-10-07",
-      "maxKrw": 540000000,
-      "prevKrw": 491000000,
-      "prevDate": "2026-09-16",
-      "prevFloor": 1,
-      "pctVsPrev": 0.15071283095723015,
-      "windowMaxKrw": 548000000,
-      "lat": 37.39181915118539,
-      "lng": 127.2282025318375,
-      "floor": 14,
       "nearestSubwayM": null
     },
     {
@@ -471,28 +339,6 @@
     },
     {
       "kind": "nerf",
-      "sigungu": "수원시 팔달구",
-      "dong": "화서동",
-      "apt": "꽃뫼버들마을진흥",
-      "areaM2": 59.96,
-      "band": "p19_25",
-      "priceKrw": 780000000,
-      "medianKrw": 712587635,
-      "pct": 0.09460220987415814,
-      "dealDate": "2026-10-03",
-      "maxKrw": 780000000,
-      "prevKrw": 690000000,
-      "prevDate": "2026-08-08",
-      "prevFloor": 7,
-      "pctVsPrev": 0.13043478260869565,
-      "windowMaxKrw": 780000000,
-      "lat": 37.28897839719809,
-      "lng": 126.9840132953533,
-      "floor": 11,
-      "nearestSubwayM": null
-    },
-    {
-      "kind": "nerf",
       "sigungu": "부천시 원미구",
       "dong": "중동",
       "apt": "포도마을(삼보)",
@@ -510,28 +356,6 @@
       "windowMaxKrw": 755000000,
       "lat": 37.50109040219921,
       "lng": 126.759124836398,
-      "floor": 12,
-      "nearestSubwayM": null
-    },
-    {
-      "kind": "nerf",
-      "sigungu": "수원시 장안구",
-      "dong": "정자동",
-      "apt": "백설마을삼환나우빌",
-      "areaM2": 59.83,
-      "band": "p19_25",
-      "priceKrw": 675000000,
-      "medianKrw": 628015360,
-      "pct": 0.07481447587523973,
-      "dealDate": "2026-10-06",
-      "maxKrw": 633000000,
-      "prevKrw": 600000000,
-      "prevDate": "2026-09-11",
-      "prevFloor": 4,
-      "pctVsPrev": 0.125,
-      "windowMaxKrw": 633000000,
-      "lat": 37.29377251154207,
-      "lng": 126.9892588151402,
       "floor": 12,
       "nearestSubwayM": null
     },
@@ -559,28 +383,6 @@
     },
     {
       "kind": "nerf",
-      "sigungu": "화성시 병점구",
-      "dong": "병점동",
-      "apt": "병점역센트럴허브시티",
-      "areaM2": 84.925,
-      "band": "p32_35",
-      "priceKrw": 550000000,
-      "medianKrw": 473532698,
-      "pct": 0.1614826226846958,
-      "dealDate": "2026-10-02",
-      "maxKrw": 500000000,
-      "prevKrw": 490000000,
-      "prevDate": "2026-09-28",
-      "prevFloor": 13,
-      "pctVsPrev": 0.12244897959183673,
-      "windowMaxKrw": 550000000,
-      "lat": 37.20395367261754,
-      "lng": 127.0401877293948,
-      "floor": 6,
-      "nearestSubwayM": null
-    },
-    {
-      "kind": "nerf",
       "sigungu": "남양주시",
       "dong": "와부읍 도곡리",
       "apt": "덕소쌍용",
@@ -599,72 +401,6 @@
       "lat": 37.5787684947428,
       "lng": 127.2199189794441,
       "floor": 11,
-      "nearestSubwayM": null
-    },
-    {
-      "kind": "nerf",
-      "sigungu": "평택시",
-      "dong": "포승읍 도곡리",
-      "apt": "모아미래도1차",
-      "areaM2": 59.9717,
-      "band": "p19_25",
-      "priceKrw": 163000000,
-      "medianKrw": 146586980,
-      "pct": 0.11196778868082281,
-      "dealDate": "2026-10-03",
-      "maxKrw": 190000000,
-      "prevKrw": 147000000,
-      "prevDate": "2026-09-01",
-      "prevFloor": 7,
-      "pctVsPrev": 0.10884353741496598,
-      "windowMaxKrw": 170000000,
-      "lat": 36.99034560733781,
-      "lng": 126.850371172544,
-      "floor": 9,
-      "nearestSubwayM": null
-    },
-    {
-      "kind": "nerf",
-      "sigungu": "평택시",
-      "dong": "동삭동",
-      "apt": "더샵지제역센트럴파크3BL",
-      "areaM2": 74.9929,
-      "band": "p26_31",
-      "priceKrw": 420000000,
-      "medianKrw": 354816805,
-      "pct": 0.18370943563397454,
-      "dealDate": "2026-10-02",
-      "maxKrw": 400000000,
-      "prevKrw": 379000000,
-      "prevDate": "2026-08-25",
-      "prevFloor": 7,
-      "pctVsPrev": 0.10817941952506596,
-      "windowMaxKrw": 410000000,
-      "lat": 37.02121150553881,
-      "lng": 127.0929214893269,
-      "floor": 11,
-      "nearestSubwayM": null
-    },
-    {
-      "kind": "nerf",
-      "sigungu": "부천시 원미구",
-      "dong": "중동",
-      "apt": "한라마을(주공2)",
-      "areaM2": 41.85,
-      "band": "under18",
-      "priceKrw": 310000000,
-      "medianKrw": 283567539,
-      "pct": 0.09321398737392153,
-      "dealDate": "2026-10-09",
-      "maxKrw": 307000000,
-      "prevKrw": 280000000,
-      "prevDate": "2026-10-02",
-      "prevFloor": 2,
-      "pctVsPrev": 0.10714285714285714,
-      "windowMaxKrw": 310000000,
-      "lat": 37.50972165940625,
-      "lng": 126.7629584748809,
-      "floor": 12,
       "nearestSubwayM": null
     },
     {
@@ -735,68 +471,24 @@
     },
     {
       "kind": "nerf",
-      "sigungu": "연수구",
-      "dong": "동춘동",
-      "apt": "연수대우.삼환",
-      "areaM2": 90.18,
-      "band": "p36_40",
-      "priceKrw": 465000000,
-      "medianKrw": 431923715,
-      "pct": 0.07657899728890784,
-      "dealDate": "2026-10-02",
-      "maxKrw": 470000000,
-      "prevKrw": 425000000,
-      "prevDate": "2026-09-11",
-      "prevFloor": 4,
-      "pctVsPrev": 0.09411764705882353,
-      "windowMaxKrw": 485000000,
-      "lat": 37.40589678518909,
-      "lng": 126.6787717274366,
-      "floor": 19,
-      "nearestSubwayM": null
-    },
-    {
-      "kind": "nerf",
-      "sigungu": "부천시 소사구",
-      "dong": "범박동",
-      "apt": "부천범박힐스테이트4단지",
-      "areaM2": 84.39,
+      "sigungu": "수원시 팔달구",
+      "dong": "화서동",
+      "apt": "화서주공3단지",
+      "areaM2": 84.9,
       "band": "p32_35",
-      "priceKrw": 595000000,
-      "medianKrw": 533366515,
-      "pct": 0.11555559501143411,
-      "dealDate": "2026-10-03",
-      "maxKrw": 626000000,
-      "prevKrw": 548000000,
-      "prevDate": "2026-09-11",
-      "prevFloor": 5,
-      "pctVsPrev": 0.08576642335766424,
-      "windowMaxKrw": 555000000,
-      "lat": 37.47163372323134,
-      "lng": 126.8077480638239,
-      "floor": 22,
-      "nearestSubwayM": null
-    },
-    {
-      "kind": "nerf",
-      "sigungu": "화성시 병점구",
-      "dong": "능동",
-      "apt": "서동탄역파크자이",
-      "areaM2": 76.9706,
-      "band": "p26_31",
-      "priceKrw": 640000000,
-      "medianKrw": 594083778,
-      "pct": 0.07728913614604707,
-      "dealDate": "2026-09-29",
-      "maxKrw": 600000000,
-      "prevKrw": 590000000,
-      "prevDate": "2026-08-10",
-      "prevFloor": 8,
-      "pctVsPrev": 0.0847457627118644,
-      "windowMaxKrw": 600000000,
-      "lat": 37.20245965723208,
-      "lng": 127.0498608187767,
-      "floor": 8,
+      "priceKrw": 1140000000,
+      "medianKrw": 1049774185,
+      "pct": 0.08594783172344822,
+      "dealDate": "2026-10-08",
+      "maxKrw": 1010000000,
+      "prevKrw": 1050000000,
+      "prevDate": "2026-10-02",
+      "prevFloor": 11,
+      "pctVsPrev": 0.08571428571428572,
+      "windowMaxKrw": 1050000000,
+      "lat": 37.28591929308884,
+      "lng": 126.9922054437349,
+      "floor": 10,
       "nearestSubwayM": null
     },
     {
@@ -823,50 +515,6 @@
     },
     {
       "kind": "nerf",
-      "sigungu": "연수구",
-      "dong": "송도동",
-      "apt": "더샵그린워크1차",
-      "areaM2": 59.9201,
-      "band": "p19_25",
-      "priceKrw": 735000000,
-      "medianKrw": 682021067,
-      "pct": 0.07767932042486306,
-      "dealDate": "2026-10-05",
-      "maxKrw": 669000000,
-      "prevKrw": 680000000,
-      "prevDate": "2026-09-22",
-      "prevFloor": 24,
-      "pctVsPrev": 0.08088235294117647,
-      "windowMaxKrw": 680000000,
-      "lat": 37.39892749574212,
-      "lng": 126.6414961117791,
-      "floor": 5,
-      "nearestSubwayM": null
-    },
-    {
-      "kind": "nerf",
-      "sigungu": "부평구",
-      "dong": "부평동",
-      "apt": "대림1차",
-      "areaM2": 84.998,
-      "band": "p32_35",
-      "priceKrw": 378000000,
-      "medianKrw": 352162489,
-      "pct": 0.07336815193852177,
-      "dealDate": "2026-10-06",
-      "maxKrw": 500000000,
-      "prevKrw": 350000000,
-      "prevDate": "2026-09-04",
-      "prevFloor": 9,
-      "pctVsPrev": 0.08,
-      "windowMaxKrw": 370000000,
-      "lat": 37.50211944964415,
-      "lng": 126.7176708641202,
-      "floor": 5,
-      "nearestSubwayM": null
-    },
-    {
-      "kind": "nerf",
       "sigungu": "광명시",
       "dong": "광명동",
       "apt": "월드메르디앙",
@@ -885,72 +533,6 @@
       "lat": 37.47687041388191,
       "lng": 126.8472675906402,
       "floor": 11,
-      "nearestSubwayM": null
-    },
-    {
-      "kind": "nerf",
-      "sigungu": "강서구",
-      "dong": "방화동",
-      "apt": "방화그린",
-      "areaM2": 33.18,
-      "band": "under18",
-      "priceKrw": 490000000,
-      "medianKrw": 455771542,
-      "pct": 0.07510003334082671,
-      "dealDate": "2026-10-05",
-      "maxKrw": 450000000,
-      "prevKrw": 455000000,
-      "prevDate": "2026-09-02",
-      "prevFloor": 14,
-      "pctVsPrev": 0.07692307692307693,
-      "windowMaxKrw": 455000000,
-      "lat": 37.57197597229787,
-      "lng": 126.8119232674471,
-      "floor": 12,
-      "nearestSubwayM": null
-    },
-    {
-      "kind": "nerf",
-      "sigungu": "관악구",
-      "dong": "봉천동",
-      "apt": "낙성대현대아파트",
-      "areaM2": 61.74,
-      "band": "p19_25",
-      "priceKrw": 850000000,
-      "medianKrw": 734250619,
-      "pct": 0.15764287833715807,
-      "dealDate": "2026-10-02",
-      "maxKrw": 920000000,
-      "prevKrw": 790000000,
-      "prevDate": "2026-08-03",
-      "prevFloor": 12,
-      "pctVsPrev": 0.0759493670886076,
-      "windowMaxKrw": 920000000,
-      "lat": 37.47281495552714,
-      "lng": 126.9655585988025,
-      "floor": 11,
-      "nearestSubwayM": null
-    },
-    {
-      "kind": "nerf",
-      "sigungu": "여주시",
-      "dong": "현암동",
-      "apt": "벽산",
-      "areaM2": 37.52,
-      "band": "under18",
-      "priceKrw": 79500000,
-      "medianKrw": 65799797,
-      "pct": 0.2082104143877526,
-      "dealDate": "2026-10-07",
-      "maxKrw": 86000000,
-      "prevKrw": 74000000,
-      "prevDate": "2026-10-02",
-      "prevFloor": 8,
-      "pctVsPrev": 0.07432432432432433,
-      "windowMaxKrw": 74500000,
-      "lat": 37.30739144121557,
-      "lng": 127.6401935414348,
-      "floor": 17,
       "nearestSubwayM": null
     },
     {
@@ -1023,6 +605,28 @@
   "buff": [
     {
       "kind": "buff",
+      "sigungu": "수원시 팔달구",
+      "dong": "인계동",
+      "apt": "선경3",
+      "areaM2": 59.32,
+      "band": "p19_25",
+      "priceKrw": 240000000,
+      "medianKrw": 335022544,
+      "pct": -0.28363029802555617,
+      "dealDate": "2026-10-08",
+      "maxKrw": 380000000,
+      "prevKrw": 320000000,
+      "prevDate": "2026-10-02",
+      "prevFloor": 2,
+      "pctVsPrev": -0.25,
+      "windowMaxKrw": 345000000,
+      "lat": 37.27599089948369,
+      "lng": 127.0360901885643,
+      "floor": 13,
+      "nearestSubwayM": null
+    },
+    {
+      "kind": "buff",
       "sigungu": "고양시 덕양구",
       "dong": "향동동",
       "apt": "DMC중흥S-클래스더센트럴",
@@ -1067,28 +671,6 @@
     },
     {
       "kind": "buff",
-      "sigungu": "은평구",
-      "dong": "갈현동",
-      "apt": "라이프시티",
-      "areaM2": 79.11,
-      "band": "p32_35",
-      "priceKrw": 400000000,
-      "medianKrw": 503104478,
-      "pct": -0.2049365142005355,
-      "dealDate": "2026-10-06",
-      "maxKrw": 477000000,
-      "prevKrw": 490000000,
-      "prevDate": "2026-09-19",
-      "prevFloor": 13,
-      "pctVsPrev": -0.1836734693877551,
-      "windowMaxKrw": 490000000,
-      "lat": 37.62299779653625,
-      "lng": 126.9104306585964,
-      "floor": 6,
-      "nearestSubwayM": null
-    },
-    {
-      "kind": "buff",
       "sigungu": "안산시 단원구",
       "dong": "선부동",
       "apt": "수정한양",
@@ -1111,122 +693,50 @@
     },
     {
       "kind": "buff",
-      "sigungu": "부천시 원미구",
-      "dong": "중동",
-      "apt": "중흥마을(주공)",
-      "areaM2": 39.87,
-      "band": "under18",
-      "priceKrw": 250000000,
-      "medianKrw": 308185237,
-      "pct": -0.18879955953243796,
-      "dealDate": "2026-09-29",
-      "maxKrw": 308000000,
-      "prevKrw": 340000000,
-      "prevDate": "2026-09-14",
-      "prevFloor": 11,
-      "pctVsPrev": -0.2647058823529412,
-      "windowMaxKrw": 370000000,
-      "lat": 37.50651619349887,
-      "lng": 126.7708742451211,
-      "floor": 12,
+      "sigungu": "안양시 만안구",
+      "dong": "박달동",
+      "apt": "금호타운",
+      "areaM2": 59.31,
+      "band": "p19_25",
+      "priceKrw": 270000000,
+      "medianKrw": 333857673,
+      "pct": -0.19127214428287231,
+      "dealDate": "2026-10-01",
+      "maxKrw": 332000000,
+      "prevKrw": 290000000,
+      "prevDate": "2026-09-20",
+      "prevFloor": 10,
+      "pctVsPrev": -0.06896551724137931,
+      "windowMaxKrw": 332000000,
+      "lat": 37.39904432244945,
+      "lng": 126.9015137805452,
+      "floor": 2,
       "nearestSubwayM": null
     }
   ],
   "major": [
     {
-      "sigungu": "강남구",
-      "dong": "삼성동",
-      "apt": "래미안삼성1차(103-22)",
-      "areaM2": 141.53,
-      "priceKrw": 3650000000,
-      "dealDate": "2026-10-01",
+      "sigungu": "서초구",
+      "dong": "반포동",
+      "apt": "반포래미안아이파크",
+      "areaM2": 84.88,
+      "priceKrw": 3870000000,
+      "dealDate": "2026-09-15",
       "pct": null,
-      "buildYear": 2006,
-      "sampleCount": null,
-      "totalSampleCount": null,
+      "buildYear": 2018,
+      "sampleCount": 2,
+      "totalSampleCount": 10,
       "prevKrw": null,
       "prevDate": null,
       "prevFloor": null,
       "pctVsPrev": null,
-      "windowMaxKrw": null,
-      "windowMaxDate": null,
-      "windowMaxFloor": null,
-      "refMaxPeriod": null,
-      "lat": null,
-      "lng": null,
-      "floor": 15,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "강남구",
-      "dong": "논현동",
-      "apt": "아크로힐스논현",
-      "areaM2": 113.231,
-      "priceKrw": 3620000000,
-      "dealDate": "2026-09-29",
-      "pct": -0.04051423576981806,
-      "buildYear": 2014,
-      "sampleCount": 3,
-      "totalSampleCount": 11,
-      "prevKrw": null,
-      "prevDate": null,
-      "prevFloor": null,
-      "pctVsPrev": null,
-      "windowMaxKrw": 3650000000,
-      "windowMaxDate": "2025-12-08",
-      "windowMaxFloor": 19,
+      "windowMaxKrw": 4200000000,
+      "windowMaxDate": "2026-04-03",
+      "windowMaxFloor": 7,
       "refMaxPeriod": "1년",
-      "lat": 37.5095503194411,
-      "lng": 127.038984695601,
-      "floor": 18,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "송파구",
-      "dong": "잠실동",
-      "apt": "우성아파트",
-      "areaM2": 96.65,
-      "priceKrw": 3400000000,
-      "dealDate": "2026-09-28",
-      "pct": -0.04059446951855815,
-      "buildYear": 1981,
-      "sampleCount": 7,
-      "totalSampleCount": 20,
-      "prevKrw": 3480000000,
-      "prevDate": "2026-08-21",
-      "prevFloor": 3,
-      "pctVsPrev": -0.022988505747126436,
-      "windowMaxKrw": 3470000000,
-      "windowMaxDate": "2026-02-11",
-      "windowMaxFloor": 6,
-      "refMaxPeriod": "1년",
-      "lat": 37.50280794612605,
-      "lng": 127.0829305864437,
-      "floor": 9,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "송파구",
-      "dong": "잠실동",
-      "apt": "리센츠",
-      "areaM2": 84.99,
-      "priceKrw": 3360000000,
-      "dealDate": "2026-09-29",
-      "pct": -0.07946041178076582,
-      "buildYear": 2008,
-      "sampleCount": 67,
-      "totalSampleCount": 123,
-      "prevKrw": 3600000000,
-      "prevDate": "2026-09-08",
-      "prevFloor": 27,
-      "pctVsPrev": -0.06666666666666667,
-      "windowMaxKrw": 3695000000,
-      "windowMaxDate": "2026-07-23",
-      "windowMaxFloor": 15,
-      "refMaxPeriod": "1년",
-      "lat": 37.51275285867244,
-      "lng": 127.0884194493474,
-      "floor": 18,
+      "lat": 37.50142267253425,
+      "lng": 127.0129094251818,
+      "floor": 6,
       "nearestSubwayM": null
     },
     {
@@ -1254,30 +764,6 @@
       "nearestSubwayM": null
     },
     {
-      "sigungu": "강남구",
-      "dong": "논현동",
-      "apt": "아크로힐스논현",
-      "areaM2": 84.13,
-      "priceKrw": 3085000000,
-      "dealDate": "2026-10-02",
-      "pct": 0.09513946462991543,
-      "buildYear": 2014,
-      "sampleCount": 8,
-      "totalSampleCount": 11,
-      "prevKrw": null,
-      "prevDate": null,
-      "prevFloor": null,
-      "pctVsPrev": null,
-      "windowMaxKrw": 3170000000,
-      "windowMaxDate": "2026-01-30",
-      "windowMaxFloor": 29,
-      "refMaxPeriod": "1년",
-      "lat": 37.5095503194411,
-      "lng": 127.038984695601,
-      "floor": 23,
-      "nearestSubwayM": null
-    },
-    {
       "sigungu": "양천구",
       "dong": "목동",
       "apt": "목동신시가지7",
@@ -1302,78 +788,6 @@
       "nearestSubwayM": null
     },
     {
-      "sigungu": "송파구",
-      "dong": "방이동",
-      "apt": "올림픽선수기자촌1단지",
-      "areaM2": 100.82,
-      "priceKrw": 2950000000,
-      "dealDate": "2026-10-02",
-      "pct": -0.06357350465300295,
-      "buildYear": 1988,
-      "sampleCount": 4,
-      "totalSampleCount": 19,
-      "prevKrw": 2661000000,
-      "prevDate": "2026-08-27",
-      "prevFloor": 3,
-      "pctVsPrev": 0.10860578729800827,
-      "windowMaxKrw": 3300000000,
-      "windowMaxDate": "2026-01-02",
-      "windowMaxFloor": 10,
-      "refMaxPeriod": "1년",
-      "lat": 37.51455377089724,
-      "lng": 127.1352531371729,
-      "floor": 8,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "송파구",
-      "dong": "신천동",
-      "apt": "파크리오",
-      "areaM2": 59.95,
-      "priceKrw": 2700000000,
-      "dealDate": "2026-09-30",
-      "pct": -0.047880872318892174,
-      "buildYear": 2008,
-      "sampleCount": 18,
-      "totalSampleCount": 100,
-      "prevKrw": 2600000000,
-      "prevDate": "2026-09-22",
-      "prevFloor": 11,
-      "pctVsPrev": 0.038461538461538464,
-      "windowMaxKrw": 2800000000,
-      "windowMaxDate": "2026-01-13",
-      "windowMaxFloor": 11,
-      "refMaxPeriod": "1년",
-      "lat": 37.52122940631966,
-      "lng": 127.1099825116699,
-      "floor": 9,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "종로구",
-      "dong": "내수동",
-      "apt": "킹스매너",
-      "areaM2": 194.43,
-      "priceKrw": 2650000000,
-      "dealDate": "2026-09-29",
-      "pct": null,
-      "buildYear": 2004,
-      "sampleCount": null,
-      "totalSampleCount": null,
-      "prevKrw": null,
-      "prevDate": null,
-      "prevFloor": null,
-      "pctVsPrev": null,
-      "windowMaxKrw": null,
-      "windowMaxDate": null,
-      "windowMaxFloor": null,
-      "refMaxPeriod": null,
-      "lat": null,
-      "lng": null,
-      "floor": 6,
-      "nearestSubwayM": null
-    },
-    {
       "sigungu": "광진구",
       "dong": "광장동",
       "apt": "광장힐스테이트",
@@ -1395,54 +809,6 @@
       "lat": 37.54317982217169,
       "lng": 127.0995626433691,
       "floor": 8,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "성남시 분당구",
-      "dong": "수내동",
-      "apt": "푸른마을(벽산)",
-      "areaM2": 131.4,
-      "priceKrw": 2400000000,
-      "dealDate": "2026-09-28",
-      "pct": 0.0314179978469665,
-      "buildYear": 1992,
-      "sampleCount": 4,
-      "totalSampleCount": 14,
-      "prevKrw": null,
-      "prevDate": null,
-      "prevFloor": null,
-      "pctVsPrev": null,
-      "windowMaxKrw": 2240000000,
-      "windowMaxDate": "2026-07-08",
-      "windowMaxFloor": 8,
-      "refMaxPeriod": "1년",
-      "lat": 37.3702947315566,
-      "lng": 127.124920145277,
-      "floor": 15,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "성동구",
-      "dong": "성수동2가",
-      "apt": "롯데캐슬파크",
-      "areaM2": 101.995,
-      "priceKrw": 2335000000,
-      "dealDate": "2026-09-15",
-      "pct": 0.08309278209858535,
-      "buildYear": 2003,
-      "sampleCount": 5,
-      "totalSampleCount": 16,
-      "prevKrw": null,
-      "prevDate": null,
-      "prevFloor": null,
-      "pctVsPrev": null,
-      "windowMaxKrw": 2270000000,
-      "windowMaxDate": "2026-03-31",
-      "windowMaxFloor": 18,
-      "refMaxPeriod": "1년",
-      "lat": 37.54604848490114,
-      "lng": 127.055959459757,
-      "floor": 4,
       "nearestSubwayM": null
     },
     {
@@ -1566,30 +932,6 @@
       "nearestSubwayM": null
     },
     {
-      "sigungu": "성동구",
-      "dong": "행당동",
-      "apt": "행당한진타운",
-      "areaM2": 84.71,
-      "priceKrw": 1950000000,
-      "dealDate": "2026-09-23",
-      "pct": -0.03225263792682677,
-      "buildYear": 2000,
-      "sampleCount": 13,
-      "totalSampleCount": 35,
-      "prevKrw": null,
-      "prevDate": null,
-      "prevFloor": null,
-      "pctVsPrev": null,
-      "windowMaxKrw": 1950000000,
-      "windowMaxDate": "2026-06-26",
-      "windowMaxFloor": 13,
-      "refMaxPeriod": "1년",
-      "lat": 37.5559331868365,
-      "lng": 127.028746219483,
-      "floor": 7,
-      "nearestSubwayM": null
-    },
-    {
       "sigungu": "강남구",
       "dong": "자곡동",
       "apt": "강남자곡아이파크",
@@ -1611,30 +953,6 @@
       "lat": 37.4748352798466,
       "lng": 127.101393788617,
       "floor": 9,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "강동구",
-      "dong": "상일동",
-      "apt": "고덕아르테온",
-      "areaM2": 59.96,
-      "priceKrw": 1940000000,
-      "dealDate": "2026-09-29",
-      "pct": 0.017827073299845005,
-      "buildYear": 2020,
-      "sampleCount": 16,
-      "totalSampleCount": 40,
-      "prevKrw": null,
-      "prevDate": null,
-      "prevFloor": null,
-      "pctVsPrev": null,
-      "windowMaxKrw": 1945000000,
-      "windowMaxDate": "2025-10-17",
-      "windowMaxFloor": 5,
-      "refMaxPeriod": "1년",
-      "lat": 37.55500651472703,
-      "lng": 127.1684597529005,
-      "floor": 10,
       "nearestSubwayM": null
     },
     {
@@ -1686,54 +1004,6 @@
       "nearestSubwayM": null
     },
     {
-      "sigungu": "강동구",
-      "dong": "명일동",
-      "apt": "현대(고덕)",
-      "areaM2": 84.91,
-      "priceKrw": 1840000000,
-      "dealDate": "2026-09-23",
-      "pct": -0.07414432206909004,
-      "buildYear": 1986,
-      "sampleCount": 3,
-      "totalSampleCount": 8,
-      "prevKrw": null,
-      "prevDate": null,
-      "prevFloor": null,
-      "pctVsPrev": null,
-      "windowMaxKrw": 1900000000,
-      "windowMaxDate": "2026-05-04",
-      "windowMaxFloor": 14,
-      "refMaxPeriod": "1년",
-      "lat": 37.55050297086706,
-      "lng": 127.1535253151171,
-      "floor": 13,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "구로구",
-      "dong": "신도림동",
-      "apt": "대림e-편한세상7",
-      "areaM2": 116.308,
-      "priceKrw": 1815000000,
-      "dealDate": "2026-10-04",
-      "pct": null,
-      "buildYear": 2004,
-      "sampleCount": 2,
-      "totalSampleCount": 8,
-      "prevKrw": null,
-      "prevDate": null,
-      "prevFloor": null,
-      "pctVsPrev": null,
-      "windowMaxKrw": 1825000000,
-      "windowMaxDate": "2026-07-05",
-      "windowMaxFloor": 14,
-      "refMaxPeriod": "1년",
-      "lat": 37.5088750101487,
-      "lng": 126.882694104468,
-      "floor": 12,
-      "nearestSubwayM": null
-    },
-    {
       "sigungu": "광진구",
       "dong": "구의동",
       "apt": "래미안파크스위트",
@@ -1758,30 +1028,6 @@
       "nearestSubwayM": null
     },
     {
-      "sigungu": "고양시 일산동구",
-      "dong": "장항동",
-      "apt": "킨텍스원시티3블럭",
-      "areaM2": 104.9074,
-      "priceKrw": 1710000000,
-      "dealDate": "2026-10-01",
-      "pct": null,
-      "buildYear": 2019,
-      "sampleCount": 1,
-      "totalSampleCount": 18,
-      "prevKrw": null,
-      "prevDate": null,
-      "prevFloor": null,
-      "pctVsPrev": null,
-      "windowMaxKrw": 1730000000,
-      "windowMaxDate": "2025-09-28",
-      "windowMaxFloor": 39,
-      "refMaxPeriod": "1년",
-      "lat": 37.66160174272338,
-      "lng": 126.749881561317,
-      "floor": 22,
-      "nearestSubwayM": null
-    },
-    {
       "sigungu": "하남시",
       "dong": "망월동",
       "apt": "미사역파라곤",
@@ -1803,30 +1049,6 @@
       "lat": 37.56436898513759,
       "lng": 127.1941323364456,
       "floor": 19,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "성남시 분당구",
-      "dong": "정자동",
-      "apt": "정든마을(2단지)(동아)",
-      "areaM2": 84.97,
-      "priceKrw": 1650000000,
-      "dealDate": "2026-09-29",
-      "pct": null,
-      "buildYear": 1995,
-      "sampleCount": 1,
-      "totalSampleCount": 20,
-      "prevKrw": 1730000000,
-      "prevDate": "2026-09-02",
-      "prevFloor": 14,
-      "pctVsPrev": -0.046242774566473986,
-      "windowMaxKrw": 1770000000,
-      "windowMaxDate": "2026-07-08",
-      "windowMaxFloor": 12,
-      "refMaxPeriod": "1년",
-      "lat": 37.36021980759613,
-      "lng": 127.1219945402717,
-      "floor": 21,
       "nearestSubwayM": null
     },
     {
@@ -1878,30 +1100,6 @@
       "nearestSubwayM": null
     },
     {
-      "sigungu": "마포구",
-      "dong": "염리동",
-      "apt": "염리삼성래미안",
-      "areaM2": 59.76,
-      "priceKrw": 1615000000,
-      "dealDate": "2026-09-28",
-      "pct": 0.03128258493775553,
-      "buildYear": 2001,
-      "sampleCount": 16,
-      "totalSampleCount": 26,
-      "prevKrw": null,
-      "prevDate": null,
-      "prevFloor": null,
-      "pctVsPrev": null,
-      "windowMaxKrw": 1670000000,
-      "windowMaxDate": "2026-01-09",
-      "windowMaxFloor": 11,
-      "refMaxPeriod": "1년",
-      "lat": 37.54896539011028,
-      "lng": 126.9467950236098,
-      "floor": 10,
-      "nearestSubwayM": null
-    },
-    {
       "sigungu": "용인시 수지구",
       "dong": "상현동",
       "apt": "광교자이더클래스",
@@ -1950,51 +1148,75 @@
       "nearestSubwayM": null
     },
     {
-      "sigungu": "광진구",
-      "dong": "자양동",
-      "apt": "자양동현대",
-      "areaM2": 84.55,
-      "priceKrw": 1570000000,
-      "dealDate": "2026-10-02",
-      "pct": 0.013849382100550249,
-      "buildYear": 1993,
-      "sampleCount": 6,
-      "totalSampleCount": 9,
-      "prevKrw": 1580000000,
-      "prevDate": "2026-09-03",
-      "prevFloor": 10,
-      "pctVsPrev": -0.006329113924050633,
-      "windowMaxKrw": 1500000000,
-      "windowMaxDate": "2026-05-03",
-      "windowMaxFloor": 17,
+      "sigungu": "성남시 수정구",
+      "dong": "신흥동",
+      "apt": "산성역포레스티아",
+      "areaM2": 74.96,
+      "priceKrw": 1600000000,
+      "dealDate": "2026-09-29",
+      "pct": 0.029811805702811493,
+      "buildYear": 2020,
+      "sampleCount": 52,
+      "totalSampleCount": 121,
+      "prevKrw": 1400000000,
+      "prevDate": "2026-09-12",
+      "prevFloor": 1,
+      "pctVsPrev": 0.14285714285714285,
+      "windowMaxKrw": 1600000000,
+      "windowMaxDate": "2026-07-04",
+      "windowMaxFloor": 23,
       "refMaxPeriod": "1년",
-      "lat": 37.52824280378817,
-      "lng": 127.0835990650082,
-      "floor": 9,
+      "lat": 37.45300088382653,
+      "lng": 127.1470137117853,
+      "floor": 11,
       "nearestSubwayM": null
     },
     {
-      "sigungu": "서대문구",
-      "dong": "북가좌동",
-      "apt": "DMC래미안e편한세상",
-      "areaM2": 84.95,
-      "priceKrw": 1557000000,
-      "dealDate": "2026-10-06",
-      "pct": -0.04495033385049201,
-      "buildYear": 2012,
-      "sampleCount": 38,
-      "totalSampleCount": 60,
-      "prevKrw": 1580000000,
-      "prevDate": "2026-09-19",
-      "prevFloor": 8,
-      "pctVsPrev": -0.014556962025316455,
-      "windowMaxKrw": 1595000000,
-      "windowMaxDate": "2026-07-09",
-      "windowMaxFloor": 14,
+      "sigungu": "광명시",
+      "dong": "일직동",
+      "apt": "유-플래닛태영데시앙",
+      "areaM2": 84.862,
+      "priceKrw": 1565000000,
+      "dealDate": "2026-10-07",
+      "pct": -0.025434779154600417,
+      "buildYear": 2019,
+      "sampleCount": 29,
+      "totalSampleCount": 38,
+      "prevKrw": 1500000000,
+      "prevDate": "2026-09-28",
+      "prevFloor": 23,
+      "pctVsPrev": 0.043333333333333335,
+      "windowMaxKrw": 1540000000,
+      "windowMaxDate": "2026-07-23",
+      "windowMaxFloor": 15,
       "refMaxPeriod": "1년",
-      "lat": 37.57366693548401,
-      "lng": 126.9106776876623,
-      "floor": 17,
+      "lat": 37.41894302323851,
+      "lng": 126.8815274888353,
+      "floor": 34,
+      "nearestSubwayM": null
+    },
+    {
+      "sigungu": "성남시 수정구",
+      "dong": "신흥동",
+      "apt": "산성역포레스티아",
+      "areaM2": 74.98,
+      "priceKrw": 1540000000,
+      "dealDate": "2026-10-06",
+      "pct": -0.008806137011043939,
+      "buildYear": 2020,
+      "sampleCount": 52,
+      "totalSampleCount": 121,
+      "prevKrw": 1600000000,
+      "prevDate": "2026-09-29",
+      "prevFloor": 11,
+      "pctVsPrev": -0.0375,
+      "windowMaxKrw": 1600000000,
+      "windowMaxDate": "2026-07-04",
+      "windowMaxFloor": 23,
+      "refMaxPeriod": "1년",
+      "lat": 37.45300088382653,
+      "lng": 127.1470137117853,
+      "floor": 20,
       "nearestSubwayM": null
     },
     {
@@ -2071,25 +1293,25 @@
     }
   ],
   "temp": {
-    "above": 363,
-    "below": 307,
-    "matched": 762
+    "above": 201,
+    "below": 158,
+    "matched": 405
   },
   "regionTemp": {
     "강동구": {
-      "above": 1,
+      "above": 0,
       "below": 2,
-      "matched": 5
+      "matched": 3
     },
     "강북구": {
-      "above": 4,
-      "below": 2,
-      "matched": 6
+      "above": 2,
+      "below": 0,
+      "matched": 2
     },
     "강서구": {
-      "above": 4,
-      "below": 2,
-      "matched": 8
+      "above": 1,
+      "below": 1,
+      "matched": 3
     },
     "강화군": {
       "above": 1,
@@ -2097,124 +1319,114 @@
       "matched": 1
     },
     "계양구": {
-      "above": 5,
-      "below": 3,
-      "matched": 9
-    },
-    "고양시 덕양구": {
-      "above": 14,
-      "below": 19,
-      "matched": 39
-    },
-    "고양시 일산동구": {
-      "above": 6,
-      "below": 2,
-      "matched": 8
-    },
-    "고양시 일산서구": {
-      "above": 0,
-      "below": 4,
+      "above": 4,
+      "below": 0,
       "matched": 5
     },
-    "관악구": {
+    "고양시 덕양구": {
+      "above": 7,
+      "below": 5,
+      "matched": 16
+    },
+    "고양시 일산동구": {
       "above": 5,
       "below": 2,
       "matched": 7
     },
-    "광명시": {
-      "above": 2,
-      "below": 1,
-      "matched": 5
+    "고양시 일산서구": {
+      "above": 0,
+      "below": 2,
+      "matched": 3
     },
-    "광주시": {
-      "above": 6,
-      "below": 4,
-      "matched": 13
-    },
-    "광진구": {
+    "관악구": {
       "above": 1,
-      "below": 0,
-      "matched": 2
+      "below": 2,
+      "matched": 3
     },
-    "구로구": {
-      "above": 6,
-      "below": 4,
-      "matched": 10
-    },
-    "구리시": {
+    "광명시": {
       "above": 3,
       "below": 1,
       "matched": 4
     },
+    "광주시": {
+      "above": 0,
+      "below": 2,
+      "matched": 3
+    },
+    "광진구": {
+      "above": 1,
+      "below": 0,
+      "matched": 1
+    },
+    "구로구": {
+      "above": 1,
+      "below": 2,
+      "matched": 3
+    },
+    "구리시": {
+      "above": 1,
+      "below": 0,
+      "matched": 1
+    },
     "군포시": {
-      "above": 7,
-      "below": 7,
-      "matched": 15
-    },
-    "김포시": {
-      "above": 5,
-      "below": 9,
-      "matched": 15
-    },
-    "남동구": {
       "above": 6,
-      "below": 3,
+      "below": 2,
       "matched": 9
     },
+    "김포시": {
+      "above": 1,
+      "below": 2,
+      "matched": 3
+    },
+    "남동구": {
+      "above": 4,
+      "below": 1,
+      "matched": 5
+    },
     "남양주시": {
-      "above": 15,
-      "below": 9,
-      "matched": 26
+      "above": 10,
+      "below": 0,
+      "matched": 11
     },
     "노원구": {
       "above": 1,
-      "below": 4,
-      "matched": 5
+      "below": 3,
+      "matched": 4
     },
     "도봉구": {
-      "above": 8,
-      "below": 2,
-      "matched": 11
-    },
-    "동대문구": {
-      "above": 2,
-      "below": 0,
-      "matched": 3
+      "above": 5,
+      "below": 1,
+      "matched": 6
     },
     "마포구": {
-      "above": 1,
-      "below": 1,
-      "matched": 2
-    },
-    "미추홀구": {
-      "above": 3,
-      "below": 0,
-      "matched": 3
-    },
-    "부천시 소사구": {
-      "above": 7,
-      "below": 6,
-      "matched": 16
-    },
-    "부천시 오정구": {
       "above": 0,
       "below": 1,
       "matched": 1
     },
+    "미추홀구": {
+      "above": 1,
+      "below": 0,
+      "matched": 1
+    },
+    "부천시 소사구": {
+      "above": 2,
+      "below": 2,
+      "matched": 5
+    },
     "부천시 원미구": {
-      "above": 18,
-      "below": 17,
-      "matched": 37
+      "above": 14,
+      "below": 13,
+      "matched": 29
     },
     "부평구": {
-      "above": 7,
-      "below": 9,
-      "matched": 16
+      "above": 5,
+      "below": 6,
+      "matched": 11
     },
     "서대문구": {
-      "above": 1,
-      "below": 2,
-      "matched": 3
+      "above": 0,
+      "below": 1,
+      "matched": 1
     },
     "서초구": {
       "above": 1,
@@ -2223,83 +1435,73 @@
     },
     "성남시 분당구": {
       "above": 2,
-      "below": 2,
-      "matched": 6
-    },
-    "성남시 중원구": {
-      "above": 2,
-      "below": 1,
-      "matched": 4
-    },
-    "성동구": {
-      "above": 1,
       "below": 0,
-      "matched": 1
-    },
-    "성북구": {
-      "above": 6,
-      "below": 5,
-      "matched": 11
-    },
-    "송파구": {
-      "above": 2,
-      "below": 2,
-      "matched": 5
-    },
-    "수원시 권선구": {
-      "above": 25,
-      "below": 17,
-      "matched": 48
-    },
-    "수원시 영통구": {
-      "above": 14,
-      "below": 12,
-      "matched": 28
-    },
-    "수원시 장안구": {
-      "above": 6,
-      "below": 4,
-      "matched": 13
-    },
-    "수원시 팔달구": {
-      "above": 4,
-      "below": 4,
-      "matched": 8
-    },
-    "시흥시": {
-      "above": 11,
-      "below": 11,
-      "matched": 27
-    },
-    "안산시 단원구": {
-      "above": 5,
-      "below": 9,
-      "matched": 16
-    },
-    "안산시 상록구": {
-      "above": 3,
-      "below": 1,
-      "matched": 5
-    },
-    "안성시": {
-      "above": 1,
-      "below": 1,
       "matched": 3
     },
-    "안양시 동안구": {
-      "above": 4,
-      "below": 3,
-      "matched": 8
+    "성남시 수정구": {
+      "above": 2,
+      "below": 2,
+      "matched": 4
     },
-    "안양시 만안구": {
+    "성남시 중원구": {
       "above": 1,
       "below": 1,
       "matched": 2
     },
-    "양주시": {
-      "above": 4,
+    "성북구": {
+      "above": 2,
+      "below": 5,
+      "matched": 7
+    },
+    "송파구": {
+      "above": 0,
+      "below": 0,
+      "matched": 1
+    },
+    "수원시 권선구": {
+      "above": 19,
+      "below": 11,
+      "matched": 33
+    },
+    "수원시 영통구": {
+      "above": 9,
+      "below": 5,
+      "matched": 15
+    },
+    "수원시 장안구": {
+      "above": 3,
+      "below": 2,
+      "matched": 8
+    },
+    "수원시 팔달구": {
+      "above": 12,
+      "below": 8,
+      "matched": 20
+    },
+    "시흥시": {
+      "above": 1,
+      "below": 6,
+      "matched": 9
+    },
+    "안산시 단원구": {
+      "above": 2,
+      "below": 7,
+      "matched": 9
+    },
+    "안성시": {
+      "above": 0,
+      "below": 1,
+      "matched": 2
+    },
+    "안양시 만안구": {
+      "above": 3,
       "below": 4,
-      "matched": 11
+      "matched": 7
+    },
+    "양주시": {
+      "above": 2,
+      "below": 1,
+      "matched": 6
     },
     "양천구": {
       "above": 1,
@@ -2309,141 +1511,131 @@
     "양평군": {
       "above": 1,
       "below": 1,
-      "matched": 3
-    },
-    "여주시": {
-      "above": 3,
-      "below": 3,
-      "matched": 6
-    },
-    "연수구": {
-      "above": 10,
-      "below": 8,
-      "matched": 19
-    },
-    "영등포구": {
-      "above": 2,
-      "below": 0,
       "matched": 2
     },
+    "여주시": {
+      "above": 2,
+      "below": 2,
+      "matched": 4
+    },
+    "연수구": {
+      "above": 0,
+      "below": 5,
+      "matched": 6
+    },
     "오산시": {
-      "above": 7,
-      "below": 6,
-      "matched": 14
+      "above": 5,
+      "below": 4,
+      "matched": 9
     },
     "용인시 기흥구": {
-      "above": 8,
-      "below": 4,
-      "matched": 15
+      "above": 5,
+      "below": 0,
+      "matched": 5
     },
     "용인시 수지구": {
       "above": 5,
-      "below": 5,
-      "matched": 11
+      "below": 2,
+      "matched": 8
     },
     "용인시 처인구": {
-      "above": 3,
-      "below": 3,
-      "matched": 6
+      "above": 1,
+      "below": 1,
+      "matched": 2
     },
     "은평구": {
-      "above": 1,
+      "above": 2,
       "below": 3,
-      "matched": 6
+      "matched": 8
     },
     "의왕시": {
-      "above": 2,
-      "below": 1,
-      "matched": 5
-    },
-    "의정부시": {
-      "above": 14,
-      "below": 21,
-      "matched": 42
-    },
-    "이천시": {
-      "above": 5,
-      "below": 5,
-      "matched": 10
-    },
-    "중랑구": {
-      "above": 3,
-      "below": 2,
-      "matched": 6
-    },
-    "파주시": {
-      "above": 12,
-      "below": 11,
-      "matched": 29
-    },
-    "평택시": {
-      "above": 19,
-      "below": 20,
-      "matched": 42
-    },
-    "포천시": {
-      "above": 0,
+      "above": 1,
       "below": 0,
       "matched": 2
     },
-    "하남시": {
-      "above": 4,
-      "below": 2,
-      "matched": 7
-    },
-    "화성시 남양구": {
-      "above": 8,
-      "below": 1,
-      "matched": 9
-    },
-    "화성시 동탄구": {
-      "above": 9,
+    "의정부시": {
+      "above": 3,
       "below": 8,
-      "matched": 21
+      "matched": 13
     },
-    "화성시 병점구": {
-      "above": 12,
+    "이천시": {
+      "above": 2,
+      "below": 4,
+      "matched": 6
+    },
+    "중랑구": {
+      "above": 1,
+      "below": 2,
+      "matched": 4
+    },
+    "파주시": {
+      "above": 8,
       "below": 7,
       "matched": 19
     },
+    "평택시": {
+      "above": 7,
+      "below": 7,
+      "matched": 16
+    },
+    "하남시": {
+      "above": 1,
+      "below": 0,
+      "matched": 2
+    },
+    "화성시 남양구": {
+      "above": 5,
+      "below": 0,
+      "matched": 5
+    },
+    "화성시 동탄구": {
+      "above": 5,
+      "below": 4,
+      "matched": 10
+    },
+    "화성시 병점구": {
+      "above": 8,
+      "below": 3,
+      "matched": 11
+    },
     "화성시 향남구": {
       "above": 3,
-      "below": 3,
-      "matched": 6
+      "below": 1,
+      "matched": 4
     }
   },
   "weakRegions": [
     {
-      "sigungu": "노원구",
-      "avgPct": -0.06372526180342988,
-      "count": 5
-    },
-    {
-      "sigungu": "고양시 일산서구",
-      "avgPct": -0.04621661874541274,
-      "count": 5
-    },
-    {
-      "sigungu": "은평구",
-      "avgPct": -0.04081956213744682,
+      "sigungu": "연수구",
+      "avgPct": -0.04137852988167564,
       "count": 6
+    },
+    {
+      "sigungu": "이천시",
+      "avgPct": -0.025437971690145177,
+      "count": 6
+    },
+    {
+      "sigungu": "의정부시",
+      "avgPct": -0.022682305398546782,
+      "count": 13
     }
   ],
   "strongRegions": [
     {
-      "sigungu": "안산시 상록구",
-      "avgPct": 0.05874052429191214,
-      "count": 5
-    },
-    {
-      "sigungu": "도봉구",
-      "avgPct": 0.05540701378065129,
+      "sigungu": "남양주시",
+      "avgPct": 0.0841786344248877,
       "count": 11
     },
     {
+      "sigungu": "도봉구",
+      "avgPct": 0.08065884886381326,
+      "count": 6
+    },
+    {
       "sigungu": "화성시 남양구",
-      "avgPct": 0.04092209898281496,
-      "count": 9
+      "avgPct": 0.05777217541804911,
+      "count": 5
     }
   ],
   "cancellations": [
@@ -2456,6 +1648,17 @@
       "dealDate": "2026-08-29",
       "wasTopInWindow": true,
       "floor": 2,
+      "nearestSubwayM": null
+    },
+    {
+      "sigungu": "화성시 동탄구",
+      "dong": "산척동",
+      "apt": "더레이크시티부영1단지",
+      "areaM2": 84.52,
+      "priceKrw": 910000000,
+      "dealDate": "2026-09-18",
+      "wasTopInWindow": true,
+      "floor": 8,
       "nearestSubwayM": null
     },
     {
@@ -2481,14 +1684,14 @@
       "nearestSubwayM": null
     },
     {
-      "sigungu": "오산시",
-      "dong": "갈곶동",
-      "apt": "오산KCC스위첸",
-      "areaM2": 84.9821,
-      "priceKrw": 335000000,
-      "dealDate": "2026-09-28",
+      "sigungu": "노원구",
+      "dong": "월계동",
+      "apt": "주공2",
+      "areaM2": 59.97,
+      "priceKrw": 680000000,
+      "dealDate": "2026-09-12",
       "wasTopInWindow": true,
-      "floor": 12,
+      "floor": 7,
       "nearestSubwayM": null
     },
     {
@@ -2547,28 +1750,6 @@
       "nearestSubwayM": null
     },
     {
-      "sigungu": "광진구",
-      "dong": "구의동",
-      "apt": "새한",
-      "areaM2": 84.91,
-      "priceKrw": 1300000000,
-      "dealDate": "2026-08-29",
-      "wasTopInWindow": false,
-      "floor": 2,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "서대문구",
-      "dong": "연희동",
-      "apt": "연희파크푸르지오",
-      "areaM2": 84.8003,
-      "priceKrw": 1287000000,
-      "dealDate": "2026-07-28",
-      "wasTopInWindow": false,
-      "floor": 8,
-      "nearestSubwayM": null
-    },
-    {
       "sigungu": "남양주시",
       "dong": "다산동",
       "apt": "다산한양수자인리버팰리스",
@@ -2602,17 +1783,6 @@
       "nearestSubwayM": null
     },
     {
-      "sigungu": "부천시 원미구",
-      "dong": "상동",
-      "apt": "다정한마을(쌍용)",
-      "areaM2": 101.703,
-      "priceKrw": 862000000,
-      "dealDate": "2026-09-11",
-      "wasTopInWindow": false,
-      "floor": 9,
-      "nearestSubwayM": null
-    },
-    {
       "sigungu": "관악구",
       "dong": "신림동",
       "apt": "관악산휴먼시아2단지",
@@ -2624,23 +1794,12 @@
       "nearestSubwayM": null
     },
     {
-      "sigungu": "광진구",
-      "dong": "화양동",
-      "apt": "브라운스톤",
-      "areaM2": 78.44,
-      "priceKrw": 840000000,
-      "dealDate": "2026-08-14",
-      "wasTopInWindow": false,
-      "floor": 6,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "군포시",
-      "dong": "산본동",
-      "apt": "한양수리",
-      "areaM2": 151.397,
-      "priceKrw": 815000000,
-      "dealDate": "2026-09-14",
+      "sigungu": "화성시 동탄구",
+      "dong": "목동",
+      "apt": "동탄2신도시호반베르디움22단지",
+      "areaM2": 53.4754,
+      "priceKrw": 750000000,
+      "dealDate": "2026-10-07",
       "wasTopInWindow": false,
       "floor": 5,
       "nearestSubwayM": null
@@ -2657,17 +1816,6 @@
       "nearestSubwayM": null
     },
     {
-      "sigungu": "용인시 수지구",
-      "dong": "죽전동",
-      "apt": "벽산블루밍",
-      "areaM2": 173.54,
-      "priceKrw": 700000000,
-      "dealDate": "2026-09-17",
-      "wasTopInWindow": false,
-      "floor": 4,
-      "nearestSubwayM": null
-    },
-    {
       "sigungu": "김포시",
       "dong": "걸포동",
       "apt": "한강메트로자이2단지",
@@ -2676,28 +1824,6 @@
       "dealDate": "2026-09-18",
       "wasTopInWindow": false,
       "floor": 30,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "수원시 영통구",
-      "dong": "매탄동",
-      "apt": "현대힐스테이트",
-      "areaM2": 84.975,
-      "priceKrw": 675000000,
-      "dealDate": "2026-09-14",
-      "wasTopInWindow": false,
-      "floor": 15,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "강서구",
-      "dong": "내발산동",
-      "apt": "천우명덕",
-      "areaM2": 84.94,
-      "priceKrw": 670000000,
-      "dealDate": "2026-07-13",
-      "wasTopInWindow": false,
-      "floor": 1,
       "nearestSubwayM": null
     },
     {
@@ -2712,28 +1838,6 @@
       "nearestSubwayM": null
     },
     {
-      "sigungu": "수원시 영통구",
-      "dong": "원천동",
-      "apt": "주공",
-      "areaM2": 66.56,
-      "priceKrw": 613000000,
-      "dealDate": "2026-10-05",
-      "wasTopInWindow": false,
-      "floor": 9,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "부평구",
-      "dong": "부평동",
-      "apt": "인천부평우미린더센트럴",
-      "areaM2": 74.9871,
-      "priceKrw": 555000000,
-      "dealDate": "2026-09-22",
-      "wasTopInWindow": false,
-      "floor": 3,
-      "nearestSubwayM": null
-    },
-    {
       "sigungu": "수원시 권선구",
       "dong": "호매실동",
       "apt": "호매실금호어울림에듀포레",
@@ -2742,28 +1846,6 @@
       "dealDate": "2026-08-20",
       "wasTopInWindow": false,
       "floor": 6,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "고양시 일산동구",
-      "dong": "장항동",
-      "apt": "일산라이브더센텀",
-      "areaM2": 56.82,
-      "priceKrw": 530000000,
-      "dealDate": "2026-10-02",
-      "wasTopInWindow": false,
-      "floor": 21,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "부천시 원미구",
-      "dong": "중동",
-      "apt": "무지개마을(동신)",
-      "areaM2": 59.49,
-      "priceKrw": 530000000,
-      "dealDate": "2026-08-11",
-      "wasTopInWindow": false,
-      "floor": 5,
       "nearestSubwayM": null
     },
     {
@@ -2778,28 +1860,6 @@
       "nearestSubwayM": null
     },
     {
-      "sigungu": "용인시 처인구",
-      "dong": "포곡읍 둔전리",
-      "apt": "용인포곡삼성쉐르빌",
-      "areaM2": 115.2875,
-      "priceKrw": 485000000,
-      "dealDate": "2026-09-21",
-      "wasTopInWindow": false,
-      "floor": 8,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "계양구",
-      "dong": "서운동",
-      "apt": "계양효성해링턴플레이스",
-      "areaM2": 59.976,
-      "priceKrw": 468000000,
-      "dealDate": "2026-09-02",
-      "wasTopInWindow": false,
-      "floor": 7,
-      "nearestSubwayM": null
-    },
-    {
       "sigungu": "안산시 단원구",
       "dong": "초지동",
       "apt": "호수마을풍림",
@@ -2808,28 +1868,6 @@
       "dealDate": "2026-07-30",
       "wasTopInWindow": false,
       "floor": 5,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "화성시 병점구",
-      "dong": "병점동",
-      "apt": "구봉마을우남퍼스트빌",
-      "areaM2": 97.1055,
-      "priceKrw": 445000000,
-      "dealDate": "2026-08-25",
-      "wasTopInWindow": false,
-      "floor": 12,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "양주시",
-      "dong": "덕계동",
-      "apt": "양주회천신도시디에트르센트럴시티",
-      "areaM2": 75.0605,
-      "priceKrw": 430000000,
-      "dealDate": "2026-10-06",
-      "wasTopInWindow": false,
-      "floor": 11,
       "nearestSubwayM": null
     },
     {
@@ -2855,17 +1893,6 @@
       "nearestSubwayM": null
     },
     {
-      "sigungu": "군포시",
-      "dong": "산본동",
-      "apt": "주공9단지금강",
-      "areaM2": 58.19,
-      "priceKrw": 380000000,
-      "dealDate": "2026-09-29",
-      "wasTopInWindow": false,
-      "floor": 13,
-      "nearestSubwayM": null
-    },
-    {
       "sigungu": "부천시 원미구",
       "dong": "중동",
       "apt": "설악마을(주공)",
@@ -2885,17 +1912,6 @@
       "dealDate": "2026-07-25",
       "wasTopInWindow": false,
       "floor": 13,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "오산시",
-      "dong": "세교동",
-      "apt": "세마역에듀파크",
-      "areaM2": 59.76,
-      "priceKrw": 375000000,
-      "dealDate": "2026-09-17",
-      "wasTopInWindow": false,
-      "floor": 14,
       "nearestSubwayM": null
     },
     {
@@ -2921,28 +1937,6 @@
       "nearestSubwayM": null
     },
     {
-      "sigungu": "안산시 단원구",
-      "dong": "신길동",
-      "apt": "삼익",
-      "areaM2": 110.97,
-      "priceKrw": 360000000,
-      "dealDate": "2026-10-01",
-      "wasTopInWindow": false,
-      "floor": 12,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "고양시 덕양구",
-      "dong": "행신동",
-      "apt": "샘터마을2",
-      "areaM2": 59.98,
-      "priceKrw": 350000000,
-      "dealDate": "2026-09-22",
-      "wasTopInWindow": false,
-      "floor": 6,
-      "nearestSubwayM": null
-    },
-    {
       "sigungu": "수원시 권선구",
       "dong": "권선동",
       "apt": "보성,유원",
@@ -2951,17 +1945,6 @@
       "dealDate": "2026-09-21",
       "wasTopInWindow": false,
       "floor": 10,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "평택시",
-      "dong": "용이동",
-      "apt": "e편한세상평택용이1단지",
-      "areaM2": 84.98,
-      "priceKrw": 305000000,
-      "dealDate": "2026-09-29",
-      "wasTopInWindow": false,
-      "floor": 2,
       "nearestSubwayM": null
     },
     {
@@ -2987,17 +1970,6 @@
       "nearestSubwayM": null
     },
     {
-      "sigungu": "평택시",
-      "dong": "이충동",
-      "apt": "정암마을뜨란채",
-      "areaM2": 75.54,
-      "priceKrw": 228000000,
-      "dealDate": "2026-09-12",
-      "wasTopInWindow": false,
-      "floor": 5,
-      "nearestSubwayM": null
-    },
-    {
       "sigungu": "강동구",
       "dong": "천호동",
       "apt": "미사아름채아파트",
@@ -3006,17 +1978,6 @@
       "dealDate": "2026-09-13",
       "wasTopInWindow": false,
       "floor": 9,
-      "nearestSubwayM": null
-    },
-    {
-      "sigungu": "이천시",
-      "dong": "송정동",
-      "apt": "수림1차",
-      "areaM2": 72.72,
-      "priceKrw": 180000000,
-      "dealDate": "2026-07-04",
-      "wasTopInWindow": false,
-      "floor": 4,
       "nearestSubwayM": null
     },
     {
@@ -3034,90 +1995,85 @@
   "busiestRegions": [
     {
       "sigungu": "수원시 권선구",
-      "count": 56
+      "count": 37
     },
     {
-      "sigungu": "의정부시",
-      "count": 50
+      "sigungu": "부천시 원미구",
+      "count": 32
     },
     {
-      "sigungu": "평택시",
-      "count": 48
+      "sigungu": "파주시",
+      "count": 22
     }
   ],
   "regionCounts": {
-    "가평군": 1,
-    "강남구": 7,
-    "강동구": 9,
-    "강북구": 9,
-    "강서구": 13,
+    "강남구": 3,
+    "강동구": 6,
+    "강북구": 2,
+    "강서구": 6,
     "강화군": 1,
-    "계양구": 12,
-    "고양시 덕양구": 43,
-    "고양시 일산동구": 12,
-    "고양시 일산서구": 10,
-    "관악구": 11,
-    "광명시": 8,
-    "광주시": 17,
-    "광진구": 3,
-    "구로구": 18,
-    "구리시": 4,
-    "군포시": 32,
-    "김포시": 22,
-    "남동구": 11,
-    "남양주시": 34,
-    "노원구": 6,
-    "도봉구": 13,
-    "동대문구": 9,
-    "동두천시": 1,
-    "마포구": 4,
-    "미추홀구": 7,
-    "부천시 소사구": 19,
-    "부천시 오정구": 8,
-    "부천시 원미구": 40,
-    "부평구": 25,
-    "서대문구": 4,
-    "서초구": 3,
-    "성남시 분당구": 10,
-    "성남시 중원구": 4,
-    "성동구": 2,
-    "성북구": 14,
-    "송파구": 11,
-    "수원시 권선구": 56,
-    "수원시 영통구": 32,
-    "수원시 장안구": 16,
-    "수원시 팔달구": 8,
-    "시흥시": 35,
-    "안산시 단원구": 20,
-    "안산시 상록구": 5,
-    "안성시": 6,
-    "안양시 동안구": 10,
-    "안양시 만안구": 4,
-    "양주시": 14,
-    "양천구": 6,
-    "양평군": 5,
-    "여주시": 6,
-    "연수구": 24,
+    "계양구": 5,
+    "고양시 덕양구": 18,
+    "고양시 일산동구": 8,
+    "고양시 일산서구": 4,
+    "관악구": 4,
+    "광명시": 5,
+    "광주시": 6,
+    "광진구": 2,
+    "구로구": 4,
+    "구리시": 1,
+    "군포시": 11,
+    "김포시": 7,
+    "남동구": 6,
+    "남양주시": 15,
+    "노원구": 5,
+    "도봉구": 6,
+    "동대문구": 3,
+    "마포구": 2,
+    "미추홀구": 1,
+    "부천시 소사구": 5,
+    "부천시 오정구": 5,
+    "부천시 원미구": 32,
+    "부평구": 17,
+    "서대문구": 1,
+    "서초구": 2,
+    "성남시 분당구": 6,
+    "성남시 수정구": 4,
+    "성남시 중원구": 2,
+    "성동구": 1,
+    "성북구": 8,
+    "송파구": 2,
+    "수원시 권선구": 37,
+    "수원시 영통구": 17,
+    "수원시 장안구": 10,
+    "수원시 팔달구": 21,
+    "시흥시": 11,
+    "안산시 단원구": 12,
+    "안성시": 3,
+    "안양시 만안구": 8,
+    "양주시": 8,
+    "양천구": 4,
+    "양평군": 3,
+    "여주시": 4,
+    "연수구": 7,
     "연천군": 1,
-    "영등포구": 4,
-    "오산시": 17,
-    "용인시 기흥구": 22,
-    "용인시 수지구": 15,
-    "용인시 처인구": 8,
-    "은평구": 9,
-    "의왕시": 6,
-    "의정부시": 50,
-    "이천시": 13,
-    "종로구": 1,
-    "중랑구": 9,
-    "파주시": 36,
-    "평택시": 48,
-    "포천시": 2,
-    "하남시": 7,
-    "화성시 남양구": 13,
-    "화성시 동탄구": 27,
-    "화성시 병점구": 20,
-    "화성시 향남구": 7
+    "영등포구": 1,
+    "오산시": 10,
+    "용인시 기흥구": 8,
+    "용인시 수지구": 10,
+    "용인시 처인구": 2,
+    "은평구": 14,
+    "의왕시": 3,
+    "의정부시": 19,
+    "이천시": 8,
+    "중랑구": 6,
+    "파주시": 22,
+    "평택시": 18,
+    "하남시": 2,
+    "화성시 남양구": 8,
+    "화성시 동탄구": 13,
+    "화성시 병점구": 11,
+    "화성시 향남구": 4
   },
   "headlines": {
     "top": {
@@ -3142,5 +2098,5 @@
       }
     ]
   },
-  "latestDealDate": "2026-10-09"
+  "latestDealDate": "2026-10-10"
 }
